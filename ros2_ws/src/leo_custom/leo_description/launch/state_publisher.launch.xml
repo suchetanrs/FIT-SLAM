@@ -1,0 +1,10 @@
+<launch version="0.1.1">
+  <arg
+    name="model"
+    default="$(find-pkg-share leo_description)/urdf/leo.urdf.xacro"
+    description="Absolute path to robot urdf.xacro file" />
+
+  <node pkg="robot_state_publisher" exec="robot_state_publisher">
+    <param name="robot_description" value="$(command 'xacro $(var model)')" />
+  </node>
+</launch>
