@@ -78,10 +78,10 @@ set(DEPENDENCIES
 add_executable(scout_path_follower src/scout_path_follower.cpp)
 ament_target_dependencies(scout_path_follower SYSTEM ${DEPENDENCIES})
 
-add_executable(scout_path_planner src/scout_path_planner.cpp)
-ament_target_dependencies(scout_path_planner SYSTEM ${DEPENDENCIES})
+add_executable(scout_path_corrector src/scout_path_corrector.cpp)
+ament_target_dependencies(scout_path_corrector SYSTEM ${DEPENDENCIES})
 
-install(TARGETS scout_path_follower scout_path_planner
+install(TARGETS scout_path_follower scout_path_corrector
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

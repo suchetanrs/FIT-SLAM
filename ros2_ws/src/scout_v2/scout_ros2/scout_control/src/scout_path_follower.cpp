@@ -15,7 +15,7 @@
 class PathFollowerNode : public rclcpp::Node
 {
 public:
-  PathFollowerNode() : Node("path_follower_node")
+  PathFollowerNode() : Node("scout_path_follower")
   {
     // Subscribe to the "plan" topic
     plan_subscription_ = this->create_subscription<nav_msgs::msg::Path>(
@@ -25,7 +25,7 @@ public:
       "goal_pose", 10, std::bind(&PathFollowerNode::goalCallback, this, std::placeholders::_1));
 
     // Publish control commands on the "twist_stamped" topic
-    control_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel_nav", 10);
+    control_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_nav", 10);
     local_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("local_goal_topic", 10);
     goal_reached_ = this->create_publisher<geometry_msgs::msg::PointStamped>("goal_reached_path_follower", 10);
 
@@ -40,6 +40,12 @@ public:
 
     this->declare_parameter("resolution", 0.25);
     this->get_parameter("resolution", map_resolution_);
+
+    this->declare_parameter("robot_base_frame", "base_link");
+    this->get_parameter("robot_base_frame", robot_base_frame_);
+
+    this->declare_parameter("global_frame", "map");
+    this->get_parameter("global_frame", global_frame_id_);
 
     tf_buffer2_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
     tf_listener2_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer2_);
@@ -100,12 +106,12 @@ private:
 
     void nearestPoseTransform(geometry_msgs::msg::Pose& current_pose, geometry_msgs::msg::Pose& nearest_pose) {
       auto rate = rclcpp::Rate(20.0);
-      while(!tf_buffer2_->canTransform("map", "base_link", tf2::TimePointZero) && rclcpp::ok())
+      while(!tf_buffer2_->canTransform(global_frame_id_, robot_base_frame_, tf2::TimePointZero) && rclcpp::ok())
       {
         rate.sleep();
         // RCLCPP_ERROR(rclcpp::get_logger("Traversability layer"), "Transform2 unavailable");
       }
-      auto transform = tf_buffer2_->lookupTransform("map", "base_link", tf2::TimePointZero);
+      auto transform = tf_buffer2_->lookupTransform(global_frame_id_, robot_base_frame_, tf2::TimePointZero);
       // Compute control commands based on the path and current pose
       current_pose.position.x = transform.transform.translation.x;
       current_pose.position.y = transform.transform.translation.y;
@@ -116,12 +122,12 @@ private:
 
     void nearestPoseTransformLastPose(geometry_msgs::msg::Pose& current_pose) {
       auto rate = rclcpp::Rate(20.0);
-      while(!tf_buffer2_->canTransform("map", "base_link", tf2::TimePointZero) && rclcpp::ok())
+      while(!tf_buffer2_->canTransform(global_frame_id_, robot_base_frame_, tf2::TimePointZero) && rclcpp::ok())
       {
         rate.sleep();
         // RCLCPP_ERROR(rclcpp::get_logger("Traversability layer"), "Transform2 unavailable");
       }
-      auto transform = tf_buffer2_->lookupTransform("map", "base_link", tf2::TimePointZero);
+      auto transform = tf_buffer2_->lookupTransform(global_frame_id_, robot_base_frame_, tf2::TimePointZero);
       // Compute control commands based on the path and current pose
       current_pose.position.x = transform.transform.translation.x;
       current_pose.position.y = transform.transform.translation.y;
@@ -138,11 +144,11 @@ private:
         latest_pose_reached_ = false;
         // Get the current position
         auto rate = rclcpp::Rate(20.0);
-        while(!tf_buffer2_->canTransform("map", "base_link", tf2::TimePointZero) && rclcpp::ok())
+        while(!tf_buffer2_->canTransform(global_frame_id_, robot_base_frame_, tf2::TimePointZero) && rclcpp::ok())
         {
           rate.sleep();
         }
-        auto transform = tf_buffer2_->lookupTransform("map", "base_link", tf2::TimePointZero);
+        auto transform = tf_buffer2_->lookupTransform(global_frame_id_, robot_base_frame_, tf2::TimePointZero);
         // Compute control commands based on the path and current pose
         geometry_msgs::msg::Pose current_pose;
         current_pose.position.x = transform.transform.translation.x;
@@ -163,7 +169,7 @@ private:
                     nearest_pose = current_plan_.poses[current_plan_.poses.size() - 1].pose;
                     geometry_msgs::msg::PoseStamped nearest_pose_stamped;
                     nearest_pose_stamped.pose = nearest_pose;
-                    nearest_pose_stamped.header.frame_id = "map";
+                    nearest_pose_stamped.header.frame_id = global_frame_id_;
                     local_publisher_->publish(nearest_pose_stamped);
                     while(!checkPosesOrientation(current_pose, nearest_pose, 0.2).first && rclcpp::ok()) {
                       rclcpp::sleep_for(std::chrono::milliseconds(100));
@@ -194,7 +200,7 @@ private:
               nearestPoseTransform(current_pose, nearest_pose);
               geometry_msgs::msg::PoseStamped nearest_pose_stamped;
               nearest_pose_stamped.pose = nearest_pose;
-              nearest_pose_stamped.header.frame_id = "map";
+              nearest_pose_stamped.header.frame_id = global_frame_id_;
               local_publisher_->publish(nearest_pose_stamped);
               auto start_time = std::chrono::high_resolution_clock::now();
               // 0.4 is threshold
@@ -308,6 +314,8 @@ private:
     double local_goal_distance_;
     double map_resolution_;
     bool goal_recvd_flag_ = true;
+    std::string robot_base_frame_;
+    std::string global_frame_id_;
 
     double max_translation_speed_;
     double max_rotation_speed_;

@@ -1,12 +1,15 @@
 <launch version="0.1.1">
   <arg name="cmd_vel_out" default="cmd_vel"
     description="Topic to send velocity commands on" />
+  <arg name="robot_namespace" default="scout_ns"
+    description="The namespace of the robot" />
 
   <node
     name="key_teleop_node"
     pkg="teleop_twist_keyboard"
     exec="teleop_twist_keyboard"
     output="screen"
+    namespace=
     launch-prefix="xterm -e">
     <param name="speed" value="0.4" />
     <param name="turn" value="1.0" />

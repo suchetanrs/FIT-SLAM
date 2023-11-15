@@ -81,20 +81,7 @@ ament_target_dependencies(polygon_point_publisher rclcpp geometry_msgs)
 add_executable(localization_pose_sub src/viz/localization_pose_sub.cpp)
 ament_target_dependencies(localization_pose_sub SYSTEM ${dependencies})
 
-# Add executable 6
-add_executable(traversability_server src/traversability_server.cpp)
-ament_target_dependencies(traversability_server rclcpp nav2_msgs nav2_costmap_2d visualization_msgs frontier_msgs rclcpp_action action_msgs)
-
-add_executable(traversability_nav_server src/traversability_nav_server.cpp)
-ament_target_dependencies(traversability_nav_server rclcpp nav2_msgs nav2_costmap_2d visualization_msgs frontier_msgs rclcpp_action action_msgs)
-
-add_executable(occ_map_publisher src/occ_map_publisher.cpp)
-ament_target_dependencies(occ_map_publisher SYSTEM ${dependencies})
-
-add_executable(traversability_thresholded src/traversability_thresholded.cpp)
-ament_target_dependencies(traversability_thresholded SYSTEM ${dependencies})
-
-install(TARGETS explore_server explore_client frontier_exploration_core polygon_point_publisher traversability_server traversability_nav_server localization_pose_sub occ_map_publisher traversability_thresholded
+install(TARGETS explore_server explore_client frontier_exploration_core polygon_point_publisher localization_pose_sub
 DESTINATION lib/${PROJECT_NAME}
 )
 

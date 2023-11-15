@@ -4,10 +4,14 @@
     xmlns:xacro="http://ros.org/wiki/xacro"
     xmlns:gazebo="http://gazebosim.org">
 
-    <xacro:arg name="robot_namespace" default="/" /> 
+    <xacro:arg name="robot_namespace" default="scout_ns" />
+    <xacro:property name="robot_namespace" value="$(arg robot_namespace)" />
 
     <xacro:include filename="$(find scout_description)/urdf/scout_wheel_type1.xacro" />
     <xacro:include filename="$(find scout_description)/urdf/scout_wheel_type2.xacro" />
+    <xacro:include filename="$(find scout_description)/urdf/depth_cam.xacro" />
+    <xacro:include filename="$(find scout_description)/urdf/imu_gps.xacro" />
+    <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
 
     <!-- Variables -->
     <xacro:property name="M_PI" value="3.14159"/>
@@ -30,15 +34,16 @@
     <xacro:arg name="organize_cloud" default="false"/>
     <xacro:property name="organize_cloud" value="$(arg organize_cloud)" />
     
-    <link name="base_footprint"/>
+    <link name="${robot_namespace}/base_footprint"/>
 
-    <joint name="base_footprint_joint" type="fixed">
-        <parent link="base_footprint" />
-        <child link="base_link" />
+    <joint name="${robot_namespace}/base_footprint_joint" type="fixed">
+        <parent link="${robot_namespace}/base_footprint" />
+        <child link="${robot_namespace}/base_link" />
         <origin xyz="0 0 ${-wheel_vertical_offset + wheel_radius}" rpy="0 0 0" />
     </joint>
+
     <!-- Base link -->
-    <link name="base_link">
+    <link name="${robot_namespace}/base_link">
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
@@ -58,8 +63,9 @@
             </geometry>
         </collision>
     </link>
+    
 
-    <link name="inertial_link">
+    <link name="${robot_namespace}/inertial_link">
         <inertial>
             <mass value="40" />
             <origin xyz="0.0 0.0 0.0" />
@@ -67,25 +73,25 @@
         </inertial>
     </link>
 
-    <joint name="inertial_joint" type="fixed">
+    <joint name="${robot_namespace}/inertial_joint" type="fixed">
         <origin xyz="0 0 0" rpy="0 0 0" />
-        <parent link="base_link" />
-        <child link="inertial_link" />
+        <parent link="${robot_namespace}/base_link" />
+        <child link="${robot_namespace}/inertial_link" />
     </joint>
 
     <!-- Scout wheel macros -->
     <!-- wheel labeled from 0 to 3, conter-clockwise, starting from front right wheel -->
     <!-- motor 1 and 2 (left side) are mechanically installed in a reversed direction -->
-    <xacro:scout_wheel_type1 wheel_prefix="front_right">
+    <xacro:scout_wheel_type1 wheel_prefix="front_right" robot_namespace="${robot_namespace}">
         <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
     </xacro:scout_wheel_type1>
-    <xacro:scout_wheel_type1 wheel_prefix="rear_right">
+    <xacro:scout_wheel_type1 wheel_prefix="rear_right" robot_namespace="${robot_namespace}">
         <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
     </xacro:scout_wheel_type1>
-    <xacro:scout_wheel_type1 wheel_prefix="front_left">
+    <xacro:scout_wheel_type1 wheel_prefix="front_left" robot_namespace="${robot_namespace}">
         <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
     </xacro:scout_wheel_type1>
-    <xacro:scout_wheel_type1 wheel_prefix="rear_left">
+    <xacro:scout_wheel_type1 wheel_prefix="rear_left" robot_namespace="${robot_namespace}">
         <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
     </xacro:scout_wheel_type1>
 
@@ -93,7 +99,7 @@
       <hardware>
         <plugin>gazebo_ros2_control/GazeboSystem</plugin>
       </hardware>
-      <joint name="front_left_wheel">
+      <joint name="${robot_namespace}/front_left_wheel">
         <command_interface name="velocity">
           <param name="min">-6</param>
           <param name="max">6</param>
@@ -102,7 +108,7 @@
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
       </joint>
-      <joint name="rear_left_wheel">
+      <joint name="${robot_namespace}/rear_left_wheel">
         <command_interface name="velocity">
           <param name="min">-6</param>
           <param name="max">6</param>
@@ -111,7 +117,7 @@
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
       </joint>
-      <joint name="front_right_wheel">
+      <joint name="${robot_namespace}/front_right_wheel">
         <command_interface name="velocity">
           <param name="min">-6</param>
           <param name="max">6</param>
@@ -120,7 +126,7 @@
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
       </joint>
-      <joint name="rear_right_wheel">
+      <joint name="${robot_namespace}/rear_right_wheel">
         <command_interface name="velocity">
           <param name="min">-6</param>
           <param name="max">6</param>
@@ -133,23 +139,17 @@
 
     <gazebo>
       <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <namespace>${robot_namespace}</namespace>
         <robot_param>robot_description</robot_param>
         <robot_param_node>robot_state_publisher</robot_param_node>
         <parameters>package://scout_description/config/scout_control.yaml</parameters>
       </plugin>
     </gazebo>
-
-   <!-- <xacro:include filename="$(find scout_description)/urdf/scout_v2_add_ouster.gazebo" />  -->
-  <!-- <xacro:include filename="$(find scout_description)/urdf/scout_v2_add_OS0-128.gazebo"/> -->
-  <!-- <OS1-64 parent="base_link" name="os1_sensor" hz="10" samples="220">
-    <origin xyz="0 0 1.2" rpy="0 0 0" />
-  </OS1-64> -->
-  <xacro:include filename="$(find scout_description)/urdf/scout_v2_add_imu_gps.gazebo" />
-  <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
-  <xacro:VLP-16 parent="base_link" name="velodyne" topic="/velodyne_points" organize_cloud="${organize_cloud}" hz="10" samples="440" gpu="${gpu}">
-    <origin xyz="0.5 0 0.4" rpy="0 0.7825 0" />
-  </xacro:VLP-16>
-  <xacro:include filename="depth_cam.xacro"/>
-
+    
+    <xacro:depth_cam robot_namespace="${robot_namespace}"/>
+    <xacro:imu_gps robot_namespace="${robot_namespace}"/>
+    <xacro:VLP-16 parent="${robot_namespace}/base_link" name="${robot_namespace}/velodyne" topic="/${robot_namespace}/velodyne_points" organize_cloud="${organize_cloud}" hz="10" samples="440" gpu="${gpu}">
+      <origin xyz="0.5 0 0.4" rpy="0 0.7825 0" />
+    </xacro:VLP-16>
 
 </robot>

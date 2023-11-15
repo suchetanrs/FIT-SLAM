@@ -9,12 +9,12 @@ public:
     TraversabilityThresholdNode() : Node("traversability_threshold_node")
     {
         costmap_sub_ = this->create_subscription<nav2_msgs::msg::Costmap>(
-            "/traversability_costmap/costmap_raw", rclcpp::QoS(rclcpp::KeepLast(1)),
+            "traversability_costmap/costmap_raw", rclcpp::QoS(rclcpp::KeepLast(1)),
             std::bind(&TraversabilityThresholdNode::costmapCallback, this, std::placeholders::_1)
         );
 
         occupancy_map_publisher_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(
-            "/traversability_thresholded", rclcpp::QoS(10).transient_local().reliable()
+            "traversability_thresholded", rclcpp::QoS(10).transient_local().reliable()
         );
 
         this->declare_parameter("threshold_value", rclcpp::ParameterValue(176));
@@ -41,7 +41,7 @@ private:
         thresholded_map.info.width = msg->metadata.size_x;
         thresholded_map.info.height = msg->metadata.size_y;
         thresholded_map.data = std::vector<int8_t>(msg->data.size(), nav2_costmap_2d::NO_INFORMATION);
-        for (int i = 0; i < msg->data.size(); ++i)
+        for (size_t i = 0; i < msg->data.size(); ++i)
         {
             if (msg->data[i] == nav2_costmap_2d::NO_INFORMATION)
             {

@@ -51,21 +51,6 @@ public:
         sxy += p3d.x()*p3d.y();
         sxz += p3d.x()*p3d.z();
         syz += p3d.y()*p3d.z();
-
-        // Get mean and covariance of the grid.
-        mean(0) = sx / N;
-        mean(1) = sy / N;
-        mean(2) = sz / N;
-
-        matCov(0, 0) = ((sx2) + ((N) * mean(0) * mean(0)) - (2 * mean(0) * sx)) / N;
-        matCov(0, 1) = ((sxy) - (mean(1) * sx) - (mean(0) * sy) + ((N) * mean(0) * mean(1))) / N;
-        matCov(0, 2) = ((sxz) - (mean(2) * sx) - (mean(0) * sz) + ((N) * mean(0) * mean(2))) / N;
-        matCov(1, 0) = ((sxy) - (mean(1) * sx) - (mean(0) * sy) + ((N) * mean(0) * mean(1))) / N;
-        matCov(1, 1) = ((sy2) + ((N) * mean(1) * mean(1)) - (2 * mean(1) * sy)) / N;
-        matCov(1, 2) = ((syz) - (mean(2) * sy) - (mean(1) * sz) + ((N) * mean(1) * mean(2))) / N;
-        matCov(2, 0) = ((sxz) - (mean(2) * sx) - (mean(0) * sz) + ((N) * mean(0) * mean(2))) / N;
-        matCov(2, 1) = ((syz) - (mean(2) * sy) - (mean(1) * sz) + ((N) * mean(1) * mean(2))) / N;
-        matCov(2, 2) = ((sz2) + ((N) * mean(2) * mean(2)) - (2 * mean(2) * sz)) / N;
     }
 
     unsigned int N=0;
@@ -79,9 +64,7 @@ public:
     double sz2 =0.;
     double sxy =0.;
     double sxz =0.;
-    double syz = 0.;        
-    Eigen::Vector3d mean = Eigen::Vector3d::Zero();
-    Eigen::Matrix3d matCov = Eigen::Matrix3d::Zero();
+    double syz = 0.;
 };
 
 

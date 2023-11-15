@@ -4,18 +4,18 @@
 <!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED                                 | -->
 <!-- =================================================================================== -->
 <robot name="scout_v2" xmlns:gazebo="http://gazebosim.org">
-  <link name="base_footprint"/>
-  <joint name="base_footprint_joint" type="fixed">
-    <parent link="base_footprint"/>
-    <child link="base_link"/>
-    <origin rpy="0 0 0" xyz="0 0 -0.23479"/>
+  <link name="scout_ns_base_footprint"/>
+  <joint name="scout_ns_base_footprint_joint" type="fixed">
+    <parent link="scout_ns_base_footprint"/>
+    <child link="scout_ns_base_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0.23479"/>
   </joint>
   <!-- Base link -->
-  <link name="base_link">
+  <link name="scout_ns_base_link">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="file:///home/suchetan/ros2_ws/install/scout_description/share/scout_description/meshes/base_link.dae"/>
+        <mesh filename="file:///root/ros2_ws/install/scout_description/share/scout_description/meshes/base_link.dae"/>
       </geometry>
     </visual>
     <collision>
@@ -31,19 +31,19 @@
       </geometry>
     </collision>
   </link>
-  <link name="inertial_link">
+  <link name="scout_ns_inertial_link">
     <inertial>
       <mass value="40"/>
       <origin xyz="0.0 0.0 0.0"/>
       <inertia ixx="2.288641" ixy="0" ixz="0" iyy="5.103976" iyz="0" izz="3.431465"/>
     </inertial>
   </link>
-  <joint name="inertial_joint" type="fixed">
+  <joint name="scout_ns_inertial_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="base_link"/>
-    <child link="inertial_link"/>
+    <parent link="scout_ns_base_link"/>
+    <child link="scout_ns_inertial_link"/>
   </joint>
-  <link name="front_right_wheel_link">
+  <link name="scout_ns_front_right_wheel_link">
     <inertial>
       <mass value="3"/>
       <origin xyz="0 0 0"/>
@@ -52,7 +52,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="file:///home/suchetan/ros2_ws/install/scout_description/share/scout_description/meshes/wheel_type1.dae"/>
+        <mesh filename="file:///root/ros2_ws/install/scout_description/share/scout_description/meshes/wheel_type1.dae"/>
       </geometry>
     </visual>
     <collision>
@@ -62,13 +62,13 @@
       </geometry>
     </collision>
   </link>
-  <joint name="front_right_wheel" type="continuous">
-    <parent link="base_link"/>
-    <child link="front_right_wheel_link"/>
+  <joint name="scout_ns_front_right_wheel" type="continuous">
+    <parent link="scout_ns_base_link"/>
+    <child link="scout_ns_front_right_wheel_link"/>
     <origin rpy="3.14 0 0" xyz="0.249 -0.29153 -0.0702"/>
     <axis rpy="0 0 0" xyz="0 -1 0"/>
   </joint>
-  <gazebo reference="front_right_wheel_link">
+  <gazebo reference="scout_ns_front_right_wheel_link">
     <collision>
       <surface>
         <friction>
@@ -89,7 +89,7 @@
       </surface>
     </collision>
   </gazebo>
-  <link name="rear_right_wheel_link">
+  <link name="scout_ns_rear_right_wheel_link">
     <inertial>
       <mass value="3"/>
       <origin xyz="0 0 0"/>
@@ -98,7 +98,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="file:///home/suchetan/ros2_ws/install/scout_description/share/scout_description/meshes/wheel_type1.dae"/>
+        <mesh filename="file:///root/ros2_ws/install/scout_description/share/scout_description/meshes/wheel_type1.dae"/>
       </geometry>
     </visual>
     <collision>
@@ -108,13 +108,13 @@
       </geometry>
     </collision>
   </link>
-  <joint name="rear_right_wheel" type="continuous">
-    <parent link="base_link"/>
-    <child link="rear_right_wheel_link"/>
+  <joint name="scout_ns_rear_right_wheel" type="continuous">
+    <parent link="scout_ns_base_link"/>
+    <child link="scout_ns_rear_right_wheel_link"/>
     <origin rpy="3.14 0 0" xyz="-0.249 -0.29153 -0.0702"/>
     <axis rpy="0 0 0" xyz="0 -1 0"/>
   </joint>
-  <gazebo reference="rear_right_wheel_link">
+  <gazebo reference="scout_ns_rear_right_wheel_link">
     <collision>
       <surface>
         <friction>
@@ -135,7 +135,7 @@
       </surface>
     </collision>
   </gazebo>
-  <link name="front_left_wheel_link">
+  <link name="scout_ns_front_left_wheel_link">
     <inertial>
       <mass value="3"/>
       <origin xyz="0 0 0"/>
@@ -144,7 +144,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="file:///home/suchetan/ros2_ws/install/scout_description/share/scout_description/meshes/wheel_type1.dae"/>
+        <mesh filename="file:///root/ros2_ws/install/scout_description/share/scout_description/meshes/wheel_type1.dae"/>
       </geometry>
     </visual>
     <collision>
@@ -154,13 +154,13 @@
       </geometry>
     </collision>
   </link>
-  <joint name="front_left_wheel" type="continuous">
-    <parent link="base_link"/>
-    <child link="front_left_wheel_link"/>
+  <joint name="scout_ns_front_left_wheel" type="continuous">
+    <parent link="scout_ns_base_link"/>
+    <child link="scout_ns_front_left_wheel_link"/>
     <origin rpy="3.14 0 0" xyz="0.249 0.29153 -0.0702"/>
     <axis rpy="0 0 0" xyz="0 -1 0"/>
   </joint>
-  <gazebo reference="front_left_wheel_link">
+  <gazebo reference="scout_ns_front_left_wheel_link">
     <collision>
       <surface>
         <friction>
@@ -181,7 +181,7 @@
       </surface>
     </collision>
   </gazebo>
-  <link name="rear_left_wheel_link">
+  <link name="scout_ns_rear_left_wheel_link">
     <inertial>
       <mass value="3"/>
       <origin xyz="0 0 0"/>
@@ -190,7 +190,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="file:///home/suchetan/ros2_ws/install/scout_description/share/scout_description/meshes/wheel_type1.dae"/>
+        <mesh filename="file:///root/ros2_ws/install/scout_description/share/scout_description/meshes/wheel_type1.dae"/>
       </geometry>
     </visual>
     <collision>
@@ -200,13 +200,13 @@
       </geometry>
     </collision>
   </link>
-  <joint name="rear_left_wheel" type="continuous">
-    <parent link="base_link"/>
-    <child link="rear_left_wheel_link"/>
+  <joint name="scout_ns_rear_left_wheel" type="continuous">
+    <parent link="scout_ns_base_link"/>
+    <child link="scout_ns_rear_left_wheel_link"/>
     <origin rpy="3.14 0 0" xyz="-0.249 0.29153 -0.0702"/>
     <axis rpy="0 0 0" xyz="0 -1 0"/>
   </joint>
-  <gazebo reference="rear_left_wheel_link">
+  <gazebo reference="scout_ns_rear_left_wheel_link">
     <collision>
       <surface>
         <friction>
@@ -231,7 +231,7 @@
     <hardware>
       <plugin>gazebo_ros2_control/GazeboSystem</plugin>
     </hardware>
-    <joint name="front_left_wheel">
+    <joint name="scout_ns_front_left_wheel">
       <command_interface name="velocity">
         <param name="min">-6</param>
         <param name="max">6</param>
@@ -240,7 +240,7 @@
       <state_interface name="velocity"/>
       <state_interface name="effort"/>
     </joint>
-    <joint name="rear_left_wheel">
+    <joint name="scout_ns_rear_left_wheel">
       <command_interface name="velocity">
         <param name="min">-6</param>
         <param name="max">6</param>
@@ -249,7 +249,7 @@
       <state_interface name="velocity"/>
       <state_interface name="effort"/>
     </joint>
-    <joint name="front_right_wheel">
+    <joint name="scout_ns_front_right_wheel">
       <command_interface name="velocity">
         <param name="min">-6</param>
         <param name="max">6</param>
@@ -258,7 +258,7 @@
       <state_interface name="velocity"/>
       <state_interface name="effort"/>
     </joint>
-    <joint name="rear_right_wheel">
+    <joint name="scout_ns_rear_right_wheel">
       <command_interface name="velocity">
         <param name="min">-6</param>
         <param name="max">6</param>
@@ -270,14 +270,72 @@
   </ros2_control>
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-      <robot_param>robot_description</robot_param>
+      <robot_param>scout_ns_robot_description</robot_param>
       <robot_param_node>robot_state_publisher</robot_param_node>
       <parameters>package://scout_description/config/scout_control.yaml</parameters>
     </plugin>
   </gazebo>
+  <link name="scout_ns_camera_link">
+    <visual>
+      <geometry>
+        <box size="0.010 0.03 0.03"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="scout_ns_camera_joint" type="fixed">
+    <parent link="scout_ns_base_link"/>
+    <child link="scout_ns_camera_link"/>
+    <origin rpy="0 0 0" xyz="0.4 0 0.18"/>
+  </joint>
+  <joint name="scout_ns_camera_optical_joint" type="fixed">
+    <parent link="scout_ns_camera_link"/>
+    <child link="scout_ns_camera_link_optical"/>
+    <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
+  </joint>
+  <link name="scout_ns_camera_link_optical"/>
+  <gazebo reference="scout_ns_camera_link">
+    <sensor name="camera" type="depth">
+      <pose> 0 0 0 0 0 0 </pose>
+      <always_on>true</always_on>
+      <visualize>true</visualize>
+      <update_rate>30</update_rate>
+      <camera>
+        <horizontal_fov>1.089</horizontal_fov>
+        <vertical_fov>1.57</vertical_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>B8G8R8</format>
+        </image>
+        <clip>
+          <near>0.4</near>
+          <far>200</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <!-- Noise is sampled independently per pixel on each frame.
+                            That pixel's noise value is added to each of its color
+                            channels, which at that point lie in the range [0,1]. -->
+          <mean>1.2e-4</mean>
+          <stddev>0.09</stddev>
+        </noise>
+      </camera>
+      <plugin filename="libgazebo_ros_camera.so" name="camera_controller">
+        <frame_name>scout_ns_camera_link_optical</frame_name>
+        <!-- <min_depth>1.2</min_depth>
+                    <max_depth>2.4</max_depth> -->
+        <ros>
+          <namespace>scout_ns</namespace>
+          <remapping>/scout_ns/camera/image_raw:=/scout_ns/rgb/image</remapping>
+          <remapping>/scout_ns/camera/camera_info:=/scout_ns/rgb/camera_info</remapping>
+          <remapping>/scout_ns/camera/depth/image_raw:=/scout_ns/depth/image</remapping>
+        </ros>
+      </plugin>
+    </sensor>
+  </gazebo>
   <!-- *********************** IMU SETUP *********************************  -->
   <!-- Each sensor must be attached to a link.                              -->
-  <link name="imu_link">
+  <link name="scout_ns_imu_link">
     <visual>
       <geometry>
         <box size="0.05 0.05 0.05"/>
@@ -289,17 +347,17 @@
       </geometry>
     </collision>
   </link>
-  <joint name="imu_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link="imu_link"/>
+  <joint name="scout_ns_imu_joint" type="fixed">
+    <parent link="scout_ns_base_link"/>
+    <child link="scout_ns_imu_link"/>
     <origin xyz="0 0 0.01"/>
   </joint>
-  <gazebo reference="imu_link">
+  <gazebo reference="scout_ns_imu_link">
     <sensor name="imu_sensor" type="imu">
       <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
         <ros>
-          <namespace/>
-          <remapping>~/out:=imu</remapping>
+          <namespace>scout_ns</namespace>
+          <remapping>/scout_ns/imu_plugin/out:=/scout_ns/imu</remapping>
         </ros>
         <initial_orientation_as_reference>false</initial_orientation_as_reference>
       </plugin>
@@ -364,7 +422,7 @@
   </gazebo>
   <!-- *********************** GPS SETUP **********************************  -->
   <!-- Each sensor must be attached to a link.                              -->
-  <link name="gps_link">
+  <link name="scout_ns_gps_link">
     <visual>
       <geometry>
         <box size="0.05 0.05 0.05"/>
@@ -376,31 +434,31 @@
       </geometry>
     </collision>
   </link>
-  <joint name="gps_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link="gps_link"/>
+  <joint name="scout_ns_gps_joint" type="fixed">
+    <parent link="scout_ns_base_link"/>
+    <child link="scout_ns_gps_link"/>
     <origin rpy="0 0 0" xyz="0.10 0 0.05"/>
   </joint>
-  <gazebo reference="gps_link">
+  <gazebo reference="scout_ns_gps_link">
     <sensor name="gps_sensor" type="gps">
       <always_on>true</always_on>
       <update_rate>10.0</update_rate>
       <plugin filename="libgazebo_ros_gps_sensor.so" name="gps_controller">
         <ros>
-          <!-- <namespace>/br</namespace> -->
-          <remapping>gps_controller/out:=gps/fix</remapping>
+          <namespace>scout_ns</namespace>
+          <remapping>/scout_ns/gps_controller/out:=/scout_ns/gps/fix</remapping>
         </ros>
-        <frame_name>gps_link</frame_name>
+        <frame_name>scout_ns_gps_link</frame_name>
       </plugin>
     </sensor>
     <material>Gazebo/Grey</material>
   </gazebo>
-  <joint name="velodyne_base_mount_joint" type="fixed">
-    <origin rpy="0 0.7825 0" xyz="0.5 0 0.2"/>
-    <parent link="base_link"/>
-    <child link="velodyne_base_link"/>
+  <joint name="scout_ns_velodyne_base_mount_joint" type="fixed">
+    <origin rpy="0 0.7825 0" xyz="0.5 0 0.4"/>
+    <parent link="scout_ns_base_link"/>
+    <child link="scout_ns_velodyne_base_link"/>
   </joint>
-  <link name="velodyne_base_link">
+  <link name="scout_ns_velodyne_base_link">
     <inertial>
       <mass value="0.83"/>
       <origin xyz="0 0 0.03585"/>
@@ -423,12 +481,12 @@
       </geometry>
     </collision>
   </link>
-  <joint name="velodyne_base_scan_joint" type="fixed">
+  <joint name="scout_ns_velodyne_base_scan_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.0377"/>
-    <parent link="velodyne_base_link"/>
-    <child link="velodyne"/>
+    <parent link="scout_ns_velodyne_base_link"/>
+    <child link="scout_ns_velodyne"/>
   </joint>
-  <link name="velodyne">
+  <link name="scout_ns_velodyne">
     <inertial>
       <mass value="0.01"/>
       <origin xyz="0 0 0"/>
@@ -447,8 +505,8 @@
     </collision>
   </link>
   <!-- Gazebo requires the velodyne_gazebo_plugins package -->
-  <gazebo reference="velodyne">
-    <sensor name="velodyne-VLP16" type="ray">
+  <gazebo reference="scout_ns_velodyne">
+    <sensor name="scout_ns_velodyne-VLP16" type="ray">
       <pose>0 0 0 0 0 0</pose>
       <visualize>false</visualize>
       <update_rate>10</update_rate>
@@ -457,14 +515,14 @@
           <horizontal>
             <samples>440</samples>
             <resolution>1</resolution>
-            <min_angle>-3.141592653589793</min_angle>
-            <max_angle>3.141592653589793</max_angle>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
           </horizontal>
           <vertical>
             <samples>16</samples>
             <resolution>1</resolution>
-            <min_angle>-0.2617993877991494</min_angle>
-            <max_angle> 0.2617993877991494</max_angle>
+            <min_angle>-0.26179916666666664</min_angle>
+            <max_angle> 0.26179916666666664</max_angle>
           </vertical>
         </scan>
         <range>
@@ -480,73 +538,15 @@
       </ray>
       <plugin filename="libgazebo_ros_velodyne_laser.so" name="gazebo_ros_laser_controller">
         <ros>
-          <namespace>/velodyne</namespace>
-          <remapping>~/out:=/velodyne_points</remapping>
+          <namespace>/scout_ns_velodyne</namespace>
+          <remapping>~/out:=/scout_ns/velodyne_points</remapping>
         </ros>
         <tf_prefix></tf_prefix>
-        <frame_name>velodyne</frame_name>
+        <frame_name>scout_ns_velodyne</frame_name>
         <organize_cloud>False</organize_cloud>
         <min_range>0.6</min_range>
         <max_range>5.0</max_range>
         <gaussian_noise>0.008</gaussian_noise>
-      </plugin>
-    </sensor>
-  </gazebo>
-  <joint name="camera_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link="camera_link"/>
-    <origin rpy="0 0 0" xyz="0.4 0 0.18"/>
-  </joint>
-  <link name="camera_link">
-    <visual>
-      <geometry>
-        <box size="0.010 0.03 0.03"/>
-      </geometry>
-    </visual>
-  </link>
-  <joint name="camera_optical_joint" type="fixed">
-    <parent link="camera_link"/>
-    <child link="camera_link_optical"/>
-    <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
-  </joint>
-  <link name="camera_link_optical"/>
-  <gazebo reference="camera_link">
-    <sensor name="camera" type="depth">
-      <pose> 0 0 0 0 0 0 </pose>
-      <always_on>true</always_on>
-      <visualize>true</visualize>
-      <update_rate>30</update_rate>
-      <camera>
-        <horizontal_fov>1.089</horizontal_fov>
-        <vertical_fov>1.57</vertical_fov>
-        <image>
-          <width>640</width>
-          <height>480</height>
-          <format>B8G8R8</format>
-        </image>
-        <clip>
-          <near>0.02</near>
-          <far>300</far>
-        </clip>
-        <noise>
-          <type>gaussian</type>
-          <!-- Noise is sampled independently per pixel on each frame.
-                        That pixel's noise value is added to each of its color
-                        channels, which at that point lie in the range [0,1]. -->
-          <mean>1.2e-4</mean>
-          <stddev>0.09</stddev>
-        </noise>
-      </camera>
-      <plugin filename="libgazebo_ros_camera.so" name="camera_controller">
-        <frame_name>camera_link_optical</frame_name>
-        <min_depth>0.1</min_depth>
-        <max_depth>2.0</max_depth>
-        <ros>
-          <!-- <namespace>test_cam</namespace> -->
-          <remapping>/camera/image_raw:=rgb/image</remapping>
-          <remapping>/camera/camera_info:=rgb/camera_info</remapping>
-          <remapping>/camera/depth/image_raw:=depth/image</remapping>
-        </ros>
       </plugin>
     </sensor>
   </gazebo>

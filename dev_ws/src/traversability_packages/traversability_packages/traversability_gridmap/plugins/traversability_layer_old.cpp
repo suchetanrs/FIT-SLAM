@@ -22,14 +22,14 @@ namespace traversability_gridmap
     {
       throw std::runtime_error{"Failed to lock node traversability_layer"};
     }
-    subscription_ = node->create_subscription<traversability_msgs::msg::PCL2WithNodeID>("/velodyne_transformed_points_nodeid", rclcpp::QoS(rclcpp::KeepLast(10)).reliable(), std::bind(&TraversabilityLayer::pointcloud_callback, this, std::placeholders::_1));
+    subscription_ = node->create_subscription<traversability_msgs::msg::PCL2WithNodeID>("velodyne_transformed_points_nodeid", rclcpp::QoS(rclcpp::KeepLast(10)).reliable(), std::bind(&TraversabilityLayer::pointcloud_callback, this, std::placeholders::_1));
 
     // subscriptionPoseArray_ = node->create_subscription<rtabmap_msgs::msg::Path>
-    //         ("/pose_graph", 10,
+    //         ("pose_graph", 10,
     //         std::bind(&TraversabilityLayer::poseArrayCallback, this, std::placeholders::_1));
 
     pubTraversability_ = node->create_publisher<grid_map_msgs::msg::GridMap>(
-        "/RTQuadtree_struct", rclcpp::QoS(1).transient_local());
+        "RTQuadtree_struct", rclcpp::QoS(1).transient_local());
 
     pubTraversability_->on_activate();
 

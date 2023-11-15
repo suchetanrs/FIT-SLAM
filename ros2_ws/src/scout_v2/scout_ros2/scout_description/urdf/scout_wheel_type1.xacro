@@ -27,8 +27,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 -->
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="scout_wheel">
 
-    <xacro:macro name="scout_wheel_type1" params="wheel_prefix *joint_pose">
-        <link name="${wheel_prefix}_wheel_link">
+    <xacro:macro name="scout_wheel_type1" params="robot_namespace wheel_prefix *joint_pose">
+        <link name="${robot_namespace}/${wheel_prefix}_wheel_link">
             <inertial>
                 <mass value="3" />
                 <origin xyz="0 0 0" />
@@ -48,14 +48,14 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
             </collision>
         </link>
 
-        <joint name="${wheel_prefix}_wheel" type="continuous">
-            <parent link="base_link"/>
-            <child link="${wheel_prefix}_wheel_link"/>
+        <joint name="${robot_namespace}/${wheel_prefix}_wheel" type="continuous">
+            <parent link="${robot_namespace}/base_link"/>
+            <child link="${robot_namespace}/${wheel_prefix}_wheel_link"/>
             <xacro:insert_block name="joint_pose"/>
             <axis xyz="0 -1 0" rpy="0 0 0" />
         </joint>
 
-        <gazebo reference="${wheel_prefix}_wheel_link">
+        <gazebo reference="${robot_namespace}/${wheel_prefix}_wheel_link">
             <collision>
                 <surface>
                     <friction>

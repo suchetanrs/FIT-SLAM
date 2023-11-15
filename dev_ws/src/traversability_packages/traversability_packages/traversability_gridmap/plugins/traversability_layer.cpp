@@ -24,10 +24,10 @@ namespace traversability_gridmap
         {
             throw std::runtime_error{"Failed to lock node traversability_layer"};
         }
-        subscription_ = node->create_subscription<traversability_msgs::msg::PCL2WithNodeID>("/velodyne_transformed_points_nodeid", rclcpp::QoS(rclcpp::KeepLast(10)).reliable(), std::bind(&TraversabilityLayer::pointcloud_callback, this, std::placeholders::_1));
+        subscription_ = node->create_subscription<traversability_msgs::msg::PCL2WithNodeID>("velodyne_transformed_points_nodeid", rclcpp::QoS(rclcpp::KeepLast(10)).reliable(), std::bind(&TraversabilityLayer::pointcloud_callback, this, std::placeholders::_1));
 
         pubTraversability_ = node->create_publisher<grid_map_msgs::msg::GridMap>(
-            "/RTQuadtree_struct", rclcpp::QoS(1).transient_local());
+            "RTQuadtree_struct", rclcpp::QoS(1).transient_local());
         pubTraversability_->on_activate();
 
         pubImage_ =
@@ -203,7 +203,7 @@ namespace traversability_gridmap
         {
             auto it = map_storage.find(point_cloud_with_id->graph.poses_id[i]);
             if (it != map_storage.end()) {
-                if(isPoseChanged(point_cloud_with_id->graph.poses[i], it->second->pose, 1.0)) {
+                if(isPoseChanged(point_cloud_with_id->graph.poses[i], it->second->pose, 0.0)) {
                   // RCLCPP_ERROR(rclcpp::get_logger("traversability_layer"), "Pose changed");
                     auto transformed_pcl = TransformPCLforAddition(point_cloud_with_id->graph.poses[i], it->second->pcl);
                     if(transformed_pcl) {
@@ -245,9 +245,8 @@ namespace traversability_gridmap
 
         // Publish as grid map
         // Create grid map.
-        grid_map::GridMap map({"hazard", "step_haz", "roughness_haz", "slope_haz", "border_haz", "elevation",
-                                "meanx", "meany", "meanz", "cov00", "cov01", "cov02", "cov10", "cov11", "cov12", "cov20", "cov21", "cov22"});
-        map.setFrameId("posegraph_map");
+        grid_map::GridMap map({"hazard", "step_haz", "roughness_haz", "slope_haz", "border_haz", "elevation"});
+        map.setFrameId("map");
         map.setGeometry(grid_map::Length(2. * half_size_, 2. * half_size_), resolution_);
         for (grid_map::GridMapIterator it(map); !it.isPastEnd(); ++it)
         {
@@ -266,18 +265,6 @@ namespace traversability_gridmap
             map.at("slope_haz", *it) = haz(3);
             map.at("border_haz", *it) = haz(4);
             map.at("elevation", *it) = haz(5);
-
-            // map.at("meanx", *it) = haz(6);
-            // map.at("meany", *it) = haz(7);
-            // map.at("meanz", *it) = haz(8);
-
-            // for (int i = 0; i < 9; ++i)
-            // {
-            // map.at("cov" + std::to_string(i / 3) + std::to_string(i % 3), *it) = haz(9 + i);
-            // }
-            // RCLCPP_INFO_STREAM(rclcpp::get_logger("traversability_node"), "\n Covariances of grid [" << haz(9) << ", " << haz(10) << ", " << haz(11) << "] \n"
-            //                                                           << "[" << haz(12) << ", " << haz(13) << ", " << haz(14) << "] \n"
-            //                                                           << "[" << haz(15) << ", " << haz(16) << ", " << haz(17) << "] \n \n \n");
         }
 
         auto message = grid_map::GridMapRosConverter::toMessage(map);
@@ -340,41 +327,13 @@ namespace traversability_gridmap
         "updateBounds: robot_x = " << robot_x << ", robot_y = " << robot_y << ", robot_yaw = " << robot_yaw << ", min_x = " << *min_x << ", min_y = " << *min_y << ", max_x = " << *max_x << ", max_y = " << *max_y << "Resolution = " << resolution_;);
   }
 
-    /*  std::map<std::string, double> TraversabilityLayer::KalmanFilter(std::map<std::string, double> predValueAtPosition, std::map<std::string, double> measValueAtPosition) {
-    // Prediction
-    Eigen::Vector3d predmean = Eigen::Vector3d::Zero();
-    predmean(0) = predValueAtPosition["meanx"];
-    predmean(1) = predValueAtPosition["meany"];
-    predmean(2) = predValueAtPosition["meanz"];
-    
-    Eigen::Matrix3d predCov = Eigen::Matrix3d::Zero();
-    for (int i = 0; i < 9; ++i)
-    {
-      predCov(i / 3 , i % 3) = predValueAtPosition["cov" + std::to_string(i / 3) + std::to_string(i % 3)];
-    }
-
-    // Correction
-    Eigen::Vector3d measmean = Eigen::Vector3d::Zero();
-    measmean(0) = measValueAtPosition["meanx"];
-    measmean(1) = measValueAtPosition["meany"];
-    measmean(2) = measValueAtPosition["meanz"];
-    
-    Eigen::Matrix3d measCov = Eigen::Matrix3d::Zero();
-    for (int i = 0; i < 9; ++i)
-    {
-      measCov(i / 3 , i % 3) = measValueAtPosition["cov" + std::to_string(i / 3) + std::to_string(i % 3)];
-    }
-    }
-    */
-
-
   void TraversabilityLayer::updateMasterCostmap(nav2_costmap_2d::Costmap2D &master_grid, double robot_pose_x, double robot_pose_y, std::map<std::string, double> valuesatposition, float positionx, float positiony)
   {
     unsigned char *master_array = master_grid.getCharMap();
     unsigned int mx, my;
-    if(master_grid.worldToMap(robot_pose_x + positionx + 0.125, robot_pose_y + positiony - 0.125, mx, my)) {
+    if(master_grid.worldToMap(robot_pose_x + positionx + (resolution_ / 2), robot_pose_y + positiony - (resolution_ / 2), mx, my)) {
         int index = master_grid.getIndex(mx, my);
-        std::vector<double> coord_values = {robot_pose_x + positionx + 0.125, robot_pose_y + positiony - 0.125};
+        std::vector<double> coord_values = {robot_pose_x + positionx + (resolution_ / 2), robot_pose_y + positiony - (resolution_ / 2)};
         // TODO:This wont work as the costmap is reset everytime. It will always show 255.
         if(static_cast<int>(master_array[index]) == 255) {
             master_array[index] = static_cast<unsigned char>(valuesatposition["hazard"] * 254);
@@ -389,13 +348,14 @@ namespace traversability_gridmap
     }
   }
 
+
   void TraversabilityLayer::updateLayer(nav2_costmap_2d::Costmap2D &master_grid, double robot_pose_x, double robot_pose_y, std::map<std::string, double> valuesatposition, float positionx, float positiony)
   {
     // unsigned char *master_array = master_grid.getCharMap();
     unsigned int mx, my;
-    if(master_grid.worldToMap(robot_pose_x + positionx + 0.125, robot_pose_y + positiony - 0.125, mx, my)) {
+    if(master_grid.worldToMap(robot_pose_x + positionx + (resolution_ / 2), robot_pose_y + positiony - (resolution_ / 2), mx, my)) {
         int index = master_grid.getIndex(mx, my);
-        std::vector<double> coord_values = {robot_pose_x + positionx + 0.125, robot_pose_y + positiony - 0.125};
+        std::vector<double> coord_values = {robot_pose_x + positionx + (resolution_ / 2), robot_pose_y + positiony - (resolution_ / 2)};
         // TODO:This wont work as the costmap is reset everytime. It will always show 255.
         if(static_cast<int>(costmap_[index]) == 255) {
             costmap_[index] = static_cast<unsigned char>(valuesatposition["hazard"] * 254);
@@ -410,33 +370,30 @@ namespace traversability_gridmap
     }
   }
 
-  void TraversabilityLayer::updateCosts(nav2_costmap_2d::Costmap2D &master_grid, int min_i, int min_j, int max_i, int max_j)
-  {
-    RCLCPP_DEBUG_STREAM(
-        rclcpp::get_logger("traversability_layer"),
-        "updateCosts: "
-            << ", min_i = " << min_i << ", min_j = " << min_j << ", max_i = " << max_i << ", max_j = " << max_j << "Resolution = " << resolution_;);
 
-    // RCLCPP_ERROR_STREAM(rclcpp::get_logger("traversability_layer"), "Max slope is: " << max_slope_);
-    // RCLCPP_ERROR_STREAM(rclcpp::get_logger("traversability_layer"), "Robot width is: " << robot_width_);
-    // RCLCPP_ERROR_STREAM(rclcpp::get_logger("traversability_layer"), "half_size is: " << half_size_);
-    // RCLCPP_ERROR_STREAM(rclcpp::get_logger("traversability_layer"), "Sec distance is: " << security_distance_);
-    
+  void TraversabilityLayer::updateCosts(nav2_costmap_2d::Costmap2D &master_grid, int min_i, int min_j, int max_i, int max_j)
+  { 
+    auto start_time = std::chrono::high_resolution_clock::now();
     auto map_storage = globalTraversabilityMap_->getGridMapsWithIDPCL();
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end_time - start_time;
+    double elapsed_seconds_decimal = elapsed_seconds.count();
+    RCLCPP_DEBUG_STREAM(rclcpp::get_logger("Traversability layer"), "Time retrieve data is: " << elapsed_seconds_decimal);
     if (map_storage.size() > 0)
     {
       for (auto it = map_storage.begin(); it != map_storage.end(); ++it)
       {
         auto grid_map_selected = it->second->gridMsg;
         auto pose_selected = it->second->pose;
-        for (grid_map::GridMapIterator it(grid_map_selected); !it.isPastEnd(); ++it)
+        for (grid_map::GridMapIterator it2(grid_map_selected); !it2.isPastEnd(); ++it2)
         {
           grid_map::Position position;
-          grid_map_selected.getPosition(*it, position);
+          grid_map_selected.getPosition(*it2, position);
           std::map<std::string, double> valuesatposition;
-          for (const std::string& layer : grid_map_selected.getLayers()) {
-            valuesatposition[layer] = grid_map_selected.atPosition(layer, position);
-          }
+        //   for (const std::string& layer : grid_map_selected.getLayers()) {
+        //     valuesatposition[layer] = grid_map_selected.atPosition(layer, position);
+        //   }
+          valuesatposition["hazard"] = grid_map_selected.atPosition("hazard", position);
           if (std::isnan(valuesatposition["hazard"]) == false) {
             if(enabledLayer_ == true) {
                 updateMasterCostmap(master_grid, pose_selected.position.x, pose_selected.position.y, valuesatposition, position.x(), position.y());
@@ -446,10 +403,16 @@ namespace traversability_gridmap
             }
           }
         }
-        // RCLCPP_INFO(rclcpp::get_logger("traversability_layer"), "Updated layer completed");
       }
     }
-    // RCLCPP_INFO(rclcpp::get_logger("traversability_layer"), "Update costs complete");
+    RCLCPP_DEBUG_STREAM(
+        rclcpp::get_logger("traversability_layer"),
+        "updateCosts: "
+            << ", min_i = " << min_i << ", min_j = " << min_j << ", max_i = " << max_i << ", max_j = " << max_j << "Resolution = " << resolution_;);
+    end_time = std::chrono::high_resolution_clock::now();
+    elapsed_seconds = end_time - start_time;
+    elapsed_seconds_decimal = elapsed_seconds.count();
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("Traversability layer"), "Time taken to update global map is: " << elapsed_seconds_decimal);
   }
 }
 

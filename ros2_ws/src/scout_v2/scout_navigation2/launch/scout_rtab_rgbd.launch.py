@@ -36,18 +36,36 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable
-from launch.substitutions import LaunchConfiguration
+from launch.actions import IncludeLaunchDescription, OpaqueFunction
+from launch.substitutions import LaunchConfiguration, FindExecutable, TextSubstitution
 from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import Node
+import os
 
 def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time')
+    use_sim_time_cmd = DeclareLaunchArgument(
+            'use_sim_time', default_value='true',
+            description='Use simulation (Gazebo) clock if true')
+
     qos = LaunchConfiguration('qos')
-    localization = LaunchConfiguration('localization')
+    qos_cmd = DeclareLaunchArgument(
+            'qos', default_value='2',
+            description='QoS used for input sensor topics')
+
+    localization = LaunchConfiguration('localization')     
+    localization_cmd = DeclareLaunchArgument(
+            'localization', default_value='false',
+            description='Launch in localization mode.')
+
+    SCOUT_NAMESPACE = os.environ['SCOUT_NAMESPACE']
+    robot_namespace =  LaunchConfiguration('robot_namespace')
+    robot_namespace_arg = DeclareLaunchArgument(
+            'robot_namespace', default_value=TextSubstitution(text=SCOUT_NAMESPACE),
+        description='The namespace of the robot')
 
     parameters={
-          'frame_id':'base_link',
           'use_sim_time':use_sim_time,
           'subscribe_depth':True,
           'use_action_for_goal':True,
@@ -56,52 +74,54 @@ def generate_launch_description():
           'Reg/Force3DoF':'true',
           'Optimizer/GravitySigma':'0', # Disable imu constraints (we are already in 2D)
           'Grid/MaxObstacleHeight':'0.4',
-          'Rtabmap/DetectionRate' : '1.5'
+          'Rtabmap/DetectionRate' : '1.5',
+          'Optimizer/PriorsIgnored': 'false',
+          'Rtabmap/LoopGPS': 'true',
     }
 
     remappings=[
-           ('/rgb/image', '/camera/color/image_raw'),
-           ('/rgb/camera_info', '/camera/color/camera_info'),
-           ('/depth/image', '/camera/depth/image_rect_raw')]
+           ('rgb/image', 'camera/image_raw'),
+           ('rgb/camera_info', 'camera/camera_info'),
+           ('depth/image', 'camera/depth/image_raw')]
 
-    remappings=[]
 
-    return LaunchDescription([
-
-        # Launch arguments
-        DeclareLaunchArgument(
-            'use_sim_time', default_value='true',
-            description='Use simulation (Gazebo) clock if true'),
-        
-        DeclareLaunchArgument(
-            'qos', default_value='2',
-            description='QoS used for input sensor topics'),
-            
-        DeclareLaunchArgument(
-            'localization', default_value='false',
-            description='Launch in localization mode.'),
-
-        # Nodes to launch
-        
+    def run_all_commands_opaque(context):
         # SLAM mode:
-        Node(
-            condition=UnlessCondition(localization),
-            name='rtabmap_slam_node', package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=[parameters],
-            remappings=remappings,
-            arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
-            
+        slam_cmd = Node(
+                condition=UnlessCondition(localization),
+                name='rtabmap_slam_node', package='rtabmap_slam', executable='rtabmap', output='screen',
+                namespace=context.launch_configurations['robot_namespace'],
+                parameters=[parameters,
+                {'frame_id': context.launch_configurations['robot_namespace'] + '/base_link',
+                'database_path': "/home/" + context.launch_configurations['robot_namespace'] + "/rtabmap.db"}],
+                remappings=remappings,
+                arguments=['-d']) # This will delete the previous database (~/.ros/rtabmap.db)
+                
         # Localization mode:
-        Node(
-            condition=IfCondition(localization),
-            name='rtabmap_local_node', package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=[parameters,
-              {'Mem/IncrementalMemory':'False',
-               'Mem/InitWMWithAllNodes':'True'}],
-            remappings=remappings),
+        localization_cmd = Node(
+                condition=IfCondition(localization),
+                name='rtabmap_local_node', package='rtabmap_slam', executable='rtabmap', output='screen',
+                namespace=context.launch_configurations['robot_namespace'],
+                parameters=[parameters,
+                {'Mem/IncrementalMemory':'False',
+                'Mem/InitWMWithAllNodes':'True',
+                'frame_id': context.launch_configurations['robot_namespace'] + '/base_link',
+                'database_path': "/home/" + context.launch_configurations['robot_namespace'] + "/rtabmap.db"}],
+                remappings=remappings)
 
-        # Node(
-        #     package='rtabmap_viz', executable='rtabmap_viz', output='screen',
-        #     parameters=[parameters],
-        #     remappings=remappings),
+            # Node(
+            #     package='rtabmap_viz', executable='rtabmap_viz', output='screen',
+            #     parameters=[parameters],
+            #     remappings=remappings),
+
+        return[slam_cmd]
+    
+    opaque_function = OpaqueFunction(function=run_all_commands_opaque)
+    
+    return LaunchDescription([
+        use_sim_time_cmd,
+        qos_cmd,
+        localization_cmd,
+        robot_namespace_arg,
+        opaque_function
     ])

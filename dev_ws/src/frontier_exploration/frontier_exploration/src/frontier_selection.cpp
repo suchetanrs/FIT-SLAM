@@ -45,10 +45,10 @@ namespace frontier_exploration {
         client_node_->get_parameter("planner_allow_unknown", planner_allow_unknown_);
 
         get_nodes_in_radius_client_ = client_node_->create_client<rtabmap_msgs::srv::GetNodesInRadius>("get_nodes_in_radius");
-        // map_subscription_ = node->create_subscription<octomap_msgs::msg::Octomap>("/octomap_full", 
+        // map_subscription_ = node->create_subscription<octomap_msgs::msg::Octomap>("octomap_full", 
         // 10, std::bind(&FrontierSelectionNode::mapCallback, this, std::placeholders::_1));
 
-        // occ_map_sub = node->create_subscription<nav_msgs::msg::OccupancyGrid>("/map", 10, std::bind(&FrontierSelectionNode::occupancyMapCallback, this, std::placeholders::_1));
+        // occ_map_sub = node->create_subscription<nav_msgs::msg::OccupancyGrid>("map", 10, std::bind(&FrontierSelectionNode::occupancyMapCallback, this, std::placeholders::_1));
         costmap_ = costmap;
     }
 

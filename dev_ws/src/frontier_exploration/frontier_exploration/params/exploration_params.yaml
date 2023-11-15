@@ -14,10 +14,12 @@ polygon_point_publisher:
   ros__parameters:
     square_half_side_length: 15.0
 
-traversability_threshold_node:
+path_follower_node:
   ros__parameters:
-    threshold_value: 170
-    allow_unknown: false # keep it false
+    translation_speed: 0.5
+    rotation_speed: 1.0
+    local_goal_distance: 0.4 # min distance for local goal
+    resolution: 0.05 # resolution of global costmap
     
 frontier_selection_node:
   ros__parameters:
@@ -32,10 +34,6 @@ localization_pose_sub_node:
   ros__parameters:
     exploration_mode: ours
     counter: 031150
-
-pointcloud_transformer:
-  ros__parameters:
-    transform_throttle: 0
 
 explore_costmap:
   explore_costmap:
@@ -66,46 +64,3 @@ explore_costmap:
         min_frontier_cluster_size: 1
         use_traversability: false
       always_send_full_costmap: false
-
-traversability_costmap:
-  traversability_costmap:
-    ros__parameters:
-      update_frequency: 1.0
-      publish_frequency: 1.0
-      global_frame: map
-      robot_base_frame: base_link
-      use_sim_time: True
-      resolution: 0.15 # change in point_cloud_transformer of traversability_gridmap if this is changed.
-      track_unknown_space: true
-      plugins: ["traversability_layer"]
-      traversability_layer:
-        plugin: "traversability_gridmap/TraversabilityLayer"
-        enabled: true
-        square_half_side_length: 15.0
-        half_size: 1.5
-        security_distance: 0.6
-        ground_clearance: 0.2
-        robot_height: 0.5
-        max_slope: 0.5
-        robot_width: 0.8
-        robot_length: 0.5
-        draw_isodistance_each: 1.0
-      always_send_full_costmap: True
-
-traversability_binary_costmap:
-  traversability_binary_costmap:
-    ros__parameters:
-      update_frequency: 1.0
-      publish_frequency: 1.0
-      global_frame: map
-      robot_base_frame: base_link
-      use_sim_time: True
-      robot_radius: 0.22
-      resolution: 0.05 # change in point_cloud_transformer of traversability_gridmap if this is changed.
-      track_unknown_space: true
-      plugins: ["static_layer"]
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: /traversability_thresholded
-        map_subscribe_transient_local: True
-      always_send_full_costmap: True

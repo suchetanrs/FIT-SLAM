@@ -23,19 +23,25 @@ public:
     PointCloudTransformer() : Node("pointcloud_transformer")
     {
         subscription_pcl_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-            "/velodyne_points", 10,
+            "velodyne_points", 10,
             std::bind(&PointCloudTransformer::pointCloudCallback, this, std::placeholders::_1));
 
         subscription_map_data_ = this->create_subscription<rtabmap_msgs::msg::MapData>(
-            "/map_data", 10,
+            "map_data", 10,
             std::bind(&PointCloudTransformer::mapDataCallback, this, std::placeholders::_1));
 
-        publisher_ = this->create_publisher<traversability_msgs::msg::PCL2WithNodeID>("velodyne_transformed_points_nodeid", rclcpp::QoS(rclcpp::KeepLast(30)).reliable());
+        publisher_ = this->create_publisher<traversability_msgs::msg::PCL2WithNodeID>("traversability_costmap/velodyne_transformed_points_nodeid", rclcpp::QoS(rclcpp::KeepLast(30)).reliable());
 
         transformed_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("transformed_point_cloud", rclcpp::QoS(rclcpp::KeepLast(10)).reliable());
 
         this->declare_parameter("transform_throttle", 0);
         this->get_parameter("transform_throttle", transform_throttle_);
+
+        this->declare_parameter("robot_base_frame", "base_link");
+        this->get_parameter("robot_base_frame", robot_base_frame_id_);
+
+        this->declare_parameter("velodyne_frame", "velodyne");
+        this->get_parameter("velodyne_frame", velodyne_frame_id_);
 
         tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
         tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
@@ -73,14 +79,14 @@ private:
         // Fill in the header.
         transformStamped.header.stamp = stamp; // Use current time.
         transformStamped.header.frame_id = "map"; // Set the frame ID for the transform.
-        transformStamped.child_frame_id = "velodyne"; // Set the child frame ID for the transform.
+        transformStamped.child_frame_id = velodyne_frame_id_; // Set the child frame ID for the transform.
 
-        while(!tf_buffer_->canTransform("base_link", "velodyne", tf2::TimePointZero))
+        while(!tf_buffer_->canTransform(robot_base_frame_id_, velodyne_frame_id_, tf2::TimePointZero))
         {
             rclcpp::sleep_for(std::chrono::milliseconds(50));
             RCLCPP_ERROR(rclcpp::get_logger("Traversability layer"), "Transform2 unavailable");
         }
-        auto transform = tf_buffer_->lookupTransform("base_link", "velodyne", tf2::TimePointZero);
+        auto transform = tf_buffer_->lookupTransform(robot_base_frame_id_, velodyne_frame_id_, tf2::TimePointZero);
         auto rpy_b_v = quatToEuler(transform.transform.rotation);
         auto rpy_m_b = quatToEuler(pose.orientation); // this is not the latest transform in the tree. This is the transform given by SLAM.
 
@@ -210,6 +216,8 @@ private:
     std::mutex pcl_buffer_mutex;
     int pcl_message_throttle_ = 0;
     int transform_throttle_;
+    std::string robot_base_frame_id_;
+    std::string velodyne_frame_id_;
 };
 
 int main(int argc, char *argv[])

@@ -19,11 +19,12 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import LaunchConfiguration, PythonExpression, TextSubstitution
 from launch_ros.actions import LoadComposableNodes
 from launch_ros.actions import Node
 from launch_ros.descriptions import ComposableNode
 from nav2_common.launch import RewrittenYaml
+from launch.actions import IncludeLaunchDescription, OpaqueFunction
 
 
 def generate_launch_description():
@@ -31,10 +32,9 @@ def generate_launch_description():
     bringup_dir = get_package_share_directory('nav2_bringup')
     scout_nav_dir = get_package_share_directory('scout_navigation2')
 
-    namespace = LaunchConfiguration('namespace')
+    robot_namespace = LaunchConfiguration('robot_namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')
     autostart = LaunchConfiguration('autostart')
-    params_file = LaunchConfiguration('params_file')
     use_composition = LaunchConfiguration('use_composition')
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
@@ -51,37 +51,14 @@ def generate_launch_description():
     # https://github.com/ros/robot_state_publisher/pull/30
     # TODO(orduno) Substitute with `PushNodeRemapping`
     #              https://github.com/ros2/launch_ros/issues/56
-    remappings = [('/tf', 'tf'),
-                  ('/tf_static', 'tf_static')]
+    remappings = [('tf', 'tf'),
+                  ('tf_static', 'tf_static')]
 
-    # Create our own temporary YAML files that include substitutions
-    param_substitutions = {
-        'use_sim_time': use_sim_time,
-        'autostart': autostart}
-
-    configured_params = RewrittenYaml(
-            source_file=params_file,
-            root_key=namespace,
-            param_rewrites=param_substitutions,
-            convert_types=True)
-
-    stdout_linebuf_envvar = SetEnvironmentVariable(
-        'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
-
-    declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace',
-        default_value='',
-        description='Top-level namespace')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
         default_value='true',
         description='Use simulation (Gazebo) clock if true')
-
-    declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file',
-        default_value=os.path.join(scout_nav_dir, 'params', 'scout_nav2_params.yaml'),
-        description='Full path to the ROS2 parameters file to use for all launched nodes')
 
     declare_autostart_cmd = DeclareLaunchArgument(
         'autostart', default_value='true',
@@ -99,69 +76,130 @@ def generate_launch_description():
         'log_level', default_value='info',
         description='log level')
 
-    load_nodes = GroupAction(
-        condition=IfCondition(PythonExpression(['not ', use_composition])),
-        actions=[
-            Node(
-                package='nav2_controller',
-                executable='controller_server',
-                output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [('/cmd_vel', '/cmd_vel_nav2_controller')]),
-            Node(
-                package='nav2_planner',
-                executable='planner_server',
-                name='planner_server',
-                output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [('/cmd_vel', '/cmd_vel_nav2_controller')]),
-            Node(
-                package='nav2_behaviors',
-                executable='behavior_server',
-                name='behavior_server',
-                output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [('/cmd_vel', '/cmd_vel_nav2_controller')]),
-            Node(
-                package='nav2_bt_navigator',
-                executable='bt_navigator',
-                name='bt_navigator',
-                output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [('/cmd_vel', '/cmd_vel_nav2_controller')]),
-            Node(
-                package='nav2_waypoint_follower',
-                executable='waypoint_follower',
-                name='waypoint_follower',
-                output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [('/cmd_vel', '/cmd_vel_nav2_controller')]),
-            Node(
-                package='nav2_lifecycle_manager',
-                executable='lifecycle_manager',
-                name='lifecycle_manager_navigation',
-                output='screen',
-                arguments=['--ros-args', '--log-level', log_level],
-                parameters=[{'use_sim_time': use_sim_time},
-                            {'autostart': autostart},
-                            {'node_names': lifecycle_nodes}]),
-        ]
-    )
+    SCOUT_NAMESPACE = os.environ['SCOUT_NAMESPACE']
+    declare_namespace_cmd = DeclareLaunchArgument(
+        'robot_namespace',
+        default_value=TextSubstitution(text=SCOUT_NAMESPACE),
+        description='Top-level namespace')
+
+    stdout_linebuf_envvar = SetEnvironmentVariable(
+        'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
+    
+    def launch_opaque_nodes(context):
+        params_file = LaunchConfiguration('params_file')
+        declare_params_file_cmd = DeclareLaunchArgument(
+            'params_file',
+            default_value=os.path.join(scout_nav_dir, 'params', 'scout_nav2_params.yaml'),
+            description='Full path to the ROS2 parameters file to use for all launched nodes')
+
+        # Create our own temporary YAML files that include substitutions
+        param_substitutions = {
+            'use_sim_time': use_sim_time,
+            'autostart': autostart,
+            'robot_base_frame': context.launch_configurations['robot_namespace'] + '/base_link'
+            }
+
+
+        configured_params = RewrittenYaml(
+                source_file=params_file,
+                root_key=context.launch_configurations['robot_namespace'],
+                param_rewrites=param_substitutions,
+                convert_types=True)
+
+
+        load_nodes = GroupAction(
+            condition=IfCondition(PythonExpression(['not ', use_composition])),
+            actions=[
+                Node(
+                    package='nav2_controller',
+                    executable='controller_server',
+                    output='screen',
+                    namespace=context.launch_configurations['robot_namespace'],
+                    respawn=use_respawn,
+                    respawn_delay=2.0,
+                    parameters=[configured_params],
+                    arguments=['--ros-args', '--log-level', log_level],
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav2_controller')]),
+                Node(
+                    package='nav2_planner',
+                    executable='planner_server',
+                    name='planner_server',
+                    output='screen',
+                    namespace=context.launch_configurations['robot_namespace'],
+                    respawn=use_respawn,
+                    respawn_delay=2.0,
+                    parameters=[configured_params],
+                    arguments=['--ros-args', '--log-level', log_level],
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav2_controller')]),
+                Node(
+                    package='nav2_behaviors',
+                    executable='behavior_server',
+                    name='behavior_server',
+                    output='screen',
+                    namespace=context.launch_configurations['robot_namespace'],
+                    respawn=use_respawn,
+                    respawn_delay=2.0,
+                    parameters=[configured_params],
+                    arguments=['--ros-args', '--log-level', log_level],
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav2_controller')]),
+                Node(
+                    package='nav2_bt_navigator',
+                    executable='bt_navigator',
+                    name='bt_navigator',
+                    output='screen',
+                    namespace=context.launch_configurations['robot_namespace'],
+                    respawn=use_respawn,
+                    respawn_delay=2.0,
+                    parameters=[configured_params],
+                    arguments=['--ros-args', '--log-level', log_level],
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav2_controller')]),
+                Node(
+                    package='nav2_waypoint_follower',
+                    executable='waypoint_follower',
+                    name='waypoint_follower',
+                    output='screen',
+                    namespace=context.launch_configurations['robot_namespace'],
+                    respawn=use_respawn,
+                    respawn_delay=2.0,
+                    parameters=[configured_params],
+                    arguments=['--ros-args', '--log-level', log_level],
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav2_controller')]),
+                Node(
+                    package='nav2_lifecycle_manager',
+                    executable='lifecycle_manager',
+                    name='lifecycle_manager_navigation',
+                    output='screen',
+                    namespace=context.launch_configurations['robot_namespace'],
+                    arguments=['--ros-args', '--log-level', log_level],
+                    parameters=[{'use_sim_time': use_sim_time},
+                                {'autostart': autostart},
+                                {'node_names': lifecycle_nodes}]),
+            ]
+        )
+
+
+        scout_path_follower_cmd = Node(
+            package='scout_control',
+            executable='scout_path_follower',
+            name='scout_path_follower',
+            output='screen',
+            namespace=context.launch_configurations['robot_namespace'],
+            parameters=[configured_params],
+        )
+
+
+        scout_path_corrector_cmd = Node(
+            package='scout_control',
+            executable='scout_path_corrector',
+            name='scout_path_corrector',
+            output='screen',
+            namespace=context.launch_configurations['robot_namespace'],
+            parameters=[configured_params],
+        )
+        
+        return [declare_params_file_cmd, load_nodes, scout_path_follower_cmd, scout_path_corrector_cmd]
+
+    opaque_function = OpaqueFunction(function=launch_opaque_nodes)
 
     # Create the launch description and populate
     ld = LaunchDescription()
@@ -172,13 +210,13 @@ def generate_launch_description():
     # Declare the launch options
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_use_composition_cmd)
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
     # Add the actions to launch all of the navigation nodes
-    ld.add_action(load_nodes)
-
+    # ld.add_action(load_nodes)
+    # ld.add_action(scout_path_corrector_cmd)
+    # ld.add_action(scout_path_follower_cmd)
+    ld.add_action(opaque_function)
     return ld
-

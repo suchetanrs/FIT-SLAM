@@ -7,8 +7,14 @@ class PathCorrectorNode : public rclcpp::Node
 {
 public:
   PathCorrectorNode()
-    : Node("path_corrector_node")
+    : Node("scout_path_corrector")
   {
+    this->declare_parameter("global_frame", "map");
+    this->get_parameter("global_frame", global_frame_id_);
+
+    this->declare_parameter("robot_base_frame", "base_link");
+    this->get_parameter("robot_base_frame", robot_base_frame_);
+
     // Create a subscription to the "plan" topic
     subscription_ = this->create_subscription<nav_msgs::msg::Path>(
       "plan", 10, std::bind(&PathCorrectorNode::planCallback, this, std::placeholders::_1));
@@ -54,11 +60,11 @@ private:
 
   void removePoses() {
       auto rate = rclcpp::Rate(20.0);
-      while(!tf_buffer2_->canTransform("map", "base_link", tf2::TimePointZero) && rclcpp::ok())
+      while(!tf_buffer2_->canTransform(global_frame_id_, robot_base_frame_, tf2::TimePointZero) && rclcpp::ok())
       {
         rate.sleep();
       }
-      auto transform = tf_buffer2_->lookupTransform("map", "base_link", tf2::TimePointZero);
+      auto transform = tf_buffer2_->lookupTransform(global_frame_id_, robot_base_frame_, tf2::TimePointZero);
       geometry_msgs::msg::Pose current_pose;
       current_pose.position.x = transform.transform.translation.x;
       current_pose.position.y = transform.transform.translation.y;
@@ -95,6 +101,8 @@ private:
   bool latest_plan_flag = false;
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::TimerBase::SharedPtr eraser_timer_;
+  std::string robot_base_frame_;
+  std::string global_frame_id_;
 };
 
 int main(int argc, char** argv)

@@ -65,32 +65,31 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
-
 #Executable 1
-add_executable(traversability_node src/traversability_node.cpp)
-ament_target_dependencies(traversability_node SYSTEM ${dependencies})
-
-#Executable 2
-add_executable(pointcloud_transformer src/pointcloud_transformer2.cpp src/global_traversability_map.cpp)
+add_executable(pointcloud_transformer src/pointcloud_transformer.cpp src/global_traversability_map.cpp)
 ament_target_dependencies(pointcloud_transformer SYSTEM ${dependencies})
 target_link_libraries(pointcloud_transformer ${PCL_LIBRARIES})
 
-# Executable 3 test
-# add_executable(vec src/vec.cpp)
-# ament_target_dependencies(vec SYSTEM ${dependencies})
+#Executable 2
+add_executable(traversability_server src/traversability_server.cpp)
+ament_target_dependencies(traversability_server SYSTEM ${dependencies})
+
+#Executable 3
+add_executable(traversability_thresholded src/traversability_thresholded.cpp)
+ament_target_dependencies(traversability_thresholded SYSTEM ${dependencies})
+
 
 #Library 1
-add_library(traversability_gridmap_core SHARED plugins/traversability_layer.cpp plugins/traversability_nav_layer.cpp src/traversabilityGrid.cpp src/global_traversability_map.cpp)
+add_library(traversability_gridmap_core SHARED plugins/traversability_layer.cpp src/traversabilityGridMod.cpp src/global_traversability_map.cpp)
 ament_target_dependencies(traversability_gridmap_core ${dependencies})
 target_link_libraries(traversability_gridmap_core ${PCL_LIBRARIES})
 
 
-# traversability_global
-install(TARGETS pointcloud_transformer traversability_gridmap_core traversability_node
+install(TARGETS pointcloud_transformer traversability_gridmap_core traversability_thresholded traversability_server
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(DIRECTORY launch
+install(DIRECTORY launch params
 DESTINATION share/${PROJECT_NAME}
 )
 

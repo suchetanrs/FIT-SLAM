@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+
+<!-- 
+Reference:
+    [1] https://answers.ros.org/question/246914/four-wheeled-skid-steering-in-gazebo-and-ros-using-gazebo-ros-control/
+    [2] https://answers.ros.org/question/10119/gazebo-controller-for-skid-steering/
+    [3] https://answers.ros.org/question/9640/rotation-error-in-gazebo-simulation/
+    [4] https://www.youtube.com/watch?v=fuRAv6PDwdw 
+-->
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="imu_gps">
+
+    
+  <xacro:macro name="imu_gps" params="robot_namespace">
+    <!-- *********************** IMU SETUP *********************************  -->   
+    <!-- Each sensor must be attached to a link.                              --> 
+    <link name="${robot_namespace}/imu_link">
+      <visual>
+        <geometry>
+          <box size="0.05 0.05 0.05"/>
+        </geometry>
+      </visual>
+
+      <collision>
+        <geometry>
+          <box size="0.05 0.05 0.05"/>
+        </geometry>
+      </collision>  
+    </link>
+
+    <joint name="${robot_namespace}/imu_joint" type="fixed">
+      <parent link="${robot_namespace}/base_link"/>
+      <child link="${robot_namespace}/imu_link"/>
+      <origin xyz="0 0 0.01"/>
+    </joint>
+
+
+
+
+    <gazebo reference="${robot_namespace}/imu_link">
+      <sensor name="imu_sensor" type="imu">
+      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+          <ros>
+            <namespace>${robot_namespace}</namespace>
+            <remapping>/${robot_namespace}/imu_plugin/out:=/${robot_namespace}/imu</remapping>
+          </ros>
+          <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        </plugin>
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <visualize>true</visualize>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>0.0</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>0.0</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>0.0</stddev>
+                <bias_mean>0.0000075</bias_mean>
+                <bias_stddev>0.0000008</bias_stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>0.0</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>0.0</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>0.0</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </gazebo>    
+        
+
+
+      <!-- *********************** GPS SETUP **********************************  -->
+      <!-- Each sensor must be attached to a link.                              --> 
+
+
+      <link name="${robot_namespace}/gps_link">
+        <visual>
+          <geometry>
+            <box size="0.05 0.05 0.05"/>
+          </geometry>
+        </visual>
+
+        <collision>
+          <geometry>
+            <box size="0.05 0.05 0.05"/>
+          </geometry>
+        </collision>  
+      </link>
+      
+      
+      <joint name="${robot_namespace}/gps_joint" type="fixed">
+        <parent link="${robot_namespace}/base_link"/>
+        <child link="${robot_namespace}/gps_link"/>
+        <origin xyz="0.10 0 0.05" rpy="0 0 0"/>
+      </joint>
+
+
+
+
+    <gazebo reference="${robot_namespace}/gps_link">
+        <sensor name="gps_sensor" type="gps">
+            <always_on>true</always_on>
+            <update_rate>10.0</update_rate>
+            <plugin name="gps_controller" filename="libgazebo_ros_gps_sensor.so">
+                <ros>
+                    <namespace>${robot_namespace}</namespace>
+                    <remapping>/${robot_namespace}/gps_controller/out:=/${robot_namespace}/gps/fix</remapping>
+                </ros>
+                <frame_name>${robot_namespace}/gps_link</frame_name>
+            </plugin>
+        </sensor>
+        <material>Gazebo/Grey</material>
+    </gazebo>
+  </xacro:macro>
+</robot>

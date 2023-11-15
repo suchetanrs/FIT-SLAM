@@ -269,7 +269,7 @@ void localizationPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStampe
 //   auto node = std::make_shared<rclcpp::Node>("frontier_search");
 
 //   auto map_sub = node->create_subscription<nav_msgs::msg::OccupancyGrid>(
-//     "/map", 10, mapCallback);
+//     "map", 10, mapCallback);
 
 //   auto localization_pose_sub = node->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
 //     "localization_pose", 10, localizationPoseCallback);
