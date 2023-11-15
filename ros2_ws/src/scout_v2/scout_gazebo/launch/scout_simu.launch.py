@@ -37,6 +37,11 @@ def generate_launch_description():
     SCOUT_NAMESPACE = os.environ['SCOUT_NAMESPACE']
     robot_namespace_arg = DeclareLaunchArgument('robot_namespace', default_value=TextSubstitution(text=SCOUT_NAMESPACE),
         description='The namespace of the robot')
+
+    robot_y = LaunchConfiguration('robot_y')
+    SCOUT_Y = os.environ['SCOUT_Y']
+    robot_y_arg = DeclareLaunchArgument('robot_y', default_value=TextSubstitution(text=SCOUT_Y),
+        description='The namespace of the robot')
 #---------------------------------------------
 
     # Start World
@@ -51,7 +56,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(pkg_scout_gazebo, 'launch', 'spawn_scout.launch.py'),
         ),
-        launch_arguments={'robot_namespace': robot_namespace}.items()
+        launch_arguments={'robot_namespace': robot_namespace, 'robot_y': robot_y}.items()
     )
 #---------------------------------------------
 
@@ -108,7 +113,7 @@ def generate_launch_description():
                 context.launch_configurations['robot_namespace'] + "/datum ",
                 "robot_localization/srv/SetDatum ",
                 # '"{geo_pose: {position: {latitude: 43.5655, longitude: 1.4740, altitude: 150}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}}"',
-                '"{geo_pose: {position: {latitude: 43.5655, longitude: 1.4740, altitude: 149.34}, orientation: {x: 0.079, y: -0.043, z: -0.041, w: 0.959}}}"',
+                '"' + "{geo_pose: {position: {latitude: 43.5655, longitude: 1.4740," + " altitude: 149.34}, orientation: {x: 0.079, y: " + context.launch_configurations['robot_y'] + ", z: -0.041, w: 0.959}}}" + '"',
             ]],
             shell=True
         )
@@ -141,7 +146,8 @@ def generate_launch_description():
     return LaunchDescription([
         declare_use_sim_time_cmd,
         robot_namespace_arg,
-        start_world,
+        robot_y_arg,
+        # start_world,
         spawn_scout,
 
         start_navsat_transform_cmd,

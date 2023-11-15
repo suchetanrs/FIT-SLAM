@@ -6,18 +6,11 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /RobotModel1
         - /RobotModel1/Mass Properties1
-        - /TF1
+        - /RobotModel2
         - /TF1/Frames1
-        - /Map1
-        - /Map2
-        - /Path1
-        - /GridMap1
-        - /PointCloud22
-        - /Pose1
       Splitter Ratio: 0.5
-    Tree Height: 504
+    Tree Height: 408
   - Class: nav2_rviz_plugins/Navigation 2
     Name: Navigation 2
   - Class: slam_toolbox::SlamToolboxPlugin
@@ -53,7 +46,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_6/robot_description
+        Value: /scout_1/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -61,64 +54,152 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        scout_6/base_footprint:
+        scout_1/base_footprint:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        scout_6/base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_6/camera_link:
+        scout_1/base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        scout_6/camera_link_optical:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_6/front_left_wheel_link:
+        scout_1/camera_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        scout_6/front_right_wheel_link:
+        scout_1/camera_link_optical:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/front_left_wheel_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        scout_6/gps_link:
+        scout_1/front_right_wheel_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        scout_6/imu_link:
+        scout_1/gps_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        scout_6/inertial_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_6/rear_left_wheel_link:
+        scout_1/imu_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        scout_6/rear_right_wheel_link:
+        scout_1/inertial_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/rear_left_wheel_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        scout_6/velodyne:
+        scout_1/rear_right_wheel_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        scout_6/velodyne_base_link:
+        scout_1/velodyne:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/velodyne_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_2/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        scout_2/base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_2/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_2/camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_2/camera_link_optical:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_2/front_left_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_2/front_right_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_2/gps_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_2/imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_2/inertial_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_2/rear_left_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_2/rear_right_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_2/velodyne:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_2/velodyne_base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -138,36 +219,58 @@ Visualization Manager:
         All Enabled: false
         map:
           Value: false
-        scout_6/base_footprint:
-          Value: false
-        scout_6/base_link:
+        scout_1/base_footprint:
           Value: true
-        scout_6/camera_link:
-          Value: false
-        scout_6/camera_link_optical:
-          Value: false
-        scout_6/front_left_wheel_link:
-          Value: false
-        scout_6/front_right_wheel_link:
-          Value: false
-        scout_6/gps_link:
-          Value: false
-        scout_6/imu_link:
-          Value: false
-        scout_6/inertial_link:
-          Value: false
-        scout_6/odom:
-          Value: false
-        scout_6/odom_scout:
-          Value: false
-        scout_6/rear_left_wheel_link:
-          Value: false
-        scout_6/rear_right_wheel_link:
-          Value: false
-        scout_6/velodyne:
-          Value: false
-        scout_6/velodyne_base_link:
-          Value: false
+        scout_1/base_link:
+          Value: true
+        scout_1/camera_link:
+          Value: true
+        scout_1/camera_link_optical:
+          Value: true
+        scout_1/front_left_wheel_link:
+          Value: true
+        scout_1/front_right_wheel_link:
+          Value: true
+        scout_1/gps_link:
+          Value: true
+        scout_1/imu_link:
+          Value: true
+        scout_1/inertial_link:
+          Value: true
+        scout_1/odom:
+          Value: true
+        scout_1/odom_scout:
+          Value: true
+        scout_1/rear_left_wheel_link:
+          Value: true
+        scout_1/rear_right_wheel_link:
+          Value: true
+        scout_1/velodyne:
+          Value: true
+        scout_1/velodyne_base_link:
+          Value: true
+        scout_2/base_footprint:
+          Value: true
+        scout_2/base_link:
+          Value: true
+        scout_2/camera_link:
+          Value: true
+        scout_2/camera_link_optical:
+          Value: true
+        scout_2/gps_link:
+          Value: true
+        scout_2/imu_link:
+          Value: true
+        scout_2/inertial_link:
+          Value: true
+        scout_2/odom:
+          Value: true
+        scout_2/odom_scout:
+          Value: true
+        scout_2/velodyne:
+          Value: true
+        scout_2/velodyne_base_link:
+          Value: true
       Marker Scale: 0.30000001192092896
       Name: TF
       Show Arrows: true
@@ -175,29 +278,45 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          scout_6/odom:
-            scout_6/odom_scout:
-              scout_6/base_footprint:
-                scout_6/base_link:
-                  scout_6/camera_link:
-                    scout_6/camera_link_optical:
+          scout_1/odom:
+            scout_1/odom_scout:
+              scout_1/base_footprint:
+                scout_1/base_link:
+                  scout_1/camera_link:
+                    scout_1/camera_link_optical:
                       {}
-                  scout_6/front_left_wheel_link:
+                  scout_1/front_left_wheel_link:
                     {}
-                  scout_6/front_right_wheel_link:
+                  scout_1/front_right_wheel_link:
                     {}
-                  scout_6/gps_link:
+                  scout_1/gps_link:
                     {}
-                  scout_6/imu_link:
+                  scout_1/imu_link:
                     {}
-                  scout_6/inertial_link:
+                  scout_1/inertial_link:
                     {}
-                  scout_6/rear_left_wheel_link:
+                  scout_1/rear_left_wheel_link:
                     {}
-                  scout_6/rear_right_wheel_link:
+                  scout_1/rear_right_wheel_link:
                     {}
-                  scout_6/velodyne_base_link:
-                    scout_6/velodyne:
+                  scout_1/velodyne_base_link:
+                    scout_1/velodyne:
+                      {}
+          scout_2/odom:
+            scout_2/odom_scout:
+              scout_2/base_footprint:
+                scout_2/base_link:
+                  scout_2/camera_link:
+                    scout_2/camera_link_optical:
+                      {}
+                  scout_2/gps_link:
+                    {}
+                  scout_2/imu_link:
+                    {}
+                  scout_2/inertial_link:
+                    {}
+                  scout_2/velodyne_base_link:
+                    scout_2/velodyne:
                       {}
       Update Interval: 0
       Value: true
@@ -431,25 +550,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 23.731033325195312
+      Distance: 18.45158576965332
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.110411286354065
-        Y: 2.723234176635742
-        Z: -1.3434687852859497
+        X: 0.4671640992164612
+        Y: 2.4458601474761963
+        Z: -1.6511123180389404
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7147961854934692
+      Pitch: 0.8097960352897644
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.880486965179443
+      Yaw: 4.725493431091309
     Saved: ~
 Window Geometry:
   Displays:
@@ -459,9 +578,9 @@ Window Geometry:
   Hide Right Dock: false
   Navigation 2:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000010000000000000385000003bdfc0200000003fb000000100044006900730070006c006100790073010000003b00000281000000c700fffffffb00000018004e0061007600690067006100740069006f006e0020003201000002c2000001360000012300fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d0000016d00ffffff000003f5000003bd00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd000000010000000000000385000003bdfc0200000003fb000000100044006900730070006c006100790073010000003b00000221000000c700fffffffb00000018004e0061007600690067006100740069006f006e002000320100000262000001960000012300fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d0000016d00ffffff000003f5000003bd00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   SlamToolboxPlugin:
     collapsed: false
   Width: 1920
-  X: 0
+  X: 3840
   Y: 0

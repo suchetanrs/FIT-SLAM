@@ -1,7 +1,7 @@
 version: "3"
 services:
   ros2-humble-base:
-    image: ubuntu-ros2-mounted:22.04
+    image: ubuntu-ros2-humble-base:22.04
     volumes:
       #full dev
       - /dev:/dev:rw
