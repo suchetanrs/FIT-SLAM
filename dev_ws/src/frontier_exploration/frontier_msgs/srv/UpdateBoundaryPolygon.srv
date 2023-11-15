@@ -1,0 +1,3 @@
+geometry_msgs/PolygonStamped explore_boundary
+---
+bool success

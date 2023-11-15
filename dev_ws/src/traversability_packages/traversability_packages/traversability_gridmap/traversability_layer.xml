@@ -1,0 +1,13 @@
+<library path="traversability_gridmap_core">
+  <class name="traversability_gridmap/TraversabilityLayer" 
+  	 type="traversability_gridmap::TraversabilityLayer" 
+  	 base_class_type="nav2_costmap_2d::Layer">
+    <description>This is a plugin which puts traversability costs to costmap</description>
+  </class>
+
+  <class name="traversability_gridmap/TraversabilityNavLayer" 
+  	 type="traversability_gridmap::TraversabilityNavLayer" 
+  	 base_class_type="nav2_costmap_2d::Layer">
+    <description>This is a plugin which puts traversability costs to costmap for navigation</description>
+  </class>
+</library>

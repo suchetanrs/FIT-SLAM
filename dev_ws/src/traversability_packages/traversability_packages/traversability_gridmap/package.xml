@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>traversability_gridmap</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="damien.vivet@gmail.com">d.vivet</maintainer>
+  <license>TODO: License declaration</license>
+  
+  <depend>rosidl_default_generators</depend>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>eigen</build_depend>
+  <build_depend>grid_map_cmake_helpers</build_depend>
+
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>traversability_msgs</depend>
+
+  <depend>grid_map_core</depend>
+  <depend>grid_map_cv</depend>
+  <depend>grid_map_filters</depend>
+  <depend>grid_map_loader</depend>
+  <depend>grid_map_msgs</depend>
+  <depend>grid_map_octomap</depend>
+  <depend>grid_map_ros</depend>
+  <depend>grid_map_rviz_plugin</depend>
+  <depend>grid_map_sdf</depend>
+  <depend>grid_map_visualization</depend>
+  <depend>nav2_costmap_2d</depend>
+  <depend>frontier_exploration</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

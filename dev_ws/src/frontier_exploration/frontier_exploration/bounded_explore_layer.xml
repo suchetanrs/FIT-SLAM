@@ -1,0 +1,7 @@
+<library path="frontier_exploration_core">
+  <class name="frontier_exploration/BoundedExploreLayer"
+    type="frontier_exploration::BoundedExploreLayer" 
+    base_class_type="nav2_costmap_2d::Layer">
+    <description>Demo Layer that marks all points that were ever one meter in front of the robot</description>
+  </class>
+</library>
