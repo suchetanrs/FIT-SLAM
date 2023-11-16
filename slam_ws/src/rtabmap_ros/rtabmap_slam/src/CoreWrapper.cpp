@@ -334,7 +334,7 @@ CoreWrapper::CoreWrapper(const rclcpp::NodeOptions & options) :
 		std::string vStr = this->declare_parameter(iter->first, iter->second);
 		if(vStr.compare(iter->second)!=0)
 		{
-			RCLCPP_INFO(this->get_logger(), "Setting RTAB-Map parameter \"%s\"=\"%s\"", iter->first.c_str(), vStr.c_str());
+			RCLCPP_INFO(this->get_logger(), "1Setting RTAB-Map parameter \"%s\"=\"%s\"", iter->first.c_str(), vStr.c_str());
 
 			if(iter->first.compare(Parameters::kRtabmapWorkingDirectory()) == 0)
 			{
@@ -836,11 +836,11 @@ CoreWrapper::CoreWrapper(const rclcpp::NodeOptions & options) :
 						if(parameters_.find(key) != parameters_.end())
 						{
 							std::string vStr = event->changed_parameters[i].value.string_value;
-							RCLCPP_INFO(this->get_logger(), "Setting RTAB-Map parameter \"%s\"=\"%s\"", key.c_str(), vStr.c_str());
+							RCLCPP_INFO(this->get_logger(), "2Setting RTAB-Map parameter \"%s\"=\"%s\"", key.c_str(), vStr.c_str());
 							parameters_.at(key) = vStr;
 						}
 					}
-					RCLCPP_INFO(this->get_logger(), "rtabmap: Updating parameters");
+					RCLCPP_INFO(this->get_logger(), "rtabmap: 2Updating parameters");
 					if(parameters_.find(Parameters::kRtabmapDetectionRate()) != parameters_.end())
 					{
 						rate_ = uStr2Float(parameters_.at(Parameters::kRtabmapDetectionRate()));
@@ -2741,12 +2741,12 @@ void CoreWrapper::updateRtabmapCallback(
 			paramValue = parameter.as_string();
 			if(paramValue.compare(iter->second)!=0)
 			{
-				RCLCPP_INFO(get_logger(), "Setting RTAB-Map parameter \"%s\"=\"%s\"", iter->first.c_str(), paramValue.c_str());
+				RCLCPP_INFO(get_logger(), "3Setting RTAB-Map parameter \"%s\"=\"%s\"", iter->first.c_str(), paramValue.c_str());
 				iter->second = paramValue;
 			}
 		}
 	}
-	RCLCPP_INFO(get_logger(), "rtabmap: Updating parameters");
+	RCLCPP_INFO(get_logger(), "rtabmap: 1Updating parameters");
 	if(parameters_.find(Parameters::kRtabmapDetectionRate()) != parameters_.end())
 	{
 		rate_ = uStr2Float(parameters_.at(Parameters::kRtabmapDetectionRate()));

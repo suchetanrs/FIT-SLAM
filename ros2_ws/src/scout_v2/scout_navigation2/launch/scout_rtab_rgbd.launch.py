@@ -75,8 +75,8 @@ def generate_launch_description():
           'Optimizer/GravitySigma':'0', # Disable imu constraints (we are already in 2D)
           'Grid/MaxObstacleHeight':'0.4',
           'Rtabmap/DetectionRate' : '1.5',
-          'Optimizer/PriorsIgnored': 'false',
-          'Rtabmap/LoopGPS': 'true',
+        #   'Optimizer/PriorsIgnored': 'false',
+        #   'Rtabmap/LoopGPS': 'true',
     }
 
     remappings=[

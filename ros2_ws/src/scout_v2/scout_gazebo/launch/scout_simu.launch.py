@@ -79,7 +79,7 @@ def generate_launch_description():
             executable='ekf_node',
             name='ekf_filter_node_map',
             output='screen',
-            namespace=robot_namespace,
+            namespace=context.launch_configurations['robot_namespace'],
             parameters=[robot_localization_file_path, 
             {'use_sim_time': use_sim_time,
             'map_frame': context.launch_configurations['robot_namespace'] + '/odom',
@@ -95,7 +95,7 @@ def generate_launch_description():
             executable='ekf_node',
             name='ekf_filter_node_odom',
             output='screen',
-            namespace=robot_namespace,
+            namespace=context.launch_configurations['robot_namespace'],
             parameters=[robot_localization_file_path, 
             {'use_sim_time': use_sim_time,
             'map_frame': context.launch_configurations['robot_namespace'] + '/odom',
@@ -113,7 +113,7 @@ def generate_launch_description():
                 context.launch_configurations['robot_namespace'] + "/datum ",
                 "robot_localization/srv/SetDatum ",
                 # '"{geo_pose: {position: {latitude: 43.5655, longitude: 1.4740, altitude: 150}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}}"',
-                '"' + "{geo_pose: {position: {latitude: 43.5655, longitude: 1.4740," + " altitude: 149.34}, orientation: {x: 0.079, y: " + context.launch_configurations['robot_y'] + ", z: -0.041, w: 0.959}}}" + '"',
+                '"{geo_pose: {position: {latitude: 43.5655, longitude: 1.4740, altitude: 149.34}, orientation: {x: 0.079, y: -0.043, z: -0.041, w: 0.959}}}"',
             ]],
             shell=True
         )

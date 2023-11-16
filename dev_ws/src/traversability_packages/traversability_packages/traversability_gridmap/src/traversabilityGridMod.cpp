@@ -40,6 +40,7 @@ Eigen::VectorXd traversabilityGrid::get_goodness(Eigen::Vector2d ind, const doub
     uint nb_min = 0.25 * (2 * delta_ind + 1) * (2 * delta_ind + 1);
 
     // Get all points to be considered for the current cell and get min/max altitude
+    std::vector<Eigen::Vector3d> P3Ds; // stores all centers of neighbouring cells.
     Eigen::Vector3d cellsSum = Eigen::Vector3d::Zero();
     Eigen::Matrix3d cellsSumSquared = Eigen::Matrix3d::Zero();     // stores all the covariances of the neighbouring cells.
     double cellsNumPoints = 0;
@@ -53,6 +54,10 @@ Eigen::VectorXd traversabilityGrid::get_goodness(Eigen::Vector2d ind, const doub
             }
             else
             {
+                Eigen::Vector3d center =
+                    Eigen::Vector3d(_grid.at(i).at(j).sx, _grid.at(i).at(j).sy, _grid.at(i).at(j).sz) /
+                    _grid.at(i).at(j).N;
+
                 Eigen::Matrix3d sumSquared;
                 sumSquared << _grid.at(i).at(j).sx2, _grid.at(i).at(j).sxy, _grid.at(i).at(j).sxz,
                               _grid.at(i).at(j).sxy, _grid.at(i).at(j).sy2, _grid.at(i).at(j).syz,
@@ -63,6 +68,7 @@ Eigen::VectorXd traversabilityGrid::get_goodness(Eigen::Vector2d ind, const doub
 
                 cellsSum += sum;
                 cellsSumSquared.noalias() += sumSquared;
+                P3Ds.push_back(center);
                 cellsNumPoints += _grid.at(i).at(j).N;
                 zM = std::max(zM, _grid.at(i).at(j).z_max);
                 zm = std::min(zm, _grid.at(i).at(j).z_min);
@@ -111,20 +117,18 @@ Eigen::VectorXd traversabilityGrid::get_goodness(Eigen::Vector2d ind, const doub
 
     // std::cout << planeLMS.transpose() << std::endl;
 
-    // TODO: ROUGHNESS
-    // double roughness = 0.0;
-    // for (uint i = 0; i < P3Ds.size(); ++i)
-    // {
-    //     // dot product of points coordinates and surface normal ** 2
-    //     roughness += double(P3Ds.at(i).transpose() * planeLMS) * double(P3Ds.at(i).transpose() * planeLMS);
-    // }
-    // // This metric represents the degree of alignment between the points and the calculated surface normal.
-    // roughness = std::sqrt(roughness) / P3Ds.size();
     double roughness = 0.0;
-
-    // Check if ground roughness is bigger than the robot ground clearance (how to deals with grass?)
-    // std::cout << "roughness : " << roughness << std::endl;
-    double roughness_hazard = 3. * roughness / ground_clearance;
+    double d = mean.transpose() * planeLMS;
+    Eigen::Vector3d distanceVector;
+    distanceVector.x() = planeLMS.x() - d;
+    distanceVector.y() = planeLMS.y() - d;
+    distanceVector.z() = planeLMS.z() - d;
+    for(uint i=0; i < P3Ds.size(); ++i)
+    {
+        roughness += double(P3Ds.at(i).transpose() * distanceVector) * double(P3Ds.at(i).transpose() * distanceVector);
+    }
+    roughness=std::sqrt(roughness)/P3Ds.size();
+    double roughness_hazard = 3. * roughness/ground_clearance;
     if (roughness_hazard > 1)
         roughness_hazard = 1;
 

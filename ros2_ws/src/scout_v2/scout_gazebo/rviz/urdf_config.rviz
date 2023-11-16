@@ -8,7 +8,10 @@ Panels:
         - /Status1
         - /RobotModel1/Mass Properties1
         - /RobotModel2
+        - /TF1
         - /TF1/Frames1
+        - /PointCloud21
+        - /PointCloud22
       Splitter Ratio: 0.5
     Tree Height: 408
   - Class: nav2_rviz_plugins/Navigation 2
@@ -47,82 +50,20 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /scout_1/robot_description
-      Enabled: true
+      Enabled: false
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        scout_1/base_footprint:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_1/base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/camera_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/camera_link_optical:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_1/front_left_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/front_right_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/gps_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/inertial_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_1/rear_left_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/rear_right_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/velodyne:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/velodyne_base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
-      Value: true
+      Value: false
       Visual Enabled: true
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
@@ -135,82 +76,20 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /scout_2/robot_description
-      Enabled: true
+      Enabled: false
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        scout_2/base_footprint:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_2/base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_2/camera_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_2/camera_link_optical:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_2/front_left_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_2/front_right_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_2/gps_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_2/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_2/inertial_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_2/rear_left_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_2/rear_right_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_2/velodyne:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_2/velodyne_base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
-      Value: true
+      Value: false
       Visual Enabled: true
     - Class: rviz_default_plugins/TF
       Enabled: true
@@ -218,59 +97,37 @@ Visualization Manager:
       Frames:
         All Enabled: false
         map:
-          Value: false
+          Value: true
         scout_1/base_footprint:
           Value: true
         scout_1/base_link:
-          Value: true
+          Value: false
         scout_1/camera_link:
-          Value: true
+          Value: false
         scout_1/camera_link_optical:
-          Value: true
+          Value: false
         scout_1/front_left_wheel_link:
-          Value: true
+          Value: false
         scout_1/front_right_wheel_link:
-          Value: true
+          Value: false
         scout_1/gps_link:
-          Value: true
+          Value: false
         scout_1/imu_link:
-          Value: true
+          Value: false
         scout_1/inertial_link:
-          Value: true
+          Value: false
         scout_1/odom:
           Value: true
         scout_1/odom_scout:
           Value: true
         scout_1/rear_left_wheel_link:
-          Value: true
+          Value: false
         scout_1/rear_right_wheel_link:
-          Value: true
+          Value: false
         scout_1/velodyne:
-          Value: true
+          Value: false
         scout_1/velodyne_base_link:
-          Value: true
-        scout_2/base_footprint:
-          Value: true
-        scout_2/base_link:
-          Value: true
-        scout_2/camera_link:
-          Value: true
-        scout_2/camera_link_optical:
-          Value: true
-        scout_2/gps_link:
-          Value: true
-        scout_2/imu_link:
-          Value: true
-        scout_2/inertial_link:
-          Value: true
-        scout_2/odom:
-          Value: true
-        scout_2/odom_scout:
-          Value: true
-        scout_2/velodyne:
-          Value: true
-        scout_2/velodyne_base_link:
-          Value: true
+          Value: false
       Marker Scale: 0.30000001192092896
       Name: TF
       Show Arrows: true
@@ -301,22 +158,6 @@ Visualization Manager:
                     {}
                   scout_1/velodyne_base_link:
                     scout_1/velodyne:
-                      {}
-          scout_2/odom:
-            scout_2/odom_scout:
-              scout_2/base_footprint:
-                scout_2/base_link:
-                  scout_2/camera_link:
-                    scout_2/camera_link_optical:
-                      {}
-                  scout_2/gps_link:
-                    {}
-                  scout_2/imu_link:
-                    {}
-                  scout_2/inertial_link:
-                    {}
-                  scout_2/velodyne_base_link:
-                    scout_2/velodyne:
                       {}
       Update Interval: 0
       Value: true
@@ -413,7 +254,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_6/traversability_costmap/RTQuadtree_struct
+        Value: /scout_1/traversability_costmap/RTQuadtree_struct
       Use Rainbow: false
       Value: true
     - Alpha: 1
@@ -446,7 +287,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_6/transformed_point_cloud
+        Value: /scout_1/transformed_point_cloud
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -550,25 +391,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 18.45158576965332
+      Distance: 12.653139114379883
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.4671640992164612
-        Y: 2.4458601474761963
-        Z: -1.6511123180389404
+        X: 2.165138006210327
+        Y: 0.14324238896369934
+        Z: -2.9877073764801025
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8097960352897644
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.725493431091309
+      Yaw: 4.695494651794434
     Saved: ~
 Window Geometry:
   Displays:
