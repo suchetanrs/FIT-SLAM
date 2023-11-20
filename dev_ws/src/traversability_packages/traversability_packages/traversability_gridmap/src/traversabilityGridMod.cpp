@@ -119,13 +119,9 @@ Eigen::VectorXd traversabilityGrid::get_goodness(Eigen::Vector2d ind, const doub
 
     double roughness = 0.0;
     double d = mean.transpose() * planeLMS;
-    Eigen::Vector3d distanceVector;
-    distanceVector.x() = planeLMS.x() - d;
-    distanceVector.y() = planeLMS.y() - d;
-    distanceVector.z() = planeLMS.z() - d;
     for(uint i=0; i < P3Ds.size(); ++i)
     {
-        roughness += double(P3Ds.at(i).transpose() * distanceVector) * double(P3Ds.at(i).transpose() * distanceVector);
+        roughness += double((P3Ds.at(i).transpose() * planeLMS) - d) * double((P3Ds.at(i).transpose() * planeLMS) - d);
     }
     roughness=std::sqrt(roughness)/P3Ds.size();
     double roughness_hazard = 3. * roughness/ground_clearance;
