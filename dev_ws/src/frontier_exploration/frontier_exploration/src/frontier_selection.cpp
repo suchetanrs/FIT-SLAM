@@ -122,7 +122,7 @@ namespace frontier_exploration {
         }        
 
         for(auto point : polygon_xy_min_max) {
-            // RCLCPP_INFO_STREAM(logger_, "The points are: " << point);            
+            RCLCPP_INFO_STREAM(logger_, "The points are: " << point);            
         }
 
         auto count_index = 0;
@@ -130,6 +130,7 @@ namespace frontier_exploration {
         std::vector<std::pair<FrontierCalcInformation, double>> FrontierCalc_with_utility;
         int min_traversable_distance = std::numeric_limits<int>::max(); // in m, TODO: if traversability is included, min_traversable_distance is the distance of the path computed through the map.
         int max_info_per_FrontierCalc_ = 0.0;
+        RCLCPP_INFO_STREAM(logger_, "No of frontiers is: " << frontier_list.size());
         for (auto frontier : frontier_list) {
             count_index ++;
             auto plan_of_frontier = getPlanForFrontier(start_point_w, frontier, map_data, false);
@@ -146,7 +147,7 @@ namespace frontier_exploration {
                     break;
                 }
             }
-            // RCLCPP_INFO_STREAM(logger_, "The length to frontier is: " << length_to_frontier);
+            RCLCPP_INFO_STREAM(logger_, "The length to frontier is: " << length_to_frontier);
             if(frontier.min_distance > frontierDetectRadius_ && frontier_exists_ == false) {
                 double sx, sy, orient; // sensor x, sensor y, sensor orientation
                 double wx, wy;
@@ -155,7 +156,7 @@ namespace frontier_exploration {
                 unsigned int max_length = radius / (costmap_->getResolution());
                 sx = frontier.initial.x;
                 sy = frontier.initial.y;
-                // RCLCPP_INFO_STREAM(logger_, "CH1");
+                RCLCPP_INFO_STREAM(logger_, "CH1");
                 std::vector<int> information_along_ray;
 
                 for(double alpha = 0; alpha <= (2 * M_PI); alpha+=theta) {
@@ -220,7 +221,7 @@ namespace frontier_exploration {
                     }
                     auto info_addition = cell_gatherer.getCells();
                     information_along_ray.push_back(info_addition.size());
-                    // RCLCPP_INFO_STREAM(logger_, "Info size: " << info_addition.size());
+                    RCLCPP_INFO_STREAM(logger_, "Info size: " << info_addition.size());
                     std::vector<geometry_msgs::msg::Pose> vizpoints;
                     for (size_t z = 0; z<info_addition.size(); z++) {
                         double wmx, wmy;
@@ -265,11 +266,11 @@ namespace frontier_exploration {
             FrontierCalc_with_utility.push_back(std::make_pair(FrontierCalc, utility));
             if (utility > max_utility) {
                 max_utility = utility;
-                // RCLCPP_INFO_STREAM(logger_, "Max utility: " << max_utility);
-                // RCLCPP_INFO_STREAM(logger_, "Max information: " << max_info_per_FrontierCalc_);
-                // RCLCPP_INFO_STREAM(logger_, "Max information" << max_info_per_FrontierCalc_);
-                // RCLCPP_INFO_STREAM(logger_, "Max utility: " << max_utility);
-                // RCLCPP_INFO_STREAM(logger_, "Min distance " << min_traversable_distance);
+                RCLCPP_INFO_STREAM(logger_, "Max utility: " << max_utility);
+                RCLCPP_INFO_STREAM(logger_, "Max information: " << max_info_per_FrontierCalc_);
+                RCLCPP_INFO_STREAM(logger_, "Max information" << max_info_per_FrontierCalc_);
+                RCLCPP_INFO_STREAM(logger_, "Max utility: " << max_utility);
+                RCLCPP_INFO_STREAM(logger_, "Min distance " << min_traversable_distance);
                 selected_alpha = FrontierCalc.alpha_;
                 selected_frontier = FrontierCalc.frontier_;
                 // auto vizpoints = FrontierCalc.unobserved_points_;
@@ -305,7 +306,7 @@ namespace frontier_exploration {
                 if(m == 0) {
                     break;
                 }
-                // RCLCPP_INFO_STREAM(logger_, "Current max information: " << FrontierCalc_with_utility[m].first.information_);
+                RCLCPP_INFO_STREAM(logger_, "Current max information: " << FrontierCalc_with_utility[m].first.information_);
                 auto plan_result = getPlanForFrontier(start_point_w, FrontierCalc_with_utility[m].first.frontier_, map_data, true);
                 if(plan_result.first.information_total > maximum_path_information) {
                     maximum_path_information = plan_result.first.information_total;
@@ -318,7 +319,7 @@ namespace frontier_exploration {
                 }
                 double current_utility = (beta_ * FrontierCalc_with_utility[m].second + (1-beta_) * (FrontierCalc_with_p_inf_utility[FrontierCalc_with_utility[m].first]/maximum_path_information));
                 if(current_utility > max_utility_information) {
-                    // RCLCPP_INFO_STREAM(logger_, "Current updated utility" << current_utility);
+                    RCLCPP_INFO_STREAM(logger_, "Current updated utility" << current_utility);
                     // max_utility_information = current_utility;
                     alpha_post_information = FrontierCalc_with_utility[m].first.alpha_;
                     frontier_selected_post_information = std::make_shared<frontier_msgs::msg::Frontier>(FrontierCalc_with_utility[m].first.frontier_);
@@ -331,7 +332,7 @@ namespace frontier_exploration {
         // To handle the case where all the max frontiers have zero information.
         if(frontier_selected_post_information) {
             selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(alpha_post_information + theta / 2);
-            // RCLCPP_ERROR_STREAM(logger_, "RETURNING COMPUTED PATH" << frontier_selected_post_information->initial.x << ", " << frontier_selected_post_information->initial.y);
+            RCLCPP_ERROR_STREAM(logger_, "RETURNING COMPUTED PATH" << frontier_selected_post_information->initial.x << ", " << frontier_selected_post_information->initial.y);
             frontier_blacklist_.push_back(*frontier_selected_post_information);
             return std::make_pair(std::make_pair(*frontier_selected_post_information, selected_orientation), true);
         }
@@ -357,12 +358,21 @@ namespace frontier_exploration {
         marker_msg_.color.r = 1.0; // Red
         marker_msg_.color.a = 1.0; // Fully opaque
 
+        RCLCPP_INFO(logger_, "GP1");
+
         nav_msgs::msg::Path plan;
         plan.header.frame_id = "map";
         std::unique_ptr<frontier_exploration::NavFn> planner_;
+        RCLCPP_INFO_STREAM(logger_, "GetCells Costmap GP10" << traversability_costmap_->getSizeInCellsX());
+        // rclcpp::sleep_for(std::chrono::milliseconds(1000000));
+        RCLCPP_INFO_STREAM(logger_, "Get Char Map" << traversability_costmap_->getCharMap());
         planner_ = std::make_unique<frontier_exploration::NavFn>(traversability_costmap_->getSizeInCellsX(), traversability_costmap_->getSizeInCellsY());
+        RCLCPP_INFO(logger_, "GP12");
         planner_->setNavArr(traversability_costmap_->getSizeInCellsX(), traversability_costmap_->getSizeInCellsY());
+        RCLCPP_INFO(logger_, "GP13");
         planner_->setCostmap(traversability_costmap_->getCharMap(), true, planner_allow_unknown_);
+
+        RCLCPP_INFO(logger_, "GP2");
 
         // start point
         unsigned int mx, my;
@@ -376,6 +386,7 @@ namespace frontier_exploration {
             struct_obj.information_total = -1;
             return std::make_pair(struct_obj, false);
         }
+        RCLCPP_INFO(logger_, "GP3");
         int map_start[2];
         map_start[0] = mx;
         map_start[1] = my;
@@ -425,6 +436,7 @@ namespace frontier_exploration {
         int path_cut_count = 0;
         int fov_cut = 10;
         double number_of_wayp = 0;
+        RCLCPP_INFO(logger_, "GP5");
         for (int i = len - 1; i >= 0; --i) {
             // convert the plan to world coordinates
             double world_x, world_y;
@@ -476,6 +488,7 @@ namespace frontier_exploration {
                 }
             }
         }
+        RCLCPP_INFO(logger_, "GP6");
         marker_publisher_->publish(marker_msg_);
         plan_pub_->publish(plan);
         if(plan.poses.empty()) {

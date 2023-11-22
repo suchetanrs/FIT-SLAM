@@ -42,13 +42,11 @@ public:
         this->declare_parameter("goal_aliasing", 0.1);
         this->declare_parameter("retry_count",30);
         this->declare_parameter("nav2_goal_timeout_sec", 35);
-        this->declare_parameter("use_traversability", false);
 
         this->get_parameter("frequency", frequency_);
         this->get_parameter("goal_aliasing", goal_aliasing_);
         this->get_parameter("retry_count", retry_);
         this->get_parameter("nav2_goal_timeout_sec", nav2WaitTime_);
-        this->get_parameter("use_traversability", use_traversability_);
 
 
         RCLCPP_ERROR_STREAM(rclcpp::get_logger("explore_server"),"frequency: " << frequency_);
@@ -72,15 +70,6 @@ public:
         std::bind(
             &FrontierExplorationServer::dynamicParametersCallback,
             this, std::placeholders::_1));
-
-// Traversability related code
-        if(use_traversability_) {
-            traversability_costmap_ros_ = std::make_shared<nav2_costmap_2d::Costmap2DROS>("traversability_costmap",std::string{get_namespace()},"traversability_costmap");
-            traversability_costmap_ros_->configure();
-            // Launch a thread to run the costmap node
-            traversability_costmap_thread_ = std::make_unique<nav2_util::NodeThread>(traversability_costmap_ros_);
-            traversability_costmap_ros_->activate();
-        }
     }
 
     ~FrontierExplorationServer()
@@ -88,12 +77,6 @@ public:
         explore_costmap_ros_->deactivate();
         explore_costmap_ros_->cleanup();
         explore_costmap_thread_.reset();
-
-        if(use_traversability_) {
-            traversability_costmap_ros_->deactivate();
-            traversability_costmap_ros_->cleanup();
-            traversability_costmap_thread_.reset();
-        }
     }
 
     rcl_interfaces::msg::SetParametersResult dynamicParametersCallback(
@@ -119,11 +102,6 @@ public:
                 }
                 else if(param_name == "nav2_goal_timeout_sec") {
                     nav2WaitTime_ = parameter.as_int();
-                }
-            }
-            else if(param_type == rclcpp::ParameterType::PARAMETER_BOOL) {
-                if (param_name == "use_traversability") {
-                    use_traversability_ = parameter.as_bool();
                 }
             }
 
@@ -152,11 +130,6 @@ private:
     NavigateToPose::Goal old_goal; //previously was old_goal
     std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> frontier_goal;
     rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
-
-// Traversability related code
-    std::shared_ptr<nav2_costmap_2d::Costmap2DROS> traversability_costmap_ros_;
-    std::unique_ptr<nav2_util::NodeThread> traversability_costmap_thread_;
-    bool use_traversability_;
 
     rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal)
     {

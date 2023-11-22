@@ -3,6 +3,11 @@ traversability_threshold_node:
     threshold_value: 170
     allow_unknown: false # keep it false
 
+multi_traversability_threshold_node:
+  ros__parameters:
+    threshold_value: 170
+    allow_unknown: false # keep it false
+
 pointcloud_transformer:
   ros__parameters:
     transform_throttle: 0
@@ -32,22 +37,4 @@ traversability_costmap:
         robot_width: 0.8
         robot_length: 0.5
         draw_isodistance_each: 1.0
-      always_send_full_costmap: True
-
-traversability_binary_costmap:
-  traversability_binary_costmap:
-    ros__parameters:
-      update_frequency: 1.0
-      publish_frequency: 1.0
-      global_frame: map
-      robot_base_frame: base_link
-      use_sim_time: True
-      robot_radius: 0.22
-      resolution: 0.05 # change in point_cloud_transformer of traversability_gridmap if this is changed.
-      track_unknown_space: true
-      plugins: ["static_layer"]
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: /traversability_thresholded
-        map_subscribe_transient_local: True
       always_send_full_costmap: True

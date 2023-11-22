@@ -4,7 +4,6 @@ explore_server:
     goal_aliasing: 2.0
     retry_count: 20
     nav2_goal_timeout_sec: 50 #secs
-    use_traversability: false
 
 explore_client:
   ros__parameters:
@@ -13,13 +12,6 @@ explore_client:
 polygon_point_publisher:
   ros__parameters:
     square_half_side_length: 15.0
-
-path_follower_node:
-  ros__parameters:
-    translation_speed: 0.5
-    rotation_speed: 1.0
-    local_goal_distance: 0.4 # min distance for local goal
-    resolution: 0.05 # resolution of global costmap
     
 frontier_selection_node:
   ros__parameters:
@@ -62,5 +54,23 @@ explore_costmap:
         exploration_mode: ours
         explore_clear_space: false
         min_frontier_cluster_size: 1
-        use_traversability: false
+        use_traversability: true
       always_send_full_costmap: false
+
+traversability_binary_costmap:
+  traversability_binary_costmap:
+    ros__parameters:
+      update_frequency: 1.0
+      publish_frequency: 1.0
+      global_frame: map
+      robot_base_frame: base_link
+      use_sim_time: True
+      robot_radius: 0.22
+      resolution: 0.05 # change in point_cloud_transformer of traversability_gridmap if this is changed.
+      track_unknown_space: true
+      plugins: ["static_layer"]
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_topic: /traversability_thresholded
+        map_subscribe_transient_local: True
+      always_send_full_costmap: True

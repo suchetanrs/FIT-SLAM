@@ -138,7 +138,7 @@ Eigen::VectorXd traversabilityGrid::get_goodness(Eigen::Vector2d ind, const doub
     // std::cout << "pitch_hazard : " << pitch_hazard << " roughness_hazard : " << roughness_hazard << " step_hazard : " << step_hazard << std::endl;
 
     Eigen::VectorXd haz(30);
-    haz(0) = std::max(std::max(step_hazard, roughness_hazard), pitch_hazard);
+    haz(0) = std::max(std::max(step_hazard, (0.0 * roughness_hazard)), pitch_hazard);
     haz(1) = step_hazard;
     haz(2) = roughness_hazard;
     haz(3) = pitch_hazard;
