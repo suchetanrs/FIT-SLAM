@@ -138,8 +138,7 @@ public:
         std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res,
         geometry_msgs::msg::Point start_point_w, 
         std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data,
-        nav2_costmap_2d::Costmap2D* traversability_costmap, 
-        bool use_traversability);
+        nav2_costmap_2d::Costmap2D* traversability_costmap);
 
     void bresenham2D(RayTracedCells at, unsigned int abs_da, unsigned int abs_db, int error_b,
         int offset_a,

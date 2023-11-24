@@ -144,9 +144,6 @@ private:
     std::vector<double> polygon_xy_min_max_;
     std::string exploration_mode_;
 
-    std::shared_ptr<nav2_costmap_2d::Costmap2DROS> traversability_binary_costmap_ros_;
-    std::unique_ptr<nav2_util::NodeThread> traversability_binary_costmap_thread_;
-
     // Dynamic parameters handler
     rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
     std::shared_ptr<frontier_exploration::FrontierSelectionNode> frontierSelect_;

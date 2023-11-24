@@ -100,7 +100,7 @@ namespace frontier_exploration {
 
     // @brief order of polygon points is : minx, miny, maxx, maxy
     std::pair<std::pair<frontier_msgs::msg::Frontier, geometry_msgs::msg::Quaternion>, bool> FrontierSelectionNode::selectFrontierCountUnknowns(const std::list<frontier_msgs::msg::Frontier>& frontier_list, std::vector<double> polygon_xy_min_max,
-                                         std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, geometry_msgs::msg::Point start_point_w, std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, nav2_costmap_2d::Costmap2D* traversability_costmap, bool use_traversability) {
+                                         std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, geometry_msgs::msg::Point start_point_w, std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, nav2_costmap_2d::Costmap2D* traversability_costmap) {
         traversability_costmap_ = traversability_costmap;
         frontier_msgs::msg::Frontier selected_frontier;
         double selected_alpha = 0;
@@ -358,21 +358,12 @@ namespace frontier_exploration {
         marker_msg_.color.r = 1.0; // Red
         marker_msg_.color.a = 1.0; // Fully opaque
 
-        RCLCPP_INFO(logger_, "GP1");
-
         nav_msgs::msg::Path plan;
         plan.header.frame_id = "map";
         std::unique_ptr<frontier_exploration::NavFn> planner_;
-        RCLCPP_INFO_STREAM(logger_, "GetCells Costmap GP10" << traversability_costmap_->getSizeInCellsX());
-        // rclcpp::sleep_for(std::chrono::milliseconds(1000000));
-        RCLCPP_INFO_STREAM(logger_, "Get Char Map" << traversability_costmap_->getCharMap());
         planner_ = std::make_unique<frontier_exploration::NavFn>(traversability_costmap_->getSizeInCellsX(), traversability_costmap_->getSizeInCellsY());
-        RCLCPP_INFO(logger_, "GP12");
         planner_->setNavArr(traversability_costmap_->getSizeInCellsX(), traversability_costmap_->getSizeInCellsY());
-        RCLCPP_INFO(logger_, "GP13");
         planner_->setCostmap(traversability_costmap_->getCharMap(), true, planner_allow_unknown_);
-
-        RCLCPP_INFO(logger_, "GP2");
 
         // start point
         unsigned int mx, my;
@@ -386,7 +377,6 @@ namespace frontier_exploration {
             struct_obj.information_total = -1;
             return std::make_pair(struct_obj, false);
         }
-        RCLCPP_INFO(logger_, "GP3");
         int map_start[2];
         map_start[0] = mx;
         map_start[1] = my;
@@ -436,7 +426,6 @@ namespace frontier_exploration {
         int path_cut_count = 0;
         int fov_cut = 10;
         double number_of_wayp = 0;
-        RCLCPP_INFO(logger_, "GP5");
         for (int i = len - 1; i >= 0; --i) {
             // convert the plan to world coordinates
             double world_x, world_y;
@@ -488,7 +477,6 @@ namespace frontier_exploration {
                 }
             }
         }
-        RCLCPP_INFO(logger_, "GP6");
         marker_publisher_->publish(marker_msg_);
         plan_pub_->publish(plan);
         if(plan.poses.empty()) {

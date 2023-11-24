@@ -157,7 +157,6 @@ namespace traversability_gridmap
 
     sensor_msgs::msg::PointCloud2::SharedPtr TraversabilityLayer::TransformPCLforAddition(geometry_msgs::msg::Pose pose_selected, sensor_msgs::msg::PointCloud2& pcl_ptr) 
     {
-
         geometry_msgs::msg::Vector3 translation;
         double ztranslation;
 

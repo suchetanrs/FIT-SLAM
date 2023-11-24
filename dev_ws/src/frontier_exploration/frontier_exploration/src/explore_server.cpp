@@ -42,6 +42,7 @@ public:
         this->declare_parameter("goal_aliasing", 0.1);
         this->declare_parameter("retry_count",30);
         this->declare_parameter("nav2_goal_timeout_sec", 35);
+        this->declare_parameter("use_traversability", false);
 
         this->get_parameter("frequency", frequency_);
         this->get_parameter("goal_aliasing", goal_aliasing_);
@@ -104,7 +105,6 @@ public:
                     nav2WaitTime_ = parameter.as_int();
                 }
             }
-
         }
 
         result.successful = true;

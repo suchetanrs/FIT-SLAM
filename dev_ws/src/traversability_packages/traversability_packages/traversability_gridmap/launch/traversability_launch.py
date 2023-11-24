@@ -75,7 +75,7 @@ def generate_launch_description():
             parameters=[configured_params])
         
 
-        return [declare_params_file_cmd, traversability_server, threshold_traversability, pointcloud_transformer]
+        return [declare_params_file_cmd, threshold_traversability, traversability_server, pointcloud_transformer]
 
     opaque_function = OpaqueFunction(function=all_nodes_launch)
 #---------------------------------------------

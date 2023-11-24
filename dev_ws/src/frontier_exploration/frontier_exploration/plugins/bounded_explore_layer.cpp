@@ -39,11 +39,6 @@ namespace frontier_exploration
         polygonService_.reset();
         frontierService_.reset();
         dyn_params_handler_.reset();
-        if (use_traversability_) {
-            traversability_binary_costmap_ros_->deactivate();
-            traversability_binary_costmap_ros_->cleanup();
-            traversability_binary_costmap_thread_.reset();
-        }
     }
 
     void BoundedExploreLayer::onInitialize(){
@@ -56,7 +51,6 @@ namespace frontier_exploration
         declareParameter("frontier_travel_point", rclcpp::ParameterValue(std::string("closest")));
         declareParameter("enabled", rclcpp::ParameterValue(true));
         declareParameter("min_frontier_cluster_size", rclcpp::ParameterValue(1));
-        declareParameter("use_traversability", rclcpp::ParameterValue(true));
         declareParameter("exploration_mode", rclcpp::ParameterValue(std::string("ours")));
 
 
@@ -71,7 +65,6 @@ namespace frontier_exploration
         node->get_parameter(name_ + "." + "frontier_travel_point", frontier_travel_point_);
         node->get_parameter(name_ + "." + "enabled", enabledLayer_);
         node->get_parameter(name_ + "." + "min_frontier_cluster_size", min_frontier_cluster_size_);
-        node->get_parameter(name_ + "." + "use_traversability", use_traversability_);
         node->get_parameter(name_ + "." + "exploration_mode", exploration_mode_);
         if(explore_clear_space_){
             default_value_ = NO_INFORMATION;
@@ -137,8 +130,6 @@ namespace frontier_exploration
                     resize_to_boundary_ = parameter.as_bool();
                 } else if (param_name == "enabled") {
                     enabledLayer_ = parameter.as_bool();
-                } else if (param_name == "use_traversability") {
-                    use_traversability_ = parameter.as_bool();
                 }
             }
             
@@ -245,12 +236,7 @@ namespace frontier_exploration
             }
 
             std::pair<std::pair<frontier_msgs::msg::Frontier, geometry_msgs::msg::Quaternion>, bool> selection_result;
-            if(use_traversability_) {
-                selection_result = frontierSelect_->selectFrontierCountUnknowns(frontier_list, polygon_xy_min_max_, res, start_point_w, srv_res, traversability_binary_costmap_ros_->getCostmap(), use_traversability_);
-            }
-            else {
-                selection_result = frontierSelect_->selectFrontierCountUnknowns(frontier_list, polygon_xy_min_max_, res, start_point_w, srv_res, layered_costmap_->getCostmap(), use_traversability_);
-            }
+            selection_result = frontierSelect_->selectFrontierCountUnknowns(frontier_list, polygon_xy_min_max_, res, start_point_w, srv_res, layered_costmap_->getCostmap());
             if(selection_result.second == false) {
                 return;
             }
@@ -293,21 +279,12 @@ namespace frontier_exploration
 
     geometry_msgs::msg::Quaternion BoundedExploreLayer::createQuaternionMsgFromYaw(double yaw)
     {
-    tf2::Quaternion q;
-    q.setRPY(0, 0, yaw);
-    return tf2::toMsg(q);
+        tf2::Quaternion q;
+        q.setRPY(0, 0, yaw);
+        return tf2::toMsg(q);
     }
 
     void BoundedExploreLayer::updateBoundaryPolygonService(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Request> req, std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Response> res){
-        if(use_traversability_) {
-            traversability_binary_costmap_ros_ = std::make_shared<nav2_costmap_2d::Costmap2DROS>("traversability_binary_costmap",std::string{standard_node_->get_namespace()},"traversability_binary_costmap");
-            traversability_binary_costmap_ros_->configure();
-            // Launch a thread to run the costmap node
-            traversability_binary_costmap_thread_ = std::make_unique<nav2_util::NodeThread>(traversability_binary_costmap_ros_);
-            traversability_binary_costmap_ros_->activate();
-        }
-        
-        
         //clear existing boundary, if any
         polygon_.points.clear();
         std::string tf_error;

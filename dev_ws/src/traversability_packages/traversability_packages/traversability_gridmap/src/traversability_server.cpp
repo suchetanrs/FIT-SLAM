@@ -18,7 +18,6 @@ public:
         // Launch a thread to run the costmap node
         traversability_costmap_thread_ = std::make_unique<nav2_util::NodeThread>(traversability_costmap_ros_);
         traversability_costmap_ros_->activate();
-
     }
 
     ~TraversabilityServer()
