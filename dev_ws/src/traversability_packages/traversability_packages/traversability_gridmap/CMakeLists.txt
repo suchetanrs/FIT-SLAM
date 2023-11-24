@@ -32,6 +32,7 @@ find_package(pluginlib REQUIRED)
 find_package(traversability_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(nav2_costmap_2d REQUIRED)
+find_package(rtabmap_msgs REQUIRED)
 
 find_package(PCL REQUIRED)
 grid_map_package()
@@ -54,6 +55,7 @@ set(dependencies
   cv_bridge
   pluginlib
   traversability_msgs
+  rtabmap_msgs
   nav_msgs
 )
 
