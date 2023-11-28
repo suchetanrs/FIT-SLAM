@@ -192,7 +192,6 @@ private:
             auto srv_req = std::make_shared<frontier_msgs::srv::UpdateBoundaryPolygon::Request>();
             srv_req->explore_boundary = goal->explore_boundary;
             auto resultBoundaryPolygon = updateBoundaryPolygon->async_send_request(srv_req);
-            // RCLCPP_INFO(rclcpp::get_logger("explore_server"),"TempUpdate Boundary Polygon result recieved.");
             std::future_status fstatus = resultBoundaryPolygon.wait_for(std::chrono::seconds(10));
             if(fstatus == std::future_status::ready){
                 RCLCPP_INFO(rclcpp::get_logger("explore_server"),"Region boundary set");
@@ -203,10 +202,7 @@ private:
             }
         }
 
-        //loop until all frontiers are explored
-        // rclcpp::Rate rate(frequency_);
         while(rclcpp::ok() && goal_handle->is_active()){
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("explore_server"), "THE CHECKPOINT IS 0!!!!");
             auto srv_req = std::make_shared<frontier_msgs::srv::GetNextFrontier::Request>();
             auto srv_res = std::make_shared<frontier_msgs::srv::GetNextFrontier::Response>();
 
@@ -228,10 +224,10 @@ private:
             auto resultNextFrontier = getNextFrontier->async_send_request(srv_req);
             std::future_status fstatus = resultNextFrontier.wait_for(std::chrono::seconds(10));
             srv_res = resultNextFrontier.get();
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("explore_server"), "The result of the getNext frontier service is: " << srv_res->next_frontier.pose.position.x << "," << srv_res->next_frontier.pose.position.y);
+            // RCLCPP_INFO_STREAM(rclcpp::get_logger("explore_server"), "The result of the getNext frontier service is: " << srv_res->next_frontier.pose.position.x << "," << srv_res->next_frontier.pose.position.y);
             //check if robot is not within exploration boundary and needs to return to center of search area
             if(goal->explore_boundary.polygon.points.size() > 0 && !pointInPolygon(eval_pose.pose.position,goal->explore_boundary.polygon)){
-                RCLCPP_INFO_STREAM(rclcpp::get_logger("explore_server"), "THE CHECKPOINT IS 1!!!!");
+                // RCLCPP_INFO_STREAM(rclcpp::get_logger("explore_server"), "THE CHECKPOINT IS 1!!!!");
                 //check if robot has explored at least one frontier, and promote debug message to warning
                 if(success_){
                     RCLCPP_ERROR(rclcpp::get_logger("explore_server"),"Robot left exploration boundary, returning to center");
@@ -289,20 +285,11 @@ private:
             //if above conditional does not escape this loop step, search has a valid goal_pose
 
             //check if new goal is close to old goal, hence no need to resend
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("explore_server"),"Moving is: " << moving_);
-            // RCLCPP_INFO_STREAM(rclcpp::get_logger("explore_server"),"The old_goal x is: " << old_goal.pose.pose.position.x);
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("explore_server"),"The goal_pose x is: " << goal_pose.pose.position.x);
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("explore_server"),"Nearby? is: " << pointsNearby(old_goal.pose.pose.position,goal_pose.pose.position,goal_aliasing_*0.5));
-            // if((!moving_ || !pointsNearby(old_goal.pose.pose.position,goal_pose.pose.position,goal_aliasing_*0.5)) && srv_res->success == true){
             if((!moving_ || !pointsNearby(old_goal.pose.pose.position,goal_pose.pose.position,goal_aliasing_*0.5)) && srv_res->success == true){
-                // RCLCPP_INFO_STREAM(rclcpp::get_logger("explore_server"), "THE CHECKPOINT IS 4!!!!" << goal_pose.pose.position.x << "," << goal_pose.pose.position.y);
-
+                
                 // This is to check if old pose is near new pose.
                 old_goal.pose = goal_pose;
-                // auto send_goal_options = rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
-                // send_goal_options.feedback_callback = std::bind(&FrontierExplorationServer::feedbackMovingCb, this, std::placeholders::_1);
-                // send_goal_options.result_callback = std::bind(&FrontierExplorationServer::doneMovingCb, this, std::placeholders::_1);
-                // auto goal_handle_future = nav2Client_->async_send_goal(old_goal, send_goal_options);
+
                 nav2Publisher_->publish(goal_pose);
                 moving_ = true;
                 int waitCount_ = 0;
@@ -315,14 +302,12 @@ private:
                         minuteWait = true;
                     }
                 }
-                // Moving is made false here to treat this as equal to nav2 feedback saying goal is reached.
+                // Moving is made false here to treat this as equal to nav2 feedback saying goal is reached (nav2 timed out here.).
                 moving_ = false;
-                // lock.unlock();
             }
         }
 
         //goal should never be active at this point
-        // ROS_ASSERT(!goal_handle->is_active());
         if(!goal_handle->is_active()){
             RCLCPP_ERROR(rclcpp::get_logger("explore_server"),"Goal Active when it should not be.");
         }
@@ -374,7 +359,6 @@ private:
 
         auto feedback_ = std::make_shared<NavigateToPose::Feedback>();
         feedback_->current_pose = feedback->current_pose;
-        // action_server_->publish_feedback(feedback_);
     }
 
     /**

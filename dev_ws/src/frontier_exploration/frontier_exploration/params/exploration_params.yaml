@@ -18,8 +18,9 @@ frontier_selection_node:
   ros__parameters:
     exploration_mode: ours
     counter: 031150
-    alpha: 0.26
-    beta: 0.49
+    alpha: 0.26 #set to 1.0 for maximum weight to information and 0.0 for maximum weight to frontier path distance.
+    beta: 0.49 #set to 1.0 for maximum weight to u1 and 0.0 for maximum weight to information on path.
+    N_best_for_u2: 7 #set to -1 for considering all the frontier for path computation (this will make the algorithm very time instensive!)
     planner_allow_unknown: true
     frontier_detect_radius: 0.2
 

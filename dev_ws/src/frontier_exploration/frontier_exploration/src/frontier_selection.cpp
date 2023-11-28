@@ -17,13 +17,13 @@ namespace frontier_exploration {
         plan_pub_->on_activate();
 
         // Create a publisher for the Marker message
-        marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("two_triangles_marker", 10);
+        marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
         marker_publisher_->on_activate();
 
         landmark_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("landmark_marker", 10);
         landmark_publisher_->on_activate();
 
-        viz_pose_publisher_ = node->create_publisher<geometry_msgs::msg::PoseStamped>("viz_pose", 10);
+        viz_pose_publisher_ = node->create_publisher<geometry_msgs::msg::PoseStamped>("u1_pose", 10);
         viz_pose_publisher_->on_activate();
 
         client_node_->declare_parameter("exploration_mode", "random");
@@ -43,6 +43,9 @@ namespace frontier_exploration {
 
         client_node_->declare_parameter("planner_allow_unknown", false);
         client_node_->get_parameter("planner_allow_unknown", planner_allow_unknown_);
+
+        client_node_->declare_parameter("N_best_for_u2", 6);
+        client_node_->get_parameter("N_best_for_u2", N_best_for_u2_);
 
         get_nodes_in_radius_client_ = client_node_->create_client<rtabmap_msgs::srv::GetNodesInRadius>("get_nodes_in_radius");
         // map_subscription_ = node->create_subscription<octomap_msgs::msg::Octomap>("octomap_full", 
@@ -99,7 +102,7 @@ namespace frontier_exploration {
     }
 
     // @brief order of polygon points is : minx, miny, maxx, maxy
-    std::pair<std::pair<frontier_msgs::msg::Frontier, geometry_msgs::msg::Quaternion>, bool> FrontierSelectionNode::selectFrontierCountUnknowns(const std::list<frontier_msgs::msg::Frontier>& frontier_list, std::vector<double> polygon_xy_min_max,
+    SelectionResult FrontierSelectionNode::selectFrontierCountUnknowns(const std::list<frontier_msgs::msg::Frontier>& frontier_list, std::vector<double> polygon_xy_min_max,
                                          std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, geometry_msgs::msg::Point start_point_w, std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, nav2_costmap_2d::Costmap2D* traversability_costmap) {
         traversability_costmap_ = traversability_costmap;
         frontier_msgs::msg::Frontier selected_frontier;
@@ -113,12 +116,20 @@ namespace frontier_exploration {
             RCLCPP_ERROR(logger_, "No frontiers found from frontier search.");
             res->success = false;
             res->next_frontier.pose.position = selected_frontier.centroid;
-            return std::make_pair(std::make_pair(selected_frontier,selected_orientation), false);
+            SelectionResult selection_result;
+            selection_result.frontier = selected_frontier;
+            selection_result.orientation = selected_orientation;
+            selection_result.success = false;
+            return selection_result;
         }
 
         if(polygon_xy_min_max.size() <= 0) {
             RCLCPP_ERROR(logger_, "Frontier cannot be selected");
-            return std::make_pair(std::make_pair(selected_frontier, selected_orientation), false);
+            SelectionResult selection_result;
+            selection_result.frontier = selected_frontier;
+            selection_result.orientation = selected_orientation;
+            selection_result.success = false;
+            return selection_result;
         }        
 
         for(auto point : polygon_xy_min_max) {
@@ -126,10 +137,10 @@ namespace frontier_exploration {
         }
 
         auto count_index = 0;
-        std::vector<FrontierCalcInformation> content_per_FrontierCalc;
-        std::vector<std::pair<FrontierCalcInformation, double>> FrontierCalc_with_utility;
+        std::vector<FrontierWithArrivalInformation> frontier_with_properties_vector;
+        std::vector<std::pair<FrontierWithArrivalInformation, double>> frontier_with_u1_utility;
         int min_traversable_distance = std::numeric_limits<int>::max(); // in m, TODO: if traversability is included, min_traversable_distance is the distance of the path computed through the map.
-        int max_info_per_FrontierCalc_ = 0.0;
+        int max_arrival_info_per_frontier = 0.0;
         RCLCPP_INFO_STREAM(logger_, "No of frontiers is: " << frontier_list.size());
         for (auto frontier : frontier_list) {
             count_index ++;
@@ -156,7 +167,6 @@ namespace frontier_exploration {
                 unsigned int max_length = radius / (costmap_->getResolution());
                 sx = frontier.initial.x;
                 sy = frontier.initial.y;
-                RCLCPP_INFO_STREAM(logger_, "CH1");
                 std::vector<int> information_along_ray;
 
                 for(double alpha = 0; alpha <= (2 * M_PI); alpha+=theta) {
@@ -181,7 +191,11 @@ namespace frontier_exploration {
                     int dy_full = y1 - y0;
                     double dist = std::hypot(dx_full, dy_full);
                     if (dist < min_length) {
-                        return std::make_pair(std::make_pair(selected_frontier, selected_orientation), false);
+                        SelectionResult selection_result;
+                        selection_result.frontier = selected_frontier;
+                        selection_result.orientation = selected_orientation;
+                        selection_result.success = false;
+                        return selection_result;
                     }
                     unsigned int min_x0, min_y0;
                     if (dist > 0.0) {
@@ -221,7 +235,6 @@ namespace frontier_exploration {
                     }
                     auto info_addition = cell_gatherer.getCells();
                     information_along_ray.push_back(info_addition.size());
-                    RCLCPP_INFO_STREAM(logger_, "Info size: " << info_addition.size());
                     std::vector<geometry_msgs::msg::Pose> vizpoints;
                     for (size_t z = 0; z<info_addition.size(); z++) {
                         double wmx, wmy;
@@ -231,7 +244,6 @@ namespace frontier_exploration {
                         pnts.position.y = wmy;
                         vizpoints.push_back(pnts);
                     }
-                    // rclcpp::sleep_for(std::chrono::milliseconds(500));
                 } // alpha end
                 
                 std::vector<int> kernel(6, 1);
@@ -252,77 +264,79 @@ namespace frontier_exploration {
                     }
                 }
 
-                FrontierCalcInformation f_info(frontier, maxValue, maxIndex * 0.15 , count_index, length_to_frontier);
-                content_per_FrontierCalc.push_back(f_info);
-                max_info_per_FrontierCalc_ = std::max(max_info_per_FrontierCalc_, maxValue);
+                FrontierWithArrivalInformation f_info(frontier, maxValue, maxIndex * 0.15 , count_index, length_to_frontier);
+                frontier_with_properties_vector.push_back(f_info);
+                max_arrival_info_per_frontier = std::max(max_arrival_info_per_frontier, maxValue);
                 min_traversable_distance = std::min(min_traversable_distance, length_to_frontier);
             }
         } // frontier end
-        double max_utility = 0;
-        for (auto FrontierCalc : content_per_FrontierCalc) {
-            // the distance term is inverted because we need to choose the closest frontier with tradeoff.
-            auto utility = (alpha_ * (static_cast<double>(FrontierCalc.information_) / static_cast<double>(max_info_per_FrontierCalc_))) + 
-                            ((1.0-alpha_) * (static_cast<double>(min_traversable_distance) / FrontierCalc.path_length_));
-            FrontierCalc_with_utility.push_back(std::make_pair(FrontierCalc, utility));
-            if (utility > max_utility) {
-                max_utility = utility;
-                RCLCPP_INFO_STREAM(logger_, "Max utility: " << max_utility);
-                RCLCPP_INFO_STREAM(logger_, "Max information: " << max_info_per_FrontierCalc_);
-                RCLCPP_INFO_STREAM(logger_, "Max information" << max_info_per_FrontierCalc_);
-                RCLCPP_INFO_STREAM(logger_, "Max utility: " << max_utility);
-                RCLCPP_INFO_STREAM(logger_, "Min distance " << min_traversable_distance);
-                selected_alpha = FrontierCalc.alpha_;
-                selected_frontier = FrontierCalc.frontier_;
-                // auto vizpoints = FrontierCalc.unobserved_points_;
 
+        // U1 Utility
+        double max_u1_utility = 0;
+        for (auto frontier_with_properties : frontier_with_properties_vector) {
+            // the distance term is inverted because we need to choose the closest frontier with tradeoff.
+            auto utility = (alpha_ * (static_cast<double>(frontier_with_properties.information_) / static_cast<double>(max_arrival_info_per_frontier))) + 
+                            ((1.0-alpha_) * (static_cast<double>(min_traversable_distance) / frontier_with_properties.path_length_));
+            frontier_with_u1_utility.push_back(std::make_pair(frontier_with_properties, utility));
+            if (utility > max_u1_utility) {
+                max_u1_utility = utility;
+                selected_alpha = frontier_with_properties.alpha_;
+                selected_frontier = frontier_with_properties.frontier_;
+
+                RCLCPP_INFO_STREAM(logger_, "Max u1 utility: " << max_u1_utility);
+                RCLCPP_INFO_STREAM(logger_, "Max information: " << max_arrival_info_per_frontier);
+                RCLCPP_INFO_STREAM(logger_, "Min distance " << min_traversable_distance);
                 // visualization_msgs::msg::Marker marker_msg_points_;
                 // landmarkViz(vizpoints, marker_msg_points_);
                 // landmark_publisher_->publish(marker_msg_points_);
-                geometry_msgs::msg::PoseStamped vizpose;
-                vizpose.header.frame_id = "map";
-                vizpose.pose.position.x = selected_frontier.initial.x;
-                vizpose.pose.position.y = selected_frontier.initial.y;
-                vizpose.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(selected_alpha + theta / 2);
-                viz_pose_publisher_->publish(vizpose);
             }
         }
-
         selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(selected_alpha + theta / 2);
 
-        FrontierCalcSecondValueComparator FrontierCalc_comp;
-        frontier_msgs::msg::Frontier::SharedPtr frontier_selected_post_information;
-        double alpha_post_information;
+        geometry_msgs::msg::PoseStamped vizpose;
+        vizpose.header.frame_id = "map";
+        vizpose.pose.position.x = selected_frontier.initial.x;
+        vizpose.pose.position.y = selected_frontier.initial.y;
+        vizpose.pose.orientation = selected_orientation;
+        viz_pose_publisher_->publish(vizpose);
+
+
+        FrontierU1Comparator frontier_u1_comp;
         // sort the frontier list based on the utility value
-        std::sort(FrontierCalc_with_utility.begin(), FrontierCalc_with_utility.end(), FrontierCalc_comp);
-        // RCLCPP_INFO_STREAM(logger_, "Sorted the FrontierCalc list");
+        std::sort(frontier_with_u1_utility.begin(), frontier_with_u1_utility.end(), frontier_u1_comp);
 
 
+        // U2 UTILITY
+        frontier_msgs::msg::Frontier::SharedPtr frontier_selected_post_u2;
+        double alpha_post_information;
         // std::map of frontier information mapped to the new utility
-        std::map<frontier_exploration::FrontierCalcInformation, double> FrontierCalc_with_p_inf_utility;
-        if(FrontierCalc_with_utility.size() > 0) {
-            double max_utility_information = 0;
+        std::map<frontier_exploration::FrontierWithArrivalInformation, double> frontier_with_u2_utility;
+
+        if(frontier_with_u1_utility.size() > 0) {
+            double max_u2_utility = 0;
             double maximum_path_information = 0;
-            for (size_t m = FrontierCalc_with_utility.size() - 1; m >=FrontierCalc_with_utility.size() - 6; m--) {
+            if(N_best_for_u2_ == -1) {
+                N_best_for_u2_ = frontier_with_u1_utility.size();
+            }
+            for (size_t m = frontier_with_u1_utility.size() - 1; m >=frontier_with_u1_utility.size() - N_best_for_u2_; m--) {
                 if(m == 0) {
                     break;
                 }
-                RCLCPP_INFO_STREAM(logger_, "Current max information: " << FrontierCalc_with_utility[m].first.information_);
-                auto plan_result = getPlanForFrontier(start_point_w, FrontierCalc_with_utility[m].first.frontier_, map_data, true);
+                auto plan_result = getPlanForFrontier(start_point_w, frontier_with_u1_utility[m].first.frontier_, map_data, true);
                 if(plan_result.first.information_total > maximum_path_information) {
                     maximum_path_information = plan_result.first.information_total;
                 }
-                FrontierCalc_with_p_inf_utility[FrontierCalc_with_utility[m].first]=plan_result.first.information_total;
+                frontier_with_u2_utility[frontier_with_u1_utility[m].first]=plan_result.first.information_total;
             }
-            for (size_t m = FrontierCalc_with_utility.size() - 1; m >=FrontierCalc_with_utility.size() - 6; m--) {
+            for (size_t m = frontier_with_u1_utility.size() - 1; m >=frontier_with_u1_utility.size() - N_best_for_u2_; m--) {
                 if(m == 0) {
                     break;
                 }
-                double current_utility = (beta_ * FrontierCalc_with_utility[m].second + (1-beta_) * (FrontierCalc_with_p_inf_utility[FrontierCalc_with_utility[m].first]/maximum_path_information));
-                if(current_utility > max_utility_information) {
-                    RCLCPP_INFO_STREAM(logger_, "Current updated utility" << current_utility);
-                    // max_utility_information = current_utility;
-                    alpha_post_information = FrontierCalc_with_utility[m].first.alpha_;
-                    frontier_selected_post_information = std::make_shared<frontier_msgs::msg::Frontier>(FrontierCalc_with_utility[m].first.frontier_);
+                double current_utility = ((beta_ * frontier_with_u1_utility[m].second) + ((1-beta_) * (frontier_with_u2_utility[frontier_with_u1_utility[m].first]/maximum_path_information)));
+                if(current_utility > max_u2_utility) {
+                    // max_u2_utility = current_utility;
+                    alpha_post_information = frontier_with_u1_utility[m].first.alpha_;
+                    frontier_selected_post_u2 = std::make_shared<frontier_msgs::msg::Frontier>(frontier_with_u1_utility[m].first.frontier_);
                 }
             }
         }
@@ -330,170 +344,25 @@ namespace frontier_exploration {
         auto duration = (endTime - startTime).count() / 1.0;
         RCLCPP_INFO_STREAM(logger_, "Time taken to search is: " << duration);
         // To handle the case where all the max frontiers have zero information.
-        if(frontier_selected_post_information) {
+        if(frontier_selected_post_u2) {
             selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(alpha_post_information + theta / 2);
-            RCLCPP_ERROR_STREAM(logger_, "RETURNING COMPUTED PATH" << frontier_selected_post_information->initial.x << ", " << frontier_selected_post_information->initial.y);
-            frontier_blacklist_.push_back(*frontier_selected_post_information);
-            return std::make_pair(std::make_pair(*frontier_selected_post_information, selected_orientation), true);
+            frontier_blacklist_.push_back(*frontier_selected_post_u2);
+            SelectionResult selection_result;
+            selection_result.frontier = *frontier_selected_post_u2;
+            selection_result.orientation = selected_orientation;
+            selection_result.success = true;
+            return selection_result;
         }
         else {
-            RCLCPP_ERROR(logger_, "NOT !! RETURNING COMPUTED PATH");
+            RCLCPP_WARN(logger_, "The selected frontier was not updated after U2 computation.");
             frontier_blacklist_.push_back(selected_frontier);
-            return std::make_pair(std::make_pair(selected_frontier, selected_orientation), true);
+            SelectionResult selection_result;
+            selection_result.frontier = selected_frontier;
+            selection_result.orientation = selected_orientation;
+            selection_result.success = false;
+            return selection_result;
         }
     }
-
-    std::pair<PathWithInfo, bool> FrontierSelectionNode::getPlanForFrontier(geometry_msgs::msg::Point start_point_w, frontier_msgs::msg::Frontier goal_point_w, 
-    std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, bool compute_information) {
-        double information_for_path = 0;
-        PathWithInfo struct_obj;
-        visualization_msgs::msg::Marker marker_msg_;
-        // Initialize the Marker message
-        marker_msg_.header.frame_id = "map"; // Set the frame ID
-        marker_msg_.ns = "two_triangles_namespace";
-        marker_msg_.id = 0;
-        marker_msg_.type = visualization_msgs::msg::Marker::LINE_LIST;
-        marker_msg_.action = visualization_msgs::msg::Marker::ADD;
-        marker_msg_.scale.x = 0.02; // Line width
-        marker_msg_.color.r = 1.0; // Red
-        marker_msg_.color.a = 1.0; // Fully opaque
-
-        nav_msgs::msg::Path plan;
-        plan.header.frame_id = "map";
-        std::unique_ptr<frontier_exploration::NavFn> planner_;
-        planner_ = std::make_unique<frontier_exploration::NavFn>(traversability_costmap_->getSizeInCellsX(), traversability_costmap_->getSizeInCellsY());
-        planner_->setNavArr(traversability_costmap_->getSizeInCellsX(), traversability_costmap_->getSizeInCellsY());
-        planner_->setCostmap(traversability_costmap_->getCharMap(), true, planner_allow_unknown_);
-
-        // start point
-        unsigned int mx, my;
-        if (!traversability_costmap_->worldToMap(start_point_w.x, start_point_w.y, mx, my)) {
-            RCLCPP_WARN(
-            logger_,
-            "Cannot create a plan: the robot's start position is off the global"
-            " costmap. Planning will always fail, are you sure"
-            " the robot has been properly localized?");
-            struct_obj.path = plan;
-            struct_obj.information_total = -1;
-            return std::make_pair(struct_obj, false);
-        }
-        int map_start[2];
-        map_start[0] = mx;
-        map_start[1] = my;
-
-        // goal point
-        if (!traversability_costmap_->worldToMap(goal_point_w.initial.x, goal_point_w.initial.y, mx, my)) {
-            RCLCPP_WARN(
-            logger_,
-            "The goal sent to the planner is off the global costmap."
-            " Planning will always fail to this goal.");
-            struct_obj.path = plan;
-            struct_obj.information_total = -1;
-            return std::make_pair(struct_obj, false);
-        }
-
-        int map_goal[2];
-        map_goal[0] = mx;
-        map_goal[1] = my;
-
-        planner_->setStart(map_goal); // Take note this is computed backwards. Copied what was done in nav2 navfn planner.
-        planner_->setGoal(map_start);
-
-        if(planner_->calcNavFnAstar()) {
-            // RCLCPP_INFO(logger_, "Plan Found.");
-        }
-        if(!planner_->calcNavFnAstar()) {
-            RCLCPP_ERROR(logger_, "Plan not Found.");
-            struct_obj.path = plan;
-            struct_obj.information_total = -1;
-            return std::make_pair(struct_obj, false);
-        }
-
-        const int & max_cycles = (traversability_costmap_->getSizeInCellsX() >= traversability_costmap_->getSizeInCellsY()) ?
-            (traversability_costmap_->getSizeInCellsX() * 4) : (traversability_costmap_->getSizeInCellsY() * 4);
-        int path_len = planner_->calcPath(max_cycles);
-        if (path_len == 0) {
-            RCLCPP_ERROR(logger_, "Path length is zero");
-            struct_obj.path = plan;
-            struct_obj.information_total = -1;
-            return std::make_pair(struct_obj, false);
-        }
-        auto cost = planner_->getLastPathCost();
-        // extract the plan
-        float * x = planner_->getPathX();
-        float * y = planner_->getPathY();
-        int len = planner_->getPathLen();
-        int path_cut_count = 0;
-        int fov_cut = 10;
-        double number_of_wayp = 0;
-        for (int i = len - 1; i >= 0; --i) {
-            // convert the plan to world coordinates
-            double world_x, world_y;
-            traversability_costmap_->mapToWorld(x[i], y[i], world_x, world_y);
-            geometry_msgs::msg::PoseStamped pose_from;
-            pose_from.pose.position.x = world_x;
-            pose_from.pose.position.y = world_y;
-            pose_from.pose.position.z = 0.0;
-            plan.poses.push_back(pose_from);
-            path_cut_count ++;
-            if(path_cut_count > static_cast<int>(1.5/traversability_costmap_->getResolution()) && compute_information == true) {
-                number_of_wayp++;
-                visualization_msgs::msg::Marker marker_msg_points_;
-                double world_x2, world_y2;
-                traversability_costmap_->mapToWorld(x[std::max(i-10, 0)], y[std::max(i-10, 0)], world_x2, world_y2);
-                geometry_msgs::msg::PoseStamped pose_to;
-                pose_to.pose.position.x = world_x2;
-                pose_to.pose.position.y = world_y2;
-                pose_to.pose.position.z = 0.0;
-                auto oriented_pose = frontier_exploration_planning::getRelativePoseGivenTwoPoints(pose_from.pose.position, pose_to.pose.position);
-                auto vertices = frontier_exploration_utils::getVerticesOfFrustum2D(oriented_pose, 2.0, 1.089);
-                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[0]));
-                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[1]));
-                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[1]));
-                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[2]));
-                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[2]));
-                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[0]));
-                path_cut_count = 0;
-
-                // Getting poses within 4.5 m radius.
-                geometry_msgs::msg::Pose request_pose;
-                request_pose.position.x = oriented_pose.position.x;
-                request_pose.position.y = oriented_pose.position.y;
-
-                // auto startTime = std::chrono::high_resolution_clock::now();
-                auto nodes_in_radius = frontier_exploration_planning::getNodesInRadius(map_data->data.graph.poses, map_data->data.graph.poses_id, 4.5, request_pose, logger_);
-                // auto endTime = std::chrono::high_resolution_clock::now();
-                // auto duration = (endTime - startTime).count() / 1.0;
-                // RCLCPP_INFO_STREAM(logger_, "Time taken to find nodes in radius is: " << duration);
-
-                auto Q = Eigen::Matrix3d::Identity() * 0.01;
-                auto info_pcl = frontier_exploration_information::computeInformationForPose(oriented_pose, 
-                nodes_in_radius.first, nodes_in_radius.second, map_data->data, 2.0, 1.089, 0.5, Q, true, logger_, costmap_);
-                if(info_pcl.first > 0) {
-                    landmarkViz(info_pcl.second, marker_msg_points_);
-                    landmark_publisher_->publish(marker_msg_points_);
-                    // RCLCPP_INFO_STREAM(logger_, "The information is: " << info_pcl.first);
-                    information_for_path += info_pcl.first;
-                }
-            }
-        }
-        marker_publisher_->publish(marker_msg_);
-        plan_pub_->publish(plan);
-        if(plan.poses.empty()) {
-            struct_obj.path = plan;
-            struct_obj.information_total = -1;
-            return std::make_pair(struct_obj, false);
-        }
-        struct_obj.path = plan;
-        if(number_of_wayp == 0)
-            struct_obj.information_total = information_for_path;
-        if(number_of_wayp != 0) {
-            // RCLCPP_ERROR_STREAM(logger_, "Information is divided by: " << number_of_wayp);
-            struct_obj.information_total = information_for_path / number_of_wayp;
-        }
-        return std::make_pair(struct_obj, true);
-    }
-
 
     std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierClosest(const std::list<frontier_msgs::msg::Frontier>& frontier_list, const std::vector<std::vector<double>>& every_frontier, std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, std::string globalFrameID) {
         //create placeholder for selected frontier
@@ -598,6 +467,157 @@ namespace frontier_exploration {
 
         frontier_blacklist_.push_back(selected);
         return std::make_pair(selected, frontierSelectionFlag);
+    }
+
+    std::pair<PathWithInfo, bool> FrontierSelectionNode::getPlanForFrontier(geometry_msgs::msg::Point start_point_w, frontier_msgs::msg::Frontier goal_point_w, 
+    std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, bool compute_information) {
+        double information_for_path = 0;
+        PathWithInfo struct_obj;
+        visualization_msgs::msg::Marker marker_msg_;
+        // Initialize the Marker message
+        marker_msg_.header.frame_id = "map"; // Set the frame ID
+        marker_msg_.ns = "two_triangles_namespace";
+        marker_msg_.id = 0;
+        marker_msg_.type = visualization_msgs::msg::Marker::LINE_LIST;
+        marker_msg_.action = visualization_msgs::msg::Marker::ADD;
+        marker_msg_.scale.x = 0.02; // Line width
+        marker_msg_.color.r = 1.0; // Red
+        marker_msg_.color.a = 1.0; // Fully opaque
+
+        nav_msgs::msg::Path plan;
+        plan.header.frame_id = "map";
+        std::unique_ptr<frontier_exploration::NavFn> planner_;
+        planner_ = std::make_unique<frontier_exploration::NavFn>(traversability_costmap_->getSizeInCellsX(), traversability_costmap_->getSizeInCellsY());
+        planner_->setNavArr(traversability_costmap_->getSizeInCellsX(), traversability_costmap_->getSizeInCellsY());
+        planner_->setCostmap(traversability_costmap_->getCharMap(), true, planner_allow_unknown_);
+
+        // start point
+        unsigned int mx, my;
+        if (!traversability_costmap_->worldToMap(start_point_w.x, start_point_w.y, mx, my)) {
+            RCLCPP_WARN(
+            logger_,
+            "Cannot create a plan: the robot's start position is off the global"
+            " costmap. Planning will always fail, are you sure"
+            " the robot has been properly localized?");
+            struct_obj.path = plan;
+            struct_obj.information_total = -1;
+            return std::make_pair(struct_obj, false);
+        }
+        int map_start[2];
+        map_start[0] = mx;
+        map_start[1] = my;
+
+        // goal point
+        if (!traversability_costmap_->worldToMap(goal_point_w.initial.x, goal_point_w.initial.y, mx, my)) {
+            RCLCPP_WARN(
+            logger_,
+            "The goal sent to the planner is off the global costmap."
+            " Planning will always fail to this goal.");
+            struct_obj.path = plan;
+            struct_obj.information_total = -1;
+            return std::make_pair(struct_obj, false);
+        }
+
+        int map_goal[2];
+        map_goal[0] = mx;
+        map_goal[1] = my;
+
+        planner_->setStart(map_goal); // Take note this is computed backwards. Copied what was done in nav2 navfn planner.
+        planner_->setGoal(map_start);
+
+        if(planner_->calcNavFnAstar()) {
+            // RCLCPP_INFO(logger_, "Plan Found.");
+        }
+        if(!planner_->calcNavFnAstar()) {
+            RCLCPP_ERROR(logger_, "Plan not Found.");
+            struct_obj.path = plan;
+            struct_obj.information_total = -1;
+            return std::make_pair(struct_obj, false);
+        }
+
+        const int & max_cycles = (traversability_costmap_->getSizeInCellsX() >= traversability_costmap_->getSizeInCellsY()) ?
+            (traversability_costmap_->getSizeInCellsX() * 4) : (traversability_costmap_->getSizeInCellsY() * 4);
+        int path_len = planner_->calcPath(max_cycles);
+        if (path_len == 0) {
+            RCLCPP_ERROR(logger_, "Path length is zero");
+            struct_obj.path = plan;
+            struct_obj.information_total = -1;
+            return std::make_pair(struct_obj, false);
+        }
+        auto cost = planner_->getLastPathCost();
+        // extract the plan
+        float * x = planner_->getPathX();
+        float * y = planner_->getPathY();
+        int len = planner_->getPathLen();
+        int path_cut_count = 0;
+        int fov_cut = 10;
+        double number_of_wayp = 0;
+        for (int i = len - 1; i >= 0; --i) {
+            // convert the plan to world coordinates
+            double world_x, world_y;
+            traversability_costmap_->mapToWorld(x[i], y[i], world_x, world_y);
+            geometry_msgs::msg::PoseStamped pose_from;
+            pose_from.pose.position.x = world_x;
+            pose_from.pose.position.y = world_y;
+            pose_from.pose.position.z = 0.0;
+            plan.poses.push_back(pose_from);
+            path_cut_count ++;
+            if(path_cut_count > static_cast<int>(1.5 / traversability_costmap_->getResolution()) && compute_information == true) {
+                number_of_wayp++;
+                visualization_msgs::msg::Marker marker_msg_points_;
+                double world_x2, world_y2;
+                traversability_costmap_->mapToWorld(x[std::max(i-10, 0)], y[std::max(i-10, 0)], world_x2, world_y2);
+                geometry_msgs::msg::PoseStamped pose_to;
+                pose_to.pose.position.x = world_x2;
+                pose_to.pose.position.y = world_y2;
+                pose_to.pose.position.z = 0.0;
+                auto oriented_pose = frontier_exploration_planning::getRelativePoseGivenTwoPoints(pose_from.pose.position, pose_to.pose.position);
+                auto vertices = frontier_exploration_utils::getVerticesOfFrustum2D(oriented_pose, 2.0, 1.089);
+                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[0]));
+                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[1]));
+                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[1]));
+                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[2]));
+                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[2]));
+                marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[0]));
+                path_cut_count = 0;
+
+                // Getting poses within 4.5 m radius.
+                geometry_msgs::msg::Pose request_pose;
+                request_pose.position.x = oriented_pose.position.x;
+                request_pose.position.y = oriented_pose.position.y;
+
+                // auto startTime = std::chrono::high_resolution_clock::now();
+                auto nodes_in_radius = frontier_exploration_planning::getNodesInRadius(map_data->data.graph.poses, map_data->data.graph.poses_id, 4.5, request_pose, logger_);
+                // auto endTime = std::chrono::high_resolution_clock::now();
+                // auto duration = (endTime - startTime).count() / 1.0;
+                // RCLCPP_INFO_STREAM(logger_, "Time taken to find nodes in radius is: " << duration);
+
+                auto Q = Eigen::Matrix3d::Identity() * 0.01;
+                auto info_pcl = frontier_exploration_information::computeInformationForPose(oriented_pose, 
+                nodes_in_radius.first, nodes_in_radius.second, map_data->data, 2.0, 1.089, 0.5, Q, true, logger_, costmap_);
+                if(info_pcl.first > 0) {
+                    landmarkViz(info_pcl.second, marker_msg_points_);
+                    landmark_publisher_->publish(marker_msg_points_);
+                    // RCLCPP_INFO_STREAM(logger_, "The information is: " << info_pcl.first);
+                    information_for_path += info_pcl.first;
+                }
+            }
+        }
+        marker_publisher_->publish(marker_msg_);
+        plan_pub_->publish(plan);
+        if(plan.poses.empty()) {
+            struct_obj.path = plan;
+            struct_obj.information_total = -1;
+            return std::make_pair(struct_obj, false);
+        }
+        struct_obj.path = plan;
+        if(number_of_wayp == 0)
+            struct_obj.information_total = information_for_path;
+        if(number_of_wayp != 0) {
+            // RCLCPP_ERROR_STREAM(logger_, "Information is divided by: " << number_of_wayp);
+            struct_obj.information_total = information_for_path / number_of_wayp;
+        }
+        return std::make_pair(struct_obj, true);
     }
 
 

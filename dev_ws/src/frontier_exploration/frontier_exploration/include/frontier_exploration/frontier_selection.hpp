@@ -40,86 +40,107 @@
 #include <random>
 namespace frontier_exploration {
 
+/**
+ * STRUCTS
+*/
 struct PathWithInfo {
     nav_msgs::msg::Path path;
     double information_total;
 };
 
+struct SelectionResult {
+    frontier_msgs::msg::Frontier frontier;
+    geometry_msgs::msg::Quaternion orientation;
+    bool success;
+    std::map<frontier_msgs::msg::Frontier, double> frontier_costs;
+};
+
+
+/**
+ * RAY TRACER CLASS
+*/
+
 // Add the cells which are currently unexplored to the cells_ function.
 class RayTracedCells
 {
-public:
-    RayTracedCells(
-        const nav2_costmap_2d::Costmap2D & costmap,
-        std::vector<nav2_costmap_2d::MapLocation> & cells)
-    : costmap_(costmap), cells_(cells)
-    {
-        hit_obstacle = false;
-    }
-
-    // just push the relevant cells back onto the list
-    inline void operator()(unsigned int offset)
-    {
-        nav2_costmap_2d::MapLocation loc;
-        costmap_.indexToCells(offset, loc.x, loc.y);
-        bool presentflag = false;
-        for (auto item : cells_) {
-            if(item.x == loc.x && item.y == loc.y)
-                presentflag = true;
+    public:
+        RayTracedCells(
+            const nav2_costmap_2d::Costmap2D & costmap,
+            std::vector<nav2_costmap_2d::MapLocation> & cells)
+        : costmap_(costmap), cells_(cells)
+        {
+            hit_obstacle = false;
         }
-        if(presentflag == false) {
-            if((int)costmap_.getCost(offset) == 255 && hit_obstacle == false) {
-                cells_.push_back(loc);
+
+        // just push the relevant cells back onto the list
+        inline void operator()(unsigned int offset)
+        {
+            nav2_costmap_2d::MapLocation loc;
+            costmap_.indexToCells(offset, loc.x, loc.y);
+            bool presentflag = false;
+            for (auto item : cells_) {
+                if(item.x == loc.x && item.y == loc.y)
+                    presentflag = true;
             }
-            if((int)costmap_.getCost(offset) > 240 && (int)costmap_.getCost(offset) != 255) {
-                hit_obstacle = true;
+            if(presentflag == false) {
+                if((int)costmap_.getCost(offset) == 255 && hit_obstacle == false) {
+                    cells_.push_back(loc);
+                }
+                if((int)costmap_.getCost(offset) > 240 && (int)costmap_.getCost(offset) != 255) {
+                    hit_obstacle = true;
+                }
             }
         }
-    }
 
-    std::vector<nav2_costmap_2d::MapLocation> getCells() {
-        return cells_;
-    }
+        std::vector<nav2_costmap_2d::MapLocation> getCells() {
+            return cells_;
+        }
 
-private:
-    const nav2_costmap_2d::Costmap2D & costmap_;
-    std::vector<nav2_costmap_2d::MapLocation> & cells_;
-    bool hit_obstacle;
+    private:
+        const nav2_costmap_2d::Costmap2D & costmap_;
+        std::vector<nav2_costmap_2d::MapLocation> & cells_;
+        bool hit_obstacle;
+};
+
+/**
+ * INFORMATION CALCULATION
+*/
+
+class FrontierWithArrivalInformation {
+    public:
+        FrontierWithArrivalInformation(frontier_msgs::msg::Frontier frontier, int information, double alpha, int count_index, int path_length) 
+        {
+            frontier_ = frontier;
+            information_ = information;
+            alpha_ = alpha;
+            count_index_ = count_index;
+            path_length_ = path_length;
+        }
+
+        // Define the less-than operator for comparing instances of FrontierWithArrivalInformation
+        bool operator<(const FrontierWithArrivalInformation& other) const {
+            // Compare based on some criteria, e.g., information
+            return path_length_ < other.path_length_;
+        }
+
+        frontier_msgs::msg::Frontier frontier_;
+        size_t information_;
+        double alpha_;
+        int count_index_;
+        int path_length_;
+};
+
+class FrontierU1Comparator {
+    public:
+        bool operator()(const std::pair<FrontierWithArrivalInformation, double>& a, const std::pair<FrontierWithArrivalInformation, double>& b) const {
+            return a.second < b.second;
+        }
 };
 
 
-
-class FrontierCalcInformation {
-public:
-FrontierCalcInformation(frontier_msgs::msg::Frontier frontier, int information, double alpha, int count_index, int path_length) 
-{
-    frontier_ = frontier;
-    information_ = information;
-    alpha_ = alpha;
-    count_index_ = count_index;
-    path_length_ = path_length;
-}
-
-// Define the less-than operator for comparing instances of FrontierCalcInformation
-bool operator<(const FrontierCalcInformation& other) const {
-    // Compare based on some criteria, e.g., information
-    return path_length_ < other.path_length_;
-}
-
-frontier_msgs::msg::Frontier frontier_;
-size_t information_;
-double alpha_;
-int count_index_;
-int path_length_;
-};
-
-class FrontierCalcSecondValueComparator {
-public:
-    bool operator()(const std::pair<FrontierCalcInformation, double>& a, const std::pair<FrontierCalcInformation, double>& b) const {
-        return a.second < b.second;
-    }
-};
-
+/**
+ * FRONTIER SELECTION
+*/
 
 class FrontierSelectionNode {
 public:
@@ -132,19 +153,19 @@ public:
 
     // void mapCallback(const octomap_msgs::msg::Octomap::ConstSharedPtr msg);
 
-    std::pair<std::pair<frontier_msgs::msg::Frontier, geometry_msgs::msg::Quaternion>, bool> selectFrontierCountUnknowns(
+    void bresenham2D(RayTracedCells at, unsigned int abs_da, unsigned int abs_db, int error_b,
+        int offset_a,
+        int offset_b, unsigned int offset,
+        unsigned int max_length,
+        int resolution_cut_factor);
+        
+    SelectionResult selectFrontierCountUnknowns(
         const std::list<frontier_msgs::msg::Frontier>& frontier_list,
         std::vector<double> polygon_xy_min_max,
         std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res,
         geometry_msgs::msg::Point start_point_w, 
         std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data,
         nav2_costmap_2d::Costmap2D* traversability_costmap);
-
-    void bresenham2D(RayTracedCells at, unsigned int abs_da, unsigned int abs_db, int error_b,
-        int offset_a,
-        int offset_b, unsigned int offset,
-        unsigned int max_length,
-        int resolution_cut_factor);
 
     std::pair<frontier_msgs::msg::Frontier, bool> selectFrontierClosest(
         const std::list<frontier_msgs::msg::Frontier>& frontier_list,
@@ -171,7 +192,7 @@ public:
 
     void exportMapCoverage(std::vector<double> polygon_xy_min_max, std::chrono::_V2::system_clock::time_point startTime);
 
-// should be modified to frontier. Currently takes points.
+    // should be modified to frontier. Currently takes points.
     std::pair<PathWithInfo, bool> getPlanForFrontier(geometry_msgs::msg::Point start_point_w, frontier_msgs::msg::Frontier goal_point_w, 
     std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, bool compute_information);
 
@@ -198,6 +219,7 @@ private:
     double beta_;
     std::vector<frontier_msgs::msg::Frontier> frontier_blacklist_;
     bool planner_allow_unknown_;
+    int N_best_for_u2_;
 };
 
 } // namespace frontier_exploration

@@ -152,11 +152,9 @@ namespace frontier_exploration
 
     void BoundedExploreLayer::getNextFrontierService(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res){
         //wait for costmap to get marked with boundary
-        // RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer"), "Resolution is: " << layered_costmap_->getCostmap()->getResolution());
         rclcpp::Rate r(10);
         while (!marked_)
         {
-            // RCLCPP_WARN_STREAM(rclcpp::get_logger("bounded_explore_layer"), "Resolution is: " << layered_costmap_->getCostmap()->getResolution());
             r.sleep();
         }
 
@@ -171,14 +169,12 @@ namespace frontier_exploration
             tf_buffer_->transform(temp_pose,req->start_pose,layered_costmap_->getGlobalFrameID(),tf2::durationFromSec(10));
         }
 
-        // RCLCPP_INFO(standard_node_->get_logger(), "CHECKPOINT 0");
         //initialize frontier search implementation
         frontier_exploration::FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_cluster_size_);
-        // RCLCPP_INFO(standard_node_->get_logger(), "CHECKPOINT 1");
         //get list of frontiers from search implementation
         std::list<frontier_msgs::msg::Frontier> frontier_list = frontierSearch.searchFrom(req->start_pose.pose.position);
         auto every_frontier = frontierSearch.getAllFrontiers();
-        RCLCPP_INFO_STREAM(standard_node_->get_logger(), "CHECKPOINT 2, frontier size: " << frontier_list.size());
+        RCLCPP_INFO_STREAM(standard_node_->get_logger(), "Clusterred frontier size: " << frontier_list.size());
 
         //Select the frontier (Modify this for different algorithms)
         frontierSelect_->exportMapCoverage(polygon_xy_min_max_, startTime_);
@@ -235,14 +231,15 @@ namespace frontier_exploration
             RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service map_data.");
             }
 
-            std::pair<std::pair<frontier_msgs::msg::Frontier, geometry_msgs::msg::Quaternion>, bool> selection_result;
+            // std::pair<std::pair<frontier_msgs::msg::Frontier, geometry_msgs::msg::Quaternion>, bool> selection_result;
+            SelectionResult selection_result;
             selection_result = frontierSelect_->selectFrontierCountUnknowns(frontier_list, polygon_xy_min_max_, res, start_point_w, srv_res, layered_costmap_->getCostmap());
-            if(selection_result.second == false) {
+            if(selection_result.success == false) {
                 return;
             }
-            selected = selection_result.first.first;
+            selected = selection_result.frontier;
             // Uncomment the next line if you are using information acquired after reaching. The pose is important in that case.
-            res->next_frontier.pose.orientation = selection_result.first.second;
+            res->next_frontier.pose.orientation = selection_result.orientation;
             auto endTime = std::chrono::high_resolution_clock::now();
             auto duration = (endTime - startTime).count() / 1.0;
             RCLCPP_INFO_STREAM(logger_, "Time taken to plan to all frontiers is: " << duration);
@@ -254,8 +251,6 @@ namespace frontier_exploration
 
         //Visualize the frontiers
         frontierSelect_->visualizeFrontier(frontier_list, every_frontier, layered_costmap_->getGlobalFrameID());
-
-        RCLCPP_INFO_STREAM(standard_node_->get_logger(), "1: " << polygon_xy_min_max_[0] << ", 2: " << polygon_xy_min_max_[1]);
 
         //set goal pose to next frontier
         res->next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
@@ -273,7 +268,6 @@ namespace frontier_exploration
             res->next_frontier.pose.position = selected.initial;
         }
         res->success = true;
-
     }
 
 
@@ -337,14 +331,14 @@ namespace frontier_exploration
             //resize the costmap to polygon boundaries, don't change resolution
             int size_x, size_y;
             worldToMapNoBounds(max_x_polygon - min_x_polygon, max_y_polygon - min_y_polygon, size_x, size_y);
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("bel"), "Resizing map with parameters matchsize2 start");
-            // layered_costmap_->resizeMap(size_x, size_y, layered_costmap_->getCostmap()->getResolution(), min_x_polygon, min_y_polygon);
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("bel"), "Resizing map with parameters matchsize2 end");
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer"), "Resolution is: " << layered_costmap_->getCostmap()->getResolution()
-                << ", size_x is: " << size_x
-                << ", size_y is: " << size_y
-                << ", min_x_polygon is: " << min_x_polygon
-                << ", min_y_polygon is: " << min_y_polygon);
+            // RCLCPP_INFO_STREAM(rclcpp::get_logger("bel"), "Resizing map with parameters matchsize2 start");
+            // // layered_costmap_->resizeMap(size_x, size_y, layered_costmap_->getCostmap()->getResolution(), min_x_polygon, min_y_polygon);
+            // RCLCPP_INFO_STREAM(rclcpp::get_logger("bel"), "Resizing map with parameters matchsize2 end");
+            // RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer"), "Resolution is: " << layered_costmap_->getCostmap()->getResolution()
+            //     << ", size_x is: " << size_x
+            //     << ", size_y is: " << size_y
+            //     << ", min_x_polygon is: " << min_x_polygon
+            //     << ", min_y_polygon is: " << min_y_polygon);
             matchSize();
 
             polygon_xy_min_max_.push_back(min_x_polygon);
@@ -376,14 +370,7 @@ namespace frontier_exploration
                                            double* min_y, double* max_x, double* max_y){
 
         //check if layer is enabled and configured with a boundary
-        // RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer")," Update bounds Min X and Min Y: " << *min_x << "," << *min_y);
         if (!enabledLayer_ || !configured_){ return; }
-        // RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer")," Enabled configured");
-        //update the whole costmap
-        // *min_x = getOriginX();
-        // *min_y = getOriginY();
-        // *max_x = getSizeInMetersX()+getOriginX();
-        // *max_y = getSizeInMetersY()+getOriginY();
 
         *min_x = -std::numeric_limits<float>::max();
         *max_x = std::numeric_limits<float>::max();
@@ -394,14 +381,9 @@ namespace frontier_exploration
 
     void BoundedExploreLayer::updateCosts(nav2_costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j){
         //check if layer is enabled and configured with a boundary
-        // RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer"),"Marked is set as: " << marked_);
-        // RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer"),"Configured is set as" << configured_);
-        // RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer"),"Enabled is set as" << enabledLayer_);
         if (!enabledLayer_ || !configured_){ 
             return;
         }
-
-        // RCLCPP_INFO(rclcpp::get_logger("bounded_explore_layer"),"updated costs0");
 
         //draw lines between each point in polygon
         MarkCell marker(costmap_, LETHAL_OBSTACLE);
@@ -414,11 +396,8 @@ namespace frontier_exploration
 
             raytraceLine(marker,x_1,y_1,x_2,y_2);
         }
-        // RCLCPP_INFO(rclcpp::get_logger("bounded_explore_layer"),"updated costs1");
         //update the master grid from the internal costmap
         mapUpdateKeepObstacles(master_grid, min_i, min_j, max_i, max_j);
-
-        // RCLCPP_INFO(rclcpp::get_logger("bounded_explore_layer"),"Bounded explore layer updated costs");
 
     }
 
@@ -428,7 +407,6 @@ namespace frontier_exploration
         if(marked_ == false) {
             unsigned char* master = master_grid.getCharMap();
             unsigned int span = master_grid.getSizeInCellsX();
-            // RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer"),"Values:" << max_i << ","<< max_j << "," << min_i << "," << min_j << "," << span << "," << master_grid.getResolution());
             for (int j = min_j; j < max_j; j++)
             {
                 unsigned int it = span*j+min_i;
@@ -442,7 +420,6 @@ namespace frontier_exploration
                 }
             }
             marked_ = true;
-            // RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer"),"Update costs function called, marked set to true" << marked_);
         }
     }
 }
