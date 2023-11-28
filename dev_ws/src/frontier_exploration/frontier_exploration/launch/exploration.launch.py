@@ -18,7 +18,7 @@ def generate_launch_description():
 #---------------------------------------------
 
     #Essential_paths
-    trav_pkg = get_package_share_directory('traversability_gridmap')
+    explore_pkg = get_package_share_directory('frontier_exploration')
 #---------------------------------------------
 
     # LAUNCH ARGS
@@ -39,7 +39,7 @@ def generate_launch_description():
         params_file = LaunchConfiguration('params_file')
         declare_params_file_cmd = DeclareLaunchArgument(
             'params_file',
-            default_value=os.path.join(trav_pkg, 'params', 'traversability_params.yaml'),
+            default_value=os.path.join(explore_pkg, 'params', 'exploration_params.yaml'),
             description='Full path to the ROS2 parameters file to use for all launched nodes')
 
         param_substitutions = {
@@ -53,21 +53,22 @@ def generate_launch_description():
             param_rewrites=param_substitutions,
             convert_types=True)
         
-        traversability_server = Node(
-            package='traversability_gridmap',
-            executable='traversability_server',
+        explore_client = Node(
+            package='frontier_exploration',
+            executable='explore_client',
             output='screen',
             namespace=context.launch_configurations['robot_namespace'],
             parameters=[configured_params])
         
-        pointcloud_transformer = Node(
-            package='traversability_gridmap',
-            executable='pointcloud_transformer',
+        explore_server = Node(
+            package='frontier_exploration',
+            executable='explore_server',
             output='screen',
             namespace=context.launch_configurations['robot_namespace'],
             parameters=[configured_params])
         
-        return [declare_params_file_cmd, traversability_server, pointcloud_transformer]
+
+        return [declare_params_file_cmd, explore_server, explore_client]
 
     opaque_function = OpaqueFunction(function=all_nodes_launch)
 #---------------------------------------------
