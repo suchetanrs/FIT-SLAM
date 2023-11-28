@@ -57,7 +57,7 @@ In case the exploration does not start even after a couple of minutes, drive the
 3. Periodically merge the `common` branch to the `unirobot-exploraiton` and `multirobot-exploration` branches.
 
 ```plaintext
-master ── common ──────────────
-          \                   \
-            └─ single-robot ──┘
-            └─ multi-robot ───┘
+master ── common ─────────────────────
+          \                            \
+            └─ unirobot-exploration ───┘
+            └─ multirobot-exploration ─┘
