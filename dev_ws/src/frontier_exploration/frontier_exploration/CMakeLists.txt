@@ -81,7 +81,6 @@ ament_target_dependencies(polygon_point_publisher rclcpp geometry_msgs)
 add_executable(localization_pose_sub src/viz/localization_pose_sub.cpp)
 ament_target_dependencies(localization_pose_sub SYSTEM ${dependencies})
 
-
 install(TARGETS explore_server explore_client frontier_exploration_core polygon_point_publisher localization_pose_sub
 DESTINATION lib/${PROJECT_NAME}
 )
