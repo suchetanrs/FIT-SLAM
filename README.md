@@ -42,3 +42,22 @@ On one terminal run ```./all_nodes.sh```
 Once all the nodes are up and running in terminal 1, on the second terminal run ```ros2 run frontier_exploration polygon_point_publisher```
 
 In case the exploration does not start even after a couple of minutes, drive the robot using the teleop window forward into an explored area, this should start the exploration.
+
+
+# GIT WORKFLOW
+
+## Branch structure
+- `common`: Contains the changes with the common files used for both single robot and multi robot exploration. For example, SLAM and Traversability.
+- `unirobot-exploraiton`: Contains the changes in the exploration package for only the uni robot case.
+- `multirobot-exploration`: Contains the changes in the exploration package for only the multi robot case. For example, multi robot traversability Map merge and Goal selection server.
+
+## Workflow
+1. Target all the changes to SLAM, Traversability related code to the `common` branch.
+2. Target all the changes to exploration to the `unirobot-exploraiton` / `multirobot-exploration` branch depending on the case.
+3. Periodically merge the `common` branch to the `unirobot-exploraiton` and `multirobot-exploration` branches.
+
+```plaintext
+master ── common ──────────────
+          \                   \
+            └─ single-robot ──┘
+            └─ multi-robot ───┘
