@@ -42,7 +42,7 @@ explore_costmap:
       plugins: ["static_layer", "bounded_explore_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
-        # map_topic: /traversability_thresholded
+        map_topic: /traversability_thresholded
         map_subscribe_transient_local: True
       bounded_explore_layer:
         plugin: "frontier_exploration/BoundedExploreLayer"

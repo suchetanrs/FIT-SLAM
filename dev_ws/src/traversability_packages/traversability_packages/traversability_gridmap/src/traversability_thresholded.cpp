@@ -14,7 +14,7 @@ public:
         );
 
         occupancy_map_publisher_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(
-            "traversability_thresholded", rclcpp::QoS(10).transient_local().reliable()
+            "/traversability_thresholded", rclcpp::QoS(10).transient_local().reliable()
         );
 
         this->declare_parameter("threshold_value", rclcpp::ParameterValue(176));

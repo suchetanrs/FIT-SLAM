@@ -1,11 +1,11 @@
 traversability_threshold_node:
   ros__parameters:
-    threshold_value: 170
+    threshold_value: 240
     allow_unknown: false # keep it false
 
 multi_traversability_threshold_node:
   ros__parameters:
-    threshold_value: 170
+    threshold_value: 240
     allow_unknown: false # keep it false
 
 pointcloud_transformer:
@@ -31,9 +31,9 @@ traversability_costmap:
         square_half_side_length: 15.0
         half_size: 1.5
         security_distance: 0.6
-        ground_clearance: 0.2
+        ground_clearance: 0.3
         robot_height: 0.5
-        max_slope: 0.35
+        max_slope: 0.80
         robot_width: 0.8
         robot_length: 0.5
         draw_isodistance_each: 1.0
