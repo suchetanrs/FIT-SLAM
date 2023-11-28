@@ -67,7 +67,15 @@ def generate_launch_description():
             namespace=context.launch_configurations['robot_namespace'],
             parameters=[configured_params])
         
-        return [declare_params_file_cmd, traversability_server, pointcloud_transformer]
+        threshold_traversability = Node(
+            package='traversability_gridmap',
+            executable='traversability_thresholded',
+            output='screen',
+            namespace=context.launch_configurations['robot_namespace'],
+            parameters=[configured_params])
+        
+
+        return [declare_params_file_cmd, threshold_traversability, traversability_server, pointcloud_transformer]
 
     opaque_function = OpaqueFunction(function=all_nodes_launch)
 #---------------------------------------------
