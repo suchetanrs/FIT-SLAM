@@ -41,6 +41,34 @@
 namespace frontier_exploration {
 
 /**
+ * INFORMATION CALCULATION
+*/
+
+class FrontierWithArrivalInformation {
+    public:
+        FrontierWithArrivalInformation(frontier_msgs::msg::Frontier frontier, int information, double alpha, int count_index, int path_length) 
+        {
+            frontier_ = frontier;
+            information_ = information;
+            alpha_ = alpha;
+            count_index_ = count_index;
+            path_length_ = path_length;
+        }
+
+        // Define the less-than operator for comparing instances of FrontierWithArrivalInformation
+        bool operator<(const FrontierWithArrivalInformation& other) const {
+            // Compare based on some criteria, e.g., information
+            return path_length_ < other.path_length_;
+        }
+
+        frontier_msgs::msg::Frontier frontier_;
+        size_t information_;
+        double alpha_;
+        int count_index_;
+        int path_length_;
+};
+
+/**
  * STRUCTS
 */
 struct PathWithInfo {
@@ -52,7 +80,7 @@ struct SelectionResult {
     frontier_msgs::msg::Frontier frontier;
     geometry_msgs::msg::Quaternion orientation;
     bool success;
-    std::map<frontier_msgs::msg::Frontier, double> frontier_costs;
+    std::map<FrontierWithArrivalInformation, double> frontier_costs;
 };
 
 
@@ -102,33 +130,6 @@ class RayTracedCells
         bool hit_obstacle;
 };
 
-/**
- * INFORMATION CALCULATION
-*/
-
-class FrontierWithArrivalInformation {
-    public:
-        FrontierWithArrivalInformation(frontier_msgs::msg::Frontier frontier, int information, double alpha, int count_index, int path_length) 
-        {
-            frontier_ = frontier;
-            information_ = information;
-            alpha_ = alpha;
-            count_index_ = count_index;
-            path_length_ = path_length;
-        }
-
-        // Define the less-than operator for comparing instances of FrontierWithArrivalInformation
-        bool operator<(const FrontierWithArrivalInformation& other) const {
-            // Compare based on some criteria, e.g., information
-            return path_length_ < other.path_length_;
-        }
-
-        frontier_msgs::msg::Frontier frontier_;
-        size_t information_;
-        double alpha_;
-        int count_index_;
-        int path_length_;
-};
 
 class FrontierU1Comparator {
     public:
