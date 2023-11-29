@@ -13,7 +13,7 @@ services:
       #ros-workspaces
       - ./root_dir/:/root/:rw
       #cesar-workspaces
-      #      - /home/deos/s.saravanan/cesar_slam/:/home/cesar_slam/:rw
+      #- /home/deos/s.saravanan/cesar_slam/:/home/cesar_slam/:rw
     privileged: true
     network_mode: host
     ipc: host
