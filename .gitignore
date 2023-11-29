@@ -1,3 +1,2 @@
 root_dir/*
 !root_dir/shell_scripts
-root_dir/shell_scripts/launch_nodes.sh
