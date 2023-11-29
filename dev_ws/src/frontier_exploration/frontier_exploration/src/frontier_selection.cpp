@@ -104,6 +104,7 @@ namespace frontier_exploration {
     // @brief order of polygon points is : minx, miny, maxx, maxy
     SelectionResult FrontierSelectionNode::selectFrontierCountUnknowns(const std::list<frontier_msgs::msg::Frontier>& frontier_list, std::vector<double> polygon_xy_min_max,
                                          std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, geometry_msgs::msg::Point start_point_w, std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, nav2_costmap_2d::Costmap2D* traversability_costmap) {
+        std::map<frontier_exploration::FrontierWithArrivalInformation, double> frontier_costs;
         traversability_costmap_ = traversability_costmap;
         frontier_msgs::msg::Frontier selected_frontier;
         double selected_alpha = 0;
@@ -120,6 +121,7 @@ namespace frontier_exploration {
             selection_result.frontier = selected_frontier;
             selection_result.orientation = selected_orientation;
             selection_result.success = false;
+            selection_result.frontier_costs = frontier_costs;
             return selection_result;
         }
 
@@ -129,6 +131,7 @@ namespace frontier_exploration {
             selection_result.frontier = selected_frontier;
             selection_result.orientation = selected_orientation;
             selection_result.success = false;
+            selection_result.frontier_costs = frontier_costs;
             return selection_result;
         }        
 
@@ -195,6 +198,7 @@ namespace frontier_exploration {
                         selection_result.frontier = selected_frontier;
                         selection_result.orientation = selected_orientation;
                         selection_result.success = false;
+                        selection_result.frontier_costs = frontier_costs;
                         return selection_result;
                     }
                     unsigned int min_x0, min_y0;
@@ -277,6 +281,7 @@ namespace frontier_exploration {
             // the distance term is inverted because we need to choose the closest frontier with tradeoff.
             auto utility = (alpha_ * (static_cast<double>(frontier_with_properties.information_) / static_cast<double>(max_arrival_info_per_frontier))) + 
                             ((1.0-alpha_) * (static_cast<double>(min_traversable_distance) / frontier_with_properties.path_length_));
+            frontier_costs[frontier_with_properties] = beta_ * utility;
             frontier_with_u1_utility.push_back(std::make_pair(frontier_with_properties, utility));
             if (utility > max_u1_utility) {
                 max_u1_utility = utility;
@@ -310,7 +315,7 @@ namespace frontier_exploration {
         frontier_msgs::msg::Frontier::SharedPtr frontier_selected_post_u2;
         double alpha_post_information;
         // std::map of frontier information mapped to the new utility
-        std::map<frontier_exploration::FrontierWithArrivalInformation, double> frontier_with_u2_utility;
+        std::map<frontier_exploration::FrontierWithArrivalInformation, double> frontier_with_path_information;
 
         if(frontier_with_u1_utility.size() > 0) {
             double max_u2_utility = 0;
@@ -326,13 +331,14 @@ namespace frontier_exploration {
                 if(plan_result.first.information_total > maximum_path_information) {
                     maximum_path_information = plan_result.first.information_total;
                 }
-                frontier_with_u2_utility[frontier_with_u1_utility[m].first]=plan_result.first.information_total;
+                frontier_with_path_information[frontier_with_u1_utility[m].first]=plan_result.first.information_total;
             }
             for (size_t m = frontier_with_u1_utility.size() - 1; m >=frontier_with_u1_utility.size() - N_best_for_u2_; m--) {
                 if(m == 0) {
                     break;
                 }
-                double current_utility = ((beta_ * frontier_with_u1_utility[m].second) + ((1-beta_) * (frontier_with_u2_utility[frontier_with_u1_utility[m].first]/maximum_path_information)));
+                double current_utility = ((beta_ * frontier_with_u1_utility[m].second) + ((1-beta_) * (frontier_with_path_information[frontier_with_u1_utility[m].first]/maximum_path_information)));
+                frontier_costs[frontier_with_u1_utility[m].first] = current_utility;
                 if(current_utility > max_u2_utility) {
                     // max_u2_utility = current_utility;
                     alpha_post_information = frontier_with_u1_utility[m].first.alpha_;
@@ -351,6 +357,7 @@ namespace frontier_exploration {
             selection_result.frontier = *frontier_selected_post_u2;
             selection_result.orientation = selected_orientation;
             selection_result.success = true;
+            selection_result.frontier_costs = frontier_costs;
             return selection_result;
         }
         else {
@@ -360,6 +367,7 @@ namespace frontier_exploration {
             selection_result.frontier = selected_frontier;
             selection_result.orientation = selected_orientation;
             selection_result.success = false;
+            selection_result.frontier_costs = frontier_costs;
             return selection_result;
         }
     }
