@@ -5,8 +5,6 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /Map1
-        - /Map1/Status1
         - /Marker2
         - /Pose3
       Splitter Ratio: 0.5
@@ -124,12 +122,128 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_1/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        scout_1/base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/camera_link_optical:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/front_left_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/front_right_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/gps_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/inertial_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/rear_left_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/rear_right_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/velodyne:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/velodyne_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        map:
+        scout_1/base_footprint:
+          Value: true
+        scout_1/base_link:
+          Value: true
+        scout_1/camera_link:
+          Value: true
+        scout_1/camera_link_optical:
+          Value: true
+        scout_1/front_left_wheel_link:
+          Value: true
+        scout_1/front_right_wheel_link:
+          Value: true
+        scout_1/gps_link:
+          Value: true
+        scout_1/imu_link:
+          Value: true
+        scout_1/inertial_link:
+          Value: true
+        scout_1/odom:
+          Value: true
+        scout_1/odom_scout:
+          Value: true
+        scout_1/rear_left_wheel_link:
+          Value: true
+        scout_1/rear_right_wheel_link:
+          Value: true
+        scout_1/velodyne:
+          Value: true
+        scout_1/velodyne_base_link:
           Value: true
         scout_2/base_footprint:
           Value: true
@@ -167,31 +281,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          scout_2/odom:
-            scout_2/odom_scout:
-              scout_2/base_footprint:
-                scout_2/base_link:
-                  scout_2/camera_link:
-                    scout_2/camera_link_optical:
-                      {}
-                  scout_2/front_left_wheel_link:
-                    {}
-                  scout_2/front_right_wheel_link:
-                    {}
-                  scout_2/gps_link:
-                    {}
-                  scout_2/imu_link:
-                    {}
-                  scout_2/inertial_link:
-                    {}
-                  scout_2/rear_left_wheel_link:
-                    {}
-                  scout_2/rear_right_wheel_link:
-                    {}
-                  scout_2/velodyne_base_link:
-                    scout_2/velodyne:
-                      {}
+        {}
       Update Interval: 0
       Value: true
     - Alpha: 0.699999988079071
@@ -206,13 +296,13 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_2/map
+        Value: /traversability_thresholded
       Update Topic:
         Depth: 5
         Durability Policy: Transient Local
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_2/map_updates
+        Value: /traversability_thresholded_updates
       Use Timestamp: false
       Value: true
     - Alpha: 0.699999988079071
@@ -272,7 +362,7 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: Intensity
+      Color Transformer: ""
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -326,7 +416,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_2/explore_costmap/all_frontiers
+        Value: /scout_1/explore_costmap/frontiers
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -354,8 +444,8 @@ Visualization Manager:
       Axes Length: 1
       Axes Radius: 0.10000000149011612
       Class: rviz_default_plugins/Pose
-      Color: 255; 25; 0
-      Enabled: false
+      Color: 170; 85; 255
+      Enabled: true
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
       Name: Pose
@@ -368,13 +458,13 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_6/goal_pose
-      Value: false
+        Value: /scout_1/goal_pose
+      Value: true
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: Marker
       Namespaces:
-        explore_points: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -443,7 +533,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        two_triangles_namespace: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -456,7 +546,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        "": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -531,16 +621,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 23.478012084960938
+      Distance: 24.389694213867188
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.23229274153709412
-        Y: 1.2569208145141602
-        Z: -2.8766229152679443
+        X: 1.2705146074295044
+        Y: 0.48326921463012695
+        Z: -2.87740159034729
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -549,7 +639,7 @@ Visualization Manager:
       Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.715487480163574
+      Yaw: 4.710485935211182
     Saved: ~
 Window Geometry:
   Displays:
@@ -559,7 +649,7 @@ Window Geometry:
   Hide Right Dock: false
   Navigation 2:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000010000000000000385000003a2fc0200000003fb000000100044006900730070006c006100790073010000003b00000205000000c700fffffffb00000018004e0061007600690067006100740069006f006e002000320100000246000001970000011200fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d0000016d00ffffff000003af000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd000000010000000000000385000003a2fc0200000003fb000000100044006900730070006c006100790073010000003b00000205000000c700fffffffb00000018004e0061007600690067006100740069006f006e002000320100000246000001970000012300fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d0000016d00ffffff000003af000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   SlamToolboxPlugin:
     collapsed: false
   Width: 1850

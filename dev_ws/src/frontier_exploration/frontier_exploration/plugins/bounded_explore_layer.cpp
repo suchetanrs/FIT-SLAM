@@ -97,6 +97,7 @@ namespace frontier_exploration
 
         standard_node_ = rclcpp::Node::make_shared("bel_standard_node");
         client_get_map_data2_ = standard_node_->create_client<rtabmap_msgs::srv::GetMap2>("get_map_data2");
+        client_get_allocated_goal_ = standard_node_->create_client<frontier_msgs::srv::GetAllocatedGoal>("/get_allocated_goal");
     }
 
 
@@ -218,14 +219,14 @@ namespace frontier_exploration
             request_map_data->with_words = true;
             request_map_data->with_global_descriptors = true;
             auto result_map_data = client_get_map_data2_->async_send_request(request_map_data);
-            std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> srv_res;
+            std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data_srv_res;
             if (rclcpp::spin_until_future_complete(standard_node_, result_map_data) == rclcpp::FutureReturnCode::SUCCESS) {
-                srv_res = result_map_data.get();
-                if (srv_res->data.nodes.empty()) {
+                map_data_srv_res = result_map_data.get();
+                if (map_data_srv_res->data.nodes.empty()) {
                     RCLCPP_INFO(standard_node_->get_logger(), "No map data recieved");
                 } else {
                     // Process the received poses as needed
-                    RCLCPP_INFO(standard_node_->get_logger(), "Received %zu map poses.", srv_res->data.nodes.size());
+                    RCLCPP_INFO(standard_node_->get_logger(), "Received %zu map poses.", map_data_srv_res->data.nodes.size());
                 }
             } else {
             RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service map_data.");
@@ -233,8 +234,9 @@ namespace frontier_exploration
 
             // std::pair<std::pair<frontier_msgs::msg::Frontier, geometry_msgs::msg::Quaternion>, bool> selection_result;
             SelectionResult selection_result;
-            selection_result = frontierSelect_->selectFrontierCountUnknowns(frontier_list, polygon_xy_min_max_, res, start_point_w, srv_res, layered_costmap_->getCostmap());
+            selection_result = frontierSelect_->selectFrontierCountUnknowns(frontier_list, polygon_xy_min_max_, res, start_point_w, map_data_srv_res, layered_costmap_->getCostmap());
             if(selection_result.success == false) {
+                RCLCPP_ERROR(logger_, "The selection result for Count Unknowns is false!");
                 return;
             }
             selected = selection_result.frontier;
@@ -243,6 +245,37 @@ namespace frontier_exploration
             auto endTime = std::chrono::high_resolution_clock::now();
             auto duration = (endTime - startTime).count() / 1.0;
             RCLCPP_INFO_STREAM(logger_, "Time taken to plan to all frontiers is: " << duration);
+
+            // PASS THE FRONTIER LIST WITH COSTS TO THE MULTI ROBOT GOAL ALLOCATOR
+            auto request_allocated_goal = std::make_shared<frontier_msgs::srv::GetAllocatedGoal::Request>();
+            std::vector<frontier_msgs::msg::Frontier> frontiers_list;
+            std::vector<double> frontier_costs;
+            for (auto pair : selection_result.frontier_costs) {
+                // Extract key and value
+                auto key = pair.first.frontier_;
+                auto value = pair.second;
+
+                // Push them into respective vectors
+                frontiers_list.push_back(key);
+                frontier_costs.push_back(value);
+            }
+            request_allocated_goal->robot_namespace = std::string{standard_node_->get_namespace()};
+            request_allocated_goal->frontiers = frontiers_list;
+            request_allocated_goal->costs = frontier_costs;
+
+            auto result_allocated_goal = client_get_allocated_goal_->async_send_request(request_allocated_goal);
+            std::shared_ptr<frontier_msgs::srv::GetAllocatedGoal_Response> get_allocated_goal_srv_res;
+            if (rclcpp::spin_until_future_complete(standard_node_, result_allocated_goal) == rclcpp::FutureReturnCode::SUCCESS) {
+                get_allocated_goal_srv_res = result_allocated_goal.get();
+                if (get_allocated_goal_srv_res->success == false) {
+                    RCLCPP_INFO(standard_node_->get_logger(), "Get Allocation failed");
+                } else {
+                    // Process the received poses as needed
+                    RCLCPP_INFO_STREAM(standard_node_->get_logger(), "Recieved allocated goal." << get_allocated_goal_srv_res->success);
+                }
+            } else {
+            RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service get_allocated_goal");
+            }
         }
         else {
             RCLCPP_ERROR(logger_, "Invalid mode of exploration");

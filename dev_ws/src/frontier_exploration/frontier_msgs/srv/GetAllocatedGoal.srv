@@ -1,4 +1,6 @@
-geometry_msgs/PoseStamped start_pose
+string robot_namespace
+frontier_msgs/Frontier[] frontiers
+float64[] costs
 ---
 bool success
-geometry_msgs/PoseStamped next_frontier
+frontier_msgs/Frontier allocated_frontier

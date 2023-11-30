@@ -255,14 +255,14 @@ void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr map) {
   costmap = nav2_costmap_2d::Costmap2D(*map);
 }
 
-void localizationPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr pose) {
-  geometry_msgs::msg::Point robot_position = pose->pose.pose.position;
-  frontier_exploration::FrontierSearch frontier_search(costmap, 5);
-  std::list<frontier_msgs::msg::Frontier> frontier_list = frontier_search.searchFrom(robot_position);
-  processFrontierListInitial(frontier_list);
-  processFrontierListCentroid(frontier_list);
-//   RCLCPP_INFO(rclcpp::get_logger("frontier_search"), "Search complete. Waiting for new pose message");
-}
+// void localizationPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr pose) {
+//   geometry_msgs::msg::Point robot_position = pose->pose.pose.position;
+//   frontier_exploration::FrontierSearch frontier_search(costmap, 5);
+//   std::list<frontier_msgs::msg::Frontier> frontier_list = frontier_search.searchFrom(robot_position);
+//   processFrontierListInitial(frontier_list);
+//   processFrontierListCentroid(frontier_list);
+// //   RCLCPP_INFO(rclcpp::get_logger("frontier_search"), "Search complete. Waiting for new pose message");
+// }
 
 // int main(int argc, char** argv) {
 //   rclcpp::init(argc, argv);

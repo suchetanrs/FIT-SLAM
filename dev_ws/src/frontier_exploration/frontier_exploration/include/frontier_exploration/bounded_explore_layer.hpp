@@ -20,7 +20,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 
 #include "rtabmap_msgs/srv/get_map2.hpp"
-
+#include "frontier_msgs/srv/get_allocated_goal.hpp"
 namespace frontier_exploration
 {
 
@@ -150,6 +150,7 @@ private:
     std::chrono::_V2::system_clock::time_point startTime_ = std::chrono::high_resolution_clock::now();
 
     rclcpp::Client<rtabmap_msgs::srv::GetMap2>::SharedPtr client_get_map_data2_;
+    rclcpp::Client<frontier_msgs::srv::GetAllocatedGoal>::SharedPtr client_get_allocated_goal_;
     rclcpp::Node::SharedPtr standard_node_;
     rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>::SharedPtr plan_pub_;
 };
