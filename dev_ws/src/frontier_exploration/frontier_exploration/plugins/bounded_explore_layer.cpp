@@ -172,7 +172,9 @@ namespace frontier_exploration
         //initialize frontier search implementation
         frontier_exploration::FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_cluster_size_);
         //get list of frontiers from search implementation
-        std::list<frontier_msgs::msg::Frontier> frontier_list = frontierSearch.searchFrom(req->start_pose.pose.position);
+        // Initialize zero point to start search.
+        geometry_msgs::msg::Point search_start_pose;
+        std::list<frontier_msgs::msg::Frontier> frontier_list = frontierSearch.searchFrom(search_start_pose);
         auto every_frontier = frontierSearch.getAllFrontiers();
         RCLCPP_INFO_STREAM(standard_node_->get_logger(), "Clusterred frontier size: " << frontier_list.size());
 
@@ -218,14 +220,14 @@ namespace frontier_exploration
             request_map_data->with_words = true;
             request_map_data->with_global_descriptors = true;
             auto result_map_data = client_get_map_data2_->async_send_request(request_map_data);
-            std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> srv_res;
+            std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data_srv_res;
             if (rclcpp::spin_until_future_complete(standard_node_, result_map_data) == rclcpp::FutureReturnCode::SUCCESS) {
-                srv_res = result_map_data.get();
-                if (srv_res->data.nodes.empty()) {
+                map_data_srv_res = result_map_data.get();
+                if (map_data_srv_res->data.nodes.empty()) {
                     RCLCPP_INFO(standard_node_->get_logger(), "No map data recieved");
                 } else {
                     // Process the received poses as needed
-                    RCLCPP_INFO(standard_node_->get_logger(), "Received %zu map poses.", srv_res->data.nodes.size());
+                    RCLCPP_INFO(standard_node_->get_logger(), "Received %zu map poses.", map_data_srv_res->data.nodes.size());
                 }
             } else {
             RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service map_data.");
@@ -233,8 +235,9 @@ namespace frontier_exploration
 
             // std::pair<std::pair<frontier_msgs::msg::Frontier, geometry_msgs::msg::Quaternion>, bool> selection_result;
             SelectionResult selection_result;
-            selection_result = frontierSelect_->selectFrontierCountUnknowns(frontier_list, polygon_xy_min_max_, res, start_point_w, srv_res, layered_costmap_->getCostmap());
+            selection_result = frontierSelect_->selectFrontierCountUnknowns(frontier_list, polygon_xy_min_max_, res, start_point_w, map_data_srv_res, layered_costmap_->getCostmap());
             if(selection_result.success == false) {
+                RCLCPP_ERROR(logger_, "The selection result for Count Unknowns is false!");
                 return;
             }
             selected = selection_result.frontier;
