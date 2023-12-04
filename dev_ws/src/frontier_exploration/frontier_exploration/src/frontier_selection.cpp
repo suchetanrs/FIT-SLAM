@@ -259,7 +259,7 @@ namespace frontier_exploration {
                         maxIndex = i;
                     }
                 }
-
+// camera_fov / 2 is added because until here the maxIndex is only the starting index.
                 FrontierWithMetaData f_info(frontier, maxValue, ((maxIndex * delta_theta) + (camera_fov / 2)), length_to_frontier);
                 frontier_meta_data_vector.push_back(f_info);
                 max_arrival_info_per_frontier = std::max(max_arrival_info_per_frontier, maxValue);
@@ -359,7 +359,7 @@ namespace frontier_exploration {
             SelectionResult selection_result;
             selection_result.frontier = selected_frontier;
             selection_result.orientation = selected_orientation;
-            selection_result.success = false;
+            selection_result.success = true;
             selection_result.frontier_costs = frontier_costs;
             return selection_result;
         }
