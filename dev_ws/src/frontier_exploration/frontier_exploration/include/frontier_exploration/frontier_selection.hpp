@@ -60,10 +60,10 @@ class FrontierWithMetaData {
             return path_length_ < other.path_length_;
         }
 
-        frontier_msgs::msg::Frontier frontier_;
-        size_t information_;
-        double theta_s_star_;
-        int path_length_;
+        frontier_msgs::msg::Frontier frontier_; // frontier location
+        size_t information_; // information on arrival
+        double theta_s_star_; // optimal orientation for frontier
+        int path_length_; // path length to frontier
 };
 
 /**
