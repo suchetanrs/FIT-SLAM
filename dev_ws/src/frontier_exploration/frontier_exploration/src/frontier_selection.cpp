@@ -104,14 +104,14 @@ namespace frontier_exploration {
     // @brief order of polygon points is : minx, miny, maxx, maxy
     SelectionResult FrontierSelectionNode::selectFrontierCountUnknowns(const std::list<frontier_msgs::msg::Frontier>& frontier_list, std::vector<double> polygon_xy_min_max,
                                          std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, geometry_msgs::msg::Point start_point_w, std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, nav2_costmap_2d::Costmap2D* traversability_costmap) {
-        std::map<frontier_exploration::FrontierWithArrivalInformation, double> frontier_costs;
         traversability_costmap_ = traversability_costmap;
+        std::map<frontier_exploration::FrontierWithMetaData, double> frontier_costs;
         frontier_msgs::msg::Frontier selected_frontier;
-        double selected_alpha = 0;
-        int max_alpha = 0;
-        const double radius = 2.0;
-        const double theta = 0.15; // horizontal fov of camera
         geometry_msgs::msg::Quaternion selected_orientation;
+        double theta_s_star = 0; // optimal sensor arrival orientation
+        const double radius = 2.0; // max depth of camera fov
+        const double delta_theta = 0.15; // spatial density
+        const double camera_fov = 1.04; // camera fov
         auto startTime = std::chrono::high_resolution_clock::now();
         if(frontier_list.size() == 0) {
             RCLCPP_ERROR(logger_, "No frontiers found from frontier search.");
@@ -133,23 +133,16 @@ namespace frontier_exploration {
             selection_result.success = false;
             selection_result.frontier_costs = frontier_costs;
             return selection_result;
-        }        
-
-        for(auto point : polygon_xy_min_max) {
-            RCLCPP_INFO_STREAM(logger_, "The points are: " << point);            
         }
 
-        auto count_index = 0;
-        std::vector<FrontierWithArrivalInformation> frontier_with_properties_vector;
-        std::vector<std::pair<FrontierWithArrivalInformation, double>> frontier_with_u1_utility;
-        int min_traversable_distance = std::numeric_limits<int>::max(); // in m, TODO: if traversability is included, min_traversable_distance is the distance of the path computed through the map.
+        std::vector<FrontierWithMetaData> frontier_meta_data_vector;
+        std::vector<std::pair<FrontierWithMetaData, double>> frontier_with_u1_utility;
+        int min_traversable_distance = std::numeric_limits<int>::max();
         int max_arrival_info_per_frontier = 0.0;
-        RCLCPP_INFO_STREAM(logger_, "No of frontiers is: " << frontier_list.size());
         for (auto frontier : frontier_list) {
-            count_index ++;
+            // PRELIMINARY CHECKS
             auto plan_of_frontier = getPlanForFrontier(start_point_w, frontier, map_data, false);
             plan_pub_->publish(plan_of_frontier.first.path);
-            // rclcpp::sleep_for(std::chrono::milliseconds(100));
             int length_to_frontier = plan_of_frontier.first.path.poses.size();
             if(length_to_frontier == 0) {
                 continue;
@@ -161,23 +154,22 @@ namespace frontier_exploration {
                     break;
                 }
             }
-            RCLCPP_INFO_STREAM(logger_, "The length to frontier is: " << length_to_frontier);
             if(frontier.min_distance > frontierDetectRadius_ && frontier_exists_ == false) {
-                double sx, sy, orient; // sensor x, sensor y, sensor orientation
+                double sx, sy; // sensor x, sensor y, sensor orientation
                 double wx, wy;
                 unsigned int min_length = 0.0;
                 int resolution_cut_factor = 5;
                 unsigned int max_length = radius / (costmap_->getResolution());
                 sx = frontier.initial.x;
                 sy = frontier.initial.y;
-                std::vector<int> information_along_ray;
+                std::vector<int> information_along_ray; // stores the information along each ray in 2PI.
 
-                for(double alpha = 0; alpha <= (2 * M_PI); alpha+=theta) {
+                for(double theta = 0; theta <= (2 * M_PI); theta+=delta_theta) {
                     std::vector<nav2_costmap_2d::MapLocation> traced_cells;
                     RayTracedCells cell_gatherer(*costmap_, traced_cells);
 
-                    wx = sx + (radius*cos(alpha));
-                    wy = sy + (radius*sin(alpha));
+                    wx = sx + (radius*cos(theta));
+                    wy = sy + (radius*sin(theta));
 
                     // Check if wx and wy are outside the polygon. If they are, bring it to the edge of the polygon.
                     // This is to prevent raytracing beyond the edge of the boundary polygon.
@@ -238,7 +230,7 @@ namespace frontier_exploration {
                             cell_gatherer, abs_dy, abs_dx, error_x, offset_dy, offset_dx, offset, (unsigned int)(scale * abs_dy), resolution_cut_factor);
                     }
                     auto info_addition = cell_gatherer.getCells();
-                    information_along_ray.push_back(info_addition.size());
+                    information_along_ray.push_back(info_addition.size()); 
                     std::vector<geometry_msgs::msg::Pose> vizpoints;
                     for (size_t z = 0; z<info_addition.size(); z++) {
                         double wmx, wmy;
@@ -248,10 +240,10 @@ namespace frontier_exploration {
                         pnts.position.y = wmy;
                         vizpoints.push_back(pnts);
                     }
-                } // alpha end
+                } // theta end
                 
-                std::vector<int> kernel(6, 1);
-                int n = information_along_ray.size();
+                std::vector<int> kernel(static_cast<int>(camera_fov / delta_theta), 1); // initialize a kernal vector of size 6 and all elements = 1
+                int n = information_along_ray.size(); // number of rays computed in 2PI
                 int k = kernel.size();
                 std::vector<int> result(n - k + 1, 0);
                 for (int i = 0; i < n - k + 1; ++i) {
@@ -268,35 +260,36 @@ namespace frontier_exploration {
                     }
                 }
 
-                FrontierWithArrivalInformation f_info(frontier, maxValue, maxIndex * 0.15 , count_index, length_to_frontier);
-                frontier_with_properties_vector.push_back(f_info);
+                FrontierWithMetaData f_info(frontier, maxValue, ((maxIndex * delta_theta) + (camera_fov / 2)), length_to_frontier);
+                frontier_meta_data_vector.push_back(f_info);
                 max_arrival_info_per_frontier = std::max(max_arrival_info_per_frontier, maxValue);
                 min_traversable_distance = std::min(min_traversable_distance, length_to_frontier);
             }
         } // frontier end
 
+
         // U1 Utility
         double max_u1_utility = 0;
-        for (auto frontier_with_properties : frontier_with_properties_vector) {
+        for (auto frontier_with_properties : frontier_meta_data_vector) {
             // the distance term is inverted because we need to choose the closest frontier with tradeoff.
             auto utility = (alpha_ * (static_cast<double>(frontier_with_properties.information_) / static_cast<double>(max_arrival_info_per_frontier))) + 
                             ((1.0-alpha_) * (static_cast<double>(min_traversable_distance) / frontier_with_properties.path_length_));
+            
+            // It is added with Beta multiplied. If the frontier lies in the N best then this value will be replaced with information on path.
+            // If it does not lie in the N best then the information on path is treated as 0 and hence it is appropriate to multiply with beta.
             frontier_costs[frontier_with_properties] = beta_ * utility;
             frontier_with_u1_utility.push_back(std::make_pair(frontier_with_properties, utility));
             if (utility > max_u1_utility) {
                 max_u1_utility = utility;
-                selected_alpha = frontier_with_properties.alpha_;
+                theta_s_star = frontier_with_properties.theta_s_star_;
                 selected_frontier = frontier_with_properties.frontier_;
+                selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(theta_s_star);
 
-                RCLCPP_INFO_STREAM(logger_, "Max u1 utility: " << max_u1_utility);
-                RCLCPP_INFO_STREAM(logger_, "Max information: " << max_arrival_info_per_frontier);
-                RCLCPP_INFO_STREAM(logger_, "Min distance " << min_traversable_distance);
-                // visualization_msgs::msg::Marker marker_msg_points_;
-                // landmarkViz(vizpoints, marker_msg_points_);
-                // landmark_publisher_->publish(marker_msg_points_);
+                RCLCPP_DEBUG_STREAM(logger_, "Max u1 utility: " << max_u1_utility);
+                RCLCPP_DEBUG_STREAM(logger_, "Max information: " << max_arrival_info_per_frontier);
+                RCLCPP_DEBUG_STREAM(logger_, "Min distance " << min_traversable_distance);
             }
         }
-        selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(selected_alpha + theta / 2);
 
         geometry_msgs::msg::PoseStamped vizpose;
         vizpose.header.frame_id = "map";
@@ -313,14 +306,14 @@ namespace frontier_exploration {
 
         // U2 UTILITY
         frontier_msgs::msg::Frontier::SharedPtr frontier_selected_post_u2;
-        double alpha_post_information;
+        double theta_s_star_post_u2;
         // std::map of frontier information mapped to the new utility
-        std::map<frontier_exploration::FrontierWithArrivalInformation, double> frontier_with_path_information;
+        std::map<frontier_exploration::FrontierWithMetaData, double> frontier_with_path_information;
 
         if(frontier_with_u1_utility.size() > 0) {
             double max_u2_utility = 0;
             double maximum_path_information = 0;
-            if(N_best_for_u2_ == -1) {
+            if(N_best_for_u2_ == -1) { // if -1 then the path information for all the frontiers is computed.
                 N_best_for_u2_ = frontier_with_u1_utility.size();
             }
             for (size_t m = frontier_with_u1_utility.size() - 1; m >=frontier_with_u1_utility.size() - N_best_for_u2_; m--) {
@@ -340,8 +333,8 @@ namespace frontier_exploration {
                 double current_utility = ((beta_ * frontier_with_u1_utility[m].second) + ((1-beta_) * (frontier_with_path_information[frontier_with_u1_utility[m].first]/maximum_path_information)));
                 frontier_costs[frontier_with_u1_utility[m].first] = current_utility;
                 if(current_utility > max_u2_utility) {
-                    // max_u2_utility = current_utility;
-                    alpha_post_information = frontier_with_u1_utility[m].first.alpha_;
+                    max_u2_utility = current_utility;
+                    theta_s_star_post_u2 = frontier_with_u1_utility[m].first.theta_s_star_;
                     frontier_selected_post_u2 = std::make_shared<frontier_msgs::msg::Frontier>(frontier_with_u1_utility[m].first.frontier_);
                 }
             }
@@ -351,7 +344,7 @@ namespace frontier_exploration {
         RCLCPP_INFO_STREAM(logger_, "Time taken to search is: " << duration);
         // To handle the case where all the max frontiers have zero information.
         if(frontier_selected_post_u2) {
-            selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(alpha_post_information + theta / 2);
+            selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(theta_s_star_post_u2);
             frontier_blacklist_.push_back(*frontier_selected_post_u2);
             SelectionResult selection_result;
             selection_result.frontier = *frontier_selected_post_u2;
@@ -408,8 +401,6 @@ namespace frontier_exploration {
         }
         rclcpp::sleep_for(std::chrono::milliseconds(10000));
 
-        // RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer"),"Current selected frontier is: x:" << selected.initial.x << ", y: " << selected.initial.y);
-
         if(frontierSelectionFlag == false){
             res->success = false;
             return std::make_pair(selected, frontierSelectionFlag);
@@ -464,8 +455,6 @@ namespace frontier_exploration {
             int randomIndex = static_cast<int>(randomFraction * (frontier_list_imp.size()-1));
             selected = frontier_list_imp[randomIndex];
             frontierSelectionFlag = true;
-
-            // RCLCPP_INFO_STREAM(rclcpp::get_logger("bounded_explore_layer"),"Current selected frontier is: x:" << selected.initial.x << ", y: " << selected.initial.y);
         }
         rclcpp::sleep_for(std::chrono::milliseconds(10000));
         if(frontierSelectionFlag == false){
