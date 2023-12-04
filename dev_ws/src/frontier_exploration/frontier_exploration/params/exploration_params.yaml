@@ -57,4 +57,4 @@ explore_costmap:
 
 goal_allocation_server:
   ros__parameters:
-    robot_namespaces: ['scout_1', 'scout_2']
+    robot_namespaces: ['/scout_1', '/scout_2']

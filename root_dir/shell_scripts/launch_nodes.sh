@@ -34,7 +34,7 @@ mkdir /home/$SCOUT_NAMESPACE
 ros2 launch scout_navigation2 scout_rtab_rgbd.launch.py &
 ros2 launch scout_navigation2 navigation.launch.py &
 ros2 launch traversability_gridmap traversability_launch.py &
-# ros2 launch frontier_exploration exploration.launch.py &
+#ros2 launch frontier_exploration exploration.launch.py &
 
 sleep 30
 
@@ -44,7 +44,7 @@ mkdir /home/$SCOUT_NAMESPACE
 ros2 launch scout_navigation2 scout_rtab_rgbd.launch.py &
 ros2 launch scout_navigation2 navigation.launch.py &
 ros2 launch traversability_gridmap traversability_launch.py &
-# ros2 launch frontier_exploration exploration.launch.py &
+#ros2 launch frontier_exploration exploration.launch.py &
 
 
 # Exploration

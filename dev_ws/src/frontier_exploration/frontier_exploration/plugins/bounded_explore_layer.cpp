@@ -97,6 +97,7 @@ namespace frontier_exploration
 
         standard_node_ = rclcpp::Node::make_shared("bel_standard_node");
         client_get_map_data2_ = standard_node_->create_client<rtabmap_msgs::srv::GetMap2>("get_map_data2");
+        client_load_frontier_costs_ = standard_node_->create_client<frontier_msgs::srv::LoadFrontierCosts>("/send_latest_frontier_costs");
         client_get_allocated_goal_ = standard_node_->create_client<frontier_msgs::srv::GetAllocatedGoal>("/get_allocated_goal");
     }
 
@@ -173,7 +174,9 @@ namespace frontier_exploration
         //initialize frontier search implementation
         frontier_exploration::FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_cluster_size_);
         //get list of frontiers from search implementation
-        std::list<frontier_msgs::msg::Frontier> frontier_list = frontierSearch.searchFrom(req->start_pose.pose.position);
+        // Initialize zero point to start search.
+        geometry_msgs::msg::Point search_start_pose;
+        std::list<frontier_msgs::msg::Frontier> frontier_list = frontierSearch.searchFrom(search_start_pose);
         auto every_frontier = frontierSearch.getAllFrontiers();
         RCLCPP_INFO_STREAM(standard_node_->get_logger(), "Clusterred frontier size: " << frontier_list.size());
 
@@ -246,8 +249,11 @@ namespace frontier_exploration
             auto duration = (endTime - startTime).count() / 1.0;
             RCLCPP_INFO_STREAM(logger_, "Time taken to plan to all frontiers is: " << duration);
 
+
+
             // PASS THE FRONTIER LIST WITH COSTS TO THE MULTI ROBOT GOAL ALLOCATOR
-            auto request_allocated_goal = std::make_shared<frontier_msgs::srv::GetAllocatedGoal::Request>();
+            
+            auto request_send_frontier_costs = std::make_shared<frontier_msgs::srv::LoadFrontierCosts::Request>();
             std::vector<frontier_msgs::msg::Frontier> frontiers_list;
             std::vector<double> frontier_costs;
             for (auto pair : selection_result.frontier_costs) {
@@ -259,22 +265,42 @@ namespace frontier_exploration
                 frontiers_list.push_back(key);
                 frontier_costs.push_back(value);
             }
-            request_allocated_goal->robot_namespace = std::string{standard_node_->get_namespace()};
-            request_allocated_goal->frontiers = frontiers_list;
-            request_allocated_goal->costs = frontier_costs;
+            request_send_frontier_costs->robot_namespace = std::string{standard_node_->get_namespace()};
+            request_send_frontier_costs->frontiers = frontiers_list;
+            request_send_frontier_costs->costs = frontier_costs;
 
-            auto result_allocated_goal = client_get_allocated_goal_->async_send_request(request_allocated_goal);
+            auto result_send_frontier_costs = client_load_frontier_costs_->async_send_request(request_send_frontier_costs);
+            std::shared_ptr<frontier_msgs::srv::LoadFrontierCosts_Response> send_frontier_costs_srv_res;
+            if (rclcpp::spin_until_future_complete(standard_node_, result_send_frontier_costs) == rclcpp::FutureReturnCode::SUCCESS) {
+                send_frontier_costs_srv_res = result_send_frontier_costs.get();
+                if (send_frontier_costs_srv_res->success == false) {
+                    RCLCPP_INFO(standard_node_->get_logger(), "Get Allocation failed");
+                } else {
+                    // Process the received poses as needed
+                    RCLCPP_INFO_STREAM(standard_node_->get_logger(), "Response of loading the costs: " << send_frontier_costs_srv_res->success);
+                }
+            } else {
+            RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service /send_latest_frontier_costs");
+            }
+
+
+            // GET THE ALLOCATED GOAL
+
+            auto request_get_allocated_goal = std::make_shared<frontier_msgs::srv::GetAllocatedGoal::Request>();
+            request_get_allocated_goal->robot_namespace = std::string{standard_node_->get_namespace()};
+
+            auto result_get_allocated_goal = client_get_allocated_goal_->async_send_request(request_get_allocated_goal);
             std::shared_ptr<frontier_msgs::srv::GetAllocatedGoal_Response> get_allocated_goal_srv_res;
-            if (rclcpp::spin_until_future_complete(standard_node_, result_allocated_goal) == rclcpp::FutureReturnCode::SUCCESS) {
-                get_allocated_goal_srv_res = result_allocated_goal.get();
+            if (rclcpp::spin_until_future_complete(standard_node_, result_get_allocated_goal) == rclcpp::FutureReturnCode::SUCCESS) {
+                get_allocated_goal_srv_res = result_get_allocated_goal.get();
                 if (get_allocated_goal_srv_res->success == false) {
                     RCLCPP_INFO(standard_node_->get_logger(), "Get Allocation failed");
                 } else {
                     // Process the received poses as needed
-                    RCLCPP_INFO_STREAM(standard_node_->get_logger(), "Recieved allocated goal." << get_allocated_goal_srv_res->success);
+                    RCLCPP_INFO_STREAM(standard_node_->get_logger(), "Response of getting allocated goal: " << get_allocated_goal_srv_res->success);
                 }
             } else {
-            RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service get_allocated_goal");
+            RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service /get_allocated_goal");
             }
         }
         else {

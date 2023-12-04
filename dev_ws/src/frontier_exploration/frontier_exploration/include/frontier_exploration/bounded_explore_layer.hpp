@@ -21,6 +21,7 @@
 
 #include "rtabmap_msgs/srv/get_map2.hpp"
 #include "frontier_msgs/srv/get_allocated_goal.hpp"
+#include "frontier_msgs/srv/load_frontier_costs.hpp"
 namespace frontier_exploration
 {
 
@@ -151,6 +152,7 @@ private:
 
     rclcpp::Client<rtabmap_msgs::srv::GetMap2>::SharedPtr client_get_map_data2_;
     rclcpp::Client<frontier_msgs::srv::GetAllocatedGoal>::SharedPtr client_get_allocated_goal_;
+    rclcpp::Client<frontier_msgs::srv::LoadFrontierCosts>::SharedPtr client_load_frontier_costs_;
     rclcpp::Node::SharedPtr standard_node_;
     rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>::SharedPtr plan_pub_;
 };

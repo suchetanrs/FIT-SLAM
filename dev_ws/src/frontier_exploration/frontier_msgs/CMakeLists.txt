@@ -17,6 +17,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 "srv/GetNextFrontier.srv"
 "srv/UpdateBoundaryPolygon.srv"
 "srv/GetAllocatedGoal.srv"
+"srv/LoadFrontierCosts.srv"
 "action/ExploreTask.action"
 DEPENDENCIES builtin_interfaces geometry_msgs
 )

@@ -5,10 +5,11 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /PointCloud21
         - /Marker2
         - /Pose3
       Splitter Ratio: 0.5
-    Tree Height: 380
+    Tree Height: 395
   - Class: nav2_rviz_plugins/Navigation 2
     Name: Navigation 2
   - Class: slam_toolbox::SlamToolboxPlugin
@@ -215,6 +216,8 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        map:
+          Value: true
         scout_1/base_footprint:
           Value: true
         scout_1/base_link:
@@ -281,7 +284,55 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        map:
+          scout_1/odom:
+            scout_1/odom_scout:
+              scout_1/base_footprint:
+                scout_1/base_link:
+                  scout_1/camera_link:
+                    scout_1/camera_link_optical:
+                      {}
+                  scout_1/front_left_wheel_link:
+                    {}
+                  scout_1/front_right_wheel_link:
+                    {}
+                  scout_1/gps_link:
+                    {}
+                  scout_1/imu_link:
+                    {}
+                  scout_1/inertial_link:
+                    {}
+                  scout_1/rear_left_wheel_link:
+                    {}
+                  scout_1/rear_right_wheel_link:
+                    {}
+                  scout_1/velodyne_base_link:
+                    scout_1/velodyne:
+                      {}
+          scout_2/odom:
+            scout_2/odom_scout:
+              scout_2/base_footprint:
+                scout_2/base_link:
+                  scout_2/camera_link:
+                    scout_2/camera_link_optical:
+                      {}
+                  scout_2/front_left_wheel_link:
+                    {}
+                  scout_2/front_right_wheel_link:
+                    {}
+                  scout_2/gps_link:
+                    {}
+                  scout_2/imu_link:
+                    {}
+                  scout_2/inertial_link:
+                    {}
+                  scout_2/rear_left_wheel_link:
+                    {}
+                  scout_2/rear_right_wheel_link:
+                    {}
+                  scout_2/velodyne_base_link:
+                    scout_2/velodyne:
+                      {}
       Update Interval: 0
       Value: true
     - Alpha: 0.699999988079071
@@ -361,8 +412,8 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
-      Color: 255; 255; 255
-      Color Transformer: ""
+      Color: 170; 85; 255
+      Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -408,8 +459,8 @@ Visualization Manager:
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.029999999329447746
-      Style: Flat Squares
+      Size (m): 0.10000000149011612
+      Style: Spheres
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -464,7 +515,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        {}
+        explore_points: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -533,7 +584,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        {}
+        two_triangles_namespace: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -546,7 +597,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        {}
+        "": true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -621,16 +672,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 24.389694213867188
+      Distance: 15.018138885498047
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.2705146074295044
-        Y: 0.48326921463012695
-        Z: -2.87740159034729
+        X: 0.02152349054813385
+        Y: 1.6340066194534302
+        Z: -2.8762528896331787
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -644,14 +695,14 @@ Visualization Manager:
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1016
+  Height: 1043
   Hide Left Dock: false
   Hide Right Dock: false
   Navigation 2:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000010000000000000385000003a2fc0200000003fb000000100044006900730070006c006100790073010000003b00000205000000c700fffffffb00000018004e0061007600690067006100740069006f006e002000320100000246000001970000012300fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d0000016d00ffffff000003af000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd000000010000000000000385000003bdfc0200000003fb000000100044006900730070006c006100790073010000003b00000214000000c700fffffffb00000018004e0061007600690067006100740069006f006e002000320100000255000001a30000011200fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d0000016d00ffffff000003f5000003bd00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   SlamToolboxPlugin:
     collapsed: false
-  Width: 1850
-  X: 1990
-  Y: 27
+  Width: 1920
+  X: 3840
+  Y: 0
