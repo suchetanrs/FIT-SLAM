@@ -44,27 +44,25 @@ namespace frontier_exploration {
  * INFORMATION CALCULATION
 */
 
-class FrontierWithArrivalInformation {
+class FrontierWithMetaData {
     public:
-        FrontierWithArrivalInformation(frontier_msgs::msg::Frontier frontier, int information, double alpha, int count_index, int path_length) 
+        FrontierWithMetaData(frontier_msgs::msg::Frontier frontier, int information, double theta_s_star, int path_length) 
         {
             frontier_ = frontier;
             information_ = information;
-            alpha_ = alpha;
-            count_index_ = count_index;
+            theta_s_star_ = theta_s_star;
             path_length_ = path_length;
         }
 
-        // Define the less-than operator for comparing instances of FrontierWithArrivalInformation
-        bool operator<(const FrontierWithArrivalInformation& other) const {
+        // Define the less-than operator for comparing instances of FrontierWithMetaData
+        bool operator<(const FrontierWithMetaData& other) const {
             // Compare based on some criteria, e.g., information
             return path_length_ < other.path_length_;
         }
 
         frontier_msgs::msg::Frontier frontier_;
         size_t information_;
-        double alpha_;
-        int count_index_;
+        double theta_s_star_;
         int path_length_;
 };
 
@@ -80,7 +78,7 @@ struct SelectionResult {
     frontier_msgs::msg::Frontier frontier;
     geometry_msgs::msg::Quaternion orientation;
     bool success;
-    std::map<FrontierWithArrivalInformation, double> frontier_costs;
+    std::map<FrontierWithMetaData, double> frontier_costs;
 };
 
 
@@ -133,7 +131,7 @@ class RayTracedCells
 
 class FrontierU1Comparator {
     public:
-        bool operator()(const std::pair<FrontierWithArrivalInformation, double>& a, const std::pair<FrontierWithArrivalInformation, double>& b) const {
+        bool operator()(const std::pair<FrontierWithMetaData, double>& a, const std::pair<FrontierWithMetaData, double>& b) const {
             return a.second < b.second;
         }
 };
