@@ -258,8 +258,8 @@ namespace frontier_exploration
             std::vector<double> frontier_costs;
             for (auto pair : selection_result.frontier_costs) {
                 // Extract key and value
-                auto key = pair.first.frontier_;
-                auto value = pair.second;
+                auto key = pair.first.frontier_; // frontier with meta data
+                auto value = pair.second; // cost.
 
                 // Push them into respective vectors
                 frontiers_list.push_back(key);
@@ -268,6 +268,14 @@ namespace frontier_exploration
             request_send_frontier_costs->robot_namespace = std::string{standard_node_->get_namespace()};
             request_send_frontier_costs->frontiers = frontiers_list;
             request_send_frontier_costs->costs = frontier_costs;
+
+            while (!client_load_frontier_costs_->wait_for_service(std::chrono::seconds(1))) {
+                if (!rclcpp::ok()) {
+                    RCLCPP_ERROR(logger_, "Interrupted while waiting for the service. Exiting.");
+                    rclcpp::shutdown();
+                }
+                RCLCPP_INFO(logger_, "load costs service not available, waiting again...");
+            }
 
             auto result_send_frontier_costs = client_load_frontier_costs_->async_send_request(request_send_frontier_costs);
             std::shared_ptr<frontier_msgs::srv::LoadFrontierCosts_Response> send_frontier_costs_srv_res;
@@ -288,6 +296,14 @@ namespace frontier_exploration
 
             auto request_get_allocated_goal = std::make_shared<frontier_msgs::srv::GetAllocatedGoal::Request>();
             request_get_allocated_goal->robot_namespace = std::string{standard_node_->get_namespace()};
+
+            while (!client_get_allocated_goal_->wait_for_service(std::chrono::seconds(1))) {
+                if (!rclcpp::ok()) {
+                    RCLCPP_ERROR(logger_, "Interrupted while waiting for the service. Exiting.");
+                    rclcpp::shutdown();
+                }
+                RCLCPP_INFO(logger_, "get goal service not available, waiting again...");
+            }
 
             auto result_get_allocated_goal = client_get_allocated_goal_->async_send_request(request_get_allocated_goal);
             std::shared_ptr<frontier_msgs::srv::GetAllocatedGoal_Response> get_allocated_goal_srv_res;
