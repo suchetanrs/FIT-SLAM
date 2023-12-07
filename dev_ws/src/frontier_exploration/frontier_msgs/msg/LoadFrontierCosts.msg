@@ -1,5 +1,3 @@
 string robot_namespace
 frontier_msgs/Frontier[] frontiers
 float64[] costs
----
-bool success

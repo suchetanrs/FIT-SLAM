@@ -18,6 +18,6 @@ ros2 launch frontier_exploration exploration.launch.py &
 export SCOUT_NAMESPACE="scout_1"
 export SCOUT_Y="-1.0"
 mkdir /home/$SCOUT_NAMESPACE
-ros2 launch frontier_exploration exploration.launch.py &
+# ros2 launch frontier_exploration exploration.launch.py &
 
 wait

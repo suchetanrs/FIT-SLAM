@@ -97,7 +97,7 @@ namespace frontier_exploration
 
         standard_node_ = rclcpp::Node::make_shared("bel_standard_node");
         client_get_map_data2_ = standard_node_->create_client<rtabmap_msgs::srv::GetMap2>("get_map_data2");
-        client_load_frontier_costs_ = standard_node_->create_client<frontier_msgs::srv::LoadFrontierCosts>("/send_latest_frontier_costs");
+        pub_load_frontier_costs_ = standard_node_->create_publisher<frontier_msgs::msg::LoadFrontierCosts>("/send_latest_frontier_costs", 20);
         client_get_allocated_goal_ = standard_node_->create_client<frontier_msgs::srv::GetAllocatedGoal>("/get_allocated_goal");
     }
 
@@ -152,6 +152,122 @@ namespace frontier_exploration
         return result;
     }
 
+    void BoundedExploreLayer::processOurApproach(frontier_msgs::msg::Frontier& selected, std::list<frontier_msgs::msg::Frontier>& frontier_list, const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res) {
+        RCLCPP_WARN(standard_node_->get_logger(), "OURS FRONTIER SELECTED");
+        geometry_msgs::msg::Point start_point_w;
+        start_point_w.x = req->start_pose.pose.position.x;
+        start_point_w.y = req->start_pose.pose.position.y;
+        auto startTime = std::chrono::high_resolution_clock::now();
+        // Getting map data
+        // Create a service request
+        auto request_map_data = std::make_shared<rtabmap_msgs::srv::GetMap2::Request>();
+        request_map_data->global_map = true;
+        request_map_data->optimized = true;
+        request_map_data->with_images = true;
+        request_map_data->with_scans = true;
+        request_map_data->with_user_data = true;
+        request_map_data->with_grids = true;
+        request_map_data->with_words = true;
+        request_map_data->with_global_descriptors = true;
+        auto result_map_data = client_get_map_data2_->async_send_request(request_map_data);
+        std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data_srv_res;
+        if (rclcpp::spin_until_future_complete(standard_node_, result_map_data) == rclcpp::FutureReturnCode::SUCCESS) {
+            map_data_srv_res = result_map_data.get();
+            if (map_data_srv_res->data.nodes.empty()) {
+                RCLCPP_INFO(standard_node_->get_logger(), "No map data recieved");
+            } else {
+                // Process the received poses as needed
+                RCLCPP_INFO(standard_node_->get_logger(), "Received %zu map poses.", map_data_srv_res->data.nodes.size());
+            }
+        } else {
+        RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service map_data.");
+        }
+
+        // std::pair<std::pair<frontier_msgs::msg::Frontier, geometry_msgs::msg::Quaternion>, bool> selection_result;
+        SelectionResult selection_result;
+        selection_result = frontierSelect_->selectFrontierCountUnknowns(frontier_list, polygon_xy_min_max_, res, start_point_w, map_data_srv_res, layered_costmap_->getCostmap());
+        if(selection_result.success == false) {
+            RCLCPP_ERROR(logger_, "The selection result for Count Unknowns is false!");
+            return;
+        }
+        selected = selection_result.frontier;
+        // Uncomment the next line if you are using information acquired after reaching. The pose is important in that case.
+        res->next_frontier.pose.orientation = selection_result.orientation;
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = (endTime - startTime).count() / 1.0;
+        RCLCPP_INFO_STREAM(logger_, "Time taken to plan to all frontiers is: " << duration);
+
+
+
+        // PASS THE FRONTIER LIST WITH COSTS TO THE MULTI ROBOT GOAL ALLOCATOR
+        
+        frontier_msgs::msg::LoadFrontierCosts frontier_costs_msg_;
+        std::vector<frontier_msgs::msg::Frontier> frontiers_list;
+        std::vector<double> frontier_costs;
+        for (auto pair : selection_result.frontier_costs) {
+            // Extract key and value
+            auto key = pair.first.frontier_; // frontier with meta data
+            auto value = pair.second; // cost.
+
+            // Push them into respective vectors
+            frontiers_list.push_back(key);
+            frontier_costs.push_back(value);
+        }
+        frontier_costs_msg_.robot_namespace = std::string{standard_node_->get_namespace()};
+        frontier_costs_msg_.frontiers = frontiers_list;
+        frontier_costs_msg_.costs = frontier_costs;
+
+        pub_load_frontier_costs_->publish(frontier_costs_msg_);
+
+
+        // GET THE ALLOCATED GOAL
+
+        auto request_get_allocated_goal = std::make_shared<frontier_msgs::srv::GetAllocatedGoal::Request>();
+        request_get_allocated_goal->robot_namespace = std::string{standard_node_->get_namespace()};
+
+        while (!client_get_allocated_goal_->wait_for_service(std::chrono::seconds(1))) {
+            if (!rclcpp::ok()) {
+                RCLCPP_ERROR(logger_, "Interrupted while waiting for the service. Exiting.");
+                rclcpp::shutdown();
+            }
+            RCLCPP_INFO(logger_, "get goal service not available, waiting again...");
+        }
+
+        auto result_get_allocated_goal = client_get_allocated_goal_->async_send_request(request_get_allocated_goal);
+        std::shared_ptr<frontier_msgs::srv::GetAllocatedGoal_Response> get_allocated_goal_srv_res;
+        if (rclcpp::spin_until_future_complete(standard_node_, result_get_allocated_goal) == rclcpp::FutureReturnCode::SUCCESS) {
+            get_allocated_goal_srv_res = result_get_allocated_goal.get();
+            if (get_allocated_goal_srv_res->success == false) {
+                RCLCPP_INFO(standard_node_->get_logger(), "Get Allocation failed");
+            } else {
+                // Process the received poses as needed
+                RCLCPP_INFO_STREAM(standard_node_->get_logger(), "Response of getting allocated goal: " << get_allocated_goal_srv_res->success);
+            }
+        } else {
+        RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service /get_allocated_goal");
+        }
+    }
+
+    void BoundedExploreLayer::processGreedyApproach(frontier_msgs::msg::Frontier& selected, std::list<frontier_msgs::msg::Frontier>& frontier_list, const std::vector<std::vector<double>>& every_frontier, const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res) {
+        auto selection_result = frontierSelect_->selectFrontierClosest(frontier_list, every_frontier, res, layered_costmap_->getGlobalFrameID());
+        RCLCPP_WARN(standard_node_->get_logger(), "GREEDY FRONTIER SELECTED");
+        if(selection_result.second == false) {
+            return;
+        }
+        selected = selection_result.first;
+        res->next_frontier.pose.orientation = createQuaternionMsgFromYaw(yawOfVector(req->start_pose.pose.position, res->next_frontier.pose.position) );
+    }
+
+    void BoundedExploreLayer::processRandomApproach(frontier_msgs::msg::Frontier& selected, std::list<frontier_msgs::msg::Frontier>& frontier_list, const std::vector<std::vector<double>>& every_frontier, const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res) {
+        RCLCPP_WARN(standard_node_->get_logger(), "RANDOM FRONTIER SELECTED");
+        auto selection_result = frontierSelect_->selectFrontierRandom(frontier_list, every_frontier, res, layered_costmap_->getGlobalFrameID());
+        if(selection_result.second == false) {
+            return;
+        }
+        selected = selection_result.first;
+        res->next_frontier.pose.orientation = createQuaternionMsgFromYaw(yawOfVector(req->start_pose.pose.position, res->next_frontier.pose.position) );
+    }
+
     void BoundedExploreLayer::getNextFrontierService(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res){
         //wait for costmap to get marked with boundary
         rclcpp::Rate r(10);
@@ -184,141 +300,17 @@ namespace frontier_exploration
         frontierSelect_->exportMapCoverage(polygon_xy_min_max_, startTime_);
         frontier_msgs::msg::Frontier selected;
         if(exploration_mode_ == "greedy") {
-        
-            auto selection_result = frontierSelect_->selectFrontierClosest(frontier_list, every_frontier, res, layered_costmap_->getGlobalFrameID());
-            RCLCPP_WARN(standard_node_->get_logger(), "GREEDY FRONTIER SELECTED");
-            if(selection_result.second == false) {
-                return;
-            }
-            selected = selection_result.first;
-            res->next_frontier.pose.orientation = createQuaternionMsgFromYaw(yawOfVector(req->start_pose.pose.position, res->next_frontier.pose.position) );
+            BoundedExploreLayer::processGreedyApproach(selected, frontier_list, every_frontier, req, res);
         }
         
         else if(exploration_mode_ == "random") {
-            RCLCPP_WARN(standard_node_->get_logger(), "RANDOM FRONTIER SELECTED");
-            auto selection_result = frontierSelect_->selectFrontierRandom(frontier_list, every_frontier, res, layered_costmap_->getGlobalFrameID());
-            if(selection_result.second == false) {
-                return;
-            }
-            selected = selection_result.first;
-            res->next_frontier.pose.orientation = createQuaternionMsgFromYaw(yawOfVector(req->start_pose.pose.position, res->next_frontier.pose.position) );
+            BoundedExploreLayer::processRandomApproach(selected, frontier_list, every_frontier, req, res);
         }
 
         else if(exploration_mode_ == "ours") {
-        	RCLCPP_WARN(standard_node_->get_logger(), "OURS FRONTIER SELECTED");
-            geometry_msgs::msg::Point start_point_w;
-            start_point_w.x = req->start_pose.pose.position.x;
-            start_point_w.y = req->start_pose.pose.position.y;
-            auto startTime = std::chrono::high_resolution_clock::now();
-            // Getting map data
-            // Create a service request
-            auto request_map_data = std::make_shared<rtabmap_msgs::srv::GetMap2::Request>();
-            request_map_data->global_map = true;
-            request_map_data->optimized = true;
-            request_map_data->with_images = true;
-            request_map_data->with_scans = true;
-            request_map_data->with_user_data = true;
-            request_map_data->with_grids = true;
-            request_map_data->with_words = true;
-            request_map_data->with_global_descriptors = true;
-            auto result_map_data = client_get_map_data2_->async_send_request(request_map_data);
-            std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data_srv_res;
-            if (rclcpp::spin_until_future_complete(standard_node_, result_map_data) == rclcpp::FutureReturnCode::SUCCESS) {
-                map_data_srv_res = result_map_data.get();
-                if (map_data_srv_res->data.nodes.empty()) {
-                    RCLCPP_INFO(standard_node_->get_logger(), "No map data recieved");
-                } else {
-                    // Process the received poses as needed
-                    RCLCPP_INFO(standard_node_->get_logger(), "Received %zu map poses.", map_data_srv_res->data.nodes.size());
-                }
-            } else {
-            RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service map_data.");
-            }
-
-            // std::pair<std::pair<frontier_msgs::msg::Frontier, geometry_msgs::msg::Quaternion>, bool> selection_result;
-            SelectionResult selection_result;
-            selection_result = frontierSelect_->selectFrontierCountUnknowns(frontier_list, polygon_xy_min_max_, res, start_point_w, map_data_srv_res, layered_costmap_->getCostmap());
-            if(selection_result.success == false) {
-                RCLCPP_ERROR(logger_, "The selection result for Count Unknowns is false!");
-                return;
-            }
-            selected = selection_result.frontier;
-            // Uncomment the next line if you are using information acquired after reaching. The pose is important in that case.
-            res->next_frontier.pose.orientation = selection_result.orientation;
-            auto endTime = std::chrono::high_resolution_clock::now();
-            auto duration = (endTime - startTime).count() / 1.0;
-            RCLCPP_INFO_STREAM(logger_, "Time taken to plan to all frontiers is: " << duration);
-
-
-
-            // PASS THE FRONTIER LIST WITH COSTS TO THE MULTI ROBOT GOAL ALLOCATOR
-            
-            auto request_send_frontier_costs = std::make_shared<frontier_msgs::srv::LoadFrontierCosts::Request>();
-            std::vector<frontier_msgs::msg::Frontier> frontiers_list;
-            std::vector<double> frontier_costs;
-            for (auto pair : selection_result.frontier_costs) {
-                // Extract key and value
-                auto key = pair.first.frontier_; // frontier with meta data
-                auto value = pair.second; // cost.
-
-                // Push them into respective vectors
-                frontiers_list.push_back(key);
-                frontier_costs.push_back(value);
-            }
-            request_send_frontier_costs->robot_namespace = std::string{standard_node_->get_namespace()};
-            request_send_frontier_costs->frontiers = frontiers_list;
-            request_send_frontier_costs->costs = frontier_costs;
-
-            while (!client_load_frontier_costs_->wait_for_service(std::chrono::seconds(1))) {
-                if (!rclcpp::ok()) {
-                    RCLCPP_ERROR(logger_, "Interrupted while waiting for the service. Exiting.");
-                    rclcpp::shutdown();
-                }
-                RCLCPP_INFO(logger_, "load costs service not available, waiting again...");
-            }
-
-            auto result_send_frontier_costs = client_load_frontier_costs_->async_send_request(request_send_frontier_costs);
-            std::shared_ptr<frontier_msgs::srv::LoadFrontierCosts_Response> send_frontier_costs_srv_res;
-            if (rclcpp::spin_until_future_complete(standard_node_, result_send_frontier_costs) == rclcpp::FutureReturnCode::SUCCESS) {
-                send_frontier_costs_srv_res = result_send_frontier_costs.get();
-                if (send_frontier_costs_srv_res->success == false) {
-                    RCLCPP_INFO(standard_node_->get_logger(), "Get Allocation failed");
-                } else {
-                    // Process the received poses as needed
-                    RCLCPP_INFO_STREAM(standard_node_->get_logger(), "Response of loading the costs: " << send_frontier_costs_srv_res->success);
-                }
-            } else {
-            RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service /send_latest_frontier_costs");
-            }
-
-
-            // GET THE ALLOCATED GOAL
-
-            auto request_get_allocated_goal = std::make_shared<frontier_msgs::srv::GetAllocatedGoal::Request>();
-            request_get_allocated_goal->robot_namespace = std::string{standard_node_->get_namespace()};
-
-            while (!client_get_allocated_goal_->wait_for_service(std::chrono::seconds(1))) {
-                if (!rclcpp::ok()) {
-                    RCLCPP_ERROR(logger_, "Interrupted while waiting for the service. Exiting.");
-                    rclcpp::shutdown();
-                }
-                RCLCPP_INFO(logger_, "get goal service not available, waiting again...");
-            }
-
-            auto result_get_allocated_goal = client_get_allocated_goal_->async_send_request(request_get_allocated_goal);
-            std::shared_ptr<frontier_msgs::srv::GetAllocatedGoal_Response> get_allocated_goal_srv_res;
-            if (rclcpp::spin_until_future_complete(standard_node_, result_get_allocated_goal) == rclcpp::FutureReturnCode::SUCCESS) {
-                get_allocated_goal_srv_res = result_get_allocated_goal.get();
-                if (get_allocated_goal_srv_res->success == false) {
-                    RCLCPP_INFO(standard_node_->get_logger(), "Get Allocation failed");
-                } else {
-                    // Process the received poses as needed
-                    RCLCPP_INFO_STREAM(standard_node_->get_logger(), "Response of getting allocated goal: " << get_allocated_goal_srv_res->success);
-                }
-            } else {
-            RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service /get_allocated_goal");
-            }
+            BoundedExploreLayer::processOurApproach(selected, frontier_list, req, res);
         }
+
         else {
             RCLCPP_ERROR(logger_, "Invalid mode of exploration");
             rclcpp::shutdown();
@@ -326,7 +318,7 @@ namespace frontier_exploration
 
         //Visualize the frontiers
         frontierSelect_->visualizeFrontier(frontier_list, every_frontier, layered_costmap_->getGlobalFrameID());
-
+        
         //set goal pose to next frontier
         res->next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
         res->next_frontier.header.stamp = rclcpp::Clock().now();
