@@ -1,2 +1,7 @@
 root_dir/*
+root_dir/.*
 !root_dir/shell_scripts
+!root_dir/.bashrc
+!root_dir/.tmux.conf
+!root_dir/.bash_history
+!root_dir/.rangerdir
