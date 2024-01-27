@@ -17,7 +17,7 @@
 #include <frontier_exploration/geometry_tools.hpp>
 
 #include <nav2_msgs/action/navigate_to_pose.hpp>
-
+#include <frontier_msgs/srv/get_frontier_costs.hpp>
 
 namespace frontier_exploration{
 
@@ -48,6 +48,7 @@ public:
         this->get_parameter("goal_aliasing", goal_aliasing_);
         this->get_parameter("retry_count", retry_);
         this->get_parameter("nav2_goal_timeout_sec", nav2WaitTime_);
+        this->get_parameter("robot_namespaces", robot_namespaces_);
 
 
         RCLCPP_ERROR_STREAM(rclcpp::get_logger("explore_server"),"frequency: " << frequency_);
@@ -71,6 +72,9 @@ public:
         std::bind(
             &FrontierExplorationServer::dynamicParametersCallback,
             this, std::placeholders::_1));
+
+        service_get_costs_ = this->create_service<frontier_msgs::srv::GetFrontierCosts>(
+        "multirobot_get_frontier_costs", std::bind(&FrontierExplorationServer::handle_multirobot_frontier_cost_request, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     }
 
     ~FrontierExplorationServer()
@@ -123,6 +127,7 @@ private:
     int retry_;
     int nav2WaitTime_;
 
+    rclcpp::Service<frontier_msgs::srv::GetFrontierCosts>::SharedPtr service_get_costs_;
     rclcpp_action::Client<NavigateToPose>::SharedPtr nav2Client_;
     std::mutex nav2Clientlock_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr nav2Publisher_;
@@ -130,6 +135,8 @@ private:
     NavigateToPose::Goal old_goal; //previously was old_goal
     std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> frontier_goal;
     rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
+
+    std::vector<std::string> robot_namespaces_;
 
     rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal)
     {
@@ -213,6 +220,7 @@ private:
             geometry_msgs::msg::PoseStamped robot_pose;
             explore_costmap_ros_->getRobotPose(robot_pose);
             srv_req->start_pose = robot_pose;
+            srv_req->override_frontier_list = false;
 
             //evaluate if robot is within exploration boundary using robot_pose in boundary frame
             geometry_msgs::msg::PoseStamped eval_pose = srv_req->start_pose;
@@ -346,6 +354,42 @@ private:
         moving_ = false;
     }
 
+
+    void handle_multirobot_frontier_cost_request(
+    std::shared_ptr<rmw_request_id_t> request_header,
+    std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Request> request,
+    std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Response> response) {
+        RCLCPP_INFO(this->get_logger(), "Multirobot frontier costs handle.");
+        rclcpp::Client<frontier_msgs::srv::GetNextFrontier>::SharedPtr getNextFrontier = this->create_client<frontier_msgs::srv::GetNextFrontier>("explore_costmap/get_next_frontier");
+        auto srv_req = std::make_shared<frontier_msgs::srv::GetNextFrontier::Request>();
+        auto srv_res = std::make_shared<frontier_msgs::srv::GetNextFrontier::Response>();
+
+        //get current robot pose in frame of exploration boundary
+        geometry_msgs::msg::PoseStamped robot_pose;
+        explore_costmap_ros_->getRobotPose(robot_pose);
+
+        srv_req->start_pose = robot_pose;
+        srv_req->override_frontier_list = true;
+        srv_req->frontier_list_to_override = request->requested_frontier_list;
+
+        //evaluate if robot is within exploration boundary using robot_pose in boundary frame
+        geometry_msgs::msg::PoseStamped eval_pose = srv_req->start_pose;
+
+        auto resultNextFrontier = getNextFrontier->async_send_request(srv_req);
+        RCLCPP_INFO(this->get_logger(), "Multi robot Sent request.");
+        std::future_status fstatus = resultNextFrontier.wait_for(std::chrono::seconds(10));
+        srv_res = resultNextFrontier.get();
+        RCLCPP_INFO(this->get_logger(), "Multi robot Recieved response.");
+        if(srv_res->success == true) {
+            response->success = true;
+            response->frontier_costs = srv_res->frontier_costs;
+            response->frontier_list = srv_res->frontier_list;
+        }
+        else if(srv_res->success == false) {
+            response->success = false;
+        }
+        service_get_costs_->send_response(*request_header, *response);
+    }
 
     /**
      * @brief Preempt callback for the server, cancels the current running goal and all associated movement actions.

@@ -21,10 +21,10 @@ FrontierSearch::FrontierSearch(nav2_costmap_2d::Costmap2D &costmap, int min_fron
     RCLCPP_INFO(rclcpp::get_logger("frontier_search"), "Frontier search constructor");
 }
 
-std::list<frontier_msgs::msg::Frontier> FrontierSearch::searchFrom(geometry_msgs::msg::Point position){
+std::vector<frontier_msgs::msg::Frontier> FrontierSearch::searchFrom(geometry_msgs::msg::Point position){
 
     //  frontier_list to store the detected frontiers.
-    std::list<frontier_msgs::msg::Frontier> frontier_list;
+    std::vector<frontier_msgs::msg::Frontier> frontier_list;
 
     //Sanity check that robot is inside costmap bounds before searching
     unsigned int mx,my;
@@ -193,7 +193,7 @@ int frontier_count = 0;
 rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_initial;
 rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_centroid;
 
-void processFrontierListInitial(const std::list<frontier_msgs::msg::Frontier>& frontier_list) {
+void processFrontierListInitial(const std::vector<frontier_msgs::msg::Frontier>& frontier_list) {
   visualization_msgs::msg::MarkerArray marker_array;
 
   int marker_id = 0;
@@ -220,7 +220,7 @@ void processFrontierListInitial(const std::list<frontier_msgs::msg::Frontier>& f
   marker_pub_initial->publish(marker_array);
 }
 
-void processFrontierListCentroid(const std::list<frontier_msgs::msg::Frontier>& frontier_list) {
+void processFrontierListCentroid(const std::vector<frontier_msgs::msg::Frontier>& frontier_list) {
   visualization_msgs::msg::MarkerArray marker_array;
 
   int marker_id = 0;
@@ -258,7 +258,7 @@ void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr map) {
 // void localizationPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr pose) {
 //   geometry_msgs::msg::Point robot_position = pose->pose.pose.position;
 //   frontier_exploration::FrontierSearch frontier_search(costmap, 5);
-//   std::list<frontier_msgs::msg::Frontier> frontier_list = frontier_search.searchFrom(robot_position);
+//   std::vector<frontier_msgs::msg::Frontier> frontier_list = frontier_search.searchFrom(robot_position);
 //   processFrontierListInitial(frontier_list);
 //   processFrontierListCentroid(frontier_list);
 // //   RCLCPP_INFO(rclcpp::get_logger("frontier_search"), "Search complete. Waiting for new pose message");

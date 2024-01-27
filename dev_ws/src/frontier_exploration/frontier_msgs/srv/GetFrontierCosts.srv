@@ -1,0 +1,6 @@
+string robot_namespace
+frontier_msgs/Frontier[] requested_frontier_list
+---
+bool success
+frontier_msgs/Frontier[] frontier_list
+float64[] frontier_costs

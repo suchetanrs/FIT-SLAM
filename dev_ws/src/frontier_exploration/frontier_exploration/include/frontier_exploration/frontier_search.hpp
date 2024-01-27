@@ -26,7 +26,7 @@ public:
      * @param position Initial position to search from
      * @return List of frontiers, if any
      */
-    std::list<frontier_msgs::msg::Frontier> searchFrom(geometry_msgs::msg::Point position);
+    std::vector<frontier_msgs::msg::Frontier> searchFrom(geometry_msgs::msg::Point position);
 
     std::vector<std::vector<double>> getAllFrontiers();
     

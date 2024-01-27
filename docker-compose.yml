@@ -12,8 +12,16 @@ services:
       - /etc/localtime:/etc/localtime:rw
       #ros-workspaces
       - ./root_dir/:/root/:rw
+      - ../.ros/:/root/.ros
+
       #cesar-workspaces
-      #- /home/deos/s.saravanan/cesar_slam/:/home/cesar_slam/:rw
+      - /home/deos/s.saravanan/cesar_slam/:/home/cesar_slam/:rw
+
+      #clutterbot-workspaces
+      - /home/suchetan/clutterbot/dusty-humble/ros2_ws_humble/:/home/clutterbot_ws/
+      #- /home/suchetan/clutterbot/dam_rosbag/pcl_rem/:/root/pcl_rem/
+    env_file:
+      - .env
     privileged: true
     network_mode: host
     ipc: host

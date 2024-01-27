@@ -19,14 +19,14 @@ export SCOUT_Y="1.0"
 mkdir /home/$SCOUT_NAMESPACE
 ros2 launch scout_gazebo scout_simu.launch.py &
 
-# sleep 50
+sleep 50
 
-# export SCOUT_NAMESPACE="scout_1"
-# export SCOUT_Y="-1.0"
-# mkdir /home/$SCOUT_NAMESPACE
-# ros2 launch scout_gazebo scout_simu.launch.py &
+export SCOUT_NAMESPACE="scout_1"
+export SCOUT_Y="-1.0"
+mkdir /home/$SCOUT_NAMESPACE
+ros2 launch scout_gazebo scout_simu.launch.py &
 
-# sleep 20
+sleep 20
 
 export SCOUT_NAMESPACE="scout_2"
 export SCOUT_Y="1.0"
@@ -36,14 +36,14 @@ ros2 launch scout_navigation2 navigation.launch.py &
 ros2 launch traversability_gridmap traversability_launch.py &
 #ros2 launch frontier_exploration exploration.launch.py &
 
-# sleep 30
+sleep 30
 
-# export SCOUT_NAMESPACE="scout_1"
-# export SCOUT_Y="-1.0"
-# mkdir /home/$SCOUT_NAMESPACE
-# ros2 launch scout_navigation2 scout_rtab_rgbd.launch.py &
-# ros2 launch scout_navigation2 navigation.launch.py &
-# ros2 launch traversability_gridmap traversability_launch.py &
+export SCOUT_NAMESPACE="scout_1"
+export SCOUT_Y="-1.0"
+mkdir /home/$SCOUT_NAMESPACE
+ros2 launch scout_navigation2 scout_rtab_rgbd.launch.py &
+ros2 launch scout_navigation2 navigation.launch.py &
+ros2 launch traversability_gridmap traversability_launch.py &
 #ros2 launch frontier_exploration exploration.launch.py &
 
 

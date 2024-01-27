@@ -159,7 +159,7 @@ public:
         int resolution_cut_factor);
         
     SelectionResult selectFrontierCountUnknowns(
-        const std::list<frontier_msgs::msg::Frontier>& frontier_list,
+        const std::vector<frontier_msgs::msg::Frontier>& frontier_list,
         std::vector<double> polygon_xy_min_max,
         std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res,
         geometry_msgs::msg::Point start_point_w, 
@@ -167,26 +167,26 @@ public:
         nav2_costmap_2d::Costmap2D* traversability_costmap);
 
     std::pair<frontier_msgs::msg::Frontier, bool> selectFrontierClosest(
-        const std::list<frontier_msgs::msg::Frontier>& frontier_list,
+        const std::vector<frontier_msgs::msg::Frontier>& frontier_list,
         const std::vector<std::vector<double>>& every_frontier,
         std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res,
         std::string globalFrameID);
 
     std::pair<frontier_msgs::msg::Frontier, bool> selectFrontierRandom(
-        const std::list<frontier_msgs::msg::Frontier>& frontier_list,
+        const std::vector<frontier_msgs::msg::Frontier>& frontier_list,
         const std::vector<std::vector<double>>& every_frontier,
         std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res,
         std::string globalFrameID);
 
     std::pair<frontier_msgs::msg::Frontier, bool> selectFrontierInformationOnPath(
-        const std::list<frontier_msgs::msg::Frontier>& frontier_list,
+        const std::vector<frontier_msgs::msg::Frontier>& frontier_list,
         std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res,
         geometry_msgs::msg::Point start_pose,
         std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data
     );
 
     
-    void visualizeFrontier(const std::list<frontier_msgs::msg::Frontier>& frontier_list, 
+    void visualizeFrontier(const std::vector<frontier_msgs::msg::Frontier>& frontier_list, 
     const std::vector<std::vector<double>>& every_frontier, std::string globalFrameID);
 
     void exportMapCoverage(std::vector<double> polygon_xy_min_max, std::chrono::_V2::system_clock::time_point startTime);

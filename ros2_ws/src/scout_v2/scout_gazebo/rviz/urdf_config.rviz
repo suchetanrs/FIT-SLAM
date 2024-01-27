@@ -1,13 +1,12 @@
 Panels:
   - Class: rviz_common/Displays
-    Help Height: 78
+    Help Height: 85
     Name: Displays
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /Map1
       Splitter Ratio: 0.5
-    Tree Height: 380
+    Tree Height: 330
   - Class: nav2_rviz_plugins/Navigation 2
     Name: Navigation 2
   - Class: slam_toolbox::SlamToolboxPlugin
@@ -132,7 +131,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /scout_1/robot_description
-      Enabled: false
+      Enabled: true
       Links:
         All Links Enabled: true
         Expand Joint Details: false
@@ -145,44 +144,14 @@ Visualization Manager:
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
-      Value: false
+      Value: true
       Visual Enabled: true
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: false
+        All Enabled: true
         map:
-          Value: true
-        scout_1/base_footprint:
-          Value: true
-        scout_1/base_link:
-          Value: true
-        scout_1/camera_link:
-          Value: true
-        scout_1/camera_link_optical:
-          Value: true
-        scout_1/front_left_wheel_link:
-          Value: true
-        scout_1/front_right_wheel_link:
-          Value: true
-        scout_1/gps_link:
-          Value: true
-        scout_1/imu_link:
-          Value: true
-        scout_1/inertial_link:
-          Value: true
-        scout_1/odom:
-          Value: true
-        scout_1/odom_scout:
-          Value: true
-        scout_1/rear_left_wheel_link:
-          Value: true
-        scout_1/rear_right_wheel_link:
-          Value: true
-        scout_1/velodyne:
-          Value: true
-        scout_1/velodyne_base_link:
           Value: true
         scout_2/base_footprint:
           Value: true
@@ -221,30 +190,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          scout_1/odom:
-            scout_1/odom_scout:
-              scout_1/base_footprint:
-                scout_1/base_link:
-                  scout_1/camera_link:
-                    scout_1/camera_link_optical:
-                      {}
-                  scout_1/front_left_wheel_link:
-                    {}
-                  scout_1/front_right_wheel_link:
-                    {}
-                  scout_1/gps_link:
-                    {}
-                  scout_1/imu_link:
-                    {}
-                  scout_1/inertial_link:
-                    {}
-                  scout_1/rear_left_wheel_link:
-                    {}
-                  scout_1/rear_right_wheel_link:
-                    {}
-                  scout_1/velodyne_base_link:
-                    scout_1/velodyne:
-                      {}
           scout_2/odom:
             scout_2/odom_scout:
               scout_2/base_footprint:
@@ -283,13 +228,13 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_2/traversability_costmap/costmap
+        Value: /traversability_thresholded
       Update Topic:
         Depth: 5
         Durability Policy: Transient Local
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_2/traversability_costmap/costmap_updates
+        Value: /traversability_thresholded_updates
       Use Timestamp: false
       Value: true
     - Alpha: 0.699999988079071
@@ -312,32 +257,6 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /scout_2/traversability_thresholded_updates
       Use Timestamp: false
-      Value: false
-    - Alpha: 1
-      Autocompute Intensity Bounds: true
-      Class: grid_map_rviz_plugin/GridMap
-      Color: 200; 200; 200
-      Color Layer: slope_haz
-      Color Transformer: ColorLayer
-      Enabled: false
-      Height Layer: slope_haz
-      Height Transformer: Layer
-      History Length: 1
-      Invert Rainbow: false
-      Max Color: 255; 255; 255
-      Max Intensity: 10
-      Min Color: 0; 0; 0
-      Min Intensity: 0
-      Name: GridMap
-      Show Grid Lines: true
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /scout_1/traversability_costmap/RTQuadtree_struct
-      Use Rainbow: false
       Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -451,7 +370,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        {}
+        explore_points: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -459,6 +378,71 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /scout_2/exploration_polygon_marker
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker
+      Namespaces:
+        two_triangles_namespace: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_2/explore_costmap/path_fovs
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_2/explore_costmap/landmark_marker
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_1/exploration_polygon_marker
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_1/explore_costmap/path_fovs
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_1/explore_costmap/landmark_marker
       Value: true
     - Alpha: 1
       Buffer Length: 1
@@ -516,52 +500,6 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /scout_2/explore_costmap/frontier_plan
       Value: true
-    - Class: rviz_default_plugins/Marker
-      Enabled: true
-      Name: Marker
-      Namespaces:
-        {}
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /scout_2/explore_costmap/path_fovs
-      Value: true
-    - Class: rviz_default_plugins/Marker
-      Enabled: true
-      Name: Marker
-      Namespaces:
-        {}
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /scout_2/explore_costmap/landmark_marker
-      Value: true
-    - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.10000000149011612
-      Class: rviz_default_plugins/Pose
-      Color: 85; 0; 255
-      Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
-      Name: Pose
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
-      Shape: Arrow
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /scout_2/explore_costmap/viz_pose
-      Value: true
     - Alpha: 1
       Buffer Length: 1
       Class: rviz_default_plugins/Path
@@ -589,6 +527,142 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /scout_1/corrected_plan
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz_default_plugins/Path
+      Color: 170; 0; 0
+      Enabled: true
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Billboards
+      Line Width: 0.09000000357627869
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_2/explore_costmap/frontier_plan
+      Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz_default_plugins/Pose
+      Color: 85; 0; 255
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
+      Name: Pose
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_2/explore_costmap/viz_pose
+      Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz_default_plugins/Pose
+      Color: 85; 0; 255
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
+      Name: Pose
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_1/explore_costmap/viz_pose
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /dam_pcl_filtered
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 0
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_2/velodyne_points
+      Use Fixed Frame: true
+      Use rainbow: true
       Value: true
   Enabled: true
   Global Options:
@@ -636,16 +710,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 23.409461975097656
+      Distance: 9.06306266784668
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.5226201415061951
-        Y: -0.1237642765045166
-        Z: -2.8780126571655273
+        X: -0.06461440026760101
+        Y: 0.10227465629577637
+        Z: -0.9754400849342346
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -654,19 +728,19 @@ Visualization Manager:
       Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.710485935211182
+      Yaw: 4.695473670959473
     Saved: ~
 Window Geometry:
   Displays:
-    collapsed: true
-  Height: 1016
-  Hide Left Dock: true
+    collapsed: false
+  Height: 1043
+  Hide Left Dock: false
   Hide Right Dock: false
   Navigation 2:
-    collapsed: true
-  QMainWindow State: 000000ff00000000fd000000010000000000000385000003a2fc0200000003fb000000100044006900730070006c006100790073000000003b00000205000000c700fffffffb00000018004e0061007600690067006100740069006f006e002000320000000246000001970000012300fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d0000016d00ffffff0000073a000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd000000010000000000000385000003b1fc0200000003fb000000100044006900730070006c0061007900730100000044000001e0000000eb00fffffffb00000018004e0061007600690067006100740069006f006e00200032010000022b000001ca0000013900fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d000001a800ffffff000003f4000003b100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   SlamToolboxPlugin:
     collapsed: false
-  Width: 1850
-  X: 70
-  Y: 27
+  Width: 1920
+  X: 0
+  Y: 0

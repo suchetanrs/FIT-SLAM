@@ -81,15 +81,15 @@ ament_target_dependencies(polygon_point_publisher rclcpp geometry_msgs)
 add_executable(localization_pose_sub src/viz/localization_pose_sub.cpp)
 ament_target_dependencies(localization_pose_sub SYSTEM ${dependencies})
 
-# Add executable 6 (multi)
-add_executable(goal_allocation_server src/goal_allocation_server.cpp)
-ament_target_dependencies(goal_allocation_server SYSTEM ${dependencies})
+# # Add executable 6 (multi)
+# add_executable(goal_allocation_server src/goal_allocation_server.cpp)
+# ament_target_dependencies(goal_allocation_server SYSTEM ${dependencies})
 
 # Add executable 6 (multi)
 add_executable(mthread src/mthread.cpp)
 ament_target_dependencies(mthread SYSTEM ${dependencies})
 
-install(TARGETS explore_server explore_client frontier_exploration_core polygon_point_publisher goal_allocation_server mthread
+install(TARGETS explore_server explore_client frontier_exploration_core polygon_point_publisher mthread
 DESTINATION lib/${PROJECT_NAME}
 )
 

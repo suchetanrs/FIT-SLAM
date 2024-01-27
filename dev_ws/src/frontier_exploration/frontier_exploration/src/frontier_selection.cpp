@@ -102,7 +102,7 @@ namespace frontier_exploration {
     }
 
     // @brief order of polygon points is : minx, miny, maxx, maxy
-    SelectionResult FrontierSelectionNode::selectFrontierCountUnknowns(const std::list<frontier_msgs::msg::Frontier>& frontier_list, std::vector<double> polygon_xy_min_max,
+    SelectionResult FrontierSelectionNode::selectFrontierCountUnknowns(const std::vector<frontier_msgs::msg::Frontier>& frontier_list, std::vector<double> polygon_xy_min_max,
                                          std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, geometry_msgs::msg::Point start_point_w, std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, nav2_costmap_2d::Costmap2D* traversability_costmap) {
         traversability_costmap_ = traversability_costmap;
         std::map<frontier_exploration::FrontierWithMetaData, double> frontier_costs;
@@ -259,7 +259,7 @@ namespace frontier_exploration {
                         maxIndex = i;
                     }
                 }
-// camera_fov / 2 is added because until here the maxIndex is only the starting index.
+                // camera_fov / 2 is added because until here the maxIndex is only the starting index.
                 FrontierWithMetaData f_info(frontier, maxValue, ((maxIndex * delta_theta) + (camera_fov / 2)), length_to_frontier);
                 frontier_meta_data_vector.push_back(f_info);
                 max_arrival_info_per_frontier = std::max(max_arrival_info_per_frontier, maxValue);
@@ -365,7 +365,7 @@ namespace frontier_exploration {
         }
     }
 
-    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierClosest(const std::list<frontier_msgs::msg::Frontier>& frontier_list, const std::vector<std::vector<double>>& every_frontier, std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, std::string globalFrameID) {
+    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierClosest(const std::vector<frontier_msgs::msg::Frontier>& frontier_list, const std::vector<std::vector<double>>& every_frontier, std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, std::string globalFrameID) {
         //create placeholder for selected frontier
         frontier_msgs::msg::Frontier selected;
         selected.min_distance = std::numeric_limits<double>::infinity();
@@ -410,7 +410,7 @@ namespace frontier_exploration {
         return std::make_pair(selected, frontierSelectionFlag);
     }
 
-    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierRandom(const std::list<frontier_msgs::msg::Frontier>& frontier_list, const std::vector<std::vector<double>>& every_frontier, std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, std::string globalFrameID) {
+    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierRandom(const std::vector<frontier_msgs::msg::Frontier>& frontier_list, const std::vector<std::vector<double>>& every_frontier, std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, std::string globalFrameID) {
         //create placeholder for selected frontier
         frontier_msgs::msg::Frontier selected;
         selected.min_distance = std::numeric_limits<double>::infinity();
@@ -618,7 +618,7 @@ namespace frontier_exploration {
     }
 
 
-    void FrontierSelectionNode::visualizeFrontier(const std::list<frontier_msgs::msg::Frontier>& frontier_list, const std::vector<std::vector<double>>& every_frontier, std::string globalFrameID) {
+    void FrontierSelectionNode::visualizeFrontier(const std::vector<frontier_msgs::msg::Frontier>& frontier_list, const std::vector<std::vector<double>>& every_frontier, std::string globalFrameID) {
 
         //pointcloud for visualization purposes
         pcl::PointCloud<pcl::PointXYZI> frontier_cloud_viz;
@@ -689,7 +689,7 @@ namespace frontier_exploration {
         file.close();        
     }
 
-    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierInformationOnPath(const std::list<frontier_msgs::msg::Frontier>& frontier_list, 
+    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierInformationOnPath(const std::vector<frontier_msgs::msg::Frontier>& frontier_list, 
         std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, geometry_msgs::msg::Point start_pose, std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data) {
         for(auto frontier: frontier_list) {
             getPlanForFrontier(start_pose, frontier, map_data, true);

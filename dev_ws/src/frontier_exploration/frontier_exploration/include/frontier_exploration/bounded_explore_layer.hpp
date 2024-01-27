@@ -15,13 +15,13 @@
 #include <frontier_msgs/msg/frontier.hpp>
 #include <frontier_msgs/srv/update_boundary_polygon.hpp>
 #include <frontier_msgs/srv/get_next_frontier.hpp>
+#include <frontier_msgs/srv/get_frontier_costs.hpp>
 #include <frontier_exploration/frontier_selection.hpp>
+
 #include <tf2_ros/buffer.h>
 #include <tf2/LinearMath/Quaternion.h>
 
 #include "rtabmap_msgs/srv/get_map2.hpp"
-#include "frontier_msgs/srv/get_allocated_goal.hpp"
-#include "frontier_msgs/msg/load_frontier_costs.hpp"
 namespace frontier_exploration
 {
 
@@ -52,11 +52,6 @@ public:
      */
     virtual void updateCosts(nav2_costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
 
-    bool isDiscretized()
-    {
-        return true;
-    }
-
     /**
      * @brief Match dimensions and origin of parent costmap
      */
@@ -72,15 +67,11 @@ public:
      */
     virtual void reset();
 
-    // std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("bounded_explore_layer");
-
     geometry_msgs::msg::Quaternion createQuaternionMsgFromYaw(double yaw);
     
+    // ROS SERVICES
     rclcpp::Service<frontier_msgs::srv::UpdateBoundaryPolygon>::SharedPtr polygonService_;
     rclcpp::Service<frontier_msgs::srv::GetNextFrontier>::SharedPtr frontierService_;
-
-    // rclcpp_lifecycle::LifecycleNode::SharedPtr node = node_.lock();
-    // rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("bounded_explore_layer");
 
 protected:
 
@@ -120,14 +111,14 @@ protected:
 
     void processOurApproach(
         frontier_msgs::msg::Frontier& selected,
-        std::list<frontier_msgs::msg::Frontier>& frontier_list,
+        std::vector<frontier_msgs::msg::Frontier>& frontier_list,
         const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, 
         std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res
     );
 
     void processRandomApproach(
         frontier_msgs::msg::Frontier& selected,
-        std::list<frontier_msgs::msg::Frontier>& frontier_list,
+        std::vector<frontier_msgs::msg::Frontier>& frontier_list,
         const std::vector<std::vector<double>>& every_frontier,
         const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, 
         std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res
@@ -135,7 +126,7 @@ protected:
 
     void processGreedyApproach(
         frontier_msgs::msg::Frontier& selected,
-        std::list<frontier_msgs::msg::Frontier>& frontier_list,
+        std::vector<frontier_msgs::msg::Frontier>& frontier_list,
         const std::vector<std::vector<double>>& every_frontier,
         const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, 
         std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res
@@ -167,6 +158,8 @@ private:
     std::string frontier_travel_point_;
     std::vector<double> polygon_xy_min_max_;
     std::string exploration_mode_;
+    std::vector<std::string> robot_namespaces_;
+    std::string current_robot_namespace_;
 
     // Dynamic parameters handler
     rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
@@ -174,8 +167,7 @@ private:
     std::chrono::_V2::system_clock::time_point startTime_ = std::chrono::high_resolution_clock::now();
 
     rclcpp::Client<rtabmap_msgs::srv::GetMap2>::SharedPtr client_get_map_data2_;
-    rclcpp::Client<frontier_msgs::srv::GetAllocatedGoal>::SharedPtr client_get_allocated_goal_;
-    rclcpp::Publisher<frontier_msgs::msg::LoadFrontierCosts>::SharedPtr pub_load_frontier_costs_;
+    rclcpp::Client<frontier_msgs::srv::GetFrontierCosts>::SharedPtr client_get_frontier_costs_;
     rclcpp::Node::SharedPtr standard_node_;
     rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>::SharedPtr plan_pub_;
 };

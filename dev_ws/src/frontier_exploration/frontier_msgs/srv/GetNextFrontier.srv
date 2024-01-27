@@ -1,4 +1,8 @@
 geometry_msgs/PoseStamped start_pose
+bool override_frontier_list
+frontier_msgs/Frontier[] frontier_list_to_override
 ---
 bool success
 geometry_msgs/PoseStamped next_frontier
+frontier_msgs/Frontier[] frontier_list
+float64[] frontier_costs

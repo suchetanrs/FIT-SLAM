@@ -96,3 +96,54 @@ int main(int argc, char **argv)
   rclcpp::shutdown();
   return 0;
 }
+
+
+
+
+        // // PASS THE FRONTIER LIST WITH COSTS TO THE MULTI ROBOT GOAL ALLOCATOR
+        
+        // frontier_msgs::msg::LoadFrontierCosts frontier_costs_msg_;
+        // std::vector<frontier_msgs::msg::Frontier> frontiers_list;
+        // std::vector<double> frontier_costs;
+        // for (auto pair : selection_result.frontier_costs) {
+        //     // Extract key and value
+        //     auto key = pair.first.frontier_; // frontier with meta data
+        //     auto value = pair.second; // cost.
+
+        //     // Push them into respective vectors
+        //     frontiers_list.push_back(key);
+        //     frontier_costs.push_back(value);
+        // }
+        // frontier_costs_msg_.robot_namespace = std::string{standard_node_->get_namespace()};
+        // frontier_costs_msg_.frontiers = frontiers_list;
+        // frontier_costs_msg_.costs = frontier_costs;
+
+        // pub_load_frontier_costs_->publish(frontier_costs_msg_);
+
+
+        // // GET THE ALLOCATED GOAL
+
+        // auto request_get_allocated_goal = std::make_shared<frontier_msgs::srv::GetAllocatedGoal::Request>();
+        // request_get_allocated_goal->robot_namespace = std::string{standard_node_->get_namespace()};
+
+        // while (!client_get_allocated_goal_->wait_for_service(std::chrono::seconds(1))) {
+        //     if (!rclcpp::ok()) {
+        //         RCLCPP_ERROR(logger_, "Interrupted while waiting for the service. Exiting.");
+        //         rclcpp::shutdown();
+        //     }
+        //     RCLCPP_INFO(logger_, "get goal service not available, waiting again...");
+        // }
+
+        // auto result_get_allocated_goal = client_get_allocated_goal_->async_send_request(request_get_allocated_goal);
+        // std::shared_ptr<frontier_msgs::srv::GetAllocatedGoal_Response> get_allocated_goal_srv_res;
+        // if (rclcpp::spin_until_future_complete(standard_node_, result_get_allocated_goal) == rclcpp::FutureReturnCode::SUCCESS) {
+        //     get_allocated_goal_srv_res = result_get_allocated_goal.get();
+        //     if (get_allocated_goal_srv_res->success == false) {
+        //         RCLCPP_INFO(standard_node_->get_logger(), "Get Allocation failed");
+        //     } else {
+        //         // Process the received poses as needed
+        //         RCLCPP_INFO_STREAM(standard_node_->get_logger(), "Response of getting allocated goal: " << get_allocated_goal_srv_res->success);
+        //     }
+        // } else {
+        // RCLCPP_ERROR(standard_node_->get_logger(), "Failed to call the service /get_allocated_goal");
+        // }
