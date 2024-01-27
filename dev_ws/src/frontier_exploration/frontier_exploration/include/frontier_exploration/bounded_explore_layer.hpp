@@ -89,11 +89,6 @@ protected:
      * @param res Service response
      * @return True on service success, false otherwise
      */
-    /**
-     * @brief Load polygon boundary to draw on map with each update
-     * @param polygon_stamped polygon boundary
-     * @return True if polygon successfully loaded, false otherwise
-     */
     void updateBoundaryPolygonService(
         const std::shared_ptr<rmw_request_id_t> request_header,
         const std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Request> req, 
@@ -104,12 +99,6 @@ protected:
      * @param req Service request
      * @param res Service response
      * @return True on service success, false otherwise
-     */
-    /**
-     * @brief Search the costmap for next reachable frontier to explore
-     * @param start_pose Pose from which to start search
-     * @param next_frontier Pose of found frontier
-     * @return True if a reachable frontier was found, false otherwise
      */
     void getNextFrontierService(
         const std::shared_ptr<rmw_request_id_t> request_header,
