@@ -1,64 +1,72 @@
 #ifndef FRONTIER_SEARCH_HPP_
 #define FRONTIER_SEARCH_HPP_
 
-#include <frontier_msgs/msg/frontier.hpp>
-#include <nav2_costmap_2d/costmap_2d.hpp>
 #include <list>
 #include <vector>
+#include <queue>
+#include <limits>
 
-namespace frontier_exploration{
+#include <rclcpp/rclcpp.hpp>
 
-/**
- * @brief Thread-safe implementation of a frontier-search task for an input costmap.
- */
-class FrontierSearch{
+#include <nav2_costmap_2d/costmap_2d.hpp>
+#include <nav2_costmap_2d/cost_values.hpp>
 
-public:
+#include <geometry_msgs/msg/point.hpp>
 
+#include <frontier_msgs/msg/frontier.hpp>
+namespace frontier_exploration
+{
     /**
-     * @brief Constructor for search task
-     * @param costmap Reference to costmap data to search.
+     * @brief Thread-safe implementation of a frontier-search task for an input costmap.
      */
-    FrontierSearch(nav2_costmap_2d::Costmap2D& costmap, int min_frontier_cluster_size);
+    class FrontierSearch
+    {
 
-    /**
-     * @brief Runs search implementation, outward from the start position
-     * @param position Initial position to search from
-     * @return List of frontiers, if any
-     */
-    std::vector<frontier_msgs::msg::Frontier> searchFrom(geometry_msgs::msg::Point position);
+    public:
+        /**
+         * @brief Constructor for search task
+         * @param costmap Reference to costmap data to search.
+         */
+        FrontierSearch(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size);
 
-    std::vector<std::vector<double>> getAllFrontiers();
-    
-protected:
+        /**
+         * @brief Runs search implementation, outward from the start position
+         * @param position Initial position to search from
+         * @return List of frontiers, if any
+         */
+        std::vector<frontier_msgs::msg::Frontier> searchFrom(geometry_msgs::msg::Point position);
 
-    /**
-     * @brief Starting from an initial cell, build a frontier from valid adjacent cells
-     * @param initial_cell Index of cell to start frontier building
-     * @param reference Reference index to calculate position from
-     * @param frontier_flag Flag vector indicating which cells are already marked as frontiers
-     * @return
-     */
-    frontier_msgs::msg::Frontier buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool>& frontier_flag);
+        /**
+         * @brief Getter function for all frontiers unclustered.
+         * @return every_frontier variable value.
+         */
+        std::vector<std::vector<double>> getAllFrontiers();
 
-    /**
-     * @brief isNewFrontierCell Evaluate if candidate cell is a valid candidate for a new frontier.
-     * @param idx Index of candidate cell
-     * @param frontier_flag Flag vector indicating which cells are already marked as frontiers
-     * @return
-     */
-    bool isNewFrontierCell(unsigned int idx, const std::vector<bool>& frontier_flag);
+    protected:
+        /**
+         * @brief Starting from an initial cell, build a frontier from valid adjacent cells
+         * @param initial_cell Index of cell to start frontier building
+         * @param reference Reference index to calculate position from
+         * @param frontier_flag Flag vector indicating which cells are already marked as frontiers
+         * @return
+         */
+        frontier_msgs::msg::Frontier buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool> &frontier_flag);
 
+        /**
+         * @brief isNewFrontierCell Evaluate if candidate cell is a valid candidate for a new frontier.
+         * @param idx Index of candidate cell
+         * @param frontier_flag Flag vector indicating which cells are already marked as frontiers
+         * @return
+         */
+        bool isNewFrontierCell(unsigned int idx, const std::vector<bool> &frontier_flag);
 
-private:
-
-    nav2_costmap_2d::Costmap2D& costmap_;
-    unsigned char* map_;
-    unsigned int size_x_ , size_y_;
-    std::vector<std::vector<double>> every_frontier_list;
-    int min_frontier_cluster_size_;
-
-};
+    private:
+        nav2_costmap_2d::Costmap2D &costmap_;
+        unsigned char *map_;
+        unsigned int size_x_, size_y_;
+        std::vector<std::vector<double>> every_frontier_list;
+        int min_frontier_cluster_size_;
+    };
 
 }
 #endif

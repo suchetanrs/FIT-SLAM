@@ -24,6 +24,7 @@ find_package(Eigen3 REQUIRED)
 find_package(nav2_util)
 find_package(PCL REQUIRED)
 find_package(octomap REQUIRED)
+find_package(example_interfaces REQUIRED)
 
 set(dependencies
 ament_cmake
@@ -48,6 +49,7 @@ Eigen3
 PCL
 octomap
 nav2_util
+example_interfaces
 )
 
 
@@ -81,15 +83,11 @@ ament_target_dependencies(polygon_point_publisher rclcpp geometry_msgs)
 add_executable(localization_pose_sub src/viz/localization_pose_sub.cpp)
 ament_target_dependencies(localization_pose_sub SYSTEM ${dependencies})
 
-# # Add executable 6 (multi)
-# add_executable(goal_allocation_server src/goal_allocation_server.cpp)
-# ament_target_dependencies(goal_allocation_server SYSTEM ${dependencies})
+# Add executable 5
+add_executable(srv_cl src/srv_cl.cpp)
+ament_target_dependencies(srv_cl SYSTEM ${dependencies})
 
-# Add executable 6 (multi)
-add_executable(mthread src/mthread.cpp)
-ament_target_dependencies(mthread SYSTEM ${dependencies})
-
-install(TARGETS explore_server explore_client frontier_exploration_core polygon_point_publisher mthread
+install(TARGETS explore_server explore_client polygon_point_publisher frontier_exploration_core srv_cl
 DESTINATION lib/${PROJECT_NAME}
 )
 

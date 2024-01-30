@@ -1,7 +1,12 @@
-#ifndef FRONTIER_EXPLORATION_UTIL_H_
-#define FRONTIER_EXPLORATION_UTIL_H_
+#ifndef FRONTIER_EXPLORATION_UTIL_HPP_
+#define FRONTIER_EXPLORATION_UTIL_HPP_
+
+#include <cmath>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
 #include <rclcpp/rclcpp.hpp>
+
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/transform.hpp>
 
@@ -10,17 +15,26 @@
 
 #include <rtabmap_msgs/msg/node_data.hpp>
 #include <rtabmap_msgs/msg/map_data.hpp>
+
 #include <nav2_util/geometry_utils.hpp>
-#include <cmath>
-#include <Eigen/Core>
-#include <Eigen/Geometry>
 #include <nav2_costmap_2d/costmap_2d.hpp>
 #include <nav2_costmap_2d/footprint.hpp>
 
-namespace frontier_exploration_utils {
-
-    // @brief Checks if a 2D point is inside a triangle. Triangle vertices size = 3 and order = x, y 
-    bool isPointInsideTriangle(std::vector<double> point, std::vector<std::vector<double>> triangle_vertices) {
+namespace frontier_exploration_utils
+{
+    /**
+     * @brief Checks if a 2D point is inside a triangle.
+     * This function determines whether a given 2D point lies within a triangle
+     * defined by its vertices.
+     *
+     * @param point The 2D point to check, represented as a vector of size 2.
+     * @param triangle_vertices The vertices of the triangle, represented as a vector of size 3,
+     *                          where each vertex is represented as a vector of size 2 containing x and y coordinates.
+     *
+     * @return true if the point is inside the triangle, false otherwise.
+     */
+    bool isPointInsideTriangle(std::vector<double> point, std::vector<std::vector<double>> triangle_vertices)
+    {
         std::vector<double> v0 = {triangle_vertices[2][0] - triangle_vertices[0][0], triangle_vertices[2][1] - triangle_vertices[0][1]};
         std::vector<double> v1 = {triangle_vertices[1][0] - triangle_vertices[0][0], triangle_vertices[1][1] - triangle_vertices[0][1]};
         std::vector<double> v2 = {point[0] - triangle_vertices[0][0], point[1] - triangle_vertices[0][1]};
@@ -38,10 +52,17 @@ namespace frontier_exploration_utils {
         return (u >= 0.0) && (v >= 0.0) && (u + v <= 1.0);
     }
 
-    // @brief the geometry_msgs quaternion to tf2 quaternion
-    // @return roll, pitch, yaw
+    /**
+     * @brief Converts a quaternion to Euler angles.
+     * This function converts a quaternion representation of orientation to Euler angles (roll, pitch, and yaw).
+     *
+     * @param quat The quaternion representing the orientation.
+     *
+     * @return A vector containing Euler angles in radians: [roll, pitch, yaw].
+     */
     // TODO: Verify if this quaternion has to be normalized.
-    std::vector<double> quatToEuler(geometry_msgs::msg::Quaternion& quat) {
+    std::vector<double> quatToEuler(geometry_msgs::msg::Quaternion &quat)
+    {
         tf2::Quaternion tf2_quaternion(
             quat.x, quat.y, quat.z, quat.w);
 
@@ -51,9 +72,21 @@ namespace frontier_exploration_utils {
         matrix.getRPY(rpy[0], rpy[1], rpy[2]);
         return rpy;
     }
-    
-    // @brief This function returns vertices of a triangle given the pose, max_depth of observation and hfov. These parameters can be found in the URDF of the depth camera.
-    std::vector<std::vector<double>> getVerticesOfFrustum2D (geometry_msgs::msg::Pose& pose, double max_depth, double hfov) {
+
+    /**
+     * @brief Returns the vertices of a 2D frustum (triangle) given the pose, max_depth of observation, and horizontal field of view (hfov).
+     *
+     * This function calculates the vertices of a 2D frustum (triangle) based on the provided pose (position and orientation),
+     * maximum depth of observation, and horizontal field of view (hfov).
+     *
+     * @param pose The pose of the camera, including position and orientation.
+     * @param max_depth The maximum depth of observation.
+     * @param hfov The horizontal field of view of the camera.
+     *
+     * @return A vector of vectors representing the vertices of the frustum in 2D space. Each vertex is represented as [x, y].
+     */
+    std::vector<std::vector<double>> getVerticesOfFrustum2D(geometry_msgs::msg::Pose &pose, double max_depth, double hfov)
+    {
         std::vector<std::vector<double>> vertices;
         auto alpha = quatToEuler(pose.orientation);
 
@@ -72,10 +105,22 @@ namespace frontier_exploration_utils {
         return vertices;
     }
 
-    // @brief This function returns the mid points of the 3 sides of a 2D triangle along with its vertices.
-    // Modify this function if you want to check for more points other than just these 6.
-    std::vector<std::vector<double>> getVerticesToCheck (geometry_msgs::msg::Pose& pose, double max_depth, double hfov) {
-        std::vector<std::vector<double>> vertices = getVerticesOfFrustum2D (pose, max_depth, hfov);
+    /**
+     * @brief Returns the midpoints of the three sides of a 2D triangle along with its vertices.
+     *
+     * This function calculates the midpoints of the three sides of a 2D triangle along with its vertices.
+     *
+     * @param pose The pose of the camera, including position and orientation.
+     * @param max_depth The maximum depth of observation.
+     * @param hfov The horizontal field of view of the camera.
+     *
+     * @return A vector of vectors representing the vertices of the triangle and the midpoints of its sides in 2D space. Each vertex is represented as [x, y].
+     *
+     * @note Modify this function if you want to check for more points other than just these 6.
+     */
+    std::vector<std::vector<double>> getVerticesToCheck(geometry_msgs::msg::Pose &pose, double max_depth, double hfov)
+    {
+        std::vector<std::vector<double>> vertices = getVerticesOfFrustum2D(pose, max_depth, hfov);
 
         std::vector<double> point;
         point.push_back((vertices[0][0] + vertices[1][0]) / 2);
@@ -96,20 +141,46 @@ namespace frontier_exploration_utils {
         return vertices;
     }
 
-    // @brief Checks if the camera frustums of two poses have any overlap. The max_depth_error is the value to be added to max_depth of the 3D camera.
-    // If the error is 0.5, the camera fov triangle will have a height of max_depth + max_depth_error.
-    bool frustumOverlap(geometry_msgs::msg::Pose& curr_pose, geometry_msgs::msg::Pose& pose_to_check, double max_depth, double hfov, double max_depth_error) {
+    /**
+     * @brief Checks if the camera frustums of two poses have any overlap.
+     *
+     * This function determines if there is any overlap between the camera frustums of two poses.
+     * The max_depth_error parameter is the value added to the max_depth of the 3D camera.
+     * For example, if the error is 0.5, the camera field of view (FOV) triangle will have a height of max_depth + max_depth_error.
+     *
+     * @param curr_pose The pose of the current camera.
+     * @param pose_to_check The pose of the camera to be checked for overlap.
+     * @param max_depth The maximum depth of observation of the camera.
+     * @param hfov The horizontal field of view (HFOV) of the camera.
+     * @param max_depth_error The error value added to the max_depth of the camera.
+     *
+     * @return True if there is overlap between the camera frustums, otherwise false.
+     */
+    bool frustumOverlap(geometry_msgs::msg::Pose &curr_pose, geometry_msgs::msg::Pose &pose_to_check, double max_depth, double hfov, double max_depth_error)
+    {
         auto vertices_pose = getVerticesOfFrustum2D(curr_pose, max_depth + max_depth_error, hfov);
         auto vertices_check = getVerticesToCheck(pose_to_check, max_depth + max_depth_error, hfov);
-        for (auto pose : vertices_check) {
-            if(isPointInsideTriangle(pose, vertices_pose)) {
+        for (auto pose : vertices_check)
+        {
+            if (isPointInsideTriangle(pose, vertices_pose))
+            {
                 return true;
             }
         }
         return false;
     }
 
-    geometry_msgs::msg::Point getPointFromVector(std::vector<double> vec) {
+    /**
+     * @brief Converts a vector of double values to a geometry_msgs::msg::Point.
+     *
+     * This function takes a vector containing double values representing coordinates
+     * and converts them into a geometry_msgs::msg::Point.
+     *
+     * @param vec The vector containing the x and y coordinates.
+     * @return The geometry_msgs::msg::Point representation of the coordinates.
+     */
+    geometry_msgs::msg::Point getPointFromVector(std::vector<double> vec)
+    {
         geometry_msgs::msg::Point pnt;
         pnt.x = vec[0];
         pnt.y = vec[1];
@@ -117,25 +188,46 @@ namespace frontier_exploration_utils {
     }
 }
 
-namespace frontier_exploration_information {
+namespace frontier_exploration_information
+{
 
-    // last entry is 1. Does not consider the last entry for computation
-    Eigen::Matrix3d getSkewMatrix(const Eigen::Vector4d& v) {
+    /**
+     * @brief Computes the skew-symmetric matrix for a 3D vector.
+     *
+     * This function calculates the skew-symmetric matrix representation of a 3D vector.
+     * The skew-symmetric matrix has the property that when multiplied by another vector,
+     * it produces the cross product of the original vector and the other vector.
+     *
+     * @param v The 3D vector.
+     * @return The skew-symmetric matrix corresponding to the input vector.
+     *         The last entry of the input vector is not considered for computation.
+     * @note The last element in v is 1. It is not used for computation.
+     */
+    Eigen::Matrix3d getSkewMatrix(const Eigen::Vector4d &v)
+    {
         Eigen::Matrix3d skewMat;
-        skewMat <<  0, -v(2),  v(1),
-                    v(2),  0,  -v(0),
-                    -v(1),  v(0),  0;
+        skewMat << 0, -v(2), v(1),
+            v(2), 0, -v(0),
+            -v(1), v(0), 0;
         return skewMat;
     }
 
-
-    Eigen::Matrix4d computeTransformationMatrix(geometry_msgs::msg::Transform& transform) {
+    /**
+     * @brief Computes the 4x4 transformation matrix from a ROS Transform message.
+     *
+     * This function computes the 4x4 transformation matrix from the rotation and translation
+     * components of a ROS Transform message.
+     *
+     * @param transform The ROS Transform message containing rotation and translation information.
+     * @return The 4x4 transformation matrix computed from the input transform.
+     */
+    Eigen::Matrix4d computeTransformationMatrix(geometry_msgs::msg::Transform &transform)
+    {
         Eigen::Quaterniond quaternion(
             transform.rotation.w,
             transform.rotation.x,
             transform.rotation.y,
-            transform.rotation.z
-        );
+            transform.rotation.z);
         quaternion.normalize();
         Eigen::Matrix3d rotation_matrix = quaternion.toRotationMatrix();
         Eigen::Matrix<double, 4, 1> translation_matrix;
@@ -150,24 +242,66 @@ namespace frontier_exploration_information {
         return transformation_matrix;
     }
 
-
-    Eigen::Matrix3d computeRotationMatrix(const Eigen::Matrix4d& transformation_matrix) {
+    /**
+     * @brief Computes the 3x3 rotation matrix from a 4x4 transformation matrix.
+     *
+     * This function extracts the 3x3 rotation matrix from the upper-left 3x3 block
+     * of a 4x4 transformation matrix.
+     *
+     * @param transformation_matrix The 4x4 transformation matrix.
+     * @return The 3x3 rotation matrix extracted from the transformation matrix.
+     */
+    Eigen::Matrix3d computeRotationMatrix(const Eigen::Matrix4d &transformation_matrix)
+    {
         return transformation_matrix.block<3, 3>(0, 0);
     }
 
-
-    Eigen::Vector4d transformPoint_C_W(Eigen::Vector4d& p3d_c, const Eigen::Matrix4d& T_w_c) {
+    /**
+     * @brief Transforms a 3D point from camera frame to world frame using a transformation matrix.
+     *
+     * This function performs the transformation of a 3D point from the camera frame to the world frame
+     * using the provided transformation matrix T_w_c.
+     *
+     * @param p3d_c The 3D point in the camera frame represented as a 4D homogeneous vector.
+     * @param T_w_c The transformation matrix from camera frame to world frame.
+     * @return The transformed 3D point in the world frame represented as a 4D homogeneous vector.
+     */
+    Eigen::Vector4d transformPoint_C_W(Eigen::Vector4d &p3d_c, const Eigen::Matrix4d &T_w_c)
+    {
         return T_w_c * p3d_c;
     }
 
-
-    Eigen::Vector4d transformPoint_C_W(Eigen::Vector4d& p3d_c, geometry_msgs::msg::Transform& T_w_c) {
+    /**
+     * @brief Transforms a 3D point from camera frame to world frame using a transformation message.
+     *
+     * This function transforms a 3D point from the camera frame to the world frame using the provided
+     * transformation message T_w_c. The transformation message is converted into a transformation matrix
+     * internally for the transformation computation.
+     *
+     * @param p3d_c The 3D point in the camera frame represented as a 4D homogeneous vector.
+     * @param T_w_c The transformation from camera frame to world frame represented as a geometry_msgs::msg::Transform.
+     * @return The transformed 3D point in the world frame represented as a 4D homogeneous vector.
+     */
+    Eigen::Vector4d transformPoint_C_W(Eigen::Vector4d &p3d_c, geometry_msgs::msg::Transform &T_w_c)
+    {
         return computeTransformationMatrix(T_w_c) * p3d_c;
     }
 
-    // @brief T_w_c is the transform between world and camera with which the point in the camera frame can be converted to world frame.
-    // T_w_c_est is the transform between world and the camera pose at which you wish to estimate the information of the pixel.
-    Eigen::Matrix<double, 3, 6> computeJacobianForPoint(Eigen::Vector4d& p3d_c4_measurement, geometry_msgs::msg::Transform& T_w_c, geometry_msgs::msg::Transform& T_w_c_est) {
+    /**
+     * @brief Computes the Jacobian matrix for a 3D point transformation.
+     *
+     * This function computes the Jacobian matrix for transforming a 3D point from camera frame to world frame
+     * with respect to the given camera-to-world transformation (T_w_c) and the estimated camera-to-world
+     * transformation (T_w_c_est). The Jacobian matrix represents the sensitivity of the transformed point
+     * to changes in the camera-to-world transformation.
+     *
+     * @param p3d_c4_measurement The 3D point in the camera frame represented as a 4D homogeneous vector.
+     * @param T_w_c The transformation from camera frame to world frame represented as a geometry_msgs::msg::Transform.
+     * @param T_w_c_est The estimated transformation from camera frame to world frame represented as a geometry_msgs::msg::Transform.
+     * @return The Jacobian matrix for the point transformation, represented as a 3x6 matrix.
+     */
+    Eigen::Matrix<double, 3, 6> computeJacobianForPoint(Eigen::Vector4d &p3d_c4_measurement, geometry_msgs::msg::Transform &T_w_c, geometry_msgs::msg::Transform &T_w_c_est)
+    {
         Eigen::Matrix4d transformation_matrix_w_c = computeTransformationMatrix(T_w_c);
         Eigen::Vector4d p3d_w4 = transformation_matrix_w_c * p3d_c4_measurement;
 
@@ -177,8 +311,7 @@ namespace frontier_exploration_information {
         // df_dp
         const double n = p3d_c4.head<3>().norm();
         Eigen::Matrix3d df_dpc = (1 / n) * Eigen::Matrix3d::Identity() -
-                                (1 / (n * n * n)) * p3d_c4.head<3>() * p3d_c4.head<3>().transpose();
-
+                                 (1 / (n * n * n)) * p3d_c4.head<3>() * p3d_c4.head<3>().transpose();
 
         // dp_dTwc
         Eigen::Matrix<double, 3, 6> rightMat;
@@ -193,26 +326,67 @@ namespace frontier_exploration_information {
         return jacobian;
     }
 
-
-    Eigen::Matrix<double, 6, 6> computeFIM(Eigen::Matrix<double, 3, 6>& jacobian, Eigen::Matrix3d& Q) {
+    /**
+     * @brief Computes the Fisher Information Matrix (FIM) for a point.
+     *
+     * This function computes the Fisher Information Matrix (FIM) for a 3D point transformation
+     * based on the provided Jacobian matrix and the covariance matrix Q. The FIM quantifies
+     * the amount of information provided by the point transformation.
+     *
+     * @param jacobian The Jacobian matrix for the point transformation, represented as a 3x6 matrix.
+     * @param Q The covariance matrix, represented as a 3x3 Eigen::Matrix3d.
+     * @return The Fisher Information Matrix (FIM) for the point, represented as a 6x6 matrix.
+     */
+    Eigen::Matrix<double, 6, 6> computeFIM(Eigen::Matrix<double, 3, 6> &jacobian, Eigen::Matrix3d &Q)
+    {
         return jacobian.transpose() * Q.inverse() * jacobian;
     }
 
-
-    double computeInformationOfPoint(Eigen::Matrix<double, 6, 6> FIM) {
+    /**
+     * @brief Computes the total information of a point from its Fisher Information Matrix (FIM).
+     *
+     * This function computes the total information of a point transformation from its Fisher Information Matrix (FIM).
+     * The total information is calculated as the trace of the FIM.
+     *
+     * @param FIM The Fisher Information Matrix (FIM) for the point, represented as a 6x6 matrix.
+     * @return The total information of the point.
+     */
+    double computeInformationOfPoint(Eigen::Matrix<double, 6, 6> FIM)
+    {
         return FIM.trace();
     }
 
-
-// NEW
-    double computeInformationOfPoint(Eigen::Vector4d& p3d_c4_measurement, geometry_msgs::msg::Transform& T_w_c,
-                                    geometry_msgs::msg::Transform& T_w_c_est, Eigen::Matrix3d& Q) {
+    /**
+     * @brief Computes the total information of a point based on its measurements and transforms.
+     *
+     * This function computes the total information of a 3D point based on its measurements,
+     * the transform between the world and camera (T_w_c), the estimated transform between
+     * the world and camera (T_w_c_est), and the covariance matrix Q.
+     *
+     * @param p3d_c4_measurement The 4D homogeneous coordinates of the 3D point measurement in the camera frame.
+     * @param T_w_c The transform between the world and camera, represented as geometry_msgs::msg::Transform.
+     * @param T_w_c_est The estimated transform between the world and camera, represented as geometry_msgs::msg::Transform.
+     * @param Q The covariance matrix of the measurement, represented as a 3x3 Eigen::Matrix3d.
+     * @return The total information of the point.
+     */
+    double computeInformationOfPoint(Eigen::Vector4d &p3d_c4_measurement, geometry_msgs::msg::Transform &T_w_c,
+                                     geometry_msgs::msg::Transform &T_w_c_est, Eigen::Matrix3d &Q)
+    {
         auto jac = computeJacobianForPoint(p3d_c4_measurement, T_w_c, T_w_c_est);
         auto fim = computeFIM(jac, Q);
         return computeInformationOfPoint(fim);
     }
 
-    geometry_msgs::msg::Transform getTransformFromPose(geometry_msgs::msg::Pose& pose) {
+    /**
+     * @brief Converts a pose to a transform.
+     *
+     * This function converts a geometry_msgs::msg::Pose to a geometry_msgs::msg::Transform.
+     *
+     * @param pose The input pose to be converted.
+     * @return The resulting transform.
+     */
+    geometry_msgs::msg::Transform getTransformFromPose(geometry_msgs::msg::Pose &pose)
+    {
         geometry_msgs::msg::Transform transform;
         transform.translation.x = pose.position.x;
         transform.translation.y = pose.position.y;
@@ -222,55 +396,86 @@ namespace frontier_exploration_information {
         return transform;
     }
 
-
-    std::pair<rtabmap_msgs::msg::NodeData, geometry_msgs::msg::Transform> getNodeDataAndOptTransform(int node_id, rtabmap_msgs::msg::MapData& map_data, rclcpp::Logger logger_) {
+    /**
+     * @brief Retrieves node data and optimal transform for a given node ID from map data.
+     *
+     * This function searches for node data and optimal transform corresponding to the specified node ID
+     * within the provided map data.
+     *
+     * @param node_id The ID of the node to retrieve data for.
+     * @param map_data The map data containing node and pose information.
+     * @param logger_ The logger for error messages.
+     * @return A pair containing the node data and optimal transform if found, otherwise null pointers.
+     */
+    std::pair<rtabmap_msgs::msg::NodeData, geometry_msgs::msg::Transform> getNodeDataAndOptTransform(int node_id, rtabmap_msgs::msg::MapData &map_data, rclcpp::Logger logger_)
+    {
         geometry_msgs::msg::Transform::SharedPtr T_w_c;
         rtabmap_msgs::msg::NodeData::SharedPtr node_data;
-        for (int i =0; i < map_data.graph.poses.size(); i++) {
-            if(node_id == map_data.graph.poses_id[i]) {
+        for (int i = 0; i < map_data.graph.poses.size(); i++)
+        {
+            if (node_id == map_data.graph.poses_id[i])
+            {
                 T_w_c = std::make_shared<geometry_msgs::msg::Transform>(getTransformFromPose(map_data.graph.poses[i]));
-                // RCLCPP_INFO(logger_, "Checkpoint 3.7");
                 break;
             }
         }
-        // RCLCPP_INFO(logger_, "Checkpoint 3.75");
-        for (int i =0; i < map_data.nodes.size(); i++) {
-            if(node_id == map_data.nodes[i].id) {
+        for (int i = 0; i < map_data.nodes.size(); i++)
+        {
+            if (node_id == map_data.nodes[i].id)
+            {
                 node_data = std::make_shared<rtabmap_msgs::msg::NodeData>(map_data.nodes[i]);
-                // RCLCPP_INFO(logger_, "Checkpoint 3.8");
                 break;
             }
         }
-        // RCLCPP_INFO(logger_, "Checkpoint 3.85");
-        if(T_w_c && node_data) {
-            // RCLCPP_INFO(logger_, "Checkpoint 3.9");
+        if (T_w_c && node_data)
+        {
             return std::make_pair(*node_data, *T_w_c);
         }
         RCLCPP_ERROR(logger_, "The pointer does not have data. Null Pointer");
-        // RCLCPP_INFO(logger_, "Checkpoint 3.95");
         return std::make_pair(*node_data, *T_w_c);
-        // TODO: Find a way to print error message below this. The function should never complete the for loop without returning.
     }
 
-    double computeInformationForPose(geometry_msgs::msg::Pose& pose,
-    std::vector<geometry_msgs::msg::Pose>& neighbouring_poses, std::vector<int> neighbouring_ids, 
-    rtabmap_msgs::msg::MapData& map_data, double max_depth, double hfov, double max_depth_error, Eigen::Matrix3d Q, rclcpp::Logger logger_)
+    /**
+     * @brief Computes information for a given pose based on its neighboring poses.
+     *
+     * This function computes information for a given pose by considering its neighboring poses
+     * within the specified camera frustum parameters and map data. Information is computed for
+     * points inside the frustum overlap region.
+     *
+     * @param pose The pose for which information is to be computed.
+     * @param neighbouring_poses The neighboring poses.
+     * @param neighbouring_ids The IDs of the neighboring poses.
+     * @param map_data The map data containing node and pose information.
+     * @param max_depth The maximum depth of observation for the camera.
+     * @param hfov The horizontal field of view of the camera.
+     * @param max_depth_error The maximum depth error.
+     * @param Q The covariance matrix Q.
+     * @param logger_ The logger for error messages.
+     * @return The computed information for the pose.
+     */
+    double computeInformationForPose(geometry_msgs::msg::Pose &pose,
+                                     std::vector<geometry_msgs::msg::Pose> &neighbouring_poses, std::vector<int> neighbouring_ids,
+                                     rtabmap_msgs::msg::MapData &map_data, double max_depth, double hfov, double max_depth_error, Eigen::Matrix3d Q, rclcpp::Logger logger_)
     {
         double pose_information = 0;
         geometry_msgs::msg::Transform::SharedPtr T_w_c_est;
         T_w_c_est = std::make_shared<geometry_msgs::msg::Transform>(getTransformFromPose(pose));
         auto vertices_pose = frontier_exploration_utils::getVerticesOfFrustum2D(pose, max_depth, hfov);
-        for(int i=0; i < neighbouring_poses.size(); i++) {
+        for (int i = 0; i < neighbouring_poses.size(); i++)
+        {
             int node_id = neighbouring_ids[i];
-            if(frontier_exploration_utils::frustumOverlap(pose, neighbouring_poses[i], max_depth, hfov, max_depth_error)) {
+            if (frontier_exploration_utils::frustumOverlap(pose, neighbouring_poses[i], max_depth, hfov, max_depth_error))
+            {
                 auto node_data_trnsfrm = getNodeDataAndOptTransform(node_id, map_data, logger_);
                 // p3d_c_m : p3d_camera frame measurement.
-                for(auto p3d_c_m : node_data_trnsfrm.first.word_pts) {
+                for (auto p3d_c_m : node_data_trnsfrm.first.word_pts)
+                {
                     Eigen::Vector4d point_4_c_m(p3d_c_m.x, p3d_c_m.y, p3d_c_m.z, 1.0);
                     std::vector<double> point_c_m = {p3d_c_m.x, p3d_c_m.y, p3d_c_m.z};
                     Eigen::Vector4d point_4_w_m = computeTransformationMatrix(node_data_trnsfrm.second) * point_4_c_m;
                     std::vector<double> point_w_m = {point_4_w_m(0), point_4_w_m(1), point_4_w_m(2)};
-                    if(frontier_exploration_utils::isPointInsideTriangle(point_w_m, vertices_pose)) {
+                    if (frontier_exploration_utils::isPointInsideTriangle(point_w_m, vertices_pose))
+                    {
                         pose_information += computeInformationOfPoint(point_4_c_m, node_data_trnsfrm.second, *T_w_c_est, Q);
                     }
                 }
@@ -279,56 +484,73 @@ namespace frontier_exploration_information {
         return pose_information;
     }
 
-    std::pair<double, std::vector<std::vector<double>>> computeInformationForPose(geometry_msgs::msg::Pose& pose,
-    std::vector<geometry_msgs::msg::Pose>& neighbouring_poses, std::vector<int> neighbouring_ids, 
-    rtabmap_msgs::msg::MapData& map_data, double max_depth, double hfov, double max_depth_error, Eigen::Matrix3d Q, bool pcl_return, rclcpp::Logger logger_,
-    nav2_costmap_2d::Costmap2D* costmap_)
-    {   
+    /**
+     * @brief Computes information for a given pose based on its neighboring poses.
+     *
+     * This function computes information for a given pose by considering its neighboring poses
+     * within the specified camera frustum parameters and map data. Information is computed for
+     * points inside the frustum overlap region.
+     *
+     * @param pose The pose for which information is to be computed.
+     * @param neighbouring_poses The neighboring poses.
+     * @param neighbouring_ids The IDs of the neighboring poses.
+     * @param map_data The map data containing node and pose information.
+     * @param max_depth The maximum depth of observation for the camera.
+     * @param hfov The horizontal field of view of the camera.
+     * @param max_depth_error The maximum depth error.
+     * @param Q The covariance matrix Q.
+     * @param pcl_return Flag indicating whether to return point cloud data.
+     * @param logger_ The logger for error messages.
+     * @param costmap_ The costmap for indexing information.
+     * @return A pair containing the computed information for the pose and optional point cloud data for visualization.
+     */
+    std::pair<double, std::vector<std::vector<double>>> computeInformationForPose(geometry_msgs::msg::Pose &pose,
+                                                                                  std::vector<geometry_msgs::msg::Pose> &neighbouring_poses, std::vector<int> neighbouring_ids,
+                                                                                  rtabmap_msgs::msg::MapData &map_data, double max_depth, double hfov, double max_depth_error, Eigen::Matrix3d Q, bool pcl_return, rclcpp::Logger logger_,
+                                                                                  nav2_costmap_2d::Costmap2D *costmap_)
+    {
+        // Variable used to hold the computed information to avoid recomputation.
         std::map<unsigned int, double> information_map;
-        // RCLCPP_INFO(logger_, "Checkpoint 0");
         double pose_information = 0;
         std::vector<std::vector<double>> point_w_m_arr;
         geometry_msgs::msg::Transform::SharedPtr T_w_c_est;
         T_w_c_est = std::make_shared<geometry_msgs::msg::Transform>(getTransformFromPose(pose));
         auto vertices_pose = frontier_exploration_utils::getVerticesOfFrustum2D(pose, max_depth, hfov);
-        // RCLCPP_INFO(logger_, "Checkpoint 1");
-        for(int i=0; i < neighbouring_poses.size(); i++) {
+        for (int i = 0; i < neighbouring_poses.size(); i++)
+        {
             int node_id = neighbouring_ids[i];
-            // RCLCPP_INFO(logger_, "Checkpoint 2");
-            if(frontier_exploration_utils::frustumOverlap(pose, neighbouring_poses[i], max_depth, hfov, max_depth_error)) {
-                // RCLCPP_INFO(logger_, "Checkpoint 3");
+            if (frontier_exploration_utils::frustumOverlap(pose, neighbouring_poses[i], max_depth, hfov, max_depth_error))
+            {
                 auto node_data_trnsfrm = getNodeDataAndOptTransform(node_id, map_data, logger_);
                 // p3d_c_m : p3d_camera frame measurement.
-                // checkpoint
-                // RCLCPP_INFO(logger_, "Checkpoint 3.95");
-                for(auto p3d_c_m : node_data_trnsfrm.first.word_pts) {
+                for (auto p3d_c_m : node_data_trnsfrm.first.word_pts)
+                {
                     Eigen::Vector4d point_4_c_m(p3d_c_m.x, p3d_c_m.y, p3d_c_m.z, 1.0);
                     std::vector<double> point_c_m = {p3d_c_m.x, p3d_c_m.y, p3d_c_m.z};
                     Eigen::Vector4d point_4_w_m = computeTransformationMatrix(node_data_trnsfrm.second) * point_4_c_m;
                     std::vector<double> point_w_m = {point_4_w_m(0), point_4_w_m(1), point_4_w_m(2)};
-                    if(frontier_exploration_utils::isPointInsideTriangle(point_w_m, vertices_pose)) {
-                        // RCLCPP_INFO(logger_, "Checkpoint 6");
-                        // pose_information += computeInformationOfPoint(point_4_c_m, node_data_trnsfrm.second, *T_w_c_est, Q);
-
-
+                    if (frontier_exploration_utils::isPointInsideTriangle(point_w_m, vertices_pose))
+                    {
                         unsigned int mx, my;
-                        if(costmap_->worldToMap(point_4_w_m(0), point_4_w_m(1), mx, my)) {
-                            // RCLCPP_INFO(logger_, "Checkpoint 6");
+                        if (costmap_->worldToMap(point_4_w_m(0), point_4_w_m(1), mx, my))
+                        {
                             auto index = costmap_->getIndex(mx, my);
                             std::map<unsigned int, double>::iterator it = information_map.find(index);
-                            if(it != information_map.end()) {
+                            // if information for a certain index is computed, just add it. Do not recompute.
+                            if (it != information_map.end())
+                            {
                                 pose_information += information_map[index];
-                                // RCLCPP_INFO(logger_, "Checkpoint 5");
                             }
-                            else {
+                            else
+                            {
                                 information_map[index] = computeInformationOfPoint(point_4_c_m, node_data_trnsfrm.second, *T_w_c_est, Q);
                                 pose_information += information_map[index];
-                                // RCLCPP_INFO(logger_, "Checkpoint 4");
                                 point_w_m_arr.push_back(point_w_m);
-                                information_map[index+1] = information_map[index];
-                                information_map[index-1] = information_map[index];
-                                information_map[index+2] = information_map[index];
-                                information_map[index-2] = information_map[index];
+                                // Set the information of surrounding indices to the computed value. To avoid recomputation.
+                                information_map[index + 1] = information_map[index];
+                                information_map[index - 1] = information_map[index];
+                                information_map[index + 2] = information_map[index];
+                                information_map[index - 2] = information_map[index];
 
                                 information_map[index + costmap_->getSizeInCellsX()] = information_map[index];
                                 information_map[index + costmap_->getSizeInCellsX() + 1] = information_map[index];
@@ -353,8 +575,6 @@ namespace frontier_exploration_information {
                                 information_map[index - 2 * costmap_->getSizeInCellsX() - 2] = information_map[index];
                             }
                         }
-
-                        // point_w_m_arr.push_back(point_w_m);
                     }
                 }
             }
@@ -363,9 +583,11 @@ namespace frontier_exploration_information {
     }
 }
 
-namespace frontier_exploration_planning {
+namespace frontier_exploration_planning
+{
 
-    double distanceBetweenTwoPoints(geometry_msgs::msg::Point point_from, geometry_msgs::msg::Point point_to) {
+    double distanceBetweenTwoPoints(geometry_msgs::msg::Point point_from, geometry_msgs::msg::Point point_to)
+    {
         // Calculate the differences in X, Y, and Z coordinates
         double dx = point_to.x - point_from.x;
         double dy = point_to.y - point_from.y;
@@ -376,7 +598,8 @@ namespace frontier_exploration_planning {
         return distance;
     }
 
-    geometry_msgs::msg::Pose getRelativePoseGivenTwoPoints(geometry_msgs::msg::Point point_from, geometry_msgs::msg::Point point_to) {
+    geometry_msgs::msg::Pose getRelativePoseGivenTwoPoints(geometry_msgs::msg::Point point_from, geometry_msgs::msg::Point point_to)
+    {
         // size_t plan_size = plan.poses.size();
         // if (plan_size == 1) {
         //   plan.poses.back().pose.orientation = start.orientation;
@@ -391,11 +614,14 @@ namespace frontier_exploration_planning {
         return oriented_pose;
     }
 
-    std::pair<std::vector<geometry_msgs::msg::Pose>, std::vector<int>> getNodesInRadius(std::vector<geometry_msgs::msg::Pose>& poses, std::vector<int>& poses_id, double radius, geometry_msgs::msg::Pose& start_pose, rclcpp::Logger logger_) {
+    std::pair<std::vector<geometry_msgs::msg::Pose>, std::vector<int>> getNodesInRadius(std::vector<geometry_msgs::msg::Pose> &poses, std::vector<int> &poses_id, double radius, geometry_msgs::msg::Pose &start_pose, rclcpp::Logger logger_)
+    {
         std::vector<geometry_msgs::msg::Pose> neighbouring_poses;
         std::vector<int> neighbouring_ids;
-        for(int k = 0; k < poses.size(); k++) {
-            if(distanceBetweenTwoPoints(start_pose.position, poses[k].position) <= radius) {
+        for (int k = 0; k < poses.size(); k++)
+        {
+            if (distanceBetweenTwoPoints(start_pose.position, poses[k].position) <= radius)
+            {
                 neighbouring_poses.push_back(poses[k]);
                 neighbouring_ids.push_back(poses_id[k]);
             }

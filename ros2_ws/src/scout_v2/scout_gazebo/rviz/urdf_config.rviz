@@ -1,12 +1,13 @@
 Panels:
   - Class: rviz_common/Displays
-    Help Height: 85
+    Help Height: 0
     Name: Displays
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /Map1
       Splitter Ratio: 0.5
-    Tree Height: 330
+    Tree Height: 506
   - Class: nav2_rviz_plugins/Navigation 2
     Name: Navigation 2
   - Class: slam_toolbox::SlamToolboxPlugin
@@ -138,6 +139,68 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        scout_1/base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/camera_link_optical:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/front_left_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/front_right_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/gps_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/inertial_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/rear_left_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/rear_right_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/velodyne:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/velodyne_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -152,6 +215,36 @@ Visualization Manager:
       Frames:
         All Enabled: true
         map:
+          Value: true
+        scout_1/base_footprint:
+          Value: true
+        scout_1/base_link:
+          Value: true
+        scout_1/camera_link:
+          Value: true
+        scout_1/camera_link_optical:
+          Value: true
+        scout_1/front_left_wheel_link:
+          Value: true
+        scout_1/front_right_wheel_link:
+          Value: true
+        scout_1/gps_link:
+          Value: true
+        scout_1/imu_link:
+          Value: true
+        scout_1/inertial_link:
+          Value: true
+        scout_1/odom:
+          Value: true
+        scout_1/odom_scout:
+          Value: true
+        scout_1/rear_left_wheel_link:
+          Value: true
+        scout_1/rear_right_wheel_link:
+          Value: true
+        scout_1/velodyne:
+          Value: true
+        scout_1/velodyne_base_link:
           Value: true
         scout_2/base_footprint:
           Value: true
@@ -190,6 +283,30 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
+          scout_1/odom:
+            scout_1/odom_scout:
+              scout_1/base_footprint:
+                scout_1/base_link:
+                  scout_1/camera_link:
+                    scout_1/camera_link_optical:
+                      {}
+                  scout_1/front_left_wheel_link:
+                    {}
+                  scout_1/front_right_wheel_link:
+                    {}
+                  scout_1/gps_link:
+                    {}
+                  scout_1/imu_link:
+                    {}
+                  scout_1/inertial_link:
+                    {}
+                  scout_1/rear_left_wheel_link:
+                    {}
+                  scout_1/rear_right_wheel_link:
+                    {}
+                  scout_1/velodyne_base_link:
+                    scout_1/velodyne:
+                      {}
           scout_2/odom:
             scout_2/odom_scout:
               scout_2/base_footprint:
@@ -302,7 +419,7 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: ""
+      Color Transformer: Intensity
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -383,7 +500,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        two_triangles_namespace: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -396,7 +513,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        "": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -409,7 +526,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        {}
+        explore_points: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -710,37 +827,37 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 9.06306266784668
+      Distance: 30.059160232543945
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.06461440026760101
-        Y: 0.10227465629577637
-        Z: -0.9754400849342346
+        X: 1.8615663051605225
+        Y: 0.9031173586845398
+        Z: -0.9732816219329834
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 1.5647963285446167
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.695473670959473
+      Yaw: 4.685473442077637
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1043
+  Height: 1009
   Hide Left Dock: false
   Hide Right Dock: false
   Navigation 2:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000010000000000000385000003b1fc0200000003fb000000100044006900730070006c0061007900730100000044000001e0000000eb00fffffffb00000018004e0061007600690067006100740069006f006e00200032010000022b000001ca0000013900fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d000001a800ffffff000003f4000003b100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000003850000038ffc0200000003fb000000100044006900730070006c00610079007301000000440000023b000000eb00fffffffb00000018004e0061007600690067006100740069006f006e0020003201000002860000014d0000014d00fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d000001a800ffffff000003ae0000038f00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   SlamToolboxPlugin:
     collapsed: false
-  Width: 1920
-  X: 0
-  Y: 0
+  Width: 1850
+  X: 70
+  Y: 34

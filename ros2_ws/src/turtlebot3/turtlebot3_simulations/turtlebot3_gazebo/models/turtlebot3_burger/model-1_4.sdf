@@ -281,7 +281,7 @@
       </visual>
     </link>
 
-    <link name='caster_back_link'>
+    <!-- <link name='caster_back_link'>
       <pose>-0.081 0 -0.004 -1.57 0 0</pose>
       <inertial>
         <mass>0.005</mass>
@@ -313,7 +313,7 @@
           </contact>
         </surface>
       </collision>
-    </link>
+    </link> -->
 
     <joint name="base_joint" type="fixed">
       <parent>base_footprint</parent>
@@ -339,10 +339,10 @@
       </axis>
     </joint>
 
-    <joint name='caster_back_joint' type='ball'>
+    <!-- <joint name='caster_back_joint' type='ball'>
       <parent>base_link</parent>
       <child>caster_back_link</child>
-    </joint>
+    </joint> -->
 
     <joint name="imu_joint" type="fixed">
       <parent>base_link</parent>

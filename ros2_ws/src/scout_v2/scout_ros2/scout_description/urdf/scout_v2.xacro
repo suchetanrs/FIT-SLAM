@@ -7,12 +7,11 @@
     <xacro:arg name="robot_namespace" default="scout_ns" />
     <xacro:property name="robot_namespace" value="$(arg robot_namespace)" />
 
-    <xacro:include filename="$(find scout_description)/urdf/scout_wheel_type1.xacro" />
-    <xacro:include filename="$(find scout_description)/urdf/scout_wheel_type2.xacro" />
+    <xacro:include filename="$(find scout_description)/urdf/scout_wheel.xacro" />
     <xacro:include filename="$(find scout_description)/urdf/depth_cam.xacro" />
     <xacro:include filename="$(find scout_description)/urdf/imu_gps.xacro" />
     <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
-
+    <xacro:include filename="$(find scout_description)/urdf/decorations.urdf.xacro" />
     <!-- Variables -->
     <xacro:property name="M_PI" value="3.14159"/>
 
@@ -74,7 +73,7 @@
     </link>
 
     <joint name="${robot_namespace}/inertial_joint" type="fixed">
-        <origin xyz="0 0 0" rpy="0 0 0" />
+        <origin xyz="0.10 0 ${-wheel_radius/2}" rpy="0 0 0" />
         <parent link="${robot_namespace}/base_link" />
         <child link="${robot_namespace}/inertial_link" />
     </joint>
@@ -82,17 +81,17 @@
     <!-- Scout wheel macros -->
     <!-- wheel labeled from 0 to 3, conter-clockwise, starting from front right wheel -->
     <!-- motor 1 and 2 (left side) are mechanically installed in a reversed direction -->
-    <xacro:scout_wheel_type1 wheel_prefix="front_right" robot_namespace="${robot_namespace}">
-        <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
-    </xacro:scout_wheel_type1>
-    <xacro:scout_wheel_type1 wheel_prefix="rear_right" robot_namespace="${robot_namespace}">
-        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
-    </xacro:scout_wheel_type1>
     <xacro:scout_wheel_type1 wheel_prefix="front_left" robot_namespace="${robot_namespace}">
-        <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
+        <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+    </xacro:scout_wheel_type1>
+    <xacro:scout_wheel_type1 wheel_prefix="front_right" robot_namespace="${robot_namespace}">
+        <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
     </xacro:scout_wheel_type1>
     <xacro:scout_wheel_type1 wheel_prefix="rear_left" robot_namespace="${robot_namespace}">
-        <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="3.14 0 0" />
+        <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+    </xacro:scout_wheel_type1>
+    <xacro:scout_wheel_type1 wheel_prefix="rear_right" robot_namespace="${robot_namespace}">
+        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
     </xacro:scout_wheel_type1>
 
     <ros2_control name="GazeboSystem" type="system">
@@ -151,5 +150,6 @@
     <xacro:VLP-16 parent="${robot_namespace}/base_link" name="${robot_namespace}/velodyne" topic="/${robot_namespace}/velodyne_points" organize_cloud="${organize_cloud}" hz="10" samples="440" gpu="${gpu}">
       <origin xyz="0.5 0 0.4" rpy="0 0.7825 0" />
     </xacro:VLP-16>
+    <xacro:scout_decorate />
 
 </robot>
