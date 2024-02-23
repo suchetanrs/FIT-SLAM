@@ -31,7 +31,7 @@ Reference:
     <joint name="${robot_namespace}/imu_joint" type="fixed">
       <parent link="${robot_namespace}/base_link"/>
       <child link="${robot_namespace}/imu_link"/>
-      <origin xyz="0 0 0.01"/>
+      <origin xyz="0 0 0.01" rpy="0 0 0"/>
     </joint>
 
 

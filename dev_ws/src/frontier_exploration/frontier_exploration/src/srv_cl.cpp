@@ -30,12 +30,10 @@ public:
         // send_request(5, 3);
         // send_request(10, 20);
         // std::thread t1(&MinimalServerClient::send_request, this);
+        // std::thread t2(&MinimalServerClient::send_request2, this);
         std::thread{std::bind(&MinimalServerClient::send_request, this)}.detach();
-        // while (currently_processing_ == true)
-        // {
-        //     rclcpp::sleep_for(std::chrono::milliseconds(100));
-        // }
         std::thread{std::bind(&MinimalServerClient::send_request2, this)}.detach();
+        rclcpp::sleep_for(std::chrono::seconds(100));
         // t1.join();
         // t2.join();
         // send_request();
@@ -50,9 +48,9 @@ private:
         auto request = std::make_shared<example_interfaces::srv::AddTwoInts::Request>();
         request->a = a;
         request->b = b;
+        std::unique_lock<std::mutex> lock(processing_lock_);
         RCLCPP_INFO_STREAM(this->get_logger(), "Sent request via thread: " << std::this_thread::get_id());
         auto future_result = client_->async_send_request(request);
-        std::unique_lock<std::mutex> lock(processing_lock_);
         if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), future_result) ==
             rclcpp::FutureReturnCode::SUCCESS)
         {
@@ -73,10 +71,10 @@ private:
         auto request = std::make_shared<example_interfaces::srv::AddTwoInts::Request>();
         request->a = a;
         request->b = b;
-        RCLCPP_INFO_STREAM(this->get_logger(), "Sent request2 via thread: " << std::this_thread::get_id());
         std::unique_lock<std::mutex> lock(processing_lock_);
+        RCLCPP_INFO_STREAM(this->get_logger(), "Sent request2 via thread: " << std::this_thread::get_id());
         auto future_result = client_->async_send_request(request);
-        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), future_result, std::chrono::seconds(2)) ==
+        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), future_result, std::chrono::seconds(20)) ==
             rclcpp::FutureReturnCode::SUCCESS)
         {
             auto result = future_result.get();

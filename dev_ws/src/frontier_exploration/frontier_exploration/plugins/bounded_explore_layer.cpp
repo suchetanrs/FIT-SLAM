@@ -31,7 +31,7 @@ namespace frontier_exploration
         declareParameter("enabled", rclcpp::ParameterValue(true));
         declareParameter("min_frontier_cluster_size", rclcpp::ParameterValue(1));
         declareParameter("exploration_mode", rclcpp::ParameterValue(std::string("ours")));
-        robot_namespaces_ = {"/scout_2", "/scout_1"};
+        robot_namespaces_ = {"/scout_2"};
         declareParameter("robot_namespaces", rclcpp::ParameterValue(robot_namespaces_));
 
         node = node_.lock();
@@ -270,9 +270,10 @@ namespace frontier_exploration
             // get list of frontiers from search implementation
             //  Initialize zero point to start search.
             geometry_msgs::msg::Point search_start_pose;
+            search_start_pose = req->start_pose.pose.position;
             frontier_list = frontierSearch.searchFrom(search_start_pose);
             every_frontier = frontierSearch.getAllFrontiers();
-            RCLCPP_DEBUG_STREAM(logger_, "Clusterred frontier size: " << frontier_list.size());
+            RCLCPP_WARN_STREAM(logger_, "Clusterred frontier size: " << frontier_list.size());
 
             // process for all robots
             for (auto robot_name : robot_namespaces_)
@@ -368,7 +369,6 @@ namespace frontier_exploration
             RCLCPP_ERROR(logger_, "Invalid 'frontier_travel_point' parameter, falling back to 'closest'");
             res->next_frontier.pose.position = selected.initial;
         }
-        res->success = true;
     }
 
     void BoundedExploreLayer::updateBoundaryPolygonService(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Request> req, std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Response> res)

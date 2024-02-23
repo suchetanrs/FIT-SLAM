@@ -58,6 +58,8 @@ namespace frontier_exploration
         geometry_msgs::msg::PolygonStamped input_;
 
         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
+
+        std::shared_ptr<rclcpp_action::Client<frontier_msgs::action::ExploreTask>> exploreClient_;
         bool waiting_for_center_;
         double costmap_resolution_;
     };

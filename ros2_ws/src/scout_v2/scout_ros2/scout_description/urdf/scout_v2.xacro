@@ -148,7 +148,7 @@
     <xacro:depth_cam robot_namespace="${robot_namespace}"/>
     <xacro:imu_gps robot_namespace="${robot_namespace}"/>
     <xacro:VLP-16 parent="${robot_namespace}/base_link" name="${robot_namespace}/velodyne" topic="/${robot_namespace}/velodyne_points" organize_cloud="${organize_cloud}" hz="10" samples="440" gpu="${gpu}">
-      <origin xyz="0.5 0 0.4" rpy="0 0.7825 0" />
+      <origin xyz="0 0 0.4" rpy="0 0 0" />
     </xacro:VLP-16>
     <xacro:scout_decorate />
 

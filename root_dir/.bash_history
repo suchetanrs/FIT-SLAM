@@ -1,602 +1,3 @@
-ls
-tmux
-ls
-cd clutterbot_ws/
-ls
-cd src
-ls
-cd isds
-ls
-cd navigation_humble/
-ls
-cd ../..
-ls
-cd clutterbot_ws/
-ls
-cd src
-l
-cd isds
-ls
-cd navigation_humble/
-ls
-cd keepout_zones/
-ls
-cd ..
-ls
-vsc
-ls
-cd ..
-ls
-la
-cd ../..
-ls
-grep -r ".vscode" .
-vsc
-ls
-rm -rf build/ install/
-colcon build --symlink-install cb_isds_msgs
-colcon build --symlink-install --packages-select cb_isds_msgs
-ranger
-cd
-cd clutterbot_ws/
-vsc
-ls
-cd clutterbot_ws/
-colcon build --symlink-install
-ls
-rm -rf build install log
-colcon build --symlink-install --packages-select cb_isds_msgs keepout_zones 
-ls
-rm -rf build install log
-colcon build --symlink-install --packages-select cb_isds_msgs
-source install/setup.bash
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-ls
-cd src
-ls
-cd cb-common-msgs/
-ros2 run keepout_zones keepout_maker_node 
-cd ../..
-source install/setup.bash
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-kill -9 %1
-source install/setup.bash
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-ls
-cd src
-l
-cd cpds/
-ls
-vsc
-cd ..
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-kill -9 %1
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-kill -9 %1
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-kill -9 %1
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-kill -9 %1
-source install/setup.bash
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-kill -9 %1
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-kill -9 %1
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-kill -9 %1
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-vsc
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-ls
-rm -rf build/ install/
-colcon build --symlink-install --packages-select cb_isds_msgs 
-source install/setup.bash
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-colcon build --symlink-install --packages-select cb_isds_msgs
-vsc
-colcon build --symlink-install --packages-select cb_isds_msgs
-source install/setup.bash
-colcon build --symlink-install --packages-select cb_isds_msgs
-source install/setup.bash1
-source install/setup.bash
-ros2 interface show cb_isds_msgs/srv/EditKeepoutZone 
-ls
-colcon build --symlink-install --packages-select keepout_zones 
-ls
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-kill -9 %1
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-kill -9 %1
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-source clutterbot_ws/install/setup.bash
-ros2 service list
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone {add_zone: True, zone_timeout: 100}
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone {add_zone: True, zone_timeout: 100.0}
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone {add_zone: False, zone_timeout: 100.0}
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone add_zone:\ falsezone_timeout:\ 0.0\ 
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone add_zone:\ true zone_timeout:\ 100.0\ 
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False, zone_timeout: 100.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_timeout: 100.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_timeout: 100.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False}"
-cd dev_ws/
-vsc
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True}"
-ros2 param set /keepout_maker radius_of_keepout 0.5
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True}"
-ros2 param set /keepout_maker radius_of_keepout 0.5
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True}"
-ros2 param set /keepout_maker radius_of_keepout 0.5
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True}"
-ros2 param set /keepout_maker translate_zone 0.3
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True}"
-ros2 param set /keepout_maker translate_zone 0.3
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True}"
-source install/setup.bash
-cd
-cd clutterbot_ws/
-source install/setup.bash
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 30.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 30.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 300.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 30.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 300.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 30.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 300.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 30.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 300.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 30.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 30.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 30.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: False, zone_radius: 1.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 30.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 1.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 1.75, distance_from_robot_frame: 2.50, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 launch scout_gazebo start_world.launch.py 
-./shell_scripts/launch_nodes.sh
-ls
-cd dev_ws/
-vsc
-ls
-cd clutterbot_ws/
-ls
-cd pcl_rem/
-colcon build --symlink-install
-rm -rf build/ install/ log/
-colcon build --symlink-install
-ls
-nano CMakeLists.txt 
-colcon build --symlink-install
-ls
-cd install/
-ls
-cd pcl_rem/
-ls
-cd share/
-ls
-cd pcl_rem/
-ls
-range
-ranger
-ls
-./statistical_removal 
-ls
-cd ../..
-ls
-nano CMakeLists.txt 
-vsc
-ls
-las
-ls
-ros2 topic list
-ros2 topic list | grep dam
-ros2 topic info -v /dam_point_cloud
-cd clutterbot_ws/
-ls
-vsc
-ls
-cd
-ros2 launch scout_gazebo start_world.launch.py 
-./shell_scripts/launch_nodes.sh
-cd clutterbot_ws/
-ls
-colcon build --symlink-install --packages-select keepout_zones 
-ls
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-ls
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-source clutterbot_ws/install/setup.bash
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-cd clutterbot_ws/
-ros2 bag play dam_rosbag/
-vsc
-cd clutterbot_ws/
-vsc
-xinput --list
-ls
-tmux
-ros2 topic info -v /dam_point_cloud
-echo $ROS_DOMAIN_ID
-ros2 topic info -v /dam_point_cloud
-ls
-tmux
-ros2 topic info -v /dam_point_cloud
-ros2 node list
-ls
-ros2 topic list
-ls
-echo $ROS_DOMAIN_ID 
-ls
-echo $ROS_DOMAIN_ID 
-ls
-echo $ROS_DOMAIN_ID 
-echo $OPT_ROS
-echo $DUSTY_WS
-nano ~/.bashrc
-echo $ROS_DOMAIN_ID 
-cd clutterbot_ws/
-ls
-vsc
-cd
-cd /home/clutterbot_ws/
-ls
-vsc
-cd
-ros2 launch scout_gazebo start_world.launch.py 
-source /home/clutterbot_ws/install/setup.bash
-cd /home/clutterbot_ws/
-ls
-rm -rf build/ install/ log/
-colcon build --symlink-install --packages-select cb_isds_msgs
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ls
-ros2 topic list | grep dam
-ros2 run keepout_zones keepout_maker_node 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-vsc
-ros2 topic info -v /dam_point_cloud
-ros2 topic list
-ros2 topic list | grep dam
-ls
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-source /home/clutterbot_ws/install/setup.bash
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 topic list | grep dam
-ros2 topic info -v /dam_point_cloud 
-./shell_scripts/launch_nodes.sh 
-cd /home/clutterbot_ws/
-source install/setup.bas
-source install/setup.bash
-ls
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 bag play dam_rosbag/
-ros2 topic list
-tmux
-ls
-source /home/clutterbot_ws/install/setup.bash
-ls
-cd /home/clutterbot_ws/
-vsc
-ls
-rm -rf clutterbot_ws/
-ls
-cd /home/clutterbot_ws/
-ls
-grep -r "callback_group_" .
-ros2 topic list
-ros2 launch scout_gazebo start_world.launch.py 
-ros2 topic info -v /dam_point_cloud
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-source /home/clutterbot_ws/install/setup.bash
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 topic list | grep dam
-ros2 topic echo /dam_point_cloud 
-ros2 topic info -v /dam_point_cloud 
-ros2 node info /keepout_maker 
-man colcon
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-source /home/clutterbot_ws/install/setup.bash
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-cd /home/clutterbot_ws/
-ls
-ros2 bag play dam_rosbag/
-ros2 service call /edit_keepout_zone cb_isds_msgs/srv/EditKeepoutZone "{add_zone: True, zone_radius: 0.75, distance_from_robot_frame: 0.50, auto_remove_zone: True, timeout_value: 200.0}"
-ros2 bag play dam_rosbag/
-ros2 bag play dam_rosbag/ --topics /dam_point_cloud
-colcon build --symlink-install --packages-select keepout_zones 
-ls
-cd /home/clutterbot_ws/
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-ls
-cd log/
-ls
-cd build_2024-01-18_16-21-23/
-ls
-cd keepout_zones/
-ls
-nano command.log 
-cd
-cd /home/clutterbot_ws/
-ls
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-source install/setup.bash
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-ros2 topic list 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-colcon build --symlink-install --packages-select keepout_zones 
-source install/setup.bash
-ros2 run keepout_zones keepout_maker_node 
-./shell_scripts/launch_nodes.sh 
-cd /home/clutterbot_ws/
-vsc
-tmux
-ros2 launch scout_gazebo start_world.launch.py 
-kill -9 %1
-ros2 launch scout_gazebo start_world.launch.py 
-kill -9 %1
-ros2 launch scout_gazebo start_world.launch.py 
-source clutterbot_ws/install/setup.bash
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-cd /home/clutterbot_ws/
-vsc
-colcon build --symlink-install --packages-select keepout_zones 
-cd dev_ws/
-vsc
-ros2 launch scout_gazebo start_world.launch.py 
-kill -9 %1
-ros2 launch scout_gazebo start_world.launch.py 
-cd ros2_ws/
-vsc
-ros2 launch scout_gazebo start_world.launch.py 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-kill -9 %1
-source /home/clutterbot_ws/install/setup.bash
-kill -9 %1
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-./shell_scripts/launch_nodes.sh 
-nano shell_scripts/launch_nodes.sh 
-./shell_scripts/launch_nodes.sh 
-nano shell_scripts/launch_nodes.sh 
-source /home/clutterbot_ws/install/setup.bash
-nano shell_scripts/launch_nodes.sh 
-./shell_scripts/launch_nodes.sh 
-cd /home/clutterbot_ws/
-vsc
-colcon build --symlink-install --packages-select keepout_zones 
-ls
-cd src
-ls
-cd isds
-ls
-cd nab
-ranger
-;s
-ls
-gcc -o test test.cpp 
-g++ -o test test.cpp 
-./test 
-g++ -o test test.cpp 
-./test 
-g++ -o test test.cpp 
-./test 
-g++ -o test test.cpp 
-./test 
-g++ -o test test.cpp 
-./test 
-g++ -o test test.cpp 
-./test 
-g++ -o test test.cpp 
-./test 
-g++ -o test test.cpp 
-./test 
-g++ -o test test.cpp 
-./test 
-g++ -o test test.cpp 
-./test 
-cd ../../..
-ls
-cd ../..
-vsc
-colcon build --symlink-install --packages-select keepout_zones 
-ros2 topic hz /dam_point_cloud
-colcon build --symlink-install --packages-select keepout_zones 
-source /home/clutterbot_ws/install/setup.bash
-ros2 bag play dam_rosbag/
-colcon build --symlink-install --packages-select keepout_zones 
-ros2 bag play dam_rosbag/
-ros2 bag play dam_rosbag/ --topics /dam_point_cloud
-colcon build --symlink-install --packages-select keepout_zones 
-ros2 bag play dam_rosbag/ --topics /dam_point_cloud
-colcon build --symlink-install --packages-select keepout_zones 
-cd dev_ws/
-vsc
-nano ~/.bashrc
-ros2 launch scout_navigation2 navigation.launch.py
-cd
-source /home/clutterbot_ws/install/setup.bash
-cd
-ros2 launch scout_navigation2 navigation.launch.py
-source /home/clutterbot_ws/install/setup.bash
-ros2 launch scout_navigation2 navigation.launch.py
-source /home/clutterbot_ws/install/setup.bash
-ros2 launch scout_navigation2 navigation.launch.py
-source /home/clutterbot_ws/install/setup.bash
-ros2 launch scout_navigation2 navigation.launch.py
-source /home/clutterbot_ws/install/setup.bash
-ros2 launch scout_navigation2 navigation.launch.py
-ls
-cd /home/clutterbot_ws/
-ls
-ros2 bag play dam_rosbag/ --topics /dam_point_cloud
-source /home/clutterbot_ws/install/setup.bash
-ros2 bag play dam_rosbag/ --topics /dam_point_cloud
-source /home/clutterbot_ws/install/setup.bash
-ros2 launch scout_navigation2 navigation.launch.py
-source /home/clutterbot_ws/install/setup.bash
-ros2 launch scout_navigation2 navigation.launch.py
 source /home/clutterbot_ws/install/setup.bash
 ros2 launch scout_navigation2 navigation.launch.py
 source /home/clutterbot_ws/install/setup.bash
@@ -1996,5 +1397,604 @@ cd dev_ws/
 vsc
 ros2 launch scout_gazebo start_world.launch.py 
 vsc
+ls
+tmux
+ros2 pkg prefix husky_gazebo 
+ros2 launch husky_gazebo gazebo.launch.py 
+sudo apt-get update
+sudo apt-get install ros-humble-interactive-marker-twist-server
+ros2 launch husky_gazebo gazebo.launch.py 
+nautilus .
+cd ros2_ws/
+ls
+vsc
+ros2 launch husky_control teleop_base.launch.py 
+ros2 topic list
+ros2 topic echo /odom
+ros2 topic echo /odometry/filtered 
+ros2 topic echo /odom
+ros2 run teleop_twist_keyboard teleop_twist_keyboard 
+rviz2
+nautilus .
+rviz2
+ros2 run teleop_twist_keyboard teleop_twist_keyboard 
+rviz2
+nano shell_scripts/launch_nodes.sh 
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_Y=1.0
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_Y=0.0
+ros2 launch scout_gazebo scout_simu.launch.py 
+sros
+nano ~/.bashrc
+sws
+ros2 launch scout_gazebo scout_simu.launch.py 
+sws
+ros2 launch scout_gazebo scout_simu.launch.py 
+cd ros2_ws/
+sws
+ros2 launch scout_gazebo scout_simu.launch.py 
+sws
+ros2 launch scout_gazebo scout_simu.launch.py 
+cd
+nano shell_scripts/launch_nodes.sh 
+./shell_scripts/launch_nodes.sh 
+cd ros2_ws/
+vsc
+cd
+ros2 launch scout_gazebo start_world.launch.py 
+cd ros2_ws/
+vsc
+colcon build --symlink-install --packages-select scout_description 
+ros2 launch scout_gazebo start_world.launch.py 
+colcon build --symlink-install --packages-select scout_description 
+ros2 launch scout_gazebo start_world.launch.py 
+colcon build --symlink-install --packages-select scout_description 
+ros2 launch scout_gazebo start_world.launch.py 
+colcon build --symlink-install --packages-select scout_description 
+sws
+colcon build --symlink-install --packages-select scout_description 
+ros2 launch scout_gazebo start_world.launch.py 
+colcon build --symlink-install --packages-select scout_description 
+sws
+ros2 launch scout_gazebo start_world.launch.py 
+colcon build --symlink-install --packages-select scout_description 
+sws
+ros2 launch scout_gazebo start_world.launch.py 
+uptime
+ls
+tmux
+sudo apt install libpython2.7-dev
+ls
+cd orb_slam_ws/
+ls
+# Install minimal prerequisites (Ubuntu 18.04 as reference)
+sudo apt update && sudo apt install -y cmake g++ wget unzip
+wget -O opencv.zip https://github.com/opencv/opencv/archive/4.4.0.zip
+wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.4.0.zip
+unzip opencv.zip
+unzip opencv_contrib.zip
+ls
+rm -rf opencv*
+ls
+mkdir opencv
+ls
+cd opencv/
+wget -O opencv.zip https://github.com/opencv/opencv/archive/4.4.0.zip
+wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.4.0.zip
+mkdir -p build && cd build
+# Configure
+cmake -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib-4.4.0/modules ../opencv-4.4.0
+cd ..
+ls
+unzip opencv.zip
+unzip opencv_contrib.zip
+ls
+cd build/
+cmake -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib-4.4.0/modules ../opencv-4.4.0
+cmake --build .
+cd
+ls
+eigen --version
+Eigen --version
+dpkg -p libeigen3-dev
+pkg-config --modversion eigen3
+python3
+cd slam_ws/
+ls
+cd src
+ls
+cd
+ls
+mkdir orb_slam_ws/
+cd orb_slam_ws/
+ls
+git clone https://github.com/UZ-SLAMLab/ORB_SLAM3.git ORB_SLAM3
+cd ORB_SLAM3/
+ls
+sudo chmod +x build.sh 
+nano build.sh 
+./build.sh 
+ls
+cd ..
+rm -rf ORB_SLAM3/
+git clone https://github.com/UZ-SLAMLab/ORB_SLAM3.git ORB_SLAM3
+git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
+./scripts/install_prerequisites.sh --dry-run recommended
+cd Pangolin/
+./scripts/install_prerequisites.sh --dry-run recommended
+ls
+cd scripts/
+ls
+nano install_prerequisites.sh 
+# Override the package manager choice and install all packages
+./scripts/install_prerequisites.sh -m brew all
+cd ..
+# Override the package manager choice and install all packages
+./scripts/install_prerequisites.sh -m brew all
+# See what package manager and packages are recommended
+./scripts/install_prerequisites.sh --dry-run recommended
+sudo apt-get install libc++-14-dev libc++1-14 libc++abi1-14 libunwind-14 libunwind-14-dev
+./scripts/install_prerequisites.sh --dry-run recommended
+./scripts/install_prerequisites.sh recommended
+# Configure and build
+cmake -B build
+cmake --build build
+cmake -B build -GNinja
+cmake --build build
+# GIVEME THE PYTHON STUFF!!!! (Check the output to verify selected python version)
+cmake --build build -t pypangolin_pip_install
+# Run me some tests! (Requires Catch2 which must be manually installed on Ubuntu.)
+cmake -B build -G Ninja -D BUILD_TESTS=ON
+cmake --build build
+cd build
+ctest
+ls
+cd ..
+ls
+cmake -B build -G Ninja -D BUILD_TESTS=ON
+cmake --build build
+cd build
+ctest
+sudo apt-get install catch2
+cd ..
+ls
+cd ..
+ks
+ls
+rm -rf Pangolin/
+ls
+git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
+git status
+ls
+cd Pangolin/
+git status
+git checkout v0.9.1
+git status
+ls
+# Install dependencies (as described above, or your preferred method)
+./scripts/install_prerequisites.sh recommended
+# Configure and build
+cmake -B build
+cmake --build build
+# with Ninja for faster builds (sudo apt install ninja-build)
+cmake -B build -GNinja
+cmake --build build
+# GIVEME THE PYTHON STUFF!!!! (Check the output to verify selected python version)
+cmake --build build -t pypangolin_pip_install
+# Run me some tests! (Requires Catch2 which must be manually installed on Ubuntu.)
+ctest
+nano ~/.bashrc 
+echo $ROS_DOMAIN_ID 
+ros2 launch scout_gazebo start_world.launch.py 
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_Y=0.0
+ros2 launch scout_gazebo scout_simu.launch.py 
+nano ~/.bashrc
+ros2 topic list
+rviz2
+nano ~/.bashrc
+tmux
+ros2 launch scout_gazebo start_world.launch.py 
+kill -9 %1
+ros2 launch scout_gazebo start_world.launch.py 
+kill -9 %1
+ros2 launch scout_gazebo start_world.launch.py 
+kill -9 %1
+ros2 launch scout_gazebo start_world.launch.py 
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_Y=69
+ros2 launch scout_gazebo scout_simu.launch.py 
+
+export SCOUT_Y=0
+ros2 launch scout_gazebo scout_simu.launch.py 
+cd ros2_ws/
+vsc
+ros2 topic list
+ls
+ros2 topic list
+ls
+tmux
+ros2 launch scout_gazebo start_world.launch.py 
+kill -9 %1
+ros2 launch scout_gazebo start_world.launch.py 
+export SCOUT_Y=0
+ros2 launch scout_gazebo scout_simu.launch.py 
+ros2 topic echo /scout_2/camera/camera_info 
+ros2 topic echo /scout_2/camera/depth/image_raw
+ros2 topic hz /scout_2/camera/image_raw
+ros2 topic echo /scout_2/camera/camera_info 
+rviz2
+kill -9 %1
+ros2 topic echo /scout_2/camera/camera_info 
+cd /opt/ros/humble/include/gazebo_plugins/gazebo_ros_camera.hpp 
+nano /opt/ros/humble/include/gazebo_plugins/gazebo_ros_camera.hpp 
+cd /opt/ros/humble/include/gazebo_plugins/
+ls
+sudo apt-get install ros-humble-gazebo-ros
+ls
+cd ros2_ws/
+vsc
+ros2 launch scout_gazebo start_world.launch.py 
+tmux
+cd
+nano ~/.bashrc
+tmux
+ros2 pkg prefix hardware_interface
+sudo apt-get install gazebo-ros2-control
+sudo apt-get install ros-humble-gazebo-ros2-control
+cd dev_ws/
+vsc
+rviz2
+vsc
+ros2 topic list | grep orb
+rviz2
+ros2 topic echo /scout_2/imu
+ros2 topic echo /scout_2/imu --field orientation
+ros2 topic info  /scout_2/imu --field orientation
+ros2 topic info /scout_2/imu --field orientation
+ros2 topic info /scout_2/imu
+rviz2
+ros2 launch scout_gazebo start_world.launch.py 
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_Y=0
+ros2 launch scout_gazebo scout_simu.launch.py 
+ros2 topic info /goal_pose
+ros2 topic echo /scout_2/camera/image_raw --field header
+cd ros2_ws/
+vsc
+echo $ROS_DOMAIN_ID 
+tmux
+ls
+cd ros2_ws/
+vsc
+cd ros2_ws/
+vsc
+ros2 topic list
+ros2 topic echo /scout_2/camera/image_raw --field header
+cd
+cd shell_scripts/
+vsc
+ros2 launch traversability_gridmap traversability_launch.py
+source ~/dev_ws/install/setup.bash
+ros2 launch traversability_gridmap traversability_launch.py
+source ~/dev_ws/install/setup.bash
+ros2 launch traversability_gridmap traversability_launch.py
+source ~/dev_ws/install/setup.bash
+ros2 launch traversability_gridmap traversability_launch.py
+source ~/dev_ws/install/setup.bash
+ros2 launch traversability_gridmap traversability_launch.py
+source ~/dev_ws/install/setup.bash
+ros2 launch traversability_gridmap traversability_launch.py
+source ~/dev_ws/install/setup.bash
+ros2 launch traversability_gridmap traversability_launch.py
+source ~/dev_ws/install/setup.bash
+ros2 launch traversability_gridmap traversability_launch.py
+bash
+ros2 launch scout_gazebo start_world.launch.py 
+cd dev_ws/
+vsc
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+cclear
+clear
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+ros2 topic echo /scout_2/velodyne_points
+colcon build --symlink-install
+source install/setup.bash
+colcon build --symlink-install
+./shell_scripts/launch_nodes.sh 
+ls
+tmux
+ros2 launch scout_gazebo start_world.launch.py 
+ls
+bash
+cd ros2_ws/
+vsc
+cd
+nano shell_scripts/launch_nodes.sh 
+ros2 launch traversability_gridmap traversability_launch.py 
+ls
+cd dev_ws/
+ls
+cd src
+ls
+cd frontier_exploration/
+ls
+grep -r "rtabmap" .
+grep -r "rtabmap_msgs::msg::GetMap" .
+grep -r "rtabmap_msgs::srv::GetMap" .
+clear
+grep -r "rtabmap" .
+grep -r "word_kpts" .
+grep -r "word_pts" .
+grep -r "word_" .
+grep -r "id" .
+grep -r "weight" .
+grep -r "pose" .
+ls
+cd ..
+ls
+cd frontier_exploration/
+ls
+cd frontier_
+cd frontier_exploration/
+ls
+cd ..
+ls
+grep -r "oxygen" .
+ls
+cd ..
+ls
+vsc
+ls
+vsc
+cd
+nano shell_scripts/launch_nodes.sh 
+nano shell_scripts/only_exploration.sh 
+./shell_scripts/only_exploration.sh 
+cd dev_ws/
+colcon build --symlink-install
+source install/setup.bash
+cd
+./shell_scripts/only_exploration.sh 
+ls
+cd dev_ws/
+colcon build --symlink-install
+source install/setup.bash
+cd
+./shell_scripts/only_exploration.sh 
+nano .bashrc 
+ros2 launch traversability_gridmap traversability_launch.py 
+ros2 launch scout_gazebo spawn_scout.launch.py 
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_Y=0.0
+ros2 launch scout_gazebo scout_simu.launch.py 
+nano shell_scripts/launch_nodes.sh 
+./shell_scripts/launch_nodes.sh 
+ros2 launch scout_gazebo scout_simu.launch.py 
+nano shell_scripts/launch_nodes.sh 
+./shell_scripts/launch_nodes.sh 
+nano shell_scripts/launch_nodes.sh 
+./shell_scripts/launch_nodes.sh 
+nano shell_scripts/launch_nodes.sh 
+./shell_scripts/launch_nodes.sh 
+nano shell_scripts/launch_nodes.sh 
+./shell_scripts/launch_nodes.sh 
+cd shell_scripts/
+vsc
+rviz2
+ros2 run tf2_tools view_frames 
+nautilus .
+ros2 run tf2_tools view_frames 
+nautilus .
+ros2 launch scout_navigation2 navigation.launch.py 
+cd dev_ws/
+vsc
+rviz2
+ls
+tmux
+cd dev_ws/
+ls
+vsc
+ls
+cd /home/cesar_slam/
+ls
+xeyes
+ls
+xeyes
+xyes
+xeyes
+ls
+cd /home/cesar_slam/
+ls
+git clone https://github.com/shun74/Fisheye-Depth-Estimation
+ls
+cd Fisheye-Depth-Estimation/
+ls
+sh scripts/build.sh 
+ls
+cd scripts/
+ls
+nano build.sh 
+cd ..
+sh scripts/build.sh 
+sh scripts/reconstruct.sh
+sh scripts/realtime.sh
+ls
+cd scripts/
+ls
+nano realtime.sh 
+cd ..
+cd configs/
+ls
+cd ..
+ls
+sh scripts/realtime.sh
+cd scripts/realtime.sh 
+nano scripts/realtime.sh 
+sh scripts/realtime.sh
+sh scripts/reconstruct.sh
+cd scripts/
+ls
+cat reconstruct.sh 
+ls
+cd ..
+ls;
+ls
+mkdir output
+ls
+sh scripts/reconstruct.sh
+ls
+cd oyu
+cd output/
+ls;
+ls
+cat disp.exr 
+1;1;120;120;1;0xls
+ls
+cd ..
+ls
+vsc
+sh scripts/reconstruct.sh
+sh scripts/build.sh 
+sh scripts/reconstruct.sh
+sh scripts/build.sh 
+sudo apt-get install exiv2
+ls
+sh scripts/build.sh 
+nano scripts/reconstruct.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+nano scripts/build.sh 
+sh scripts/build.sh 
+nano scripts/build.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+nano scripts/reconstruct.sh 
+nano scripts/build.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+nano scripts/reconstruct.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+sh scripts/build.sh 
+sh scripts/reconstruct.sh 
+./shell_scripts/launch_nodes.sh 
+ros2 launch scout_gazebo start_world.launch.py 
+tmux
+cd dev_ws/
+vsc
+cd
+ls
+cd ros2_ws/
+ls
+vsc
+ls
+cd ro
+cd ros2_ws/
+ls
+vsc
+ros2 topic echo /cmd_vel
+xeyes
+ros2 launch scout_gazebo start_world.launch.py 
+cd ro
+cd ros2_ws/
+vsc
+ros2 launch scout_gazebo start_world.launch.py 
+vsc
+ros2 launch scout_gazebo start_world.launch.py 
+nano .bashrc
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_Y=0
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_Y=1
+export SCOUT_X=1
+ros2 launch scout_gazebo scout_simu.launch.py 
+nano shell_scripts/launch_nodes.sh 
+./shell_scripts/launch_nodes.sh 
+nano shell_scripts/launch_nodes.sh 
+cd shell_scripts/
+vsc
+./launch_nodes.sh 
+./shell_scripts/launch_nodes.sh 
+export SCOUT_X = 0.0
+export SCOUT_X=0
+ros2 launch scout_gazebo scout_simu.launch.py 
+echo $SCOUT_Y
+echo SCOUT_Y
+bash
+cd dev_ws/
+vsc
+nano ~/.bashrc 
+ros2 launch frontier_exploration exploration.launch.py 
+ros2 run tf2_tools view_frames 
+nautilus .
+ros2 launch frontier_exploration exploration.launch.py 
+ls
+cd col
+cd dev_ws/
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch frontier_exploration exploration.launch.py 
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch frontier_exploration exploration.launch.py 
+colcon build --symlink-install
+source install/setup.bash
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch frontier_exploration exploration.launch.py 
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch frontier_exploration exploration.launch.py 
+cd
+source dev_ws/install/setup.bash
+cd dev_ws/
+colcon build --symlink-install
+source install/setup.bash
+cd
+./shell_scripts/only_exploration.sh 
+tmux
+./shell_scripts/launch_nodes.sh 
+./shell_scripts/only_exploration.sh 
+ros2 launch scout_gazebo start_world.launch.py 
+kill -9 %1
+ros2 launch scout_gazebo start_world.launch.py 
+echo $ROS_DOMAIN_ID 
+rviz2
+./shell_scripts/launch_nodes.sh 
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_X=1.0
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_Y=1.0
+ros2 launch scout_gazebo scout_simu.launch.py 
+cd ros2_ws/
+vsc
+ros2 launch scout_gazebo start_world.launch.py 
 ls
 tmux

@@ -7,3 +7,7 @@ root_dir/.*
 !root_dir/.tmux.conf
 root_dir/.bash_history
 !root_dir/.rangerdir
+dev_ws/src/frontier_exploration/Doxyfile
+dev_ws/src/frontier_exploration/doc/
+orb_slam3_docker_20_foxy/
+

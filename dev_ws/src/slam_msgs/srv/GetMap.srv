@@ -1,0 +1,5 @@
+#request
+bool tracked_points
+---
+#response
+slam_msgs/MapData data

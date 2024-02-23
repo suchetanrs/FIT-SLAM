@@ -20,7 +20,7 @@
 class PointCloudTransformer : public rclcpp::Node
 {
 public:
-    PointCloudTransformer() : Node("pointcloud_transformer")
+    PointCloudTransformer() : Node("unique_pcl_transformer")
     {
         subscription_pcl_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
             "velodyne_points", 10,
@@ -73,6 +73,12 @@ private:
 
         return quat_msg;
     }
+
+	double StampToSec(builtin_interfaces::msg::Time stamp)
+	{
+		double seconds = stamp.sec + (stamp.nanosec * pow(10, -9));
+		return seconds;
+	}
 
     geometry_msgs::msg::TransformStamped convertPoseToTransformStamped(geometry_msgs::msg::Pose pose, rclcpp::Time stamp) {
         geometry_msgs::msg::TransformStamped transformStamped;
@@ -138,12 +144,15 @@ private:
     {        
         if (calledonceflag == false)
         {            
-            int index_to_prune = -1;            
-            size_t starting_index = previous_map_msg.graph.poses.size();            
-            for (size_t i = starting_index; i < map_msg->graph.poses.size(); ++i)
+            int index_to_prune = -1;     
+            for (size_t i = 0; i < map_msg->graph.poses.size(); ++i)
             {
+                if(pcl_recorded_[map_msg->graph.poses_id[i]] == true) {
+                    continue;
+                }
                 int nodeid_pose = map_msg->graph.poses_id[i];
                 auto last_pose_ = map_msg->graph.poses[i];
+                RCLCPP_INFO_STREAM(get_logger(), "Last pose ts:" << StampToSec(last_pose_.header.stamp));
                 if (new_pcl == true)
                 {                    
                     sensor_msgs::msg::PointCloud2::SharedPtr transformed_msg;
@@ -153,8 +162,7 @@ private:
                     std::lock_guard<std::mutex> lock(pcl_buffer_mutex);                  
                     for (size_t k=0; k<pcl_buffer_.size(); k++) {                        
                         auto pcl_selected = pcl_buffer_[k];                        
-                        int64_t time_diff = (pcl_selected.header.stamp.sec - map_msg->header.stamp.sec) * 1e9 +
-                                        (static_cast<int64_t>(pcl_selected.header.stamp.nanosec) - static_cast<int64_t>(map_msg->header.stamp.nanosec));                      
+                        double time_diff = StampToSec(pcl_selected.header.stamp) - StampToSec(last_pose_.header.stamp);           
                         if(pcl_buffer_.size() > 0) {
                             if (abs(time_diff) > closest_time || k == pcl_buffer_.size()-1) {                                                                                                
                                 sensor_msgs::msg::PointCloud2 closest_pcl;
@@ -164,8 +172,8 @@ private:
                                 else {
                                     closest_pcl = pcl_buffer_[k-1];
                                 }
-                                auto transform = convertPoseToTransformStamped(last_pose_, map_msg->header.stamp);                            
-                                transformed_msg = std::make_shared<sensor_msgs::msg::PointCloud2>(transformPCL(closest_pcl, transform, map_msg->header));                            
+                                auto transform = convertPoseToTransformStamped(last_pose_.pose, last_pose_.header.stamp);                            
+                                transformed_msg = std::make_shared<sensor_msgs::msg::PointCloud2>(transformPCL(closest_pcl, transform, pcl_selected.header));                            
                                 transformed_publisher_->publish(*transformed_msg);
                                 index_to_prune = k-1;
                                 break;
@@ -176,20 +184,29 @@ private:
                             RCLCPP_ERROR(this->get_logger(), "PCL BUFFER SIZE = 0, This should never happen.");
                         }                        
                     }                    
-                    closest_time = std::numeric_limits<int64_t>::max();
+                    closest_time = std::numeric_limits<double>::max();
                     if(transformed_msg) {                        
                         pclwithnodeid.pcl = *transformed_msg;
                         pclwithnodeid.node_id = nodeid_pose;
                         pclwithnodeid.graph = map_msg->graph;
-                        pclwithnodeid.pose = last_pose_;
+                        pclwithnodeid.pose = last_pose_.pose;
+                        if(StampToSec(pclwithnodeid.pcl.header.stamp) - StampToSec(last_pose_.header.stamp) > 4.0) {
+                            pcl_recorded_[map_msg->graph.poses_id[i]] = true;
+                            RCLCPP_ERROR_STREAM(get_logger(), "Skipped this node:" << nodeid_pose);
+                            continue;
+                        }
                         publisher_->publish(pclwithnodeid);
-                        RCLCPP_INFO_STREAM(get_logger(), "Published with NODEID: " << nodeid_pose);
+                        RCLCPP_INFO_STREAM(get_logger(), "Published with NODEID: " << nodeid_pose << " pcl buffer size: " << pcl_buffer_.size());
+                        RCLCPP_INFO_STREAM(get_logger(), "Pose ts:" << StampToSec(last_pose_.header.stamp));
+                        RCLCPP_INFO_STREAM(get_logger(), "PCL ts:" << StampToSec(pclwithnodeid.pcl.header.stamp));
+                        RCLCPP_INFO_STREAM(get_logger(), "Difference in seconds: " << StampToSec(pclwithnodeid.pcl.header.stamp) - StampToSec(last_pose_.header.stamp));
                     }
                     else {
                         RCLCPP_ERROR(this->get_logger(), "Could not find any transformed messages. This should never happen.");
                         rclcpp::shutdown();
                     }
                     new_pcl = false;
+                    pcl_recorded_[map_msg->graph.poses_id[i]] = true;
                 }
             }
             if(index_to_prune!= -1)
@@ -211,13 +228,14 @@ private:
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     bool calledonceflag;
     bool new_pcl;
-    int64_t closest_time = std::numeric_limits<int64_t>::max();
+    double closest_time = std::numeric_limits<double>::max();
     slam_msgs::msg::MapData previous_map_msg;
     std::mutex pcl_buffer_mutex;
     int pcl_message_throttle_ = 0;
     int transform_throttle_;
     std::string robot_base_frame_id_;
     std::string velodyne_frame_id_;
+    std::map<int, bool> pcl_recorded_;
 };
 
 int main(int argc, char *argv[])

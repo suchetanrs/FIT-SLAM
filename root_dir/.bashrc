@@ -109,6 +109,8 @@ source /opt/ros/humble/setup.bash
 export TURTLEBOT3_MODEL=waffle
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/root/ros2_ws/src/scout_v2/scout_gazebo/models
 export SCOUT_NAMESPACE=scout_2
+export ROS_DOMAIN_ID=55
+export RCUTILS_COLORIZED_OUTPUT=1
 cd
 sros
 sws

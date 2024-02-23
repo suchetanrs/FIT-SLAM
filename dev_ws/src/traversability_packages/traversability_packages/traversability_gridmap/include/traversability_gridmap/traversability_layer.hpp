@@ -33,7 +33,7 @@
 #include <pcl/point_types.h>
 #include <pcl_ros/impl/transforms.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
-#include <rtabmap_msgs/msg/map_graph.hpp>
+#include <slam_msgs/msg/map_graph.hpp>
 
 #include <geometry_msgs/msg/pose_array.hpp>
 

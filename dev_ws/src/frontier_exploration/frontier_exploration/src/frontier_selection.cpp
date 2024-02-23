@@ -523,12 +523,12 @@ namespace frontier_exploration
         auto count_index = 0;
         for (const auto &frontier : frontier_list)
         {
-            count_index++;
 
             // check if this frontier is the nearest to robot and ignore if very close (frontier_detect_radius)
             if (frontier.min_distance > frontierDetectRadius_)
             {
                 bool frontier_exists_ = false;
+                // check if its blacklisted
                 for (auto blacklisted_frontier_ : frontier_blacklist_)
                 {
                     if (blacklisted_frontier_.initial == frontier.initial)
@@ -539,23 +539,26 @@ namespace frontier_exploration
                 }
                 if (frontier.min_distance < selected.min_distance && frontier_exists_ == false)
                 {
+                    count_index++;
                     selected = frontier;
                     frontierSelectionFlag = true;
                 }
             }
         }
         // Wait for a brief period to match time of other methods.
-        rclcpp::sleep_for(std::chrono::milliseconds(10000));
+        // rclcpp::sleep_for(std::chrono::milliseconds(10000));
 
         // If no frontier is selected, set success flag to false and return
         if (frontierSelectionFlag == false)
         {
+            RCLCPP_ERROR(logger_, "No clustered frontiers are outside the minimum detection radius.");
             res->success = false;
+            res->next_frontier.pose.position = selected.centroid;
             return std::make_pair(selected, frontierSelectionFlag);
         }
         // Add the selected frontier to the blacklist to prevent re-selection
         frontier_blacklist_.push_back(selected);
-
+        res->success = true;
         return std::make_pair(selected, frontierSelectionFlag);
     }
 
@@ -613,8 +616,6 @@ namespace frontier_exploration
             selected = frontier_list_imp[randomIndex];
             frontierSelectionFlag = true;
         }
-        // Wait for a brief period to match time of other methods.
-        rclcpp::sleep_for(std::chrono::milliseconds(10000));
         if (frontierSelectionFlag == false)
         {
             res->success = false;

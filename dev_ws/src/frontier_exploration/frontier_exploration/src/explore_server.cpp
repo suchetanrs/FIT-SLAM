@@ -1,529 +1,490 @@
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_action/rclcpp_action.hpp>
-#include <rclcpp/parameter.hpp>
-#include <rclcpp_lifecycle/lifecycle_node.hpp>
-#include <nav2_costmap_2d/costmap_2d_ros.hpp>
-#include <nav2_costmap_2d/costmap_2d.hpp>
-#include <nav2_util/node_thread.hpp>
-
-#include <geometry_msgs/msg/point_stamped.hpp>
-
-#include <action_msgs/msg/goal_status_array.hpp>
-
-#include <frontier_msgs/action/explore_task.hpp>
-#include <frontier_msgs/srv/get_next_frontier.hpp>
-#include <frontier_msgs/srv/update_boundary_polygon.hpp>
-
+#include <frontier_exploration/explore_server.hpp>
 #include <frontier_exploration/geometry_tools.hpp>
-
-#include <nav2_msgs/action/navigate_to_pose.hpp>
-#include <frontier_msgs/srv/get_frontier_costs.hpp>
 
 namespace frontier_exploration
 {
-
-    /**
-     * @brief Server for frontier exploration action, runs the state machine associated with a
-     * structured frontier exploration task and manages robot movement through move_base.
-     */
-    class FrontierExplorationServer : public rclcpp::Node
+    FrontierExplorationServer::FrontierExplorationServer() : Node("explore_server")
     {
-    public:
-        using GoalHandleExplore = rclcpp_action::ServerGoalHandle<frontier_msgs::action::ExploreTask>;
-        using NavigateToPose = nav2_msgs::action::NavigateToPose;
-        using GoalHandleNav2 = rclcpp_action::ClientGoalHandle<NavigateToPose>;
+        this->declare_parameter("frequency", 5.0);
+        this->declare_parameter("goal_aliasing", 0.1);
+        this->declare_parameter("retry_count", 30);
+        this->declare_parameter("nav2_goal_timeout_sec", 35);
+        this->declare_parameter("use_traversability", false);
 
-        /**
-         * @brief Constructor for the server, sets up this node's ActionServer for exploration and ActionClient to move_base for robot movement.
-         * @param name Name for SimpleActionServer
-         */
-        FrontierExplorationServer() : Node("explore_server")
+        this->get_parameter("frequency", frequency_);
+        this->get_parameter("goal_aliasing", goal_aliasing_);
+        this->get_parameter("retry_count", retry_);
+        this->get_parameter("nav2_goal_timeout_sec", nav2WaitTime_);
+        this->get_parameter("robot_namespaces", robot_namespaces_);
+
+        //--------------------------------------------NAV2 CLIENT RELATED--------------------------------
+        nav2_client_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+        nav2Client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose", nav2_client_callback_group_); // was previously move_base, true
+
+        nav2_goal_options_.feedback_callback = std::bind(&FrontierExplorationServer::nav2GoalFeedbackCallback, this, std::placeholders::_1, std::placeholders::_2);
+        nav2_goal_options_.result_callback = std::bind(&FrontierExplorationServer::nav2GoalResultCallback, this, std::placeholders::_1);
+        nav2_goal_options_.goal_response_callback = std::bind(&FrontierExplorationServer::nav2GoalResponseCallback, this, std::placeholders::_1);
+
+        if (!nav2Client_->wait_for_action_server(std::chrono::seconds(50)))
         {
-            this->declare_parameter("frequency", 5.0);
-            this->declare_parameter("goal_aliasing", 0.1);
-            this->declare_parameter("retry_count", 30);
-            this->declare_parameter("nav2_goal_timeout_sec", 35);
-            this->declare_parameter("use_traversability", false);
-
-            this->get_parameter("frequency", frequency_);
-            this->get_parameter("goal_aliasing", goal_aliasing_);
-            this->get_parameter("retry_count", retry_);
-            this->get_parameter("nav2_goal_timeout_sec", nav2WaitTime_);
-            this->get_parameter("robot_namespaces", robot_namespaces_);
-
-            RCLCPP_ERROR_STREAM(this->get_logger(), "frequency: " << frequency_);
-            nav2Client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose"); // was previously move_base, true
-            action_server_ = rclcpp_action::create_server<frontier_msgs::action::ExploreTask>(
-                this,
-                "explore_action",
-                std::bind(&FrontierExplorationServer::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
-                std::bind(&FrontierExplorationServer::handle_cancel, this, std::placeholders::_1),
-                std::bind(&FrontierExplorationServer::handle_accepted, this, std::placeholders::_1));
-            explore_costmap_ros_ = std::make_shared<nav2_costmap_2d::Costmap2DROS>("explore_costmap", std::string{get_namespace()}, "explore_costmap");
-            explore_costmap_ros_->configure();
-            // Launch a thread to run the costmap node
-            explore_costmap_thread_ = std::make_unique<nav2_util::NodeThread>(explore_costmap_ros_);
-            explore_costmap_ros_->activate();
-
-            service_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-            tf_listener_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
-            nav2Publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("goal_pose", 10);
-            nav2Subscriber_ = this->create_subscription<geometry_msgs::msg::PointStamped>("goal_reached_path_follower", 10, std::bind(&FrontierExplorationServer::feedbackNav2cb, this, std::placeholders::_1));
-            dyn_params_handler_ = this->add_on_set_parameters_callback(
-                std::bind(
-                    &FrontierExplorationServer::dynamicParametersCallback,
-                    this, std::placeholders::_1));
-
-            service_get_costs_ = this->create_service<frontier_msgs::srv::GetFrontierCosts>(
-                "multirobot_get_frontier_costs", std::bind(&FrontierExplorationServer::handle_multirobot_frontier_cost_request, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), rmw_qos_profile_default, service_callback_group_);
-
-            client_node_ = rclcpp::Node::make_shared("explore_server_client_node");
-            updateBoundaryPolygon = client_node_->create_client<frontier_msgs::srv::UpdateBoundaryPolygon>("explore_costmap/update_boundary_polygon");
-            getNextFrontier = client_node_->create_client<frontier_msgs::srv::GetNextFrontier>("explore_costmap/get_next_frontier");
+            RCLCPP_ERROR(this->get_logger(), "Nav2 Action server not available after waiting for %d seconds", 50);
+            rclcpp::shutdown();
+        }
+        else
+        {
+            RCLCPP_INFO(this->get_logger(), "Nav2 action server available");
         }
 
-        ~FrontierExplorationServer()
-        {
-            explore_costmap_ros_->deactivate();
-            explore_costmap_ros_->cleanup();
-            explore_costmap_thread_.reset();
-        }
+        //--------------------------------------------EXPLORE SERVER RELATED----------------------------
+        explore_server_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+        action_server_ = rclcpp_action::create_server<frontier_msgs::action::ExploreTask>(
+            this,
+            "explore_action",
+            std::bind(&FrontierExplorationServer::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&FrontierExplorationServer::handle_cancel, this, std::placeholders::_1),
+            std::bind(&FrontierExplorationServer::handle_accepted, this, std::placeholders::_1),
+            rcl_action_server_get_default_options(),
+            explore_server_callback_group_);
 
-        rcl_interfaces::msg::SetParametersResult dynamicParametersCallback(
-            std::vector<rclcpp::Parameter> parameters)
-        {
-            rcl_interfaces::msg::SetParametersResult result;
+        explore_costmap_ros_ = std::make_shared<nav2_costmap_2d::Costmap2DROS>("explore_costmap", std::string{get_namespace()}, "explore_costmap");
+        explore_costmap_ros_->configure();
+        // Launch a thread to run the costmap node
+        explore_costmap_thread_ = std::make_unique<nav2_util::NodeThread>(explore_costmap_ros_);
+        explore_costmap_ros_->activate();
 
-            for (auto parameter : parameters)
+        //------------------------------------------BOUNDED EXPLORE LAYER RELATED------------------------
+        multirobot_service_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+        service_get_costs_ = this->create_service<frontier_msgs::srv::GetFrontierCosts>(
+            "multirobot_get_frontier_costs", std::bind(&FrontierExplorationServer::handle_multirobot_frontier_cost_request, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), rmw_qos_profile_default, multirobot_service_callback_group_);
+
+        client_node_ = rclcpp::Node::make_shared("explore_server_client_node");
+        updateBoundaryPolygon = client_node_->create_client<frontier_msgs::srv::UpdateBoundaryPolygon>("explore_costmap/update_boundary_polygon");
+        getNextFrontier = client_node_->create_client<frontier_msgs::srv::GetNextFrontier>("explore_costmap/get_next_frontier");
+
+        //---------------------------------------------ROS RELATED------------------------------------------
+        tf_listener_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+        dyn_params_handler_ = this->add_on_set_parameters_callback(
+            std::bind(
+                &FrontierExplorationServer::dynamicParametersCallback,
+                this, std::placeholders::_1));
+
+        RCLCPP_INFO(this->get_logger(), "FrontierExplorationServer::FrontierExplorationServer()");
+    }
+
+    FrontierExplorationServer::~FrontierExplorationServer()
+    {
+        RCLCPP_INFO(this->get_logger(), "FrontierExplorationServer::~FrontierExplorationServer()");
+        explore_costmap_ros_->deactivate();
+        explore_costmap_ros_->cleanup();
+        explore_costmap_thread_.reset();
+    }
+
+    rcl_interfaces::msg::SetParametersResult FrontierExplorationServer::dynamicParametersCallback(
+        std::vector<rclcpp::Parameter> parameters)
+    {
+        rcl_interfaces::msg::SetParametersResult result;
+
+        for (auto parameter : parameters)
+        {
+            const auto &param_type = parameter.get_type();
+            const auto &param_name = parameter.get_name();
+
+            if (param_type == rclcpp::ParameterType::PARAMETER_DOUBLE)
             {
-                const auto &param_type = parameter.get_type();
-                const auto &param_name = parameter.get_name();
-
-                if (param_type == rclcpp::ParameterType::PARAMETER_DOUBLE)
+                if (param_name == "frequency")
                 {
-                    if (param_name == "frequency")
-                    {
-                        frequency_ = parameter.as_double();
-                    }
-                    else if (param_name == "goal_aliasing")
-                    {
-                        goal_aliasing_ = parameter.as_double();
-                    }
+                    frequency_ = parameter.as_double();
                 }
-                else if (param_type == rclcpp::ParameterType::PARAMETER_INTEGER)
+                else if (param_name == "goal_aliasing")
                 {
-                    if (param_name == "retry_count")
-                    {
-                        retry_ = parameter.as_int();
-                    }
-                    else if (param_name == "nav2_goal_timeout_sec")
-                    {
-                        nav2WaitTime_ = parameter.as_int();
-                    }
+                    goal_aliasing_ = parameter.as_double();
                 }
             }
-
-            result.successful = true;
-            return result;
-        }
-
-    private:
-        std::shared_ptr<tf2_ros::Buffer> tf_listener_;
-        rclcpp_action::Server<frontier_msgs::action::ExploreTask>::SharedPtr action_server_;
-
-        std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
-        std::unique_ptr<nav2_util::NodeThread> explore_costmap_thread_;
-        double frequency_, goal_aliasing_;
-        bool success_, moving_;
-        int retry_;
-        int nav2WaitTime_;
-
-        rclcpp::Service<frontier_msgs::srv::GetFrontierCosts>::SharedPtr service_get_costs_;
-        rclcpp_action::Client<NavigateToPose>::SharedPtr nav2Client_;
-        std::mutex nav2Clientlock_;
-        rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr nav2Publisher_;
-        rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr nav2Subscriber_;
-        rclcpp::Node::SharedPtr client_node_;
-        NavigateToPose::Goal old_goal; // previously was old_goal
-        std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> frontier_goal;
-        rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
-
-        std::vector<std::string> robot_namespaces_;
-        bool currently_processing_ = false;
-        std::mutex nextFrontierLock_;
-        rclcpp::Client<frontier_msgs::srv::UpdateBoundaryPolygon>::SharedPtr updateBoundaryPolygon;
-        rclcpp::Client<frontier_msgs::srv::GetNextFrontier>::SharedPtr getNextFrontier;
-        rclcpp::CallbackGroup::SharedPtr service_callback_group_;
-
-        rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal)
-        {
-            (void)uuid;
-            frontier_goal = goal;
-            return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-        }
-
-        rclcpp_action::CancelResponse handle_cancel(const std::shared_ptr<GoalHandleExplore> goal_handle)
-        {
-            nav2Client_->async_cancel_goals_before(rclcpp::Clock().now());
-            RCLCPP_WARN(this->get_logger(), "Current exploration task cancelled");
-
-            (void)goal_handle;
-            return rclcpp_action::CancelResponse::ACCEPT;
-        }
-
-        void handle_accepted(const std::shared_ptr<GoalHandleExplore> goal_handle)
-        {
-            // std::thread{std::bind(&FrontierExplorationServer::executeCb, this, std::placeholders::_1, std::placeholders::_2), goal_handle, frontier_goal}.detach();
-            executeCb(goal_handle, frontier_goal);
-        }
-
-        geometry_msgs::msg::Quaternion createQuaternionMsgFromYaw(double yaw)
-        {
-            tf2::Quaternion q;
-            q.setRPY(0, 0, yaw);
-            return tf2::toMsg(q);
-        }
-
-        /**
-         * @brief Execute callback for actionserver, run after accepting a new goal
-         * @param goal ActionGoal containing boundary of area to explore, and a valid centerpoint for the area.
-         */
-
-        void executeCb(const std::shared_ptr<GoalHandleExplore> goal_handle, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal)
-        {
-            RCLCPP_INFO(this->get_logger(), "FrontierExplorationServer::executeCb");
-            success_ = false;
-            moving_ = false;
-            auto feedback_ = std::make_shared<frontier_msgs::action::ExploreTask::Feedback>();
-            auto res = std::make_shared<frontier_msgs::action::ExploreTask::Result>();
-
-            // Don't compute a plan until costmap is valid (after clear costmap)
-            rclcpp::Rate r(100);
-            while (!explore_costmap_ros_->isCurrent())
+            else if (param_type == rclcpp::ParameterType::PARAMETER_INTEGER)
             {
-                r.sleep();
+                if (param_name == "retry_count")
+                {
+                    retry_ = parameter.as_int();
+                }
+                else if (param_name == "nav2_goal_timeout_sec")
+                {
+                    nav2WaitTime_ = parameter.as_int();
+                }
             }
+        }
 
-            RCLCPP_INFO_STREAM(this->get_logger(), "Currently processing is: " << currently_processing_);
-            // wait for move_base and costmap services
-            if (!nav2Client_->wait_for_action_server(std::chrono::seconds(10)) || !updateBoundaryPolygon->wait_for_service(std::chrono::seconds(10)) || !getNextFrontier->wait_for_service(std::chrono::seconds(10)))
+        result.successful = true;
+        return result;
+    }
+
+    rclcpp_action::GoalResponse FrontierExplorationServer::handle_goal(const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal)
+    {
+        (void)uuid;
+        frontier_goal = goal;
+        return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+    }
+
+    rclcpp_action::CancelResponse FrontierExplorationServer::handle_cancel(const std::shared_ptr<GoalHandleExplore> goal_handle)
+    {
+        nav2Client_->async_cancel_all_goals();
+        RCLCPP_WARN(this->get_logger(), "Current exploration task cancelled");
+        (void)goal_handle;
+        return rclcpp_action::CancelResponse::ACCEPT;
+    }
+
+    void FrontierExplorationServer::handle_accepted(const std::shared_ptr<GoalHandleExplore> goal_handle)
+    {
+        // std::thread{std::bind(&FrontierExplorationServer::executeCb, this, std::placeholders::_1, std::placeholders::_2), goal_handle, frontier_goal}.detach();
+        executeCb(goal_handle, frontier_goal);
+    }
+
+    void FrontierExplorationServer::executeCb(const std::shared_ptr<GoalHandleExplore> goal_handle, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal)
+    {
+        RCLCPP_INFO(this->get_logger(), "FrontierExplorationServer::executeCb");
+        success_ = false;
+        moving_ = false;
+        auto res = std::make_shared<frontier_msgs::action::ExploreTask::Result>();
+
+        // Don't compute a plan until costmap is valid (after clear costmap)
+        rclcpp::Rate r(100);
+        while (!explore_costmap_ros_->isCurrent())
+        {
+            r.sleep();
+        }
+
+        // wait for move_base and costmap services
+        if (!nav2Client_->wait_for_action_server(std::chrono::seconds(10)) || !updateBoundaryPolygon->wait_for_service(std::chrono::seconds(10)) || !getNextFrontier->wait_for_service(std::chrono::seconds(10)))
+        {
+            goal_handle->abort(res);
+            RCLCPP_ERROR(this->get_logger(), "Action server or bel services is not available.");
+            return;
+        }
+
+        // set region boundary on costmap
+        if (rclcpp::ok() && goal_handle->is_active())
+        {
+            auto srv_req = std::make_shared<frontier_msgs::srv::UpdateBoundaryPolygon::Request>();
+            auto boundary_polygon_srv_res = std::make_shared<frontier_msgs::srv::UpdateBoundaryPolygon::Response>();
+            srv_req->explore_boundary = goal->explore_boundary;
+            auto resultBoundaryPolygon = updateBoundaryPolygon->async_send_request(srv_req);
+            RCLCPP_INFO(this->get_logger(), "Adding update boundary polygon for spin.");
+            if (rclcpp::spin_until_future_complete(client_node_, resultBoundaryPolygon, std::chrono::seconds(15)) ==
+                rclcpp::FutureReturnCode::SUCCESS)
             {
+                boundary_polygon_srv_res = resultBoundaryPolygon.get();
+                RCLCPP_INFO(this->get_logger(), "Region boundary set");
+            }
+            else
+            {
+                RCLCPP_ERROR(this->get_logger(), "Failed to receive response for updateBoundaryPolygon called from within.");
                 goal_handle->abort(res);
-                RCLCPP_ERROR(this->get_logger(), "Action server or service is not available.");
                 return;
-            }
-
-            // set region boundary on costmap
-            if (rclcpp::ok() && goal_handle->is_active())
-            {
-                auto srv_req = std::make_shared<frontier_msgs::srv::UpdateBoundaryPolygon::Request>();
-                auto boundary_polygon_srv_res = std::make_shared<frontier_msgs::srv::UpdateBoundaryPolygon::Response>();
-                srv_req->explore_boundary = goal->explore_boundary;
-                auto resultBoundaryPolygon = updateBoundaryPolygon->async_send_request(srv_req);
-                if (rclcpp::spin_until_future_complete(client_node_, resultBoundaryPolygon, std::chrono::seconds(40)) ==
-                    rclcpp::FutureReturnCode::SUCCESS)
-                {
-                    boundary_polygon_srv_res = resultBoundaryPolygon.get();
-                    RCLCPP_INFO(this->get_logger(), "Region boundary set");
-                }
-                else
-                {
-                    RCLCPP_ERROR(this->get_logger(), "Failed to receive response for updateBoundaryPolygon called from within.");
-                    goal_handle->abort(res);
-                    return;
-                }
-            }
-
-            while (rclcpp::ok() && goal_handle->is_active())
-            {
-                auto srv_req = std::make_shared<frontier_msgs::srv::GetNextFrontier::Request>();
-                auto srv_res = std::make_shared<frontier_msgs::srv::GetNextFrontier::Response>();
-
-                // placeholder for next goal to be sent to move base
-                geometry_msgs::msg::PoseStamped goal_pose;
-
-                // get current robot pose in frame of exploration boundary
-                geometry_msgs::msg::PoseStamped robot_pose;
-                explore_costmap_ros_->getRobotPose(robot_pose);
-                srv_req->start_pose = robot_pose;
-                srv_req->override_frontier_list = false;
-
-                // evaluate if robot is within exploration boundary using robot_pose in boundary frame
-                geometry_msgs::msg::PoseStamped eval_pose = srv_req->start_pose;
-                if (eval_pose.header.frame_id != goal->explore_boundary.header.frame_id)
-                {
-                    RCLCPP_ERROR(this->get_logger(), "Frames not same");
-                    tf_listener_->transform(srv_req->start_pose, eval_pose, goal->explore_boundary.header.frame_id);
-                }
-                if (currently_processing_ == true) {
-                    success_ = false;
-                    RCLCPP_ERROR(this->get_logger(), "Cannot process getNextFrontier from within, server busy.");
-                    return;
-                }
-                nextFrontierLock_.lock();
-                currently_processing_ = true;
-                nextFrontierLock_.unlock();
-                RCLCPP_INFO_STREAM(this->get_logger(), "Set Currently processing to true: " << currently_processing_);
-                
-                auto resultNextFrontier = getNextFrontier->async_send_request(srv_req);
-                if (rclcpp::spin_until_future_complete(client_node_, resultNextFrontier, std::chrono::seconds(2000)) ==
-                    rclcpp::FutureReturnCode::SUCCESS)
-                {
-                    srv_res = resultNextFrontier.get();
-                }
-                else
-                {
-                    RCLCPP_ERROR(this->get_logger(), "Failed to receive response for getNextFrontier called from within.");
-                    return;
-                }
-                nextFrontierLock_.lock();
-                currently_processing_ = false;
-                nextFrontierLock_.unlock();
-                // RCLCPP_INFO_STREAM(this->get_logger(), "The result of the getNext frontier service is: " << srv_res->next_frontier.pose.position.x << "," << srv_res->next_frontier.pose.position.y);
-                // check if robot is not within exploration boundary and needs to return to center of search area
-                if (goal->explore_boundary.polygon.points.size() > 0 && !pointInPolygon(eval_pose.pose.position, goal->explore_boundary.polygon))
-                {
-                    // RCLCPP_INFO_STREAM(this->get_logger(), "THE CHECKPOINT IS 1!!!!");
-                    // check if robot has explored at least one frontier, and promote debug message to warning
-                    if (success_)
-                    {
-                        RCLCPP_ERROR(this->get_logger(), "Robot left exploration boundary, returning to center");
-                    }
-                    else
-                    {
-                        RCLCPP_ERROR(this->get_logger(), "Robot not initially in exploration boundary, traveling to center");
-                    }
-                    // get current robot position in frame of exploration center
-                    geometry_msgs::msg::PointStamped eval_point;
-                    eval_point.header = eval_pose.header;
-                    eval_point.point = eval_pose.pose.position;
-                    if (eval_point.header.frame_id != goal->explore_center.header.frame_id)
-                    {
-                        geometry_msgs::msg::PointStamped temp = eval_point;
-                        RCLCPP_ERROR(this->get_logger(), "Frames not same");
-                        tf_listener_->transform(temp, eval_point, goal->explore_center.header.frame_id);
-                    }
-
-                    // set goal pose to exploration center
-                    goal_pose.header = goal->explore_center.header;
-                    goal_pose.pose.position = goal->explore_center.point;
-                    goal_pose.pose.orientation = FrontierExplorationServer::createQuaternionMsgFromYaw(yawOfVector(eval_point.point, goal->explore_center.point));
-                }
-                else if (srv_res->success == true)
-                {
-                    RCLCPP_INFO_STREAM(this->get_logger(), "THE CHECKPOINT IS 2!!!!");
-                    success_ = true;
-                    goal_pose = srv_res->next_frontier;
-                }
-                else if (srv_res->success == false)
-                { // if no frontier found, check if search is successful
-                    RCLCPP_INFO_STREAM(this->get_logger(), "THE CHECKPOINT IS 3!!!!");
-                    // RCLCPP_INFO(this->get_logger(),"Couldn't find a frontier");
-
-                    // search is succesful
-                    if (retry_ == 0 && success_)
-                    {
-                        RCLCPP_WARN(this->get_logger(), "Finished exploring room");
-                        goal_handle->succeed(res);
-                        std::unique_lock<std::mutex> lock(nav2Clientlock_);
-                        nav2Client_->async_cancel_goals_before(rclcpp::Clock().now());
-                        return;
-                    }
-                    else if (retry_ == 0 || !rclcpp::ok())
-                    { // search is not successful
-
-                        RCLCPP_ERROR(this->get_logger(), "Failed exploration");
-                        goal_handle->abort(res);
-                        return;
-                    }
-
-                    RCLCPP_INFO(this->get_logger(), "Retrying...");
-                    retry_--;
-                    // try to find frontier again, without moving robot
-                    if (retry_ <= 7)
-                    {
-                        performBackupAction();
-                        rclcpp::Rate(2).sleep();
-                    }
-                    continue;
-                }
-                // if above conditional does not escape this loop step, search has a valid goal_pose
-
-                // check if new goal is close to old goal, hence no need to resend
-                if ((!moving_ || !pointsNearby(old_goal.pose.pose.position, goal_pose.pose.position, goal_aliasing_ * 0.5)) && srv_res->success == true)
-                {
-
-                    // This is to check if old pose is near new pose.
-                    old_goal.pose = goal_pose;
-
-                    nav2Publisher_->publish(goal_pose);
-                    moving_ = true;
-                    int waitCount_ = 0;
-                    bool minuteWait = false;
-                    while (moving_ && minuteWait == false)
-                    {
-                        rclcpp::Rate(1).sleep();
-                        waitCount_++;
-                        RCLCPP_INFO_STREAM(this->get_logger(), "Wait count goal is: " << waitCount_);
-                        if (waitCount_ > nav2WaitTime_)
-                        {
-                            minuteWait = true;
-                        }
-                    }
-                    // Moving is made false here to treat this as equal to nav2 feedback saying goal is reached (nav2 timed out here.).
-                    moving_ = false;
-                }
-            }
-
-            // goal should never be active at this point
-            if (!goal_handle->is_active())
-            {
-                RCLCPP_ERROR(this->get_logger(), "Goal Active when it should not be.");
             }
         }
 
-        void performBackupAction()
+        while (rclcpp::ok() && goal_handle->is_active())
         {
-            RCLCPP_INFO(this->get_logger(), "Frontier Exploration backup");
-            geometry_msgs::msg::PoseStamped robot_pose;
-            explore_costmap_ros_->getRobotPose(robot_pose);
-            tf2::Quaternion quaternion;
-            tf2::fromMsg(robot_pose.pose.orientation, quaternion);
-            double current_yaw = tf2::getYaw(quaternion);
-            double desired_rad = M_PI / 2;
-            double new_yaw = current_yaw + desired_rad;
-            quaternion.setRPY(0, 0, new_yaw);
-            geometry_msgs::msg::PoseStamped new_pose;
-            new_pose.header.frame_id = robot_pose.header.frame_id;
-            new_pose.pose.position = robot_pose.pose.position;
-            new_pose.pose.orientation = tf2::toMsg(quaternion);
-            RCLCPP_INFO(this->get_logger(), "Rotating in place to get new frontiers");
-            nav2Publisher_->publish(new_pose);
-            moving_ = true;
-            int waitCount_ = 0;
-            bool minuteWait = false;
-            while (moving_ && minuteWait == false)
-            {
-                rclcpp::WallRate(1.0).sleep();
-                RCLCPP_INFO(this->get_logger(), "Waiting to finish moving while rotating");
-                waitCount_++;
-                RCLCPP_INFO_STREAM(this->get_logger(), "Wait count rotation is: " << waitCount_);
-                // TODO: Assign different wait times for goal and rotate.
-                if (waitCount_ > (nav2WaitTime_ / 3))
-                {
-                    minuteWait = true;
-                }
-            }
-            // Moving is made false here to treat this as equal to nav2 feedback saying goal is reached.
-            moving_ = false;
-        }
-
-        void handle_multirobot_frontier_cost_request(
-            std::shared_ptr<rmw_request_id_t> request_header,
-            std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Request> request,
-            std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Response> response)
-        {
-            RCLCPP_INFO_STREAM(this->get_logger(), "Multirobot frontier costs handle called with cp as: " << currently_processing_);
-            if(currently_processing_ == true) {
-                RCLCPP_ERROR(this->get_logger(), "Cannot process getNextFrontier from another robot, server busy.");
-                response->success = false;
-                return;
-            }
-            getNextFrontier = client_node_->create_client<frontier_msgs::srv::GetNextFrontier>("explore_costmap/get_next_frontier");
             auto srv_req = std::make_shared<frontier_msgs::srv::GetNextFrontier::Request>();
+            auto srv_res = std::make_shared<frontier_msgs::srv::GetNextFrontier::Response>();
+
+            // placeholder for next goal to be sent to move base
+            geometry_msgs::msg::PoseStamped goal_pose;
 
             // get current robot pose in frame of exploration boundary
             geometry_msgs::msg::PoseStamped robot_pose;
             explore_costmap_ros_->getRobotPose(robot_pose);
-
             srv_req->start_pose = robot_pose;
-            srv_req->override_frontier_list = true;
-            srv_req->frontier_list_to_override = request->requested_frontier_list;
+            srv_req->override_frontier_list = false;
 
             // evaluate if robot is within exploration boundary using robot_pose in boundary frame
-            std::unique_lock<std::mutex> lock(nextFrontierLock_);
             geometry_msgs::msg::PoseStamped eval_pose = srv_req->start_pose;
-            nextFrontierLock_.lock();
+            if (eval_pose.header.frame_id != goal->explore_boundary.header.frame_id)
+            {
+                RCLCPP_ERROR(this->get_logger(), "Frames not same");
+                tf_listener_->transform(srv_req->start_pose, eval_pose, goal->explore_boundary.header.frame_id);
+            }
+            if (currently_processing_ == true)
+            {
+                success_ = false;
+                RCLCPP_ERROR(this->get_logger(), "Cannot process getNextFrontier from within, server busy.");
+                return;
+            }
+            currently_processing_lock_.lock();
             currently_processing_ = true;
-            nextFrontierLock_.unlock();
-            auto resultNextFrontier = getNextFrontier->async_send_request(srv_req);
+            currently_processing_lock_.unlock();
+            RCLCPP_INFO_STREAM(this->get_logger(), "Set Currently processing to true: " << currently_processing_);
 
-            std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> next_frontier_srv_res;
-            RCLCPP_INFO(this->get_logger(), "Multi robot Sent request.");
+            auto resultNextFrontier = getNextFrontier->async_send_request(srv_req);
             if (rclcpp::spin_until_future_complete(client_node_, resultNextFrontier, std::chrono::seconds(2000)) ==
                 rclcpp::FutureReturnCode::SUCCESS)
             {
-                next_frontier_srv_res = resultNextFrontier.get();
+                srv_res = resultNextFrontier.get();
             }
             else
             {
-                RCLCPP_ERROR(this->get_logger(), "Failed to receive response of getNextFrontier Called from outside.");
+                RCLCPP_ERROR(this->get_logger(), "Failed to receive response for getNextFrontier called from within.");
+                return;
             }
-            RCLCPP_INFO(this->get_logger(), "Multi robot Recieved response.");
-            if (next_frontier_srv_res->success == true)
-            {
-                response->success = true;
-                response->frontier_costs = next_frontier_srv_res->frontier_costs;
-                response->frontier_list = next_frontier_srv_res->frontier_list;
-            }
-            else if (next_frontier_srv_res->success == false)
-            {
-                response->success = false;
-            }
-            nextFrontierLock_.lock();
+            currently_processing_lock_.lock();
             currently_processing_ = false;
-            nextFrontierLock_.unlock();
-        }
-
-        /**
-         * @brief Preempt callback for the server, cancels the current running goal and all associated movement actions.
-         */
-
-        /**
-         * @brief Feedback callback for the move_base client, republishes as feedback for the exploration server
-         * @param feedback Feedback from the move_base client
-         */
-        void
-        feedbackMovingCb(GoalHandleNav2::SharedPtr, const std::shared_ptr<const NavigateToPose::Feedback> feedback)
-        {
-
-            auto feedback_ = std::make_shared<NavigateToPose::Feedback>();
-            feedback_->current_pose = feedback->current_pose;
-        }
-
-        /**
-         * @brief Done callback for the move_base client, checks for errors and aborts exploration task if necessary
-         * @param state State from the move_base client
-         * @param result Result from the move_base client
-         */
-        void doneMovingCb(const GoalHandleNav2::WrappedResult &result)
-        {
-
-            if (result.code == rclcpp_action::ResultCode::ABORTED)
+            currently_processing_lock_.unlock();
+            // check if robot is not within exploration boundary and needs to return to center of search area
+            if (goal->explore_boundary.polygon.points.size() > 0 && !pointInPolygon(eval_pose.pose.position, goal->explore_boundary.polygon))
             {
-                RCLCPP_ERROR(this->get_logger(), "Failed to move");
-                // action_server_.setAborted();
+                if (success_)
+                {
+                    RCLCPP_ERROR(this->get_logger(), "Robot left exploration boundary, returning to center");
+                }
+                else
+                {
+                    RCLCPP_ERROR(this->get_logger(), "Robot not initially in exploration boundary, traveling to center");
+                }
+                // get current robot position in frame of exploration center
+                geometry_msgs::msg::PointStamped eval_point;
+                eval_point.header = eval_pose.header;
+                eval_point.point = eval_pose.pose.position;
+                if (eval_point.header.frame_id != goal->explore_center.header.frame_id)
+                {
+                    geometry_msgs::msg::PointStamped temp = eval_point;
+                    RCLCPP_ERROR(this->get_logger(), "Frames not same");
+                    tf_listener_->transform(temp, eval_point, goal->explore_center.header.frame_id);
+                }
+
+                // set goal pose to exploration center
+                goal_pose.header = goal->explore_center.header;
+                goal_pose.pose.position = goal->explore_center.point;
+                goal_pose.pose.orientation = createQuaternionMsgFromYaw(yawOfVector(eval_point.point, goal->explore_center.point));
             }
-            else if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
+            else if (srv_res->success == true)
             {
+                RCLCPP_INFO(this->get_logger(), "Next frontier Result success. Sending goal to Nav2");
+                success_ = true;
+                goal_pose = srv_res->next_frontier;
+            }
+            else if (srv_res->success == false)
+            { // if no frontier found, check if search is successful
+                RCLCPP_ERROR_STREAM(this->get_logger(), "Next frontier Result failure.");
+
+                // search is succesful
+                if (retry_ == 0 && success_)
+                {
+                    RCLCPP_WARN(this->get_logger(), "Finished exploring room");
+                    goal_handle->succeed(res);
+                    std::unique_lock<std::mutex> lock(nav2Clientlock_);
+                    nav2Client_->async_cancel_goals_before(rclcpp::Clock().now());
+                    return;
+                }
+                else if (retry_ == 0 || !rclcpp::ok())
+                { // search is not successful
+                    RCLCPP_ERROR(this->get_logger(), "Failed exploration");
+                    goal_handle->abort(res);
+                    return;
+                }
+
+                RCLCPP_WARN(this->get_logger(), "Retrying...");
+                retry_--;
+                // try to find frontier again
+                if (retry_ <= 7)
+                {
+                    FrontierExplorationServer::performBackupRotation();
+                    FrontierExplorationServer::performBackupReverse();
+                    rclcpp::Rate(2).sleep();
+                }
+                continue;
+            }
+            // if above conditional does not escape this loop step, search has a valid goal_pose
+
+            // check if new goal is close to old goal, hence no need to resend
+            if ((!moving_ || !pointsNearby(old_goal.pose.pose.position, goal_pose.pose.position, goal_aliasing_ * 0.5)) && srv_res->success == true)
+            {
+                // This is to check if old pose is near new pose.
+                old_goal.pose = goal_pose;
+
+                nav2_goal_.pose = old_goal.pose;
+                nav2Client_->async_send_goal(nav2_goal_, nav2_goal_options_);
+                moving_ = true;
+                int waitCount_ = 0;
+                bool minuteWait = false;
+                while (moving_ && minuteWait == false && rclcpp::ok())
+                {
+                    rclcpp::Rate(1).sleep();
+                    waitCount_++;
+                    RCLCPP_INFO_STREAM(this->get_logger(), "Wait count goal is: " << waitCount_);
+                    if (waitCount_ > nav2WaitTime_)
+                    {
+                        minuteWait = true;
+                    }
+                }
+                // Moving is made false here to treat this as equal to nav2 feedback saying goal is reached (nav2 timed out here.).
                 moving_ = false;
             }
         }
 
-        void feedbackNav2cb(const geometry_msgs::msg::PointStamped::SharedPtr status)
+        // goal should never be active at this point
+        if (!goal_handle->is_active())
         {
-            if (status->point.x == 10.0)
+            RCLCPP_ERROR(this->get_logger(), "Goal Active when it should not be.");
+        }
+    }
+
+    void FrontierExplorationServer::performBackupRotation()
+    {
+        RCLCPP_WARN(this->get_logger(), "Frontier Exploration backup");
+        geometry_msgs::msg::PoseStamped robot_pose;
+        explore_costmap_ros_->getRobotPose(robot_pose);
+        tf2::Quaternion quaternion;
+        tf2::fromMsg(robot_pose.pose.orientation, quaternion);
+        double current_yaw = tf2::getYaw(quaternion);
+        double desired_rad = M_PI / 2;
+        double new_yaw = current_yaw + desired_rad;
+        quaternion.setRPY(0, 0, new_yaw);
+        geometry_msgs::msg::PoseStamped new_pose;
+        new_pose.header.frame_id = robot_pose.header.frame_id;
+        new_pose.pose.position = robot_pose.pose.position;
+        new_pose.pose.orientation = tf2::toMsg(quaternion);
+        RCLCPP_INFO(this->get_logger(), "Rotating in place to get new frontiers");
+        nav2_goal_.pose = new_pose;
+        nav2Client_->async_send_goal(nav2_goal_, nav2_goal_options_);
+        moving_ = true;
+        int waitCount_ = 0;
+        bool minuteWait = false;
+        while (moving_ && minuteWait == false && rclcpp::ok())
+        {
+            rclcpp::WallRate(1.0).sleep();
+            RCLCPP_INFO(this->get_logger(), "Waiting to finish moving while rotating");
+            waitCount_++;
+            RCLCPP_INFO_STREAM(this->get_logger(), "Wait count rotation is: " << waitCount_);
+            // TODO: Assign different wait times for goal and rotate.
+            if (waitCount_ > nav2WaitTime_)
             {
-                moving_ = false;
-                // RCLCPP_ERROR(this->get_logger(),"Moving completed");
-            }
-            else if (status->point.x == 0.0)
-            {
-                // RCLCPP_INFO(this->get_logger(),"Currently moving");
+                minuteWait = true;
             }
         }
-    };
-}
+        // Moving is made false here to treat this as equal to nav2 feedback saying goal is reached.
+        moving_ = false;
+    }
+
+    void FrontierExplorationServer::performBackupReverse()
+    {
+        moving_ = true;
+        // Create a publisher to publish messages on cmd_vel_nav topic
+        auto publisher = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_nav", 10);
+        geometry_msgs::msg::Twist twist_msg;
+        twist_msg.linear.x = -0.5; // -0.5 m/s for reverse motion
+        publisher->publish(twist_msg);
+        rclcpp::sleep_for(std::chrono::milliseconds(2000));
+        twist_msg.linear.x = 0.0;
+        publisher->publish(twist_msg);
+        // Log the action
+        RCLCPP_WARN(this->get_logger(), "FrontierExplorationServer::performBackupReverse");
+        moving_ = false;
+    }
+
+    void FrontierExplorationServer::handle_multirobot_frontier_cost_request(
+        std::shared_ptr<rmw_request_id_t> request_header,
+        std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Request> request,
+        std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Response> response)
+    {
+        RCLCPP_INFO_STREAM(this->get_logger(), "Multirobot frontier costs handle called with cp as: " << currently_processing_);
+        if (currently_processing_ == true)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Cannot process getNextFrontier from another robot, server busy.");
+            response->success = false;
+            return;
+        }
+        auto srv_req = std::make_shared<frontier_msgs::srv::GetNextFrontier::Request>();
+
+        // get current robot pose in frame of exploration boundary
+        geometry_msgs::msg::PoseStamped robot_pose;
+        explore_costmap_ros_->getRobotPose(robot_pose);
+
+        srv_req->start_pose = robot_pose;
+        srv_req->override_frontier_list = true;
+        srv_req->frontier_list_to_override = request->requested_frontier_list;
+
+        // evaluate if robot is within exploration boundary using robot_pose in boundary frame
+        currently_processing_lock_.lock();
+        currently_processing_ = true;
+        currently_processing_lock_.unlock();
+        auto resultNextFrontier = getNextFrontier->async_send_request(srv_req);
+
+        std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> next_frontier_srv_res;
+        RCLCPP_INFO(this->get_logger(), "Multi robot Sent request.");
+        if (rclcpp::spin_until_future_complete(client_node_, resultNextFrontier, std::chrono::seconds(2000)) ==
+            rclcpp::FutureReturnCode::SUCCESS)
+        {
+            next_frontier_srv_res = resultNextFrontier.get();
+        }
+        else
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to receive response of getNextFrontier Called from outside.");
+        }
+        RCLCPP_INFO(this->get_logger(), "Multi robot Recieved response.");
+        if (next_frontier_srv_res->success == true)
+        {
+            response->success = true;
+            response->frontier_costs = next_frontier_srv_res->frontier_costs;
+            response->frontier_list = next_frontier_srv_res->frontier_list;
+        }
+        else if (next_frontier_srv_res->success == false)
+        {
+            response->success = false;
+        }
+        currently_processing_lock_.lock();
+        currently_processing_ = false;
+        currently_processing_lock_.unlock();
+    }
+
+    void FrontierExplorationServer::nav2GoalFeedbackCallback(GoalHandleNav2::SharedPtr, const std::shared_ptr<const NavigateToPose::Feedback> feedback)
+    {
+        auto nav2_feedback_ = std::make_shared<NavigateToPose::Feedback>();
+        nav2_feedback_->current_pose = feedback->current_pose;
+        nav2_feedback_->distance_remaining = feedback->distance_remaining;
+    }
+
+    void FrontierExplorationServer::nav2GoalResultCallback(const GoalHandleNav2::WrappedResult &result)
+    {
+        switch (result.code)
+        {
+        case rclcpp_action::ResultCode::SUCCEEDED:
+            RCLCPP_INFO(this->get_logger(), "Goal succeeded");
+            moving_ = false;
+            break;
+        case rclcpp_action::ResultCode::ABORTED:
+            RCLCPP_INFO(this->get_logger(), "Nav2 internal fault! Nav2 aborted the goal!");
+            FrontierExplorationServer::performBackupReverse();
+            moving_ = false;
+            break;
+        case rclcpp_action::ResultCode::CANCELED:
+            RCLCPP_INFO(this->get_logger(), "Nav2 goal canceled successfully");
+            if (explore_client_requested_cancel_)
+            {
+                RCLCPP_INFO(this->get_logger(), "Explore client canceled goal");
+            }
+            else
+            {
+                RCLCPP_WARN(this->get_logger(), "Nav2 internal fault! Nav2 canceled the goal without explicit cancel request from Explore client!");
+            }
+            moving_ = false;
+            break;
+        default:
+            RCLCPP_ERROR(this->get_logger(), "Unknown nav2 goal result code");
+        }
+        RCLCPP_INFO(this->get_logger(), "Nav2 result callback executed");
+    }
+
+    void FrontierExplorationServer::nav2GoalResponseCallback(const GoalHandleNav2::SharedPtr &goal_handle)
+    {
+        if (!goal_handle)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Goal was rejected by Nav2 server");
+        }
+        else
+        {
+            RCLCPP_INFO(this->get_logger(), "Goal accepted by Nav2 server, waiting for result");
+        }
+    }
+};
 
 int main(int argc, char **argv)
 {

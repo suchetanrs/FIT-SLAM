@@ -195,18 +195,18 @@ namespace traversability_gridmap
 
     void TraversabilityLayer::pointcloud_callback(const traversability_msgs::msg::PCL2WithNodeID::SharedPtr point_cloud_with_id)
     {
-        // RCLCPP_INFO_STREAM(rclcpp::get_logger("traversability_layer"), "Callback!");
+        RCLCPP_INFO_STREAM(rclcpp::get_logger("traversability_layer"), "Callback!");
         auto start_time = std::chrono::high_resolution_clock::now();
         auto map_storage = globalTraversabilityMap_->getGridMapsWithIDPCL();
         for (size_t i = 0; i < point_cloud_with_id->graph.poses_id.size(); ++i)
         {
             auto it = map_storage.find(point_cloud_with_id->graph.poses_id[i]);
             if (it != map_storage.end()) {
-                if(isPoseChanged(point_cloud_with_id->graph.poses[i], it->second->pose, 0.0)) {
+                if(isPoseChanged(point_cloud_with_id->graph.poses[i].pose, it->second->pose, 0.0)) {
                   // RCLCPP_ERROR(rclcpp::get_logger("traversability_layer"), "Pose changed");
-                    auto transformed_pcl = TransformPCLforAddition(point_cloud_with_id->graph.poses[i], it->second->pcl);
+                    auto transformed_pcl = TransformPCLforAddition(point_cloud_with_id->graph.poses[i].pose, it->second->pcl);
                     if(transformed_pcl) {
-                        TraversabilityLayer::publishtraversabilityMap(point_cloud_with_id->graph.poses_id[i], it->second->pcl, transformed_pcl, point_cloud_with_id->graph.poses[i]);
+                        TraversabilityLayer::publishtraversabilityMap(point_cloud_with_id->graph.poses_id[i], it->second->pcl, transformed_pcl, point_cloud_with_id->graph.poses[i].pose);
                     }
                 }
             }
@@ -226,7 +226,7 @@ namespace traversability_gridmap
         auto end_time = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed_seconds = end_time - start_time;
         double elapsed_seconds_decimal = elapsed_seconds.count();
-        RCLCPP_DEBUG_STREAM(rclcpp::get_logger("Traversability layer"), "Time: " << elapsed_seconds_decimal);
+        RCLCPP_INFO_STREAM(rclcpp::get_logger("Traversability layer"), "Time: " << elapsed_seconds_decimal);
     }
 
     void TraversabilityLayer::publishtraversabilityMap(int nodeid, sensor_msgs::msg::PointCloud2& pcl_map, std::shared_ptr<sensor_msgs::msg::PointCloud2> pcl_, geometry_msgs::msg::Pose pose_selected)

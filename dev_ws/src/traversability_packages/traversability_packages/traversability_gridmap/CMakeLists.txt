@@ -32,7 +32,7 @@ find_package(pluginlib REQUIRED)
 find_package(traversability_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(nav2_costmap_2d REQUIRED)
-find_package(rtabmap_msgs REQUIRED)
+find_package(slam_msgs REQUIRED)
 
 find_package(PCL REQUIRED)
 grid_map_package()
@@ -55,7 +55,7 @@ set(dependencies
   cv_bridge
   pluginlib
   traversability_msgs
-  rtabmap_msgs
+  slam_msgs
   nav_msgs
 )
 
@@ -68,7 +68,7 @@ include_directories(
 )
 
 #Executable 1
-add_executable(pointcloud_transformer src/pointcloud_transformer.cpp src/global_traversability_map.cpp)
+add_executable(pointcloud_transformer src/unique_pcl_transformer.cpp src/global_traversability_map.cpp)
 ament_target_dependencies(pointcloud_transformer SYSTEM ${dependencies})
 target_link_libraries(pointcloud_transformer ${PCL_LIBRARIES})
 

@@ -24,6 +24,7 @@ def generate_launch_description():
     robot_namespace_arg = DeclareLaunchArgument('robot_namespace', default_value=TextSubstitution(text='scout_ns'),
         description='The namespace of the robot')
     
+    x_coord_arg = DeclareLaunchArgument('robot_x', default_value='0.0', description="The x coordinate to spawn the robot")
     y_coord_arg = DeclareLaunchArgument('robot_y', default_value='0.0', description="The y coordinate to spawn the robot")
 
 
@@ -40,7 +41,7 @@ def generate_launch_description():
                                     '-entity', context.launch_configurations['robot_namespace'],
                                     '-y', context.launch_configurations['robot_y'],
                                     '-z', '0.5',
-                                    '-x', '0.0'],
+                                    '-x', context.launch_configurations['robot_x']],
                             output='screen')
         
         joint_state_broadcaster_node = Node(
@@ -65,6 +66,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         robot_namespace_arg,
+        x_coord_arg,
         y_coord_arg,
         opaque_function
     ])

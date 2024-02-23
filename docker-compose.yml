@@ -15,7 +15,7 @@ services:
       - ../.ros/:/root/.ros
 
       #cesar-workspaces
-      - /home/deos/s.saravanan/cesar_slam/:/home/cesar_slam/:rw
+      - /home/suchetan/cesar_slam/:/home/cesar_slam/:rw
 
       #clutterbot-workspaces
       - /home/suchetan/clutterbot/dusty-humble/ros2_ws_humble/:/home/clutterbot_ws/

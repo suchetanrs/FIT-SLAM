@@ -24,6 +24,8 @@ namespace frontier_exploration
             std::bind(
                 &FrontierExplorationClient::dynamicParametersCallback,
                 this, std::placeholders::_1));
+
+        exploreClient_ = rclcpp_action::create_client<frontier_msgs::action::ExploreTask>(this, "explore_action");
     }
 
     void FrontierExplorationClient::vizPubCb()
@@ -89,11 +91,10 @@ namespace frontier_exploration
             }
             else
             {
-                auto exploreClient = rclcpp_action::create_client<frontier_msgs::action::ExploreTask>(this, "explore_action");
                 frontier_msgs::action::ExploreTask::Goal goal;
                 goal.explore_center = *point;
                 goal.explore_boundary = input_;
-                exploreClient->async_send_goal(goal);
+                exploreClient_->async_send_goal(goal);
             }
             waiting_for_center_ = false;
             input_.polygon.points.clear();

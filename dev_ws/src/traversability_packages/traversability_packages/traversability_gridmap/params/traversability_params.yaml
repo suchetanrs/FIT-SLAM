@@ -14,11 +14,17 @@ pointcloud_transformer:
     robot_base_frame: base_link
     velodyne_frame: velodyne
 
+unique_pcl_transformer:
+  ros__parameters:
+    transform_throttle: 0
+    robot_base_frame: base_link
+    velodyne_frame: velodyne
+
 traversability_costmap:
   traversability_costmap:
     ros__parameters:
-      update_frequency: 1.0
-      publish_frequency: 1.0
+      update_frequency: 5.0
+      publish_frequency: 5.0
       global_frame: map
       robot_base_frame: base_link
       use_sim_time: True
@@ -28,7 +34,7 @@ traversability_costmap:
       traversability_layer:
         plugin: "traversability_gridmap/TraversabilityLayer"
         enabled: true
-        square_half_side_length: 15.0
+        square_half_side_length: 25.0
         half_size: 1.5
         security_distance: 0.6
         ground_clearance: 0.3

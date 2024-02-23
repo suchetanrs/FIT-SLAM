@@ -40,10 +40,8 @@ def generate_launch_description():
     log_level = LaunchConfiguration('log_level')
 
     lifecycle_nodes = ['planner_server',
-                       'behavior_server',
-                       'bt_navigator',
-                       'waypoint_follower',
-                       'controller_server']
+                       'controller_server',
+                       'bt_navigator']
 
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
     # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
@@ -68,6 +66,10 @@ def generate_launch_description():
         'use_composition', default_value='False',
         description='Use composed bringup if True')
 
+    declare_container_name_cmd = DeclareLaunchArgument(
+        'container_name', default_value='nav2_container',
+        description='the name of conatiner that nodes will load in if use composition')
+
     declare_use_respawn_cmd = DeclareLaunchArgument(
         'use_respawn', default_value='False',
         description='Whether to respawn if a node crashes. Applied when composition is disabled.')
@@ -82,6 +84,9 @@ def generate_launch_description():
         default_value=TextSubstitution(text=SCOUT_NAMESPACE),
         description='Top-level namespace')
 
+    container_name = LaunchConfiguration('container_name')
+    container_name_full = (robot_namespace, '/', container_name)
+
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
     
@@ -89,7 +94,7 @@ def generate_launch_description():
         params_file = LaunchConfiguration('params_file')
         declare_params_file_cmd = DeclareLaunchArgument(
             'params_file',
-            default_value=os.path.join(scout_nav_dir, 'params', 'scout_nav2_params.yaml'),
+            default_value=os.path.join(scout_nav_dir, 'params', 'nav2_params.yaml'),
             description='Full path to the ROS2 parameters file to use for all launched nodes')
 
         # Create our own temporary YAML files that include substitutions
@@ -119,7 +124,7 @@ def generate_launch_description():
                     respawn_delay=2.0,
                     parameters=[configured_params],
                     arguments=['--ros-args', '--log-level', log_level],
-                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav2_controller')]),
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
                 Node(
                     package='nav2_planner',
                     executable='planner_server',
@@ -130,7 +135,7 @@ def generate_launch_description():
                     respawn_delay=2.0,
                     parameters=[configured_params],
                     arguments=['--ros-args', '--log-level', log_level],
-                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav2_controller')]),
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
                 Node(
                     package='nav2_behaviors',
                     executable='behavior_server',
@@ -141,7 +146,7 @@ def generate_launch_description():
                     respawn_delay=2.0,
                     parameters=[configured_params],
                     arguments=['--ros-args', '--log-level', log_level],
-                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav2_controller')]),
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
                 Node(
                     package='nav2_bt_navigator',
                     executable='bt_navigator',
@@ -152,18 +157,18 @@ def generate_launch_description():
                     respawn_delay=2.0,
                     parameters=[configured_params],
                     arguments=['--ros-args', '--log-level', log_level],
-                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav2_controller')]),
-                Node(
-                    package='nav2_waypoint_follower',
-                    executable='waypoint_follower',
-                    name='waypoint_follower',
-                    output='screen',
-                    namespace=context.launch_configurations['robot_namespace'],
-                    respawn=use_respawn,
-                    respawn_delay=2.0,
-                    parameters=[configured_params],
-                    arguments=['--ros-args', '--log-level', log_level],
-                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav2_controller')]),
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
+                # Node(
+                #     package='nav2_velocity_smoother',
+                #     executable='velocity_smoother',
+                #     name='velocity_smoother',
+                #     output='screen',
+                #     respawn=use_respawn,
+                #     respawn_delay=2.0,
+                #     parameters=[configured_params],
+                #     arguments=['--ros-args', '--log-level', log_level],
+                #     remappings=remappings +
+                #             [('cmd_vel', 'cmd_vel_nav'), ('cmd_vel_smoothed', 'cmd_vel_nav')]),
                 Node(
                     package='nav2_lifecycle_manager',
                     executable='lifecycle_manager',
@@ -177,6 +182,50 @@ def generate_launch_description():
             ]
         )
 
+        load_composable_nodes = LoadComposableNodes(
+            condition=IfCondition(use_composition),
+            target_container=container_name_full,
+            composable_node_descriptions=[
+                ComposableNode(
+                    package='nav2_controller',
+                    plugin='nav2_controller::ControllerServer',
+                    name='controller_server',
+                    parameters=[configured_params],
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
+                # ComposableNode(
+                #     package='nav2_smoother',
+                #     plugin='nav2_smoother::SmootherServer',
+                #     name='smoother_server',
+                #     parameters=[configured_params],
+                #     remappings=remappings),
+                ComposableNode(
+                    package='nav2_planner',
+                    plugin='nav2_planner::PlannerServer',
+                    name='planner_server',
+                    parameters=[configured_params],
+                    remappings=remappings),
+                ComposableNode(
+                    package='nav2_bt_navigator',
+                    plugin='nav2_bt_navigator::BtNavigator',
+                    name='bt_navigator',
+                    parameters=[configured_params],
+                    remappings=remappings),
+                # ComposableNode(
+                #     package='nav2_velocity_smoother',
+                #     plugin='nav2_velocity_smoother::VelocitySmoother',
+                #     name='velocity_smoother',
+                #     parameters=[configured_params],
+                #     remappings=remappings +
+                #             [('cmd_vel', 'cmd_vel_nav'), ('cmd_vel_smoothed', 'cmd_vel_nav')]),
+                ComposableNode(
+                    package='nav2_lifecycle_manager',
+                    plugin='nav2_lifecycle_manager::LifecycleManager',
+                    name='lifecycle_manager_navigation',
+                    parameters=[{'use_sim_time': use_sim_time,
+                                'autostart': autostart,
+                                'node_names': lifecycle_nodes}]),
+            ],
+        )
 
         scout_path_follower_cmd = Node(
             package='scout_control',
@@ -197,7 +246,7 @@ def generate_launch_description():
             parameters=[configured_params],
         )
         
-        return [declare_params_file_cmd, load_nodes, scout_path_follower_cmd, scout_path_corrector_cmd]
+        return [declare_params_file_cmd, load_nodes, load_composable_nodes]
 
     opaque_function = OpaqueFunction(function=launch_opaque_nodes)
 
@@ -213,6 +262,7 @@ def generate_launch_description():
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_use_composition_cmd)
     ld.add_action(declare_use_respawn_cmd)
+    ld.add_action(declare_container_name_cmd)
     ld.add_action(declare_log_level_cmd)
     # Add the actions to launch all of the navigation nodes
     # ld.add_action(load_nodes)

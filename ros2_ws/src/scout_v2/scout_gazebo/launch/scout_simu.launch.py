@@ -38,6 +38,11 @@ def generate_launch_description():
     robot_namespace_arg = DeclareLaunchArgument('robot_namespace', default_value=TextSubstitution(text=SCOUT_NAMESPACE),
         description='The namespace of the robot')
 
+    robot_x = LaunchConfiguration('robot_x')
+    SCOUT_X = os.environ['SCOUT_X']
+    robot_x_arg = DeclareLaunchArgument('robot_x', default_value=TextSubstitution(text=SCOUT_X),
+        description='The namespace of the robot')
+
     robot_y = LaunchConfiguration('robot_y')
     SCOUT_Y = os.environ['SCOUT_Y']
     robot_y_arg = DeclareLaunchArgument('robot_y', default_value=TextSubstitution(text=SCOUT_Y),
@@ -56,7 +61,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(pkg_scout_gazebo, 'launch', 'spawn_scout.launch.py'),
         ),
-        launch_arguments={'robot_namespace': robot_namespace, 'robot_y': robot_y}.items()
+        launch_arguments={'robot_namespace': robot_namespace, 'robot_y': robot_y, 'robot_x': robot_x}.items()
     )
 #---------------------------------------------
 
@@ -90,6 +95,20 @@ def generate_launch_description():
                         ('set_pose', 'initialpose')])
 
         # # Start robot localization using an Extended Kalman filter...odom->base_footprint transform
+        # start_robot_localization_local_cmd = Node(
+        #     package='robot_localization',
+        #     executable='ekf_node',
+        #     name='ekf_filter_node_odom',
+        #     output='screen',
+        #     namespace=context.launch_configurations['robot_namespace'],
+        #     parameters=[robot_localization_file_path, 
+        #     {'use_sim_time': use_sim_time,
+        #     'map_frame': context.launch_configurations['robot_namespace'] + '/odom',
+        #     'odom_frame': context.launch_configurations['robot_namespace'] + '/odom_scout',
+        #     'base_link_frame': context.launch_configurations['robot_namespace'] + '/base_footprint',
+        #     'world_frame': context.launch_configurations['robot_namespace'] + '/odom_scout'}],
+        #     remappings=[('odometry/filtered', 'odometry/local'),
+        #                 ('set_pose', 'initialpose')])
         start_robot_localization_local_cmd = Node(
             package='robot_localization',
             executable='ekf_node',
@@ -99,10 +118,10 @@ def generate_launch_description():
             parameters=[robot_localization_file_path, 
             {'use_sim_time': use_sim_time,
             'map_frame': context.launch_configurations['robot_namespace'] + '/odom',
-            'odom_frame': context.launch_configurations['robot_namespace'] + '/odom_scout',
+            'odom_frame': context.launch_configurations['robot_namespace'] + '/odom',
             'base_link_frame': context.launch_configurations['robot_namespace'] + '/base_footprint',
-            'world_frame': context.launch_configurations['robot_namespace'] + '/odom_scout'}],
-            remappings=[('odometry/filtered', 'odometry/local'),
+            'world_frame': context.launch_configurations['robot_namespace'] + '/odom'}],
+            remappings=[('odometry/filtered', 'odom'),
                         ('set_pose', 'initialpose')])
 
         # set gps point
@@ -117,7 +136,8 @@ def generate_launch_description():
             ]],
             shell=True
         )
-        return [start_robot_localization_global_cmd, start_robot_localization_local_cmd, set_gps_datum_cmd]
+        # start_robot_localization_global_cmd,
+        return [start_robot_localization_local_cmd, set_gps_datum_cmd]
 
     opaque_function = OpaqueFunction(function=set_gps_localization)
 
@@ -146,6 +166,7 @@ def generate_launch_description():
     return LaunchDescription([
         declare_use_sim_time_cmd,
         robot_namespace_arg,
+        robot_x_arg,
         robot_y_arg,
         # start_world,
         spawn_scout,

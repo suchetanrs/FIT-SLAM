@@ -57,6 +57,16 @@
                 </camera>
                 <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
                     <frame_name>${robot_namespace}/camera_link_optical</frame_name>
+                    <hackBaseline>0.07</hackBaseline>
+                    <!-- Projection matrix principal point cx-->
+                    <!-- <P_cx>0</P_cx> -->
+                    <!-- Projection matrix principal point cy-->
+                    <P_cy>380.5</P_cy>
+                    <!-- Projection matrix focal length fy-->
+                    <!-- <P_fy>0</P_fy> -->
+                    <!-- Projection matrix translation Tx, Ty between stereo cameras-->
+                    <Tx>243.5</Tx>
+                    <!-- <Ty>0</Ty> -->
                     <!-- <min_depth>1.2</min_depth>
                     <max_depth>2.4</max_depth> -->
                     <ros>
