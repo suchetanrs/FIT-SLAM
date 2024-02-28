@@ -11,8 +11,11 @@ function cleanup_and_exit {
 trap cleanup_and_exit INT
 
 # #Essential
+ros2 launch scout_gazebo start_world.launch.py &
 ros2 launch scout_gazebo rviz_launch.py &
 ros2 run traversability_gridmap multi_traversability_thresholded --ros-args --params-file /root/dev_ws/src/traversability_packages/traversability_packages/traversability_gridmap/params/traversability_params.yaml &
+
+sleep 10
 
 export SCOUT_NAMESPACE="scout_2"
 export SCOUT_X="1.0"
@@ -20,7 +23,7 @@ export SCOUT_Y="1.0"
 mkdir /home/$SCOUT_NAMESPACE
 ros2 launch scout_gazebo scout_simu.launch.py &
 
-sleep 50
+#sleep 50
 
 export SCOUT_NAMESPACE="scout_1"
 export SCOUT_X="-8.5"
@@ -28,7 +31,7 @@ export SCOUT_Y="7.5"
 mkdir /home/$SCOUT_NAMESPACE
 ros2 launch scout_gazebo scout_simu.launch.py &
 
-sleep 6
+sleep 10
 
 export SCOUT_NAMESPACE="scout_2"
 export SCOUT_X="1.0"

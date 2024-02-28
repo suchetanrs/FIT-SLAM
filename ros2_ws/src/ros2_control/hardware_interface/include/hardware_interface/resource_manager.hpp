@@ -36,6 +36,12 @@ class SensorInterface;
 class SystemInterface;
 class ResourceStorage;
 
+struct HardwareReadWriteStatus
+{
+  bool ok;
+  std::vector<std::string> failed_hardware_names;
+};
+
 class HARDWARE_INTERFACE_PUBLIC ResourceManager
 {
 public:
@@ -55,8 +61,7 @@ public:
    * \param[in] validate_interfaces boolean argument indicating whether the exported
    * interfaces ought to be validated. Defaults to true.
    * \param[in] activate_all boolean argument indicating if all resources should be immediately
-   * activated. Currently used only in tests. In typical applications use parameters
-   * "autostart_components" and "autoconfigure_components" instead.
+   * activated. Currently used only in tests.
    */
   explicit ResourceManager(
     const std::string & urdf, bool validate_interfaces = true, bool activate_all = false);
@@ -74,8 +79,22 @@ public:
    * \param[in] urdf string containing the URDF.
    * \param[in] validate_interfaces boolean argument indicating whether the exported
    * interfaces ought to be validated. Defaults to true.
+   * \param[in] load_and_initialize_components boolean argument indicating whether to load and
+   * initialize the components present in the parsed URDF. Defaults to true.
    */
-  void load_urdf(const std::string & urdf, bool validate_interfaces = true);
+  void load_urdf(
+    const std::string & urdf, bool validate_interfaces = true,
+    bool load_and_initialize_components = true);
+
+  /**
+   * @brief if the resource manager load_urdf(...) function has been called this returns true.
+   * We want to permit to load the urdf later on but we currently don't want to permit multiple
+   * calls to load_urdf (reloading/loading different urdf).
+   *
+   * @return true if resource manager's load_urdf() has been already called.
+   * @return false if resource manager's load_urdf() has not been yet called.
+   */
+  bool is_urdf_already_loaded() const;
 
   /// Claim a state interface given its key.
   /**
@@ -101,12 +120,6 @@ public:
    * \return Vector of strings, containing all available state interface names.
    */
   std::vector<std::string> available_state_interfaces() const;
-
-  /// Checks whether a state interface is registered under the given key.
-  /**
-   * \return true if interface exist, false otherwise.
-   */
-  bool state_interface_exists(const std::string & key) const;
 
   /// Checks whether a state interface is available under the given key.
   /**
@@ -166,6 +179,27 @@ public:
    */
   void remove_controller_reference_interfaces(const std::string & controller_name);
 
+  /// Cache mapping between hardware and controllers using it
+  /**
+   * Find mapping between controller and hardware based on interfaces controller with
+   * \p controller_name is using and cache those for later usage.
+   *
+   * \param[in] controller_name name of the controller which interfaces are provided.
+   * \param[in] interfaces list of interfaces controller with \p controller_name is using.
+   */
+  void cache_controller_to_hardware(
+    const std::string & controller_name, const std::vector<std::string> & interfaces);
+
+  /// Return cached controllers for a specific hardware.
+  /**
+   * Return list of cached controller names that use the hardware with name \p hardware_name.
+   *
+   * \param[in] hardware_name the name of the hardware for which cached controllers should be
+   * returned. \returns list of cached controller names that depend on hardware with name \p
+   * hardware_name.
+   */
+  std::vector<std::string> get_cached_controllers_to_hardware(const std::string & hardware_name);
+
   /// Checks whether a command interface is already claimed.
   /**
    * Any command interface can only be claimed by a single instance.
@@ -201,13 +235,6 @@ public:
    * \return vector of strings, containing all available command interface names.
    */
   std::vector<std::string> available_command_interfaces() const;
-
-  /// Checks whether a command interface is registered under the given key.
-  /**
-   * \param[in] key string identifying the interface to check.
-   * \return true if interface exist, false otherwise.
-   */
-  bool command_interface_exists(const std::string & key) const;
 
   /// Checks whether a command interface is available under the given name.
   /**
@@ -301,7 +328,9 @@ public:
    * by default
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
    * \param[in] stop_interfaces vector of string identifiers for the command interfaces stopping.
-   * \return true if switch can be prepared, false if a component rejects switch request.
+   * \return true if switch can be prepared; false if a component rejects switch request, and if
+   * at least one of the input interfaces are not existing or not available (i.e., component is not
+   * in ACTIVE or INACTIVE state).
    */
   bool prepare_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
@@ -314,6 +343,8 @@ public:
    * \note this is intended for mode-switching when a hardware interface needs to change
    * control mode depending on which command interface is claimed.
    * \note this is for realtime switching of the command interface.
+   * \note it is assumed that `prepare_command_mode_switch` is called just before this method
+   * with the same input arguments.
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
    * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
    * \return true if switch is performed, false if a component rejects switching.
@@ -343,18 +374,18 @@ public:
    * Reads from all active hardware components.
    *
    * Part of the real-time critical update loop.
-   * It is realtime-safe if used hadware interfaces are implemented adequately.
+   * It is realtime-safe if used hardware interfaces are implemented adequately.
    */
-  void read(const rclcpp::Time & time, const rclcpp::Duration & period);
+  HardwareReadWriteStatus read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   /// Write all loaded hardware components.
   /**
    * Writes to all active hardware components.
    *
    * Part of the real-time critical update loop.
-   * It is realtime-safe if used hadware interfaces are implemented adequately.
+   * It is realtime-safe if used hardware interfaces are implemented adequately.
    */
-  void write(const rclcpp::Time & time, const rclcpp::Duration & period);
+  HardwareReadWriteStatus write(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   /// Activates all available hardware components in the system.
   /**
@@ -362,7 +393,24 @@ public:
    * This is used to preserve default behavior from previous versions where all hardware components
    * are activated per default.
    */
-  void activate_all_components();
+  [[deprecated(
+    "The method 'activate_all_components' is deprecated. "
+    "Use the new 'hardware_components_initial_state' parameter structure to setup the "
+    "components")]] void
+  activate_all_components();
+
+  /// Checks whether a command interface is registered under the given key.
+  /**
+   * \param[in] key string identifying the interface to check.
+   * \return true if interface exist, false otherwise.
+   */
+  bool command_interface_exists(const std::string & key) const;
+
+  /// Checks whether a state interface is registered under the given key.
+  /**
+   * \return true if interface exist, false otherwise.
+   */
+  bool state_interface_exists(const std::string & key) const;
 
 private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
@@ -373,7 +421,14 @@ private:
 
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;
+  mutable std::recursive_mutex resources_lock_;
+
   std::unique_ptr<ResourceStorage> resource_storage_;
+
+  // Structure to store read and write status so it is not initialized in the real-time loop
+  HardwareReadWriteStatus read_write_status;
+
+  bool is_urdf_loaded__ = false;
 };
 
 }  // namespace hardware_interface

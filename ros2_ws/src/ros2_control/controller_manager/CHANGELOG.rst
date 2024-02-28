@@ -2,6 +2,89 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.39.1 (2024-02-14)
+-------------------
+
+2.39.0 (2024-02-12)
+-------------------
+* [Spawners] Remove walrus operator (`#1366 <https://github.com/ros-controls/ros2_control/issues/1366>`_)
+* [CM] Use explicit constants in controller tests. (`#1356 <https://github.com/ros-controls/ros2_control/issues/1356>`_) (`#1359 <https://github.com/ros-controls/ros2_control/issues/1359>`_)
+* Move `test_components` to own package (backport `#1325 <https://github.com/ros-controls/ros2_control/issues/1325>`_) (`#1340 <https://github.com/ros-controls/ros2_control/issues/1340>`_)
+* Contributors: Christoph Fröhlich, Dr Denis
+
+2.38.0 (2024-01-25)
+-------------------
+* [CM] Fix controller parameter loading issue in different cases (`#1293 <https://github.com/ros-controls/ros2_control/issues/1293>`_) (`#1332 <https://github.com/ros-controls/ros2_control/issues/1332>`_)
+* Enable setting of initial state in HW components (backport `#1046 <https://github.com/ros-controls/ros2_control/issues/1046>`_) (`#1064 <https://github.com/ros-controls/ros2_control/issues/1064>`_)
+* Contributors: Sai Kishor Kothakota, mergify[bot]
+
+2.37.0 (2024-01-20)
+-------------------
+* Add additional checks for non existing and not available interfaces. (backport `#1218 <https://github.com/ros-controls/ros2_control/issues/1218>`_) (`#1291 <https://github.com/ros-controls/ros2_control/issues/1291>`_)
+* [ControllerManager] Fix all warnings from the latets features. (backport `#1174 <https://github.com/ros-controls/ros2_control/issues/1174>`_) (`#1309 <https://github.com/ros-controls/ros2_control/issues/1309>`_)
+* Reformat with braces added (backport `#1209 <https://github.com/ros-controls/ros2_control/issues/1209>`_) (`#1306 <https://github.com/ros-controls/ros2_control/issues/1306>`_)
+* Add spawner for hardware (backport `#941 <https://github.com/ros-controls/ros2_control/issues/941>`_) (`#1216 <https://github.com/ros-controls/ros2_control/issues/1216>`_)
+* Initialize the controller manager services after initializing resource manager (`#1272 <https://github.com/ros-controls/ros2_control/issues/1272>`_)
+* Fix rqt controller manager crash on ros2_control restart (`#1273 <https://github.com/ros-controls/ros2_control/issues/1273>`_) (`#1280 <https://github.com/ros-controls/ros2_control/issues/1280>`_)
+* Contributors: David Yackzan, Sai Kishor Kothakota, mergify[bot]
+
+2.36.1 (2024-01-08)
+-------------------
+* [docs] Remove joint_state_controller (`#1263 <https://github.com/ros-controls/ros2_control/issues/1263>`_) (`#1264 <https://github.com/ros-controls/ros2_control/issues/1264>`_)
+* [CI] Increase timeout for controller_managers_srv test (backport `#1224 <https://github.com/ros-controls/ros2_control/issues/1224>`_) (`#1225 <https://github.com/ros-controls/ros2_control/issues/1225>`_)
+* Contributors: mergify[bot]
+
+2.36.0 (2023-12-12)
+-------------------
+* Fix controller sorting issue while loading large number of controllers (`#1180 <https://github.com/ros-controls/ros2_control/issues/1180>`_) (`#1186 <https://github.com/ros-controls/ros2_control/issues/1186>`_)
+* Contributors: mergify[bot]
+
+2.35.1 (2023-11-27)
+-------------------
+
+2.35.0 (2023-11-14)
+-------------------
+* Fix the controller sorting bug when the interfaces are not configured (fixes `#1164 <https://github.com/ros-controls/ros2_control/issues/1164>`_) (`#1165 <https://github.com/ros-controls/ros2_control/issues/1165>`_) (`#1166 <https://github.com/ros-controls/ros2_control/issues/1166>`_)
+* [CM] Use `robot_description` topic instead of parameter and don't crash on empty URDF 🦿 (backport `#940 <https://github.com/ros-controls/ros2_control/issues/940>`_) (`#1052 <https://github.com/ros-controls/ros2_control/issues/1052>`_)
+* Contributors: Sai Kishor Kothakota, Denis Stogl
+
+2.34.0 (2023-11-08)
+-------------------
+* [Humble] Controller sorting (`#1157 <https://github.com/ros-controls/ros2_control/issues/1157>`_)
+* Update spawner to accept controllers list and start them in sequence (backport `#1139 <https://github.com/ros-controls/ros2_control/issues/1139>`_) (`#1149 <https://github.com/ros-controls/ros2_control/issues/1149>`_)
+* Create doc file for chained controllers (backport `#985 <https://github.com/ros-controls/ros2_control/issues/985>`_) (`#1131 <https://github.com/ros-controls/ros2_control/issues/1131>`_)
+* Contributors: Sai Kishor Kothakota, mergify[bot]
+
+2.33.0 (2023-10-11)
+-------------------
+* Export of the get_cm_node_options() from robostack (`#1129 <https://github.com/ros-controls/ros2_control/issues/1129>`_) (`#1130 <https://github.com/ros-controls/ros2_control/issues/1130>`_)
+* Contributors: mergify[bot]
+
+2.32.0 (2023-10-03)
+-------------------
+* Fix multiple calls to export reference interfaces (backport `#1108 <https://github.com/ros-controls/ros2_control/issues/1108>`_) (`#1114 <https://github.com/ros-controls/ros2_control/issues/1114>`_)
+* Contributors: Sai Kishor Kothakota, Dr Denis
+
+2.31.0 (2023-09-11)
+-------------------
+* [Docs] Fix information about activation and deactivation of chainable controllers (`#1104 <https://github.com/ros-controls/ros2_control/issues/1104>`_) (`#1106 <https://github.com/ros-controls/ros2_control/issues/1106>`_)
+* Contributors: mergify[bot]
+
+2.30.0 (2023-08-14)
+-------------------
+* [CM] Fixes the issue with individual controller's update rate (`#1082 <https://github.com/ros-controls/ros2_control/issues/1082>`_) (`#1097 <https://github.com/ros-controls/ros2_control/issues/1097>`_)
+* Contributors: Sai Kishor Kothakota
+
+2.29.0 (2023-07-09)
+-------------------
+* [CM] Make error message after trying to active controller more informative. (`#1066 <https://github.com/ros-controls/ros2_control/issues/1066>`_) (`#1072 <https://github.com/ros-controls/ros2_control/issues/1072>`_)
+* added controller manager runner to have update cycles (`#1075 <https://github.com/ros-controls/ros2_control/issues/1075>`_) (`#1076 <https://github.com/ros-controls/ros2_control/issues/1076>`_)
+* Fix equal and higher controller update rate (backport `#1070 <https://github.com/ros-controls/ros2_control/issues/1070>`_) (`#1071 <https://github.com/ros-controls/ros2_control/issues/1071>`_)
+* Contributors: Sai Kishor Kothakota, Dr Denis
+
+2.28.0 (2023-06-23)
+-------------------
+
 2.27.0 (2023-06-14)
 -------------------
 * Docs: Use branch name substitution for all links (backport `#1031 <https://github.com/ros-controls/ros2_control/issues/1031>`_) (`#1042 <https://github.com/ros-controls/ros2_control/issues/1042>`_)

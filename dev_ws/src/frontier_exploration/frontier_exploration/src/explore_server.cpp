@@ -284,7 +284,7 @@ namespace frontier_exploration
                 RCLCPP_WARN(this->get_logger(), "Retrying...");
                 retry_--;
                 // try to find frontier again
-                if (retry_ <= 7)
+                if (retry_ <= std::static_cast<int>(this->get_parameter("retry_count").as_int() / 3))
                 {
                     FrontierExplorationServer::performBackupRotation();
                     FrontierExplorationServer::performBackupReverse();
@@ -329,7 +329,7 @@ namespace frontier_exploration
 
     void FrontierExplorationServer::performBackupRotation()
     {
-        RCLCPP_WARN(this->get_logger(), "Frontier Exploration backup");
+        RCLCPP_WARN(this->get_logger(), "FrontierExplorationServer::performBackupRotation");
         geometry_msgs::msg::PoseStamped robot_pose;
         explore_costmap_ros_->getRobotPose(robot_pose);
         tf2::Quaternion quaternion;
@@ -385,7 +385,7 @@ namespace frontier_exploration
         std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Request> request,
         std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Response> response)
     {
-        RCLCPP_INFO_STREAM(this->get_logger(), "Multirobot frontier costs handle called with cp as: " << currently_processing_);
+        RCLCPP_WARN_STREAM(this->get_logger(), "Multirobot frontier costs handle called with cp as: " << currently_processing_);
         if (currently_processing_ == true)
         {
             RCLCPP_ERROR(this->get_logger(), "Cannot process getNextFrontier from another robot, server busy.");

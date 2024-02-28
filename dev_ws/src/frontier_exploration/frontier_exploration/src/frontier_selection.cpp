@@ -520,7 +520,6 @@ namespace frontier_exploration
 
         // Iterate through each frontier in the list
         bool frontierSelectionFlag = false;
-        auto count_index = 0;
         for (const auto &frontier : frontier_list)
         {
 
@@ -539,7 +538,6 @@ namespace frontier_exploration
                 }
                 if (frontier.min_distance < selected.min_distance && frontier_exists_ == false)
                 {
-                    count_index++;
                     selected = frontier;
                     frontierSelectionFlag = true;
                 }
@@ -562,6 +560,7 @@ namespace frontier_exploration
         return std::make_pair(selected, frontierSelectionFlag);
     }
 
+
     std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierRandom(const std::vector<frontier_msgs::msg::Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, std::string globalFrameID)
     {
         // create placeholder for selected frontier
@@ -577,14 +576,11 @@ namespace frontier_exploration
         }
 
         bool frontierSelectionFlag = false;
-        auto count_index = 0;
         // Create a vector to store eligible frontiers
         std::vector<frontier_msgs::msg::Frontier> frontier_list_imp;
         // Iterate through each frontier in the list
         for (const auto &frontier : frontier_list)
         {
-            count_index++;
-
             // check if this frontier is the nearest to robot and ignore if very close (frontier_detect_radius)
             if (frontier.min_distance > frontierDetectRadius_)
             {
@@ -616,14 +612,21 @@ namespace frontier_exploration
             selected = frontier_list_imp[randomIndex];
             frontierSelectionFlag = true;
         }
+        else {
+            frontierSelectionFlag = false;
+        }
+        
         if (frontierSelectionFlag == false)
         {
+            RCLCPP_ERROR(logger_, "No clustered frontiers are outside the minimum detection radius.");
             res->success = false;
+            res->next_frontier.pose.position = selected.centroid;
             return std::make_pair(selected, frontierSelectionFlag);
         }
 
         // Add the selected frontier to the blacklist
         frontier_blacklist_.push_back(selected);
+        res->success = true;
         return std::make_pair(selected, frontierSelectionFlag);
     }
 

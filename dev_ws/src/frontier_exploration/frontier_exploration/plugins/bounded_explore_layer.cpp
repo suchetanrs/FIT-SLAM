@@ -31,7 +31,7 @@ namespace frontier_exploration
         declareParameter("enabled", rclcpp::ParameterValue(true));
         declareParameter("min_frontier_cluster_size", rclcpp::ParameterValue(1));
         declareParameter("exploration_mode", rclcpp::ParameterValue(std::string("ours")));
-        robot_namespaces_ = {"/scout_2"};
+        robot_namespaces_ = {"/scout_1","/scout_2"};
         declareParameter("robot_namespaces", rclcpp::ParameterValue(robot_namespaces_));
 
         node = node_.lock();

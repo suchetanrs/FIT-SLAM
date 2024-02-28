@@ -175,7 +175,7 @@ global_costmap:
       use_sim_time: True
       resolution: 0.05 #0.05
       track_unknown_space: true
-      plugins: ["static_layer", "inflation_layer", "keepout_layer"]
+      plugins: ["static_layer", "inflation_layer"]
       #, 
       # filters: ["keepout_filter"]
       static_layer:
@@ -186,23 +186,6 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 0.6
         inflation_radius: 0.60
-      keepout_layer:
-        plugin: "isds/KeepoutLayer"
-        enabled: True
-        radius_of_keepout: 0.75
-        translate_zone: 0.50
-        occupancy_map_dimensions: 1000
-        robot_frame_id: "scout_2/base_link"
-        global_frame_id: "map"
-        edit_keepout_service_name: "/edit_keepout_zone"
-        filter_pcl_x: 2.0
-        filter_pcl_y: 0.5
-        dam_pcl_topic: "/transformed_points"
-      # keepout_filter:
-      #   plugin: "nav2_costmap_2d::KeepoutFilter"
-      #   enabled: True
-      #   filter_info_topic: "/filter_info_keepout"
-      #   transform_tolerance: 0.1
       always_send_full_costmap: True
 
 planner_server:

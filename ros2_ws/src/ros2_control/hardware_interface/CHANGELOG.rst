@@ -2,6 +2,82 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.39.1 (2024-02-14)
+-------------------
+* readd activate_all_components method to not break API (`#1392 <https://github.com/ros-controls/ros2_control/issues/1392>`_)
+* Contributors: Sai Kishor Kothakota
+
+2.39.0 (2024-02-12)
+-------------------
+* Move `test_components` to own package (backport `#1325 <https://github.com/ros-controls/ros2_control/issues/1325>`_) (`#1340 <https://github.com/ros-controls/ros2_control/issues/1340>`_)
+* Contributors: mergify[bot]
+
+2.38.0 (2024-01-25)
+-------------------
+* [CM] Fix controller parameter loading issue in different cases (`#1293 <https://github.com/ros-controls/ros2_control/issues/1293>`_) (`#1332 <https://github.com/ros-controls/ros2_control/issues/1332>`_)
+* Enable setting of initial state in HW components (backport `#1046 <https://github.com/ros-controls/ros2_control/issues/1046>`_) (`#1064 <https://github.com/ros-controls/ros2_control/issues/1064>`_)
+* Contributors: Sai Kishor Kothakota, mergify[bot]
+
+2.37.0 (2024-01-20)
+-------------------
+* [RM] Fix crash for missing urdf in resource manager (`#1301 <https://github.com/ros-controls/ros2_control/issues/1301>`_) (`#1316 <https://github.com/ros-controls/ros2_control/issues/1316>`_)
+* Add additional checks for non existing and not available interfaces. (backport `#1218 <https://github.com/ros-controls/ros2_control/issues/1218>`_) (`#1291 <https://github.com/ros-controls/ros2_control/issues/1291>`_)
+* Fix return of ERROR and calls of cleanup when system is unconfigured of finalized (`#1279 <https://github.com/ros-controls/ros2_control/issues/1279>`_) (`#1286 <https://github.com/ros-controls/ros2_control/issues/1286>`_)
+* fix the multiple definitions of lexical casts methods (`#1281 <https://github.com/ros-controls/ros2_control/issues/1281>`_) (`#1282 <https://github.com/ros-controls/ros2_control/issues/1282>`_)
+* Contributors: Sai Kishor Kothakota, mergify[bot]
+
+2.36.1 (2024-01-08)
+-------------------
+* [ResourceManager] adds test for uninitialized hardware (`#1243 <https://github.com/ros-controls/ros2_control/issues/1243>`_) (`#1274 <https://github.com/ros-controls/ros2_control/issues/1274>`_)
+* Use portable version for string-to-double conversion (backport `#1257 <https://github.com/ros-controls/ros2_control/issues/1257>`_) (`#1268 <https://github.com/ros-controls/ros2_control/issues/1268>`_)
+* Fix typo in docs (`#1219 <https://github.com/ros-controls/ros2_control/issues/1219>`_) (`#1221 <https://github.com/ros-controls/ros2_control/issues/1221>`_)
+* Contributors: Christoph Fröhlich, mergify[bot]
+
+2.36.0 (2023-12-12)
+-------------------
+* Cleanup Resource Manager a bit to increase clarity. (backport `#816 <https://github.com/ros-controls/ros2_control/issues/816>`_) (`#1191 <https://github.com/ros-controls/ros2_control/issues/1191>`_)
+* Handle hardware errors in Resource Manager (`#805 <https://github.com/ros-controls/ros2_control/issues/805>`_) (`#837 <https://github.com/ros-controls/ros2_control/issues/837>`_) #ABI-breaking
+* Contributors: mergify[bot]
+
+2.35.1 (2023-11-27)
+-------------------
+* [MockHardware] Fix the issues where hardware with multiple interfaces can not be started because of a logical bug added when adding dynamics calculation functionality. (`#1151 <https://github.com/ros-controls/ros2_control/issues/1151>`_) (`#1178 <https://github.com/ros-controls/ros2_control/issues/1178>`_)
+* Contributors: Dr Denis
+
+2.35.0 (2023-11-14)
+-------------------
+* [CM] Use `robot_description` topic instead of parameter and don't crash on empty URDF 🦿 (backport `#940 <https://github.com/ros-controls/ros2_control/issues/940>`_) (`#1052 <https://github.com/ros-controls/ros2_control/issues/1052>`_)
+* Contributors: mergify[bot]
+
+2.34.0 (2023-11-08)
+-------------------
+
+2.33.0 (2023-10-11)
+-------------------
+* [MockHardware] Added dynamic simulation functionality. (`#1028 <https://github.com/ros-controls/ros2_control/issues/1028>`_) (`#1125 <https://github.com/ros-controls/ros2_control/issues/1125>`_)
+* Contributors: mergify[bot]
+
+2.32.0 (2023-10-03)
+-------------------
+* Add GPIO tag description to docs (`#1109 <https://github.com/ros-controls/ros2_control/issues/1109>`_) (`#1120 <https://github.com/ros-controls/ros2_control/issues/1120>`_)
+* Contributors: Christoph Froehlich
+
+2.31.0 (2023-09-11)
+-------------------
+
+2.30.0 (2023-08-14)
+-------------------
+* Add checks if hardware is initialized. (backport `#1054 <https://github.com/ros-controls/ros2_control/issues/1054>`_) (`#1081 <https://github.com/ros-controls/ros2_control/issues/1081>`_)
+* Contributors: Denis Stogl
+
+2.29.0 (2023-07-09)
+-------------------
+
+2.28.0 (2023-06-23)
+-------------------
+* Ensure instantiation of hardware classes work for python bindings (`#1058 <https://github.com/ros-controls/ros2_control/issues/1058>`_) (`#1062 <https://github.com/ros-controls/ros2_control/issues/1062>`_)
+* Contributors: Olivier Stasse
+
 2.27.0 (2023-06-14)
 -------------------
 * [MockHardware] Enable disabling of command to simulate HW failures. (backport `#1027 <https://github.com/ros-controls/ros2_control/issues/1027>`_) (`#1050 <https://github.com/ros-controls/ros2_control/issues/1050>`_)
