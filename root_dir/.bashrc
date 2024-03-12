@@ -105,6 +105,7 @@ alias sexp='source /root/dev_ws/install/setup.bash'
 alias sros='source /opt/ros/humble/setup.bash'
 alias scesar='source /home/cesar_slam/dense_stereo_fisheye/trav_ws/install/setup.bash'
 alias vsc='code --no-sandbox --disable-gpu-sandbox --user-data-dir=/tmp/vscode .'
+alias sep='echo "================================================================="'
 source /opt/ros/humble/setup.bash
 export TURTLEBOT3_MODEL=waffle
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/root/ros2_ws/src/scout_v2/scout_gazebo/models

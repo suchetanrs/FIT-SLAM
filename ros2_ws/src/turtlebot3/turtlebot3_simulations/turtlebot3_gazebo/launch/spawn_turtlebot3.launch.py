@@ -59,6 +59,9 @@ def generate_launch_description():
             '-z', '0.01'
         ],
         output='screen',
+        remappings=[
+            ("/scan","/lidar/scan")
+        ]
     )
 
     robot_state_publisher_cmd = IncludeLaunchDescription(

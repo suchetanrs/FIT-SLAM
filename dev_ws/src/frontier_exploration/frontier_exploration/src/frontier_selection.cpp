@@ -50,8 +50,7 @@ namespace frontier_exploration
 
         frontier_selection_node_->declare_parameter("N_best_for_u2", 6);
         frontier_selection_node_->get_parameter("N_best_for_u2", N_best_for_u2_);
-
-        get_nodes_in_radius_client_ = frontier_selection_node_->create_client<rtabmap_msgs::srv::GetNodesInRadius>("get_nodes_in_radius");
+        
         costmap_ = costmap;
     }
 
@@ -115,6 +114,40 @@ namespace frontier_exploration
         for (auto point : points)
         {
             geometry_msgs::msg::Point point1 = point.position;
+            marker_msg_.points.push_back(point1);
+        }
+    }
+
+    /**
+     * @brief Visualizes landmarks using a marker message.
+     * This function generates a visualization marker message for landmarks defined by a set of pose points.
+     *
+     * @param points A vector containing geometry_msgs::msg::Pose representing the landmarks' positions.
+     * @param marker_msg_ Reference to a visualization_msgs::msg::Marker message to be filled with landmark information.
+     */
+    void landmarkViz(std::vector<Eigen::Vector3f> &points, visualization_msgs::msg::Marker &marker_msg_)
+    {
+
+        // Initialize the Marker message
+        marker_msg_.header.frame_id = "map"; // Set the frame ID
+        marker_msg_.type = visualization_msgs::msg::Marker::POINTS;
+        marker_msg_.action = visualization_msgs::msg::Marker::ADD;
+
+        // Set the scale of the points
+        marker_msg_.scale.x = 0.1; // Point size
+        marker_msg_.scale.y = 0.1;
+
+        // Set the color (green in RGBA format)
+        marker_msg_.color.r = 0.0;
+        marker_msg_.color.g = 1.0;
+        marker_msg_.color.b = 0.0;
+        marker_msg_.color.a = 1.0;
+        for (auto point : points)
+        {
+            geometry_msgs::msg::Point point1;
+            point1.x = point.x();
+            point1.y = point.y();
+            point1.z = point.z();
             marker_msg_.points.push_back(point1);
         }
     }
@@ -194,7 +227,7 @@ namespace frontier_exploration
     }
 
     SelectionResult FrontierSelectionNode::selectFrontierOurs(const std::vector<frontier_msgs::msg::Frontier> &frontier_list, std::vector<double> polygon_xy_min_max,
-                                                              std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, geometry_msgs::msg::Point start_point_w, std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, nav2_costmap_2d::Costmap2D *traversability_costmap)
+                                                              std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, geometry_msgs::msg::Point start_point_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, nav2_costmap_2d::Costmap2D *traversability_costmap)
     {
         RCLCPP_INFO(logger_, "FrontierSelectionNode::selectFrontierOurs");
         traversability_costmap_ = traversability_costmap;
@@ -221,7 +254,9 @@ namespace frontier_exploration
 
         if (polygon_xy_min_max.size() <= 0)
         {
-            RCLCPP_ERROR(logger_, "Frontier cannot be selected");
+            RCLCPP_ERROR(logger_, "Frontier cannot be selected, no polygon.");
+            res->success = false;
+            res->next_frontier.pose.position = selected_frontier.centroid;
             SelectionResult selection_result;
             selection_result.frontier = selected_frontier;
             selection_result.orientation = selected_orientation;
@@ -242,7 +277,7 @@ namespace frontier_exploration
         {
             // Preliminary checks and path planning for each frontier
             auto plan_of_frontier = getPlanForFrontier(start_point_w, frontier, map_data, false);
-            frontier_plan_pub_->publish(plan_of_frontier.first.path);
+            // frontier_plan_pub_->publish(plan_of_frontier.first.path);
             int length_to_frontier = plan_of_frontier.first.path.poses.size();
 
             // Continue to next frontier if path length is zero
@@ -303,6 +338,8 @@ namespace frontier_exploration
                     double dist = std::hypot(dx_full, dy_full);
                     if (dist < min_length)
                     {
+                        res->success = false;
+                        res->next_frontier.pose.position = selected_frontier.centroid;
                         SelectionResult selection_result;
                         selection_result.frontier = selected_frontier;
                         selection_result.orientation = selected_orientation;
@@ -440,6 +477,7 @@ namespace frontier_exploration
 
         if (frontier_with_u1_utility.size() > 0)
         {
+            RCLCPP_INFO_STREAM(logger_, "Frontier size list after u1 is: " << frontier_with_u1_utility.size());
             double max_u2_utility = 0;
             double maximum_path_information = 0;
             if (N_best_for_u2_ == -1)
@@ -475,6 +513,9 @@ namespace frontier_exploration
                 }
             }
         }
+        else {
+            RCLCPP_WARN(logger_, "The number of frontiers after U1 compute is zero.");
+        }
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = (endTime - startTime).count() / 1.0;
         RCLCPP_INFO_STREAM(logger_, "Time taken to search is: " << duration);
@@ -484,6 +525,8 @@ namespace frontier_exploration
         {
             selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(theta_s_star_post_u2);
             frontier_blacklist_.push_back(*frontier_selected_post_u2);
+            res->success = true;
+            res->next_frontier.pose.position = frontier_selected_post_u2->centroid;
             SelectionResult selection_result;
             selection_result.frontier = *frontier_selected_post_u2;
             selection_result.orientation = selected_orientation;
@@ -495,6 +538,8 @@ namespace frontier_exploration
         {
             RCLCPP_WARN(logger_, "The selected frontier was not updated after U2 computation.");
             frontier_blacklist_.push_back(selected_frontier);
+            res->success = true;
+            res->next_frontier.pose.position = selected_frontier.centroid;
             SelectionResult selection_result;
             selection_result.frontier = selected_frontier;
             selection_result.orientation = selected_orientation;
@@ -631,7 +676,7 @@ namespace frontier_exploration
     }
 
     std::pair<PathWithInfo, bool> FrontierSelectionNode::getPlanForFrontier(geometry_msgs::msg::Point start_point_w, frontier_msgs::msg::Frontier goal_point_w,
-                                                                            std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, bool compute_information)
+                                                                            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information)
     {
         double information_for_path = 0;
         PathWithInfo struct_obj;
@@ -715,6 +760,7 @@ namespace frontier_exploration
         int len = planner_->getPathLen();
         int path_cut_count = 0; // This variable is used to sample the poses in the path.
         double number_of_wayp = 0;
+        RCLCPP_DEBUG_STREAM(logger_, "Compute information? << " << compute_information);
         for (int i = len - 1; i >= 0; --i)
         {
             // convert the plan to world coordinates
@@ -739,7 +785,8 @@ namespace frontier_exploration
                 pose_to.pose.position.y = world_y2;
                 pose_to.pose.position.z = 0.0;
                 // Calculate orientation of the pose and generate frustum vertices
-                auto oriented_pose = frontier_exploration_planning::getRelativePoseGivenTwoPoints(pose_from.pose.position, pose_to.pose.position);
+                geometry_msgs::msg::Pose oriented_pose;
+                frontier_exploration_planning::getRelativePoseGivenTwoPoints(pose_from.pose.position, pose_to.pose.position, oriented_pose);
                 auto vertices = frontier_exploration_utils::getVerticesOfFrustum2D(oriented_pose, 2.0, 1.089);
                 // Add frustum vertices to the marker message
                 marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[0]));
@@ -756,9 +803,9 @@ namespace frontier_exploration
                 request_pose.position.y = oriented_pose.position.y;
                 auto nodes_in_radius = frontier_exploration_planning::getNodesInRadius(map_data->data.graph.poses, map_data->data.graph.poses_id, 4.5, request_pose, logger_);
 
-                auto Q = Eigen::Matrix3d::Identity() * 0.01;
-                auto info_pcl = frontier_exploration_information::computeInformationForPose(oriented_pose,
-                                                                                            nodes_in_radius.first, nodes_in_radius.second, map_data->data, 2.0, 1.089, 0.5, Q, true, logger_, costmap_);
+                auto Q = Eigen::Matrix3f::Identity() * 0.01f;
+                auto info_pcl = frontier_exploration_information_affine::computeInformationForPose(oriented_pose,
+                                                                                            nodes_in_radius.first, nodes_in_radius.second, map_data->data, 2.0, 1.089, 0.5, Q, true, logger_, costmap_, true);
                 if (info_pcl.first > 0)
                 {
                     landmarkViz(info_pcl.second, marker_msg_points_);
@@ -776,8 +823,9 @@ namespace frontier_exploration
             return std::make_pair(struct_obj, false);
         }
         struct_obj.path = plan;
-        if (number_of_wayp == 0)
+        if (number_of_wayp == 0) {
             struct_obj.information_total = information_for_path;
+        }
         if (number_of_wayp != 0)
         {
             // This is done so as to normalize the information on the path.

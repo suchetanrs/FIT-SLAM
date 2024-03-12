@@ -23,8 +23,6 @@
 #include <pcl/point_types.h>
 #include <pcl_ros/impl/transforms.hpp>
 
-#include <rtabmap_msgs/srv/get_nodes_in_radius.hpp>
-
 #include <nav2_costmap_2d/costmap_2d.hpp>
 #include <nav2_costmap_2d/footprint.hpp>
 #include <nav2_costmap_2d/layer.hpp>
@@ -41,7 +39,7 @@
 
 #include <geometry_msgs/msg/pose_array.hpp>
 
-#include <rtabmap_msgs/srv/get_map2.hpp>
+#include <slam_msgs/srv/get_map.hpp>
 namespace frontier_exploration
 {
     /**
@@ -256,7 +254,7 @@ namespace frontier_exploration
             std::vector<double> polygon_xy_min_max,
             std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res,
             geometry_msgs::msg::Point start_point_w,
-            std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data,
+            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
             nav2_costmap_2d::Costmap2D *traversability_costmap);
 
         /**
@@ -317,7 +315,7 @@ namespace frontier_exploration
          * @return std::pair<PathWithInfo, bool> The planned path along with success status.
          */
         std::pair<PathWithInfo, bool> getPlanForFrontier(geometry_msgs::msg::Point start_point_w, frontier_msgs::msg::Frontier goal_point_w,
-                                                         std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data, bool compute_information);
+                                                         std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information);
 
     private:
         // ROS Publishers.
@@ -328,9 +326,6 @@ namespace frontier_exploration
         rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)
         rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::Marker>::SharedPtr landmark_publisher_;   ///< Publisher for landmarks in the path FOVs
         rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseStamped>::SharedPtr viz_pose_publisher_;   ///< Publisher for the best pose after u1 computation.
-
-        // ROS Services.
-        rclcpp::Client<rtabmap_msgs::srv::GetNodesInRadius>::SharedPtr get_nodes_in_radius_client_;
 
         nav2_costmap_2d::Costmap2D *costmap_;
         nav2_costmap_2d::Costmap2D *traversability_costmap_;

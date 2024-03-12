@@ -35,7 +35,7 @@
 #include <tf2_ros/buffer.h>
 #include <tf2/LinearMath/Quaternion.h>
 
-#include <rtabmap_msgs/srv/get_map2.hpp>
+#include <slam_msgs/srv/get_map.hpp>
 
 namespace frontier_exploration
 {
@@ -210,7 +210,7 @@ namespace frontier_exploration
         rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
 
         // ROS Clients
-        rclcpp::Client<rtabmap_msgs::srv::GetMap2>::SharedPtr client_get_map_data2_;
+        rclcpp::Client<slam_msgs::srv::GetMap>::SharedPtr client_get_map_data2_;
         rclcpp::Client<frontier_msgs::srv::GetFrontierCosts>::SharedPtr client_get_frontier_costs_;
 
         // ROS Publishers

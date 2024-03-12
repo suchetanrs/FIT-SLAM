@@ -79,7 +79,7 @@ namespace frontier_exploration
         RCLCPP_INFO(logger_, "BoundedExploreLayer::onInitialize");
 
         client_node_ = rclcpp::Node::make_shared("client_node_bel");
-        client_get_map_data2_ = client_node_->create_client<rtabmap_msgs::srv::GetMap2>("get_map_data2");
+        client_get_map_data2_ = client_node_->create_client<slam_msgs::srv::GetMap>("orb_slam3_get_map_data");
 
         current_robot_namespace_ = node->get_namespace();
         current_robot_namespace_ = current_robot_namespace_.substr(0, current_robot_namespace_.find('/', current_robot_namespace_.find('/') + 1));
@@ -150,29 +150,39 @@ namespace frontier_exploration
 
         // Getting map data
         // Create a service request
-        auto request_map_data = std::make_shared<rtabmap_msgs::srv::GetMap2::Request>();
-        request_map_data->global_map = true;
-        request_map_data->optimized = true;
-        request_map_data->with_images = true;
-        request_map_data->with_scans = true;
-        request_map_data->with_user_data = true;
-        request_map_data->with_grids = true;
-        request_map_data->with_words = true;
-        request_map_data->with_global_descriptors = true;
+        auto request_map_data = std::make_shared<slam_msgs::srv::GetMap::Request>();
+        request_map_data->tracked_points = true;
+        std::vector<int32_t> kf_id_for_landmarks;
+        // Adding landmarks from 1 to 100 to the vector
+        for (int i = 0; i <= 10000; ++i) {
+            kf_id_for_landmarks.push_back(i);
+        }
+        request_map_data->kf_id_for_landmarks =kf_id_for_landmarks;
+        // request_map_data->global_map = true;
+        // request_map_data->optimized = true;
+        // request_map_data->with_images = true;
+        // request_map_data->with_scans = true;
+        // request_map_data->with_user_data = true;
+        // request_map_data->with_grids = true;
+        // request_map_data->with_words = true;
+        // request_map_data->with_global_descriptors = true;
         auto result_map_data = client_get_map_data2_->async_send_request(request_map_data);
-        std::shared_ptr<rtabmap_msgs::srv::GetMap2_Response> map_data_srv_res;
+        std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data_srv_res;
         RCLCPP_INFO(logger_, "BoundedExploreLayer -- Start map data.");
         if (rclcpp::spin_until_future_complete(client_node_, result_map_data, std::chrono::seconds(10)) == rclcpp::FutureReturnCode::SUCCESS)
         {
             map_data_srv_res = result_map_data.get();
             if (map_data_srv_res->data.nodes.empty())
             {
-                RCLCPP_DEBUG(logger_, "No map data recieved");
+                RCLCPP_WARN(logger_, "No map data recieved");
             }
             else
             {
                 // Process the received poses as needed
                 RCLCPP_INFO(logger_, "Received %zu map poses.", map_data_srv_res->data.nodes.size());
+                RCLCPP_WARN_STREAM(logger_, "Map data has " << map_data_srv_res->data.graph.poses.size() << " poses");
+                RCLCPP_WARN_STREAM(logger_, "Map data has " << map_data_srv_res->data.graph.poses_id.size() << " pose ids");
+                RCLCPP_WARN_STREAM(logger_, "Map data has " << map_data_srv_res->data.nodes.size() << " keyframes");
             }
         }
         else

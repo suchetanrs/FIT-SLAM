@@ -39,42 +39,6 @@ Visualization Manager:
         All Enabled: true
         map:
           Value: true
-        scout_1/base_footprint:
-          Value: true
-        scout_1/base_link:
-          Value: true
-        scout_1/camera_link:
-          Value: true
-        scout_1/camera_link_optical:
-          Value: true
-        scout_1/front_left_wheel_link:
-          Value: true
-        scout_1/front_right_wheel_link:
-          Value: true
-        scout_1/gps_link:
-          Value: true
-        scout_1/imu_link:
-          Value: true
-        scout_1/inertial_link:
-          Value: true
-        scout_1/odom:
-          Value: true
-        scout_1/rear_left_wheel_link:
-          Value: true
-        scout_1/rear_right_wheel_link:
-          Value: true
-        scout_1/top_chassis_link:
-          Value: true
-        scout_1/top_plate_front_link:
-          Value: true
-        scout_1/top_plate_link:
-          Value: true
-        scout_1/top_plate_rear_link:
-          Value: true
-        scout_1/velodyne:
-          Value: true
-        scout_1/velodyne_base_link:
-          Value: true
         scout_2/base_footprint:
           Value: true
         scout_2/base_link:
@@ -118,36 +82,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          scout_1/odom:
-            scout_1/base_footprint:
-              scout_1/base_link:
-                scout_1/camera_link:
-                  scout_1/camera_link_optical:
-                    {}
-                scout_1/front_left_wheel_link:
-                  {}
-                scout_1/front_right_wheel_link:
-                  {}
-                scout_1/gps_link:
-                  {}
-                scout_1/imu_link:
-                  {}
-                scout_1/inertial_link:
-                  {}
-                scout_1/rear_left_wheel_link:
-                  {}
-                scout_1/rear_right_wheel_link:
-                  {}
-                scout_1/top_chassis_link:
-                  {}
-                scout_1/top_plate_link:
-                  scout_1/top_plate_front_link:
-                    {}
-                  scout_1/top_plate_rear_link:
-                    {}
-                scout_1/velodyne_base_link:
-                  scout_1/velodyne:
-                    {}
           scout_2/odom:
             scout_2/base_footprint:
               scout_2/base_link:
@@ -184,7 +118,7 @@ Visualization Manager:
       Class: rviz_default_plugins/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: Traversability map / Global costmap
       Topic:
         Depth: 5
@@ -200,7 +134,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /scout_2/global_costmap/costmap_updates
       Use Timestamp: false
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: Exploration polygon
@@ -338,86 +272,6 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        scout_1/base_footprint:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_1/base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/camera_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/camera_link_optical:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_1/front_left_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/front_right_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/gps_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/inertial_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_1/rear_left_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/rear_right_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/top_chassis_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/top_plate_front_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_1/top_plate_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/top_plate_rear_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        scout_1/velodyne:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        scout_1/velodyne_base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -498,7 +352,7 @@ Visualization Manager:
       Enabled: true
       Name: 2/PathFOV
       Namespaces:
-        {}
+        two_triangles_namespace: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -524,7 +378,7 @@ Visualization Manager:
       Enabled: true
       Name: 2/Landmarks
       Namespaces:
-        {}
+        "": true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -706,7 +560,7 @@ Visualization Manager:
       Enabled: true
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
-      Name: 2/VizPose
+      Name: 2/BestU1Pose
       Shaft Length: 1
       Shaft Radius: 0.05000000074505806
       Shape: Arrow
@@ -716,7 +570,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_2/explore_costmap/viz_pose
+        Value: /scout_2/explore_costmap/u1_pose
       Value: true
     - Alpha: 1
       Axes Length: 1
@@ -726,7 +580,7 @@ Visualization Manager:
       Enabled: true
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
-      Name: 1/VizPose
+      Name: 1/BestU2Pose
       Shaft Length: 1
       Shaft Radius: 0.05000000074505806
       Shape: Arrow
@@ -736,7 +590,75 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_1/explore_costmap/viz_pose
+        Value: /scout_1/explore_costmap/u1_pose
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 63.13325119018555
+        Min Value: -0.372514009475708
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: AxisColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.019999999552965164
+      Style: Spheres
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_2/map_points
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 35.43300247192383
+        Min Value: -13.617616653442383
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: AxisColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.019999999552965164
+      Style: Spheres
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_1/map_points
+      Use Fixed Frame: true
+      Use rainbow: true
       Value: true
   Enabled: true
   Global Options:
@@ -784,16 +706,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 28.354148864746094
+      Distance: 13.53785514831543
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -1.179463505744934
-        Y: 6.934536933898926
-        Z: 2.343747138977051
+        X: 1.3410561084747314
+        Y: -0.329189270734787
+        Z: -0.7434214949607849
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -802,7 +724,7 @@ Visualization Manager:
       Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.690485000610352
+      Yaw: 4.715490818023682
     Saved: ~
 Window Geometry:
   Displays:
@@ -812,9 +734,9 @@ Window Geometry:
   Hide Right Dock: false
   Navigation 2:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000003320000038ffc0200000003fb000000100044006900730070006c00610079007301000000440000038f000000eb00fffffffb00000018004e0061007600690067006100740069006f006e0020003200000001f3000001e00000013900fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d000001a800ffffff000004010000038f00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000003320000038ffc0200000003fb000000100044006900730070006c00610079007301000000440000038f000000eb00fffffffb00000018004e0061007600690067006100740069006f006e0020003200000001f3000001e00000014d00fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d000001a800ffffff000004010000038f00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   SlamToolboxPlugin:
     collapsed: false
   Width: 1850
-  X: 1990
+  X: 70
   Y: 34

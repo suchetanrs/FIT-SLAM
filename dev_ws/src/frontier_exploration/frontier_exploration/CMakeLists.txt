@@ -17,7 +17,7 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(octomap_msgs REQUIRED)
-find_package(rtabmap_msgs REQUIRED)
+find_package(slam_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -42,7 +42,7 @@ tf2_ros
 tf2
 pluginlib
 octomap_msgs
-rtabmap_msgs
+slam_msgs
 visualization_msgs
 eigen3_cmake_module
 Eigen3
@@ -84,10 +84,11 @@ add_executable(localization_pose_sub src/viz/localization_pose_sub.cpp)
 ament_target_dependencies(localization_pose_sub SYSTEM ${dependencies})
 
 # Add executable 5
-add_executable(srv_cl src/srv_cl.cpp)
-ament_target_dependencies(srv_cl SYSTEM ${dependencies})
+# add_executable(srv_cl src/srv_cl.cpp)
+# ament_target_dependencies(srv_cl SYSTEM ${dependencies})
+# srv_cl
 
-install(TARGETS explore_server explore_client polygon_point_publisher frontier_exploration_core srv_cl
+install(TARGETS explore_server explore_client polygon_point_publisher frontier_exploration_core
 DESTINATION lib/${PROJECT_NAME}
 )
 

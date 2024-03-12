@@ -1,6 +1,6 @@
 root_dir/*
 root_dir/.*
-*.vscode
+**.vscode**
 *.csv
 !root_dir/shell_scripts
 !root_dir/.bashrc
@@ -10,4 +10,4 @@ root_dir/.bash_history
 dev_ws/src/frontier_exploration/Doxyfile
 dev_ws/src/frontier_exploration/doc/
 orb_slam3_docker_20_foxy/
-
+**__pycache__**

@@ -284,7 +284,7 @@ namespace frontier_exploration
                 RCLCPP_WARN(this->get_logger(), "Retrying...");
                 retry_--;
                 // try to find frontier again
-                if (retry_ <= std::static_cast<int>(this->get_parameter("retry_count").as_int() / 3))
+                if (retry_ <= this->get_parameter("retry_count").as_int() / 3.0)
                 {
                     FrontierExplorationServer::performBackupRotation();
                     FrontierExplorationServer::performBackupReverse();
