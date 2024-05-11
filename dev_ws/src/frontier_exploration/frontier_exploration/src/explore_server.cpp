@@ -5,14 +5,11 @@ namespace frontier_exploration
 {
     FrontierExplorationServer::FrontierExplorationServer() : Node("explore_server")
     {
-        this->declare_parameter("frequency", 5.0);
         this->declare_parameter("goal_aliasing", 0.1);
         this->declare_parameter("retry_count", 30);
         this->declare_parameter("nav2_goal_timeout_sec", 35);
-        this->declare_parameter("use_traversability", false);
         this->declare_parameter("use_custom_sim", false);
 
-        this->get_parameter("frequency", frequency_);
         this->get_parameter("goal_aliasing", goal_aliasing_);
         this->get_parameter("retry_count", retry_);
         this->get_parameter("nav2_goal_timeout_sec", nav2WaitTime_);
@@ -93,11 +90,7 @@ namespace frontier_exploration
 
             if (param_type == rclcpp::ParameterType::PARAMETER_DOUBLE)
             {
-                if (param_name == "frequency")
-                {
-                    frequency_ = parameter.as_double();
-                }
-                else if (param_name == "goal_aliasing")
+                if (param_name == "goal_aliasing")
                 {
                     goal_aliasing_ = parameter.as_double();
                 }
@@ -199,7 +192,6 @@ namespace frontier_exploration
             {
                 RCLCPP_INFO(this->get_logger(), "Waitting for the layer to be configued");
                 rclcpp::sleep_for(std::chrono::milliseconds(200));
-                continue;
             }
             auto srv_req = std::make_shared<frontier_msgs::srv::GetNextFrontier::Request>();
             auto srv_res = std::make_shared<frontier_msgs::srv::GetNextFrontier::Response>();
@@ -227,13 +219,13 @@ namespace frontier_exploration
             if (currently_processing_ == true)
             {
                 RCLCPP_ERROR(this->get_logger(), "Cannot process getNextFrontier from within, server busy.");
-                rclcpp::sleep_for(std::chrono::milliseconds(500));
+                rclcpp::sleep_for(std::chrono::milliseconds(50));
                 continue;
             }
             currently_processing_lock_.lock();
             currently_processing_ = true;
             currently_processing_lock_.unlock();
-            RCLCPP_INFO_STREAM(this->get_logger(), "Set Currently processing to true: " << currently_processing_);
+            RCLCPP_INFO_STREAM(this->get_logger(), "Currently processing is: " << currently_processing_);
             while (!getNextFrontier->wait_for_service(std::chrono::seconds(10)))
             {
                 if (!rclcpp::ok())

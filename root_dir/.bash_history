@@ -498,3 +498,9 @@ ros2 topic hz /simulation_costmap
 bash
 ls
 tmux
+ls
+l
+ls
+cd dev_ws/
+ls
+vsc
