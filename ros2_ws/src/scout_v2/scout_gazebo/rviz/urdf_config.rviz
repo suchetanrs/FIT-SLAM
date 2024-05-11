@@ -5,6 +5,12 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /Traversability map / Global costmap1
+        - /PointCloud21
+        - /PointCloud22
+        - /Map1
+        - /Map2
+        - /Map3
       Splitter Ratio: 0.5
     Tree Height: 846
   - Class: nav2_rviz_plugins/Navigation 2
@@ -38,6 +44,42 @@ Visualization Manager:
       Frames:
         All Enabled: true
         map:
+          Value: true
+        scout_1/base_footprint:
+          Value: true
+        scout_1/base_link:
+          Value: true
+        scout_1/camera_link:
+          Value: true
+        scout_1/camera_link_optical:
+          Value: true
+        scout_1/front_left_wheel_link:
+          Value: true
+        scout_1/front_right_wheel_link:
+          Value: true
+        scout_1/gps_link:
+          Value: true
+        scout_1/imu_link:
+          Value: true
+        scout_1/inertial_link:
+          Value: true
+        scout_1/odom:
+          Value: true
+        scout_1/rear_left_wheel_link:
+          Value: true
+        scout_1/rear_right_wheel_link:
+          Value: true
+        scout_1/top_chassis_link:
+          Value: true
+        scout_1/top_plate_front_link:
+          Value: true
+        scout_1/top_plate_link:
+          Value: true
+        scout_1/top_plate_rear_link:
+          Value: true
+        scout_1/velodyne:
+          Value: true
+        scout_1/velodyne_base_link:
           Value: true
         scout_2/base_footprint:
           Value: true
@@ -82,6 +124,36 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
+          scout_1/odom:
+            scout_1/base_footprint:
+              scout_1/base_link:
+                scout_1/camera_link:
+                  scout_1/camera_link_optical:
+                    {}
+                scout_1/front_left_wheel_link:
+                  {}
+                scout_1/front_right_wheel_link:
+                  {}
+                scout_1/gps_link:
+                  {}
+                scout_1/imu_link:
+                  {}
+                scout_1/inertial_link:
+                  {}
+                scout_1/rear_left_wheel_link:
+                  {}
+                scout_1/rear_right_wheel_link:
+                  {}
+                scout_1/top_chassis_link:
+                  {}
+                scout_1/top_plate_link:
+                  scout_1/top_plate_front_link:
+                    {}
+                  scout_1/top_plate_rear_link:
+                    {}
+                scout_1/velodyne_base_link:
+                  scout_1/velodyne:
+                    {}
           scout_2/odom:
             scout_2/base_footprint:
               scout_2/base_link:
@@ -118,7 +190,7 @@ Visualization Manager:
       Class: rviz_default_plugins/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: true
+      Enabled: false
       Name: Traversability map / Global costmap
       Topic:
         Depth: 5
@@ -126,20 +198,20 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_2/global_costmap/costmap
+        Value: /scout_2/gridmap
       Update Topic:
         Depth: 5
         Durability Policy: Transient Local
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_2/global_costmap/costmap_updates
+        Value: /scout_2/gridmap_updates
       Use Timestamp: false
-      Value: true
+      Value: false
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: Exploration polygon
       Namespaces:
-        explore_points: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -272,6 +344,86 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        scout_1/base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/camera_link_optical:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/front_left_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/front_right_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/gps_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/inertial_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/rear_left_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/rear_right_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/top_chassis_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/top_plate_front_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/top_plate_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/top_plate_rear_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        scout_1/velodyne:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        scout_1/velodyne_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -323,6 +475,74 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: -999999
+      Min Color: 0; 0; 0
+      Min Intensity: 999999
+      Name: 1/AllFrontiers
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.05000000074505806
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_1/explore_costmap/all_frontiers
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: -999999
+      Min Color: 0; 0; 0
+      Min Intensity: 999999
+      Name: 2/AllFrontiers
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.05000000074505806
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_2/explore_costmap/all_frontiers
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
       Color: 255; 85; 255
       Color Transformer: FlatColor
       Decay Time: 0
@@ -352,7 +572,7 @@ Visualization Manager:
       Enabled: true
       Name: 2/PathFOV
       Namespaces:
-        two_triangles_namespace: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -378,7 +598,7 @@ Visualization Manager:
       Enabled: true
       Name: 2/Landmarks
       Namespaces:
-        "": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -532,8 +752,8 @@ Visualization Manager:
       Head Diameter: 0.30000001192092896
       Head Length: 0.20000000298023224
       Length: 0.30000001192092896
-      Line Style: Lines
-      Line Width: 0.029999999329447746
+      Line Style: Billboards
+      Line Width: 0.09000000357627869
       Name: 1/FrontierPlan
       Offset:
         X: 0
@@ -595,8 +815,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 63.13325119018555
-        Min Value: -0.372514009475708
+        Max Value: 1.1203502416610718
+        Min Value: -0.3698490262031555
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -604,7 +824,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: AxisColor
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -622,10 +842,10 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_2/map_points
+        Value: /scout_2/velodyne_points
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -636,19 +856,19 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: AxisColor
+      Color Transformer: Intensity
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
+      Max Intensity: 0
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud2
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.019999999552965164
+      Size (m): 0.05000000074505806
       Style: Spheres
       Topic:
         Depth: 5
@@ -656,10 +876,73 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scout_1/map_points
+        Value: /scout_2/map_points
       Use Fixed Frame: true
       Use rainbow: true
+      Value: false
+    - Alpha: 0.699999988079071
+      Class: rviz_default_plugins/Map
+      Color Scheme: costmap
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /traversability_thresholded
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /traversability_thresholded_updates
+      Use Timestamp: false
       Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: false
+      Name: Map
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_1/traversability_grid
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_1/traversability_grid_updates
+      Use Timestamp: false
+      Value: false
+    - Alpha: 0.699999988079071
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: false
+      Name: Map
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_2/traversability_grid
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scout_2/traversability_grid_updates
+      Use Timestamp: false
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -706,16 +989,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 13.53785514831543
+      Distance: 58.12443923950195
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.3410561084747314
-        Y: -0.329189270734787
-        Z: -0.7434214949607849
+        X: 0.7664985060691833
+        Y: 6.803981781005859
+        Z: 0.7195796370506287
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -724,7 +1007,7 @@ Visualization Manager:
       Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.715490818023682
+      Yaw: 4.690487861633301
     Saved: ~
 Window Geometry:
   Displays:
@@ -734,9 +1017,9 @@ Window Geometry:
   Hide Right Dock: false
   Navigation 2:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000003320000038ffc0200000003fb000000100044006900730070006c00610079007301000000440000038f000000eb00fffffffb00000018004e0061007600690067006100740069006f006e0020003200000001f3000001e00000014d00fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d000001a800ffffff000004010000038f00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000001000000000000048f0000038ffc0200000003fb000000100044006900730070006c00610079007301000000440000038f000000eb00fffffffb00000018004e0061007600690067006100740069006f006e0020003200000001f3000001e00000014d00fffffffb000000220053006c0061006d0054006f006f006c0062006f00780050006c007500670069006e000000028b0000016d000001a800ffffff000002a90000038f00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   SlamToolboxPlugin:
     collapsed: false
-  Width: 1850
-  X: 70
+  Width: 1855
+  X: 65
   Y: 34

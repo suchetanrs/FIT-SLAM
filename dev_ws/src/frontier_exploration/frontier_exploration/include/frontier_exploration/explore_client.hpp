@@ -35,6 +35,11 @@ namespace frontier_exploration
         FrontierExplorationClient();
 
         /**
+         * @brief Destructor for the client.
+         */
+        ~FrontierExplorationClient();
+
+        /**
          * @brief The callback for dynamically changing the set parameters during runtime.
          */
         rcl_interfaces::msg::SetParametersResult dynamicParametersCallback(
@@ -52,6 +57,11 @@ namespace frontier_exploration
          */
         void pointCb(const std::shared_ptr<const geometry_msgs::msg::PointStamped> point);
 
+        /**
+         * @brief Build boundary polygon from points received through parameter values and ignore rviz.
+         */
+        void sendActionFromConfig();
+
         rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr point_;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr point_viz_pub_;
         rclcpp::TimerBase::SharedPtr point_viz_timer_;
@@ -62,6 +72,8 @@ namespace frontier_exploration
         std::shared_ptr<rclcpp_action::Client<frontier_msgs::action::ExploreTask>> exploreClient_;
         bool waiting_for_center_;
         double costmap_resolution_;
+        bool use_config_;
+        std::vector<std::string> config_;
     };
 
 }

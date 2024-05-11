@@ -129,11 +129,9 @@ namespace frontier_exploration
          * @param selected The frontier selected after processing the FIT-SLAM approach.
          * @param frontier_list The frontier list to run the approach on.
          */
-        void processOurApproach(
-            frontier_msgs::msg::Frontier &selected,
+        SelectionResult processOurApproach(
             std::vector<frontier_msgs::msg::Frontier> &frontier_list,
-            const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req,
-            std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res);
+            geometry_msgs::msg::Point& start_point_w);
 
         /**
          * @brief A function that processes the frontier list and selects a frontier randomly.
@@ -147,12 +145,8 @@ namespace frontier_exploration
          * @param res The response provided in the getNextFrontier service.
          *
          * */
-        void processRandomApproach(
-            frontier_msgs::msg::Frontier &selected,
-            std::vector<frontier_msgs::msg::Frontier> &frontier_list,
-            const std::vector<std::vector<double>> &every_frontier,
-            const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req,
-            std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res);
+        std::pair<frontier_msgs::msg::Frontier, bool> processRandomApproach(
+            std::vector<frontier_msgs::msg::Frontier> &frontier_list);
 
         /**
          * @brief A function that processes the frontier list and selects a frontier using the Greedy approach.
@@ -166,12 +160,8 @@ namespace frontier_exploration
          * @param req The request provided in the getNextFrontier service.
          * @param res The response provided in the getNextFrontier service.
          */
-        void processGreedyApproach(
-            frontier_msgs::msg::Frontier &selected,
-            std::vector<frontier_msgs::msg::Frontier> &frontier_list,
-            const std::vector<std::vector<double>> &every_frontier,
-            const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req,
-            std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res);
+        std::pair<frontier_msgs::msg::Frontier, bool> processGreedyApproach(
+            std::vector<frontier_msgs::msg::Frontier> &frontier_list);
 
         /**
          * @brief Update the map with exploration boundary data
@@ -200,6 +190,7 @@ namespace frontier_exploration
         bool configured_, marked_;
         bool resize_to_boundary_;
         std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+        std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
         std::string current_robot_namespace_;
         std::vector<std::string> robot_namespaces_;
@@ -223,7 +214,8 @@ namespace frontier_exploration
          *
          * This node has been created to use with the service clients.
          */
-        rclcpp::Node::SharedPtr client_node_;
+        rclcpp::Node::SharedPtr internal_node_;
+        std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> internal_executor_;
     };
 
 }

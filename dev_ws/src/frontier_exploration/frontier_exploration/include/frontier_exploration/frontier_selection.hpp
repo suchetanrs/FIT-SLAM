@@ -252,7 +252,6 @@ namespace frontier_exploration
         SelectionResult selectFrontierOurs(
             const std::vector<frontier_msgs::msg::Frontier> &frontier_list,
             std::vector<double> polygon_xy_min_max,
-            std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res,
             geometry_msgs::msg::Point start_point_w,
             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
             nav2_costmap_2d::Costmap2D *traversability_costmap);
@@ -267,10 +266,7 @@ namespace frontier_exploration
          * @return std::pair<frontier_msgs::msg::Frontier, bool> The selected frontier along with success status.
          */
         std::pair<frontier_msgs::msg::Frontier, bool> selectFrontierClosest(
-            const std::vector<frontier_msgs::msg::Frontier> &frontier_list,
-            const std::vector<std::vector<double>> &every_frontier,
-            std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res,
-            std::string globalFrameID);
+            const std::vector<frontier_msgs::msg::Frontier> &frontier_list);
 
         /**
          * @brief Selects a random frontier.
@@ -282,10 +278,7 @@ namespace frontier_exploration
          * @return std::pair<frontier_msgs::msg::Frontier, bool> The selected frontier along with success status.
          */
         std::pair<frontier_msgs::msg::Frontier, bool> selectFrontierRandom(
-            const std::vector<frontier_msgs::msg::Frontier> &frontier_list,
-            const std::vector<std::vector<double>> &every_frontier,
-            std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res,
-            std::string globalFrameID);
+            const std::vector<frontier_msgs::msg::Frontier> &frontier_list);
 
         /**
          * @brief Visualizes frontiers.

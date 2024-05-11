@@ -1,6 +1,8 @@
 explore_client:
   ros__parameters:
     costmap_resolution: 0.05 # same as bounded_explore_layer
+    use_config: True
+    config: ["70.0", "70.0", "70.0", "-70.0", "-70.0", "-70.0", "-70.0", "70.0"]
   
 explore_server:
   ros__parameters:
@@ -9,6 +11,7 @@ explore_server:
     retry_count: 20
     nav2_goal_timeout_sec: 50 #secs
     use_traversability: true
+    use_custom_sim: true
 
 polygon_point_publisher:
   ros__parameters:
@@ -18,9 +21,9 @@ frontier_selection_node:
   ros__parameters:
     exploration_mode: ours
     counter: 031150
-    alpha: 1.0 #set to 1.0 for maximum weight to information and 0.0 for maximum weight to frontier path distance.
-    beta: 0.0 #set to 1.0 for maximum weight to u1 and 0.0 for maximum weight to information on path.
-    N_best_for_u2: 10 #set to -1 for considering all the frontier for path computation (this will make the algorithm very time instensive!)
+    alpha: 0.50 #set to 1.0 for maximum weight to arrival information and 0.0 for maximum weight to frontier path distance.
+    beta: 0.50 #set to 1.0 for maximum weight to u1 and 0.0 for maximum weight to information on path.
+    N_best_for_u2: 100000 #set to -1 for considering all the frontier for path computation (this will make the algorithm very time instensive!)
     planner_allow_unknown: true
     frontier_detect_radius: 0.2
 
@@ -42,7 +45,8 @@ explore_costmap:
       plugins: ["static_layer", "bounded_explore_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: /traversability_thresholded
+        # map_topic: /traversability_thresholded
+        map_topic: /simulation_costmap
         map_subscribe_transient_local: True
       bounded_explore_layer:
         plugin: "frontier_exploration/BoundedExploreLayer"
@@ -59,5 +63,5 @@ explore_costmap:
 
 goal_allocation_server:
   ros__parameters:
-    # robot_namespaces: ['/scout_1', '/scout_2']
+    robot_namespaces: ['/scout_1', '/scout_2']
     robot_namespaces: []

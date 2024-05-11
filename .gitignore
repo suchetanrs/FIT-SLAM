@@ -10,4 +10,7 @@ root_dir/.bash_history
 dev_ws/src/frontier_exploration/Doxyfile
 dev_ws/src/frontier_exploration/doc/
 orb_slam3_docker_20_foxy/
+ros2_ws/src/scout_v2/scout_gazebo/models
+ros2_ws/src/scout_v2/scout_gazebo/worlds
+dev_ws/src/exploration_sim/
 **__pycache__**

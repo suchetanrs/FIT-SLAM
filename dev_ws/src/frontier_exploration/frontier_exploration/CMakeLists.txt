@@ -75,10 +75,6 @@ ament_target_dependencies(explore_client rclcpp geometry_msgs std_msgs nav2_msgs
 add_executable(explore_server src/explore_server.cpp)
 ament_target_dependencies(explore_server rclcpp nav2_msgs nav2_costmap_2d visualization_msgs frontier_msgs rclcpp_action action_msgs)
 
-# Add executable 4
-add_executable(polygon_point_publisher src/polygon_point_publisher.cpp)
-ament_target_dependencies(polygon_point_publisher rclcpp geometry_msgs)
-
 # Add executable 5
 add_executable(localization_pose_sub src/viz/localization_pose_sub.cpp)
 ament_target_dependencies(localization_pose_sub SYSTEM ${dependencies})
@@ -88,7 +84,7 @@ ament_target_dependencies(localization_pose_sub SYSTEM ${dependencies})
 # ament_target_dependencies(srv_cl SYSTEM ${dependencies})
 # srv_cl
 
-install(TARGETS explore_server explore_client polygon_point_publisher frontier_exploration_core
+install(TARGETS explore_server explore_client frontier_exploration_core
 DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -50,7 +50,6 @@ namespace frontier_exploration
         rclcpp::CallbackGroup::SharedPtr explore_server_callback_group_;
         rclcpp::CallbackGroup::SharedPtr nav2_client_callback_group_;
         rclcpp::CallbackGroup::SharedPtr multirobot_service_callback_group_;
-        rclcpp::Node::SharedPtr client_node_;
 
         rclcpp_action::Server<frontier_msgs::action::ExploreTask>::SharedPtr action_server_;
         std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> frontier_goal;
@@ -76,6 +75,8 @@ namespace frontier_exploration
         rclcpp::Client<frontier_msgs::srv::GetNextFrontier>::SharedPtr getNextFrontier;
         rclcpp::Client<frontier_msgs::srv::GetNextFrontier>::SharedPtr getNextFrontierMultiRobot;
         rclcpp::Service<frontier_msgs::srv::GetFrontierCosts>::SharedPtr service_get_costs_;
+        bool layer_configured_;
+        bool use_custom_sim_;
 
         rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID &uuid,
                                                 std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal);

@@ -80,13 +80,17 @@ ament_target_dependencies(traversability_server SYSTEM ${dependencies})
 add_executable(multi_traversability_thresholded src/multi_traversability_thresholded.cpp)
 ament_target_dependencies(multi_traversability_thresholded SYSTEM ${dependencies})
 
+#Executable 4
+add_executable(pcl_transform src/pcl_transform.cpp)
+ament_target_dependencies(pcl_transform SYSTEM ${dependencies})
+
 #Library 1
 add_library(traversability_gridmap_core SHARED plugins/traversability_layer.cpp src/traversabilityGridMod.cpp src/global_traversability_map.cpp)
 ament_target_dependencies(traversability_gridmap_core ${dependencies})
 target_link_libraries(traversability_gridmap_core ${PCL_LIBRARIES})
 
 
-install(TARGETS pointcloud_transformer traversability_gridmap_core traversability_server multi_traversability_thresholded
+install(TARGETS pointcloud_transformer traversability_gridmap_core traversability_server multi_traversability_thresholded pcl_transform
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -50,7 +50,7 @@ namespace frontier_exploration
 
         frontier_selection_node_->declare_parameter("N_best_for_u2", 6);
         frontier_selection_node_->get_parameter("N_best_for_u2", N_best_for_u2_);
-        
+
         costmap_ = costmap;
     }
 
@@ -227,7 +227,7 @@ namespace frontier_exploration
     }
 
     SelectionResult FrontierSelectionNode::selectFrontierOurs(const std::vector<frontier_msgs::msg::Frontier> &frontier_list, std::vector<double> polygon_xy_min_max,
-                                                              std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, geometry_msgs::msg::Point start_point_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, nav2_costmap_2d::Costmap2D *traversability_costmap)
+                                                              geometry_msgs::msg::Point start_point_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, nav2_costmap_2d::Costmap2D *traversability_costmap)
     {
         RCLCPP_INFO(logger_, "FrontierSelectionNode::selectFrontierOurs");
         traversability_costmap_ = traversability_costmap;
@@ -242,8 +242,6 @@ namespace frontier_exploration
         if (frontier_list.size() == 0)
         {
             RCLCPP_ERROR(logger_, "No frontiers found from frontier search.");
-            res->success = false;
-            res->next_frontier.pose.position = selected_frontier.centroid;
             SelectionResult selection_result;
             selection_result.frontier = selected_frontier;
             selection_result.orientation = selected_orientation;
@@ -255,8 +253,6 @@ namespace frontier_exploration
         if (polygon_xy_min_max.size() <= 0)
         {
             RCLCPP_ERROR(logger_, "Frontier cannot be selected, no polygon.");
-            res->success = false;
-            res->next_frontier.pose.position = selected_frontier.centroid;
             SelectionResult selection_result;
             selection_result.frontier = selected_frontier;
             selection_result.orientation = selected_orientation;
@@ -308,7 +304,7 @@ namespace frontier_exploration
                 sx = frontier.initial.x;
                 sy = frontier.initial.y;
                 std::vector<int> information_along_ray; // stores the information along each ray in 2PI.
-
+                std::vector<geometry_msgs::msg::Pose> vizpoints;
                 // Iterate through each angle in 2PI with delta_theta resolution
                 for (double theta = 0; theta <= (2 * M_PI); theta += delta_theta)
                 {
@@ -338,8 +334,7 @@ namespace frontier_exploration
                     double dist = std::hypot(dx_full, dy_full);
                     if (dist < min_length)
                     {
-                        res->success = false;
-                        res->next_frontier.pose.position = selected_frontier.centroid;
+                        RCLCPP_WARN(logger_, "Distance to ray trace is lesser than minimum distance. Proceeding to next frontier.");
                         SelectionResult selection_result;
                         selection_result.frontier = selected_frontier;
                         selection_result.orientation = selected_orientation;
@@ -390,7 +385,6 @@ namespace frontier_exploration
 
                     auto info_addition = cell_gatherer.getCells();
                     information_along_ray.push_back(info_addition.size());
-                    std::vector<geometry_msgs::msg::Pose> vizpoints;
                     for (size_t z = 0; z < info_addition.size(); z++)
                     {
                         double wmx, wmy;
@@ -445,6 +439,7 @@ namespace frontier_exploration
             // If it does not lie in the N best then the information on path is treated as 0 and hence it is appropriate to multiply with beta.
             frontier_costs[frontier_with_properties] = beta_ * utility;
             frontier_with_u1_utility.push_back(std::make_pair(frontier_with_properties, utility));
+            RCLCPP_DEBUG_STREAM(logger_, "Utility U1:" << utility);
             if (utility > max_u1_utility)
             {
                 max_u1_utility = utility;
@@ -458,6 +453,8 @@ namespace frontier_exploration
             }
         }
 
+        RCLCPP_DEBUG_STREAM(logger_, "Alpha_: " << alpha_);
+        RCLCPP_DEBUG_STREAM(logger_, "Beta_: " << beta_);
         geometry_msgs::msg::PoseStamped vizpose;
         vizpose.header.frame_id = "map";
         vizpose.pose.position.x = selected_frontier.initial.x;
@@ -475,16 +472,18 @@ namespace frontier_exploration
         // std::map of frontier information mapped to the new utility
         std::map<frontier_exploration::FrontierWithMetaData, double> frontier_with_path_information;
 
-        if (frontier_with_u1_utility.size() > 0)
+        if (static_cast<int>(frontier_with_u1_utility.size()) > 0)
         {
-            RCLCPP_INFO_STREAM(logger_, "Frontier size list after u1 is: " << frontier_with_u1_utility.size());
+            RCLCPP_DEBUG_STREAM(logger_, "Frontier size list after u1 is: " << static_cast<int>(frontier_with_u1_utility.size()));
+            RCLCPP_DEBUG_STREAM(logger_, "The value of N_best_for_u2 is: " << N_best_for_u2_);
             double max_u2_utility = 0;
             double maximum_path_information = 0;
             if (N_best_for_u2_ == -1)
             { // if -1 then the path information for all the frontiers is computed.
-                N_best_for_u2_ = frontier_with_u1_utility.size();
+                N_best_for_u2_ = static_cast<int>(frontier_with_u1_utility.size());
             }
-            for (size_t m = frontier_with_u1_utility.size() - 1; m >= frontier_with_u1_utility.size() - N_best_for_u2_; m--)
+            RCLCPP_DEBUG_STREAM(logger_, "The value of loop min is: " << static_cast<int>(frontier_with_u1_utility.size()) - N_best_for_u2_);
+            for (int m = static_cast<int>(frontier_with_u1_utility.size()) - 1; m >= static_cast<int>(frontier_with_u1_utility.size()) - N_best_for_u2_; m--)
             {
                 if (m == 0)
                 {
@@ -497,7 +496,7 @@ namespace frontier_exploration
                 }
                 frontier_with_path_information[frontier_with_u1_utility[m].first] = plan_result.first.information_total;
             }
-            for (size_t m = frontier_with_u1_utility.size() - 1; m >= frontier_with_u1_utility.size() - N_best_for_u2_; m--)
+            for (int m = static_cast<int>(frontier_with_u1_utility.size()) - 1; m >= static_cast<int>(frontier_with_u1_utility.size()) - N_best_for_u2_; m--)
             {
                 if (m == 0)
                 {
@@ -507,14 +506,23 @@ namespace frontier_exploration
                 frontier_costs[frontier_with_u1_utility[m].first] = current_utility;
                 if (current_utility > max_u2_utility)
                 {
+                    RCLCPP_DEBUG_STREAM(logger_, "Current U2 utility: " << current_utility);
+                    RCLCPP_DEBUG_STREAM(logger_, "U1 utility for current one: " << frontier_with_u1_utility[m].second);
                     max_u2_utility = current_utility;
                     theta_s_star_post_u2 = frontier_with_u1_utility[m].first.theta_s_star_;
                     frontier_selected_post_u2 = std::make_shared<frontier_msgs::msg::Frontier>(frontier_with_u1_utility[m].first.frontier_);
                 }
             }
         }
-        else {
+        else
+        {
             RCLCPP_WARN(logger_, "The number of frontiers after U1 compute is zero.");
+            SelectionResult selection_result;
+            selection_result.frontier = selected_frontier;
+            selection_result.orientation = selected_orientation;
+            selection_result.success = false;
+            selection_result.frontier_costs = frontier_costs;
+            return selection_result;
         }
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = (endTime - startTime).count() / 1.0;
@@ -525,8 +533,6 @@ namespace frontier_exploration
         {
             selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(theta_s_star_post_u2);
             frontier_blacklist_.push_back(*frontier_selected_post_u2);
-            res->success = true;
-            res->next_frontier.pose.position = frontier_selected_post_u2->centroid;
             SelectionResult selection_result;
             selection_result.frontier = *frontier_selected_post_u2;
             selection_result.orientation = selected_orientation;
@@ -538,8 +544,6 @@ namespace frontier_exploration
         {
             RCLCPP_WARN(logger_, "The selected frontier was not updated after U2 computation.");
             frontier_blacklist_.push_back(selected_frontier);
-            res->success = true;
-            res->next_frontier.pose.position = selected_frontier.centroid;
             SelectionResult selection_result;
             selection_result.frontier = selected_frontier;
             selection_result.orientation = selected_orientation;
@@ -549,25 +553,24 @@ namespace frontier_exploration
         }
     }
 
-    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierClosest(const std::vector<frontier_msgs::msg::Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, std::string globalFrameID)
+    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierClosest(const std::vector<frontier_msgs::msg::Frontier> &frontier_list)
     {
         // create placeholder for selected frontier
         frontier_msgs::msg::Frontier selected;
         selected.min_distance = std::numeric_limits<double>::infinity();
 
+        // initialize with false, becomes true if frontier is selected.
+        bool frontierSelectionFlag = false;
         if (frontier_list.size() == 0)
         {
             RCLCPP_ERROR(logger_, "No frontiers found, exploration complete");
-            res->success = false;
-            res->next_frontier.pose.position = selected.centroid;
+            frontierSelectionFlag = false;
             return std::make_pair(selected, false);
         }
 
         // Iterate through each frontier in the list
-        bool frontierSelectionFlag = false;
         for (const auto &frontier : frontier_list)
         {
-
             // check if this frontier is the nearest to robot and ignore if very close (frontier_detect_radius)
             if (frontier.min_distance > frontierDetectRadius_)
             {
@@ -588,39 +591,32 @@ namespace frontier_exploration
                 }
             }
         }
-        // Wait for a brief period to match time of other methods.
-        // rclcpp::sleep_for(std::chrono::milliseconds(10000));
 
-        // If no frontier is selected, set success flag to false and return
+        // If no frontier is selected, return
         if (frontierSelectionFlag == false)
         {
             RCLCPP_ERROR(logger_, "No clustered frontiers are outside the minimum detection radius.");
-            res->success = false;
-            res->next_frontier.pose.position = selected.centroid;
             return std::make_pair(selected, frontierSelectionFlag);
         }
         // Add the selected frontier to the blacklist to prevent re-selection
         frontier_blacklist_.push_back(selected);
-        res->success = true;
         return std::make_pair(selected, frontierSelectionFlag);
     }
 
-
-    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierRandom(const std::vector<frontier_msgs::msg::Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> res, std::string globalFrameID)
+    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierRandom(const std::vector<frontier_msgs::msg::Frontier> &frontier_list)
     {
         // create placeholder for selected frontier
         frontier_msgs::msg::Frontier selected;
         selected.min_distance = std::numeric_limits<double>::infinity();
 
+        bool frontierSelectionFlag = false;
         if (frontier_list.size() == 0)
         {
             RCLCPP_ERROR(logger_, "No frontiers found, exploration complete");
-            res->success = false;
-            res->next_frontier.pose.position = selected.centroid;
+            frontierSelectionFlag = false;
             return std::make_pair(selected, false);
         }
 
-        bool frontierSelectionFlag = false;
         // Create a vector to store eligible frontiers
         std::vector<frontier_msgs::msg::Frontier> frontier_list_imp;
         // Iterate through each frontier in the list
@@ -657,21 +653,19 @@ namespace frontier_exploration
             selected = frontier_list_imp[randomIndex];
             frontierSelectionFlag = true;
         }
-        else {
+        else
+        {
             frontierSelectionFlag = false;
         }
-        
+
         if (frontierSelectionFlag == false)
         {
             RCLCPP_ERROR(logger_, "No clustered frontiers are outside the minimum detection radius.");
-            res->success = false;
-            res->next_frontier.pose.position = selected.centroid;
             return std::make_pair(selected, frontierSelectionFlag);
         }
 
         // Add the selected frontier to the blacklist
         frontier_blacklist_.push_back(selected);
-        res->success = true;
         return std::make_pair(selected, frontierSelectionFlag);
     }
 
@@ -805,7 +799,7 @@ namespace frontier_exploration
 
                 auto Q = Eigen::Matrix3f::Identity() * 0.01f;
                 auto info_pcl = frontier_exploration_information_affine::computeInformationForPose(oriented_pose,
-                                                                                            nodes_in_radius.first, nodes_in_radius.second, map_data->data, 2.0, 1.089, 0.5, Q, true, logger_, costmap_, true);
+                                                                                                   nodes_in_radius.first, nodes_in_radius.second, map_data->data, 2.0, 1.089, 0.5, Q, true, logger_, costmap_, true);
                 if (info_pcl.first > 0)
                 {
                     landmarkViz(info_pcl.second, marker_msg_points_);
@@ -823,7 +817,8 @@ namespace frontier_exploration
             return std::make_pair(struct_obj, false);
         }
         struct_obj.path = plan;
-        if (number_of_wayp == 0) {
+        if (number_of_wayp == 0)
+        {
             struct_obj.information_total = information_for_path;
         }
         if (number_of_wayp != 0)

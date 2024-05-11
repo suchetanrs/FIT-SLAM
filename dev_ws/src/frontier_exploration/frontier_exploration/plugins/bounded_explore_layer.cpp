@@ -24,6 +24,7 @@ namespace frontier_exploration
     {
         configured_ = false;
         marked_ = false;
+        current_ = true;
 
         declareParameter("explore_clear_space", rclcpp::ParameterValue(true));
         declareParameter("resize_to_boundary", rclcpp::ParameterValue(true));
@@ -31,7 +32,7 @@ namespace frontier_exploration
         declareParameter("enabled", rclcpp::ParameterValue(true));
         declareParameter("min_frontier_cluster_size", rclcpp::ParameterValue(1));
         declareParameter("exploration_mode", rclcpp::ParameterValue(std::string("ours")));
-        robot_namespaces_ = {"/scout_1","/scout_2"};
+        robot_namespaces_ = {"/scout_1", "/scout_2"};
         declareParameter("robot_namespaces", rclcpp::ParameterValue(robot_namespaces_));
 
         node = node_.lock();
@@ -74,12 +75,20 @@ namespace frontier_exploration
                 this, std::placeholders::_1));
 
         tf_buffer_ = std::make_shared<tf2_ros::Buffer>(node->get_clock());
+        tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
         matchSize();
         RCLCPP_INFO(logger_, "BoundedExploreLayer::onInitialize");
 
-        client_node_ = rclcpp::Node::make_shared("client_node_bel");
-        client_get_map_data2_ = client_node_->create_client<slam_msgs::srv::GetMap>("orb_slam3_get_map_data");
+        internal_node_ = rclcpp::Node::make_shared("layer_node_bel");
+        internal_executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+        internal_executor_->add_node(internal_node_);
+        client_get_map_data2_ = internal_node_->create_client<slam_msgs::srv::GetMap>("orb_slam3_get_map_data");
+
+        std::thread t1([this]() {
+            internal_executor_->spin();
+        });
+        t1.detach();
 
         current_robot_namespace_ = node->get_namespace();
         current_robot_namespace_ = current_robot_namespace_.substr(0, current_robot_namespace_.find('/', current_robot_namespace_.find('/') + 1));
@@ -140,49 +149,46 @@ namespace frontier_exploration
         return result;
     }
 
-    void BoundedExploreLayer::processOurApproach(frontier_msgs::msg::Frontier &selected, std::vector<frontier_msgs::msg::Frontier> &frontier_list, const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res)
+    SelectionResult BoundedExploreLayer::processOurApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list, geometry_msgs::msg::Point& start_point_w)
     {
         RCLCPP_INFO(logger_, "BoundedExploreLayer::processOurApproach");
-        geometry_msgs::msg::Point start_point_w;
-        start_point_w.x = req->start_pose.pose.position.x;
-        start_point_w.y = req->start_pose.pose.position.y;
         auto startTime = std::chrono::high_resolution_clock::now();
 
         // Getting map data
         // Create a service request
         auto request_map_data = std::make_shared<slam_msgs::srv::GetMap::Request>();
+        auto response_map_data = std::make_shared<slam_msgs::srv::GetMap::Response>();
+        /** Uncomment this if you want to use map data.
         request_map_data->tracked_points = true;
-        std::vector<int32_t> kf_id_for_landmarks;
         // Adding landmarks from 1 to 100 to the vector
-        for (int i = 0; i <= 10000; ++i) {
+        std::vector<int32_t> kf_id_for_landmarks;
+        for (int i = 0; i <= 10000; ++i)
+        {
             kf_id_for_landmarks.push_back(i);
         }
-        request_map_data->kf_id_for_landmarks =kf_id_for_landmarks;
-        // request_map_data->global_map = true;
-        // request_map_data->optimized = true;
-        // request_map_data->with_images = true;
-        // request_map_data->with_scans = true;
-        // request_map_data->with_user_data = true;
-        // request_map_data->with_grids = true;
-        // request_map_data->with_words = true;
-        // request_map_data->with_global_descriptors = true;
+        request_map_data->kf_id_for_landmarks = kf_id_for_landmarks;
+        while (!client_get_map_data2_->wait_for_service(std::chrono::seconds(1))) {
+            if(!rclcpp::ok()) {
+                RCLCPP_INFO(logger_, "ROS shutdown request in between waiting for service.");
+            }
+            RCLCPP_INFO(logger_, "Waiting for get map data service");
+        }
+        RCLCPP_INFO(logger_, "Got get map data service.");
         auto result_map_data = client_get_map_data2_->async_send_request(request_map_data);
-        std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data_srv_res;
         RCLCPP_INFO(logger_, "BoundedExploreLayer -- Start map data.");
-        if (rclcpp::spin_until_future_complete(client_node_, result_map_data, std::chrono::seconds(10)) == rclcpp::FutureReturnCode::SUCCESS)
+        if (result_map_data.wait_for(std::chrono::seconds(20)) == std::future_status::ready)
         {
-            map_data_srv_res = result_map_data.get();
-            if (map_data_srv_res->data.nodes.empty())
+            response_map_data = result_map_data.get();
+            if (response_map_data->data.nodes.empty())
             {
                 RCLCPP_WARN(logger_, "No map data recieved");
             }
             else
             {
                 // Process the received poses as needed
-                RCLCPP_INFO(logger_, "Received %zu map poses.", map_data_srv_res->data.nodes.size());
-                RCLCPP_WARN_STREAM(logger_, "Map data has " << map_data_srv_res->data.graph.poses.size() << " poses");
-                RCLCPP_WARN_STREAM(logger_, "Map data has " << map_data_srv_res->data.graph.poses_id.size() << " pose ids");
-                RCLCPP_WARN_STREAM(logger_, "Map data has " << map_data_srv_res->data.nodes.size() << " keyframes");
+                RCLCPP_WARN_STREAM(logger_, "Map data has " << response_map_data->data.graph.poses.size() << " poses");
+                RCLCPP_WARN_STREAM(logger_, "Map data has " << response_map_data->data.graph.poses_id.size() << " pose ids");
+                RCLCPP_WARN_STREAM(logger_, "Map data has " << response_map_data->data.nodes.size() << " keyframes");
             }
         }
         else
@@ -190,65 +196,38 @@ namespace frontier_exploration
             RCLCPP_ERROR(logger_, "Failed to call the service map_data.");
         }
         RCLCPP_INFO(logger_, "BoundedExploreLayer -- End map data.");
+        */
         // Select the frontier
         SelectionResult selection_result;
-        selection_result = frontierSelect_->selectFrontierOurs(frontier_list, polygon_xy_min_max_, res, start_point_w, map_data_srv_res, layered_costmap_->getCostmap());
+        selection_result = frontierSelect_->selectFrontierOurs(frontier_list, polygon_xy_min_max_, start_point_w, response_map_data, layered_costmap_->getCostmap());
         if (selection_result.success == false)
         {
-            RCLCPP_ERROR(logger_, "The selection result for Count Unknowns is false!");
-            return;
+            RCLCPP_ERROR(logger_, "The selection result for our method is false!");
+            return selection_result;
         }
-        selected = selection_result.frontier;
-        // Uncomment the next line if you are using information acquired after reaching. The pose is important in that case.
-        res->next_frontier.pose.orientation = selection_result.orientation;
 
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = (endTime - startTime).count() / 1.0;
         RCLCPP_INFO_STREAM(logger_, "Time taken to plan to all frontiers is: " << duration);
-
-        std::vector<frontier_msgs::msg::Frontier> frontiers_list;
-        std::vector<double> frontier_costs;
-        for (auto pair : selection_result.frontier_costs)
-        {
-            // Extract key and value
-            auto key = pair.first.frontier_; // frontier with meta data
-            auto value = pair.second;        // cost.
-
-            // Push them into respective vectors
-            frontiers_list.push_back(key);
-            frontier_costs.push_back(value);
-        }
-        res->frontier_costs = frontier_costs;
-        res->frontier_list = frontiers_list;
+        return selection_result;
     }
 
-    void BoundedExploreLayer::processGreedyApproach(frontier_msgs::msg::Frontier &selected, std::vector<frontier_msgs::msg::Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res)
+    std::pair<frontier_msgs::msg::Frontier, bool> BoundedExploreLayer::processGreedyApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list)
     {
-        auto selection_result = frontierSelect_->selectFrontierClosest(frontier_list, every_frontier, res, layered_costmap_->getGlobalFrameID());
+        auto selection_result = frontierSelect_->selectFrontierClosest(frontier_list);
         RCLCPP_INFO(logger_, "BoundedExploreLayer::processGreedyApproach");
-        if (selection_result.second == false)
-        {
-            return;
-        }
-        selected = selection_result.first;
-        res->next_frontier.pose.orientation = createQuaternionMsgFromYaw(yawOfVector(req->start_pose.pose.position, res->next_frontier.pose.position));
+        return selection_result;
     }
 
-    void BoundedExploreLayer::processRandomApproach(frontier_msgs::msg::Frontier &selected, std::vector<frontier_msgs::msg::Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res)
+    std::pair<frontier_msgs::msg::Frontier, bool> BoundedExploreLayer::processRandomApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list)
     {
         RCLCPP_INFO(logger_, "BoundedExploreLayer::processRandomApproach");
-        auto selection_result = frontierSelect_->selectFrontierRandom(frontier_list, every_frontier, res, layered_costmap_->getGlobalFrameID());
-        if (selection_result.second == false)
-        {
-            return;
-        }
-        selected = selection_result.first;
-        res->next_frontier.pose.orientation = createQuaternionMsgFromYaw(yawOfVector(req->start_pose.pose.position, res->next_frontier.pose.position));
+        auto selection_result = frontierSelect_->selectFrontierRandom(frontier_list);
+        return selection_result;
     }
 
     void BoundedExploreLayer::getNextFrontierService(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res)
     {
-        RCLCPP_INFO(logger_, "BoundedExploreLayer::getNextFrontierService");
         // wait for costmap to get marked with boundary
         rclcpp::Rate r(10);
         while (!marked_)
@@ -267,13 +246,14 @@ namespace frontier_exploration
                 res->success = false;
             }
             geometry_msgs::msg::PoseStamped temp_pose = req->start_pose;
-            tf_buffer_->transform(temp_pose, req->start_pose, layered_costmap_->getGlobalFrameID(), tf2::durationFromSec(10));
+            tf_buffer_->transform(temp_pose, req->start_pose, layered_costmap_->getGlobalFrameID());
         }
 
         std::vector<frontier_msgs::msg::Frontier> frontier_list;
         std::vector<std::vector<double>> every_frontier;
         if (req->override_frontier_list == false)
         {
+            RCLCPP_INFO(logger_, "BoundedExploreLayer::getNextFrontierService");
             RCLCPP_INFO(logger_, "Get next frontier called from within.");
             // initialize frontier search implementation
             frontier_exploration::FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_cluster_size_);
@@ -291,14 +271,21 @@ namespace frontier_exploration
                 RCLCPP_INFO_STREAM(logger_, "Picked: " << robot_name << " from " << current_robot_namespace_);
                 if (robot_name != current_robot_namespace_)
                 {
-                    RCLCPP_INFO_STREAM(logger_, "Processing: " << robot_name);
-                    client_get_frontier_costs_ = client_node_->create_client<frontier_msgs::srv::GetFrontierCosts>(robot_name + "/multirobot_get_frontier_costs");
+                    RCLCPP_INFO_STREAM(logger_, "Processing robot: " << robot_name);
+                    client_get_frontier_costs_ = internal_node_->create_client<frontier_msgs::srv::GetFrontierCosts>(robot_name + "/multirobot_get_frontier_costs");
                     auto request_frontier_costs = std::make_shared<frontier_msgs::srv::GetFrontierCosts::Request>();
                     request_frontier_costs->requested_frontier_list = frontier_list;
                     request_frontier_costs->robot_namespace = robot_name;
+                    while (!client_get_frontier_costs_->wait_for_service(std::chrono::seconds(1))) {
+                        if(!rclcpp::ok()) {
+                            RCLCPP_INFO(logger_, "ROS shutdown request in between waiting for service.");
+                        }
+                        RCLCPP_INFO_STREAM(logger_, "Waiting for get frontier costs service from " << robot_name);
+                    }
+                    RCLCPP_INFO_STREAM(logger_, "Got get frontier costs service from" << robot_name);
                     auto result_frontier_costs = client_get_frontier_costs_->async_send_request(request_frontier_costs);
                     std::shared_ptr<frontier_msgs::srv::GetFrontierCosts_Response> frontier_costs_srv_res;
-                    if (rclcpp::spin_until_future_complete(client_node_, result_frontier_costs, std::chrono::seconds(2000)) == rclcpp::FutureReturnCode::SUCCESS)
+                    if (result_frontier_costs.wait_for(std::chrono::seconds(200)) == std::future_status::ready)
                     {
                         frontier_costs_srv_res = result_frontier_costs.get();
                         if (!frontier_costs_srv_res)
@@ -311,7 +298,7 @@ namespace frontier_exploration
                         }
                         else if (frontier_costs_srv_res->success == false)
                         {
-                            RCLCPP_INFO(logger_, "Server returned false. Probably busy.");
+                            RCLCPP_ERROR_STREAM(logger_, "Server returned false of robot " << robot_name << ". Probably busy.");
                         }
                     }
                     else
@@ -320,11 +307,13 @@ namespace frontier_exploration
                     }
                 }
             }
+            // Visualize the frontiers only if frontier list is not overriden.
+            frontierSelect_->visualizeFrontier(frontier_list, every_frontier, layered_costmap_->getGlobalFrameID());
         }
         if (req->override_frontier_list == true)
         {
             frontier_list = req->frontier_list_to_override;
-            RCLCPP_INFO(logger_, "Get next frontier called from another robot.");
+            RCLCPP_INFO(logger_, "BoundedExploreLayer::getNextFrontierService another robot");
         }
 
         // Select the frontier (Modify this for different algorithms)
@@ -332,17 +321,61 @@ namespace frontier_exploration
         frontier_msgs::msg::Frontier selected;
         if (exploration_mode_ == "greedy")
         {
-            BoundedExploreLayer::processGreedyApproach(selected, frontier_list, every_frontier, req, res);
+            auto selection_result = BoundedExploreLayer::processGreedyApproach(frontier_list);
+            if (selection_result.second == false)
+            {
+                res->success = false;
+                return;
+            }
+            res->success = true;
+            selected = selection_result.first;
+            // set orientation here. The position is set later in the code based on ```frontier_travel_point_```
+            res->next_frontier.pose.orientation = createQuaternionMsgFromYaw(yawOfVector(req->start_pose.pose.position, res->next_frontier.pose.position));
         }
 
         else if (exploration_mode_ == "random")
         {
-            BoundedExploreLayer::processRandomApproach(selected, frontier_list, every_frontier, req, res);
+            auto selection_result = BoundedExploreLayer::processRandomApproach(frontier_list);
+            if (selection_result.second == false)
+            {
+                res->success = false;
+                return;
+            }
+            res->success = true;
+            selected = selection_result.first;
+            // set orientation here. The position is set later in the code based on ```frontier_travel_point_```
+            res->next_frontier.pose.orientation = createQuaternionMsgFromYaw(yawOfVector(req->start_pose.pose.position, res->next_frontier.pose.position));
         }
 
         else if (exploration_mode_ == "ours")
         {
-            BoundedExploreLayer::processOurApproach(selected, frontier_list, req, res);
+            geometry_msgs::msg::Point start_point_w;
+            start_point_w.x = req->start_pose.pose.position.x;
+            start_point_w.y = req->start_pose.pose.position.y;
+            auto selection_result = BoundedExploreLayer::processOurApproach(frontier_list, start_point_w);
+            if (selection_result.success == false)
+            {
+                res->success = false;
+                return;
+            }
+            res->success = true;
+            selected = selection_result.frontier;
+            // Uncomment the next line if you are using information acquired after reaching. The pose is important in that case.
+            res->next_frontier.pose.orientation = selection_result.orientation;
+            std::vector<frontier_msgs::msg::Frontier> frontiers_list;
+            std::vector<double> frontier_costs;
+            for (auto pair : selection_result.frontier_costs)
+            {
+                // Extract key and value
+                auto key = pair.first.frontier_; // frontier with meta data
+                auto value = pair.second;        // cost.
+
+                // Push them into respective vectors
+                frontiers_list.push_back(key);
+                frontier_costs.push_back(value);
+            }
+            res->frontier_costs = frontier_costs;
+            res->frontier_list = frontiers_list;
         }
 
         else
@@ -354,9 +387,6 @@ namespace frontier_exploration
         RCLCPP_INFO_STREAM(logger_, "Is the list overriden? : " << req->override_frontier_list);
         RCLCPP_INFO_STREAM(logger_, "Is the list overriden? : " << req->override_frontier_list);
         RCLCPP_INFO_STREAM(logger_, "Is the list overriden? : " << req->override_frontier_list);
-
-        // Visualize the frontiers
-        frontierSelect_->visualizeFrontier(frontier_list, every_frontier, layered_costmap_->getGlobalFrameID());
 
         // set goal pose to next frontier
         res->next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
@@ -401,7 +431,7 @@ namespace frontier_exploration
         for (const auto &point32 : req->explore_boundary.polygon.points)
         {
             in.point = nav2_costmap_2d::toPoint(point32);
-            tf_buffer_->transform(in, out, layered_costmap_->getGlobalFrameID(), tf2::durationFromSec(10));
+            tf_buffer_->transform(in, out, layered_costmap_->getGlobalFrameID());
             polygon_.points.push_back(nav2_costmap_2d::toPoint32(out.point));
         }
 
@@ -486,9 +516,12 @@ namespace frontier_exploration
             return;
         }
 
+        current_ = true;
+
         // draw lines between each point in polygon
         MarkCell marker(costmap_, LETHAL_OBSTACLE);
 
+        // TODO (suchetan): Check if cells are actually marked on the costmap.
         // circular iterator
         for (int i = 0, j = polygon_.points.size() - 1; i < polygon_.points.size(); j = i++)
         {

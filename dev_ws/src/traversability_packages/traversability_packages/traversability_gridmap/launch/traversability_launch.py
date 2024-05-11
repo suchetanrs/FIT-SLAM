@@ -66,8 +66,15 @@ def generate_launch_description():
             output='screen',
             namespace=context.launch_configurations['robot_namespace'],
             parameters=[configured_params])
+
+        pcl_transform = Node(
+            package='traversability_gridmap',
+            executable='pcl_transform',
+            output='screen',
+            namespace=context.launch_configurations['robot_namespace'],
+            parameters=[configured_params])
         
-        return [declare_params_file_cmd, traversability_server, pointcloud_transformer]
+        return [declare_params_file_cmd, traversability_server, pointcloud_transformer, pcl_transform]
 
     opaque_function = OpaqueFunction(function=all_nodes_launch)
 #---------------------------------------------

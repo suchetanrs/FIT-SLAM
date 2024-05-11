@@ -10,12 +10,14 @@ namespace frontier_exploration
         this->declare_parameter("retry_count", 30);
         this->declare_parameter("nav2_goal_timeout_sec", 35);
         this->declare_parameter("use_traversability", false);
+        this->declare_parameter("use_custom_sim", false);
 
         this->get_parameter("frequency", frequency_);
         this->get_parameter("goal_aliasing", goal_aliasing_);
         this->get_parameter("retry_count", retry_);
         this->get_parameter("nav2_goal_timeout_sec", nav2WaitTime_);
         this->get_parameter("robot_namespaces", robot_namespaces_);
+        this->get_parameter("use_custom_sim", use_custom_sim_);
 
         //--------------------------------------------NAV2 CLIENT RELATED--------------------------------
         nav2_client_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -57,9 +59,8 @@ namespace frontier_exploration
         service_get_costs_ = this->create_service<frontier_msgs::srv::GetFrontierCosts>(
             "multirobot_get_frontier_costs", std::bind(&FrontierExplorationServer::handle_multirobot_frontier_cost_request, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), rmw_qos_profile_default, multirobot_service_callback_group_);
 
-        client_node_ = rclcpp::Node::make_shared("explore_server_client_node");
-        updateBoundaryPolygon = client_node_->create_client<frontier_msgs::srv::UpdateBoundaryPolygon>("explore_costmap/update_boundary_polygon");
-        getNextFrontier = client_node_->create_client<frontier_msgs::srv::GetNextFrontier>("explore_costmap/get_next_frontier");
+        updateBoundaryPolygon = this->create_client<frontier_msgs::srv::UpdateBoundaryPolygon>("explore_costmap/update_boundary_polygon");
+        getNextFrontier = this->create_client<frontier_msgs::srv::GetNextFrontier>("explore_costmap/get_next_frontier");
 
         //---------------------------------------------ROS RELATED------------------------------------------
         tf_listener_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
@@ -67,6 +68,7 @@ namespace frontier_exploration
             std::bind(
                 &FrontierExplorationServer::dynamicParametersCallback,
                 this, std::placeholders::_1));
+        layer_configured_ = false;
 
         RCLCPP_INFO(this->get_logger(), "FrontierExplorationServer::FrontierExplorationServer()");
     }
@@ -143,7 +145,7 @@ namespace frontier_exploration
         RCLCPP_INFO(this->get_logger(), "FrontierExplorationServer::executeCb");
         success_ = false;
         moving_ = false;
-        auto res = std::make_shared<frontier_msgs::action::ExploreTask::Result>();
+        auto explore_action_res = std::make_shared<frontier_msgs::action::ExploreTask::Result>();
 
         // Don't compute a plan until costmap is valid (after clear costmap)
         rclcpp::Rate r(100);
@@ -152,11 +154,11 @@ namespace frontier_exploration
             r.sleep();
         }
 
-        // wait for move_base and costmap services
+        // wait for nav2 and costmap services
         if (!nav2Client_->wait_for_action_server(std::chrono::seconds(10)) || !updateBoundaryPolygon->wait_for_service(std::chrono::seconds(10)) || !getNextFrontier->wait_for_service(std::chrono::seconds(10)))
         {
-            goal_handle->abort(res);
-            RCLCPP_ERROR(this->get_logger(), "Action server or bel services is not available.");
+            goal_handle->abort(explore_action_res);
+            RCLCPP_ERROR(this->get_logger(), "Action server or BEL services is not available.");
             return;
         }
 
@@ -164,26 +166,41 @@ namespace frontier_exploration
         if (rclcpp::ok() && goal_handle->is_active())
         {
             auto srv_req = std::make_shared<frontier_msgs::srv::UpdateBoundaryPolygon::Request>();
-            auto boundary_polygon_srv_res = std::make_shared<frontier_msgs::srv::UpdateBoundaryPolygon::Response>();
+            auto srv_res = std::make_shared<frontier_msgs::srv::UpdateBoundaryPolygon::Response>();
             srv_req->explore_boundary = goal->explore_boundary;
-            auto resultBoundaryPolygon = updateBoundaryPolygon->async_send_request(srv_req);
-            RCLCPP_INFO(this->get_logger(), "Adding update boundary polygon for spin.");
-            if (rclcpp::spin_until_future_complete(client_node_, resultBoundaryPolygon, std::chrono::seconds(15)) ==
-                rclcpp::FutureReturnCode::SUCCESS)
+            while (!updateBoundaryPolygon->wait_for_service(std::chrono::seconds(10)))
             {
-                boundary_polygon_srv_res = resultBoundaryPolygon.get();
+                if (!rclcpp::ok())
+                {
+                    RCLCPP_INFO(this->get_logger(), "ROS shutdown request in between waiting for service.");
+                }
+                RCLCPP_INFO_STREAM(this->get_logger(), "Waiting for update boundary polygon service");
+            }
+            auto srv_future_id = updateBoundaryPolygon->async_send_request(srv_req);
+            RCLCPP_INFO(this->get_logger(), "Adding update boundary polygon for spin.");
+            if (srv_future_id.wait_for(std::chrono::seconds(15)) == std::future_status::ready)
+            {
+                srv_res = srv_future_id.get();
                 RCLCPP_INFO(this->get_logger(), "Region boundary set");
+                layer_configured_ = true;
             }
             else
             {
                 RCLCPP_ERROR(this->get_logger(), "Failed to receive response for updateBoundaryPolygon called from within.");
-                goal_handle->abort(res);
+                goal_handle->abort(explore_action_res);
                 return;
             }
         }
 
+        // The exploration is active until this while loop runs.
         while (rclcpp::ok() && goal_handle->is_active())
         {
+            if (!layer_configured_)
+            {
+                RCLCPP_INFO(this->get_logger(), "Waitting for the layer to be configued");
+                rclcpp::sleep_for(std::chrono::milliseconds(200));
+                continue;
+            }
             auto srv_req = std::make_shared<frontier_msgs::srv::GetNextFrontier::Request>();
             auto srv_res = std::make_shared<frontier_msgs::srv::GetNextFrontier::Response>();
 
@@ -192,42 +209,54 @@ namespace frontier_exploration
 
             // get current robot pose in frame of exploration boundary
             geometry_msgs::msg::PoseStamped robot_pose;
-            explore_costmap_ros_->getRobotPose(robot_pose);
+            if (!explore_costmap_ros_->getRobotPose(robot_pose))
+            {
+                RCLCPP_ERROR(this->get_logger(), "Could not get robot position from explore costmap.");
+            }
             srv_req->start_pose = robot_pose;
+            // make this true only if you are providing a custom frontier list.
             srv_req->override_frontier_list = false;
 
             // evaluate if robot is within exploration boundary using robot_pose in boundary frame
             geometry_msgs::msg::PoseStamped eval_pose = srv_req->start_pose;
             if (eval_pose.header.frame_id != goal->explore_boundary.header.frame_id)
             {
-                RCLCPP_ERROR(this->get_logger(), "Frames not same");
+                RCLCPP_ERROR(this->get_logger(), "Frames of robot pose and exploration boundary is not same");
                 tf_listener_->transform(srv_req->start_pose, eval_pose, goal->explore_boundary.header.frame_id);
             }
             if (currently_processing_ == true)
             {
-                success_ = false;
                 RCLCPP_ERROR(this->get_logger(), "Cannot process getNextFrontier from within, server busy.");
-                return;
+                rclcpp::sleep_for(std::chrono::milliseconds(500));
+                continue;
             }
             currently_processing_lock_.lock();
             currently_processing_ = true;
             currently_processing_lock_.unlock();
             RCLCPP_INFO_STREAM(this->get_logger(), "Set Currently processing to true: " << currently_processing_);
-
-            auto resultNextFrontier = getNextFrontier->async_send_request(srv_req);
-            if (rclcpp::spin_until_future_complete(client_node_, resultNextFrontier, std::chrono::seconds(2000)) ==
-                rclcpp::FutureReturnCode::SUCCESS)
+            while (!getNextFrontier->wait_for_service(std::chrono::seconds(10)))
             {
-                srv_res = resultNextFrontier.get();
+                if (!rclcpp::ok())
+                {
+                    RCLCPP_INFO(this->get_logger(), "ROS shutdown request in between waiting for service.");
+                }
+                RCLCPP_INFO_STREAM(this->get_logger(), "Waiting for get next frontier service of the same robot");
+            }
+            auto srv_future_id = getNextFrontier->async_send_request(srv_req);
+            if (srv_future_id.wait_for(std::chrono::seconds(200)) == std::future_status::ready)
+            {
+                srv_res = srv_future_id.get();
             }
             else
             {
-                RCLCPP_ERROR(this->get_logger(), "Failed to receive response for getNextFrontier called from within.");
-                return;
+                RCLCPP_ERROR(this->get_logger(), "Failed to receive response for getNextFrontier called from within the robot.");
+                rclcpp::sleep_for(std::chrono::milliseconds(500));
+                continue;
             }
             currently_processing_lock_.lock();
             currently_processing_ = false;
             currently_processing_lock_.unlock();
+
             // check if robot is not within exploration boundary and needs to return to center of search area
             if (goal->explore_boundary.polygon.points.size() > 0 && !pointInPolygon(eval_pose.pose.position, goal->explore_boundary.polygon))
             {
@@ -237,6 +266,7 @@ namespace frontier_exploration
                 }
                 else
                 {
+                    // (TODO: suchetan) evaluate this method if it works. Make exploration outside robot position and make it travel to center.
                     RCLCPP_ERROR(this->get_logger(), "Robot not initially in exploration boundary, traveling to center");
                 }
                 // get current robot position in frame of exploration center
@@ -262,22 +292,25 @@ namespace frontier_exploration
                 goal_pose = srv_res->next_frontier;
             }
             else if (srv_res->success == false)
-            { // if no frontier found, check if search is successful
+            {
+                // if no frontier found, check if search is successful
                 RCLCPP_ERROR_STREAM(this->get_logger(), "Next frontier Result failure.");
 
                 // search is succesful
+                // (TODO: suchetan) evaluate the usefulness of success variable.
                 if (retry_ == 0 && success_)
                 {
                     RCLCPP_WARN(this->get_logger(), "Finished exploring room");
-                    goal_handle->succeed(res);
+                    goal_handle->succeed(explore_action_res);
                     std::unique_lock<std::mutex> lock(nav2Clientlock_);
                     nav2Client_->async_cancel_goals_before(rclcpp::Clock().now());
                     return;
                 }
                 else if (retry_ == 0 || !rclcpp::ok())
-                { // search is not successful
+                {
+                    // search is not successful
                     RCLCPP_ERROR(this->get_logger(), "Failed exploration");
-                    goal_handle->abort(res);
+                    goal_handle->abort(explore_action_res);
                     return;
                 }
 
@@ -301,6 +334,8 @@ namespace frontier_exploration
                 old_goal.pose = goal_pose;
 
                 nav2_goal_.pose = old_goal.pose;
+                if (use_custom_sim_)
+                    nav2_goal_.behavior_tree = get_namespace();
                 nav2Client_->async_send_goal(nav2_goal_, nav2_goal_options_);
                 moving_ = true;
                 int waitCount_ = 0;
@@ -385,6 +420,12 @@ namespace frontier_exploration
         std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Request> request,
         std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Response> response)
     {
+        if (!layer_configured_)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Frontier costs handle called but not configured so exiting...");
+            response->success = false;
+            return;
+        }
         RCLCPP_WARN_STREAM(this->get_logger(), "Multirobot frontier costs handle called with cp as: " << currently_processing_);
         if (currently_processing_ == true)
         {
@@ -393,6 +434,7 @@ namespace frontier_exploration
             return;
         }
         auto srv_req = std::make_shared<frontier_msgs::srv::GetNextFrontier::Request>();
+        auto srv_res = std::make_shared<frontier_msgs::srv::GetNextFrontier::Response>();
 
         // get current robot pose in frame of exploration boundary
         geometry_msgs::msg::PoseStamped robot_pose;
@@ -406,27 +448,34 @@ namespace frontier_exploration
         currently_processing_lock_.lock();
         currently_processing_ = true;
         currently_processing_lock_.unlock();
-        auto resultNextFrontier = getNextFrontier->async_send_request(srv_req);
-
-        std::shared_ptr<frontier_msgs::srv::GetNextFrontier_Response> next_frontier_srv_res;
-        RCLCPP_INFO(this->get_logger(), "Multi robot Sent request.");
-        if (rclcpp::spin_until_future_complete(client_node_, resultNextFrontier, std::chrono::seconds(2000)) ==
-            rclcpp::FutureReturnCode::SUCCESS)
+        RCLCPP_INFO_STREAM(this->get_logger(), "Set Currently processing to true: " << currently_processing_);
+        while (!getNextFrontier->wait_for_service(std::chrono::seconds(10)))
         {
-            next_frontier_srv_res = resultNextFrontier.get();
+            if (!rclcpp::ok())
+            {
+                RCLCPP_INFO(this->get_logger(), "ROS shutdown request in between waiting for service.");
+            }
+            RCLCPP_INFO_STREAM(this->get_logger(), "Waiting for get next frontier service of the same robot called from another robot.");
+        }
+        auto srv_future_id = getNextFrontier->async_send_request(srv_req);
+
+        RCLCPP_INFO(this->get_logger(), "Multi robot Sent request.");
+        if (srv_future_id.wait_for(std::chrono::seconds(200)) == std::future_status::ready)
+        {
+            srv_res = srv_future_id.get();
         }
         else
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to receive response of getNextFrontier Called from outside.");
         }
         RCLCPP_INFO(this->get_logger(), "Multi robot Recieved response.");
-        if (next_frontier_srv_res->success == true)
+        if (srv_res->success == true)
         {
             response->success = true;
-            response->frontier_costs = next_frontier_srv_res->frontier_costs;
-            response->frontier_list = next_frontier_srv_res->frontier_list;
+            response->frontier_costs = srv_res->frontier_costs;
+            response->frontier_list = srv_res->frontier_list;
         }
-        else if (next_frontier_srv_res->success == false)
+        else if (srv_res->success == false)
         {
             response->success = false;
         }
@@ -447,11 +496,11 @@ namespace frontier_exploration
         switch (result.code)
         {
         case rclcpp_action::ResultCode::SUCCEEDED:
-            RCLCPP_INFO(this->get_logger(), "Goal succeeded");
+            RCLCPP_WARN(this->get_logger(), "Goal succeeded");
             moving_ = false;
             break;
         case rclcpp_action::ResultCode::ABORTED:
-            RCLCPP_INFO(this->get_logger(), "Nav2 internal fault! Nav2 aborted the goal!");
+            RCLCPP_ERROR(this->get_logger(), "Nav2 internal fault! Nav2 aborted the goal!");
             FrontierExplorationServer::performBackupReverse();
             moving_ = false;
             break;
