@@ -7,7 +7,7 @@ namespace frontier_exploration
     using nav2_costmap_2d::LETHAL_OBSTACLE;
     using nav2_costmap_2d::NO_INFORMATION;
 
-    FrontierSearch::FrontierSearch(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size) : costmap_(costmap), min_frontier_cluster_size_(min_frontier_cluster_size)
+    FrontierSearch::FrontierSearch(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size, int max_frontier_cluster_size) : costmap_(costmap), min_frontier_cluster_size_(min_frontier_cluster_size), max_frontier_cluster_size_(max_frontier_cluster_size)
     {
         RCLCPP_DEBUG(rclcpp::get_logger("frontier_search"), "FrontierSearch::FrontierSearch");
     }
@@ -60,6 +60,7 @@ namespace frontier_exploration
             // iterate over 4-connected neighbourhood
             for (unsigned nbr : nhood4(idx, costmap_))
             {
+                // RCLCPP_INFO(rclcpp::get_logger("frontier_search"), "New nhood4");
                 // add to queue all free, unvisited cells, use descending search in case initialized on non-free cell
                 if (map_[nbr] <= map_[idx] && !visited_flag[nbr])
                 {
@@ -70,10 +71,13 @@ namespace frontier_exploration
                 else if (isNewFrontierCell(nbr, frontier_flag))
                 {
                     frontier_flag[nbr] = true;
-                    frontier_msgs::msg::Frontier new_frontier = buildNewFrontier(nbr, pos, frontier_flag);
-                    if (new_frontier.size > min_frontier_cluster_size_)
+                    std::vector<frontier_msgs::msg::Frontier> new_frontier = buildNewFrontier(nbr, pos, frontier_flag);
+                    for (auto curr_frontier : new_frontier)
                     {
-                        frontier_list.push_back(new_frontier);
+                        if (curr_frontier.size > min_frontier_cluster_size_)
+                        {
+                            frontier_list.push_back(curr_frontier);
+                        }
                     }
                 }
             }
@@ -82,16 +86,17 @@ namespace frontier_exploration
         return frontier_list;
     }
 
-    frontier_msgs::msg::Frontier FrontierSearch::buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool> &frontier_flag)
+    std::vector<frontier_msgs::msg::Frontier> FrontierSearch::buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool> &frontier_flag)
     {
-
-        // initialize frontier structure
         frontier_msgs::msg::Frontier output;
-        output.centroid.x = 0;
-        output.centroid.y = 0;
+        // initialize frontier structure
+        output.centroid.x = 0.0;
+        output.centroid.y = 0.0;
+        output.middle.x = 0.0;
+        output.middle.y = 0.0;
         output.size = 1;
         output.min_distance = std::numeric_limits<double>::infinity();
-
+        std::vector<frontier_msgs::msg::Frontier> calculated_frontiers;
         // record initial contact point for frontier
         unsigned int ix, iy;
         costmap_.indexToCells(initial_cell, ix, iy);
@@ -106,6 +111,7 @@ namespace frontier_exploration
         double reference_x, reference_y;
         costmap_.indexToCells(reference, rx, ry);
         costmap_.mapToWorld(rx, ry, reference_x, reference_y);
+        int current_cluster_size = 0;
 
         while (!bfs.empty())
         {
@@ -118,7 +124,6 @@ namespace frontier_exploration
                 // check if neighbour is a potential frontier cell
                 if (isNewFrontierCell(nbr, frontier_flag))
                 {
-
                     // mark cell as frontier
                     frontier_flag[nbr] = true;
                     unsigned int mx, my;
@@ -151,6 +156,24 @@ namespace frontier_exploration
 
                     // add to queue for breadth first search
                     bfs.push(nbr);
+
+                    if (output.size > max_frontier_cluster_size_)
+                    {
+                        // push to output vector
+                        output.centroid.x /= output.size;
+                        output.centroid.y /= output.size;
+                        calculated_frontiers.push_back(output);
+
+                        // reset frontier structure
+                        output.centroid.x = 0.0;
+                        output.centroid.y = 0.0;
+                        output.middle.x = 0.0;
+                        output.middle.y = 0.0;
+                        output.initial.x = wx;
+                        output.initial.y = wy;
+                        output.size = 1;
+                        output.min_distance = std::numeric_limits<double>::infinity();
+                    }
                 }
             }
         }
@@ -158,7 +181,8 @@ namespace frontier_exploration
         // average out frontier centroid
         output.centroid.x /= output.size;
         output.centroid.y /= output.size;
-        return output;
+        calculated_frontiers.push_back(output);
+        return calculated_frontiers;
     }
 
     bool FrontierSearch::isNewFrontierCell(unsigned int idx, const std::vector<bool> &frontier_flag)

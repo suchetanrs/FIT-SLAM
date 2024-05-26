@@ -27,7 +27,7 @@ namespace frontier_exploration
          * @brief Constructor for search task
          * @param costmap Reference to costmap data to search.
          */
-        FrontierSearch(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size);
+        FrontierSearch(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size, int max_frontier_cluster_size);
 
         /**
          * @brief Runs search implementation, outward from the start position
@@ -50,7 +50,7 @@ namespace frontier_exploration
          * @param frontier_flag Flag vector indicating which cells are already marked as frontiers
          * @return
          */
-        frontier_msgs::msg::Frontier buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool> &frontier_flag);
+        std::vector<frontier_msgs::msg::Frontier> buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool> &frontier_flag);
 
         /**
          * @brief isNewFrontierCell Evaluate if candidate cell is a valid candidate for a new frontier.
@@ -66,6 +66,7 @@ namespace frontier_exploration
         unsigned int size_x_, size_y_;
         std::vector<std::vector<double>> every_frontier_list;
         int min_frontier_cluster_size_;
+        int max_frontier_cluster_size_;
     };
 
 }

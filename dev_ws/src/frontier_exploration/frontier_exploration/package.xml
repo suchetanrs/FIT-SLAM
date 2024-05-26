@@ -17,6 +17,7 @@
   <build_depend>frontier_msgs</build_depend>
   <build_depend>pcl_ros</build_depend>
   <build_depend>sensor_msgs</build_depend>
+  <build_depend>frontier_multirobot_allocator</build_depend>
   
   <exec_depend>rclcpp</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
@@ -24,6 +25,7 @@
   <exec_depend>frontier_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>pcl_ros</exec_depend>
+  <exec_depend>frontier_multirobot_allocator</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

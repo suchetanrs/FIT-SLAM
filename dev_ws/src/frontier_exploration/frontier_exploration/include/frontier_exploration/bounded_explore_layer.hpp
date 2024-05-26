@@ -178,6 +178,7 @@ namespace frontier_exploration
     private:
         geometry_msgs::msg::Polygon polygon_;    ///< A Polygon representing the boundary polygon for exploration. This is used to set the vector of polygon points.
         int min_frontier_cluster_size_;          ///< Minimum size of a frontier cluster.
+        int max_frontier_cluster_size_;
         std::string exploration_mode_;           ///< String representing the exploration mode. {Ours, Greedy, Random}
         std::vector<double> polygon_xy_min_max_; ///< Polygon points for the boundary.
         std::string frontier_travel_point_;      ///< Used to set the frontier travel point. {Closest, Centroid, Middle}
@@ -193,7 +194,6 @@ namespace frontier_exploration
         std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
         std::string current_robot_namespace_;
-        std::vector<std::string> robot_namespaces_;
         std::chrono::_V2::system_clock::time_point startTime_ = std::chrono::high_resolution_clock::now();
         rclcpp_lifecycle::LifecycleNode::SharedPtr node;
 
@@ -202,7 +202,6 @@ namespace frontier_exploration
 
         // ROS Clients
         rclcpp::Client<slam_msgs::srv::GetMap>::SharedPtr client_get_map_data2_;
-        rclcpp::Client<frontier_msgs::srv::GetFrontierCosts>::SharedPtr client_get_frontier_costs_;
 
         // ROS Publishers
         rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>::SharedPtr plan_pub_;

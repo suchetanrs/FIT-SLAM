@@ -2,16 +2,18 @@ explore_client:
   ros__parameters:
     costmap_resolution: 0.05 # same as bounded_explore_layer
     use_config: True
-    config: ["70.0", "70.0", "70.0", "-70.0", "-70.0", "-70.0", "-70.0", "70.0"]
+    config: ["70.0", "70.0", "70.0", "1.0", "1.0", "1.0", "1.0", "70.0"]
   
 explore_server:
   ros__parameters:
     frequency: 15.0
-    goal_aliasing: 2.0
+    goal_aliasing: 0.0
     retry_count: 20
     nav2_goal_timeout_sec: 50 #secs
     use_traversability: true
     use_custom_sim: true
+    robot_namespaces: ['/scout_1', '/scout_2']
+    wait_for_other_robot_costs: true
 
 polygon_point_publisher:
   ros__parameters:
@@ -25,7 +27,7 @@ frontier_selection_node:
     beta: 0.50 #set to 1.0 for maximum weight to u1 and 0.0 for maximum weight to information on path.
     N_best_for_u2: 100000 #set to -1 for considering all the frontier for path computation (this will make the algorithm very time instensive!)
     planner_allow_unknown: true
-    frontier_detect_radius: 0.2
+    frontier_detect_radius: 0.0
 
 localization_pose_sub_node:
   ros__parameters:
@@ -56,12 +58,11 @@ explore_costmap:
         exploration_mode: ours
         explore_clear_space: false
         min_frontier_cluster_size: 1
+        max_frontier_cluster_size: 21
         use_traversability: false
-        # robot_namespaces: ['/scout_1', '/scout_2']
-        robot_namespaces: ['/scout_2']
       always_send_full_costmap: false
 
-goal_allocation_server:
-  ros__parameters:
-    robot_namespaces: ['/scout_1', '/scout_2']
-    robot_namespaces: []
+# goal_allocation_server:
+#   ros__parameters:
+    # robot_namespaces: ['/scout_1', '/scout_2']
+    # robot_namespaces: ['']

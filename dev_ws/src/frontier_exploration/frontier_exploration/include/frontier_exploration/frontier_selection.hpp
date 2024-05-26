@@ -5,6 +5,7 @@
 #include <fstream>
 #include <thread>
 #include <random>
+#include <unordered_map>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -72,11 +73,32 @@ namespace frontier_exploration
          * @param other Another instance of FrontierWithMetaData to compare against.
          * @return True if this instance's path length is less than the other's, false otherwise.
          */
-        bool operator<(const FrontierWithMetaData &other) const
+        bool operator==(const FrontierWithMetaData &other) const
         {
             // Compare based on some criteria, e.g., information
-            return path_length_ < other.path_length_;
+            return (path_length_ == other.path_length_) && (theta_s_star_ == other.theta_s_star_) && (information_ == other.information_) && (frontier_ == other.frontier_);
         }
+
+        // Define hash function specialization for FrontierWithMetaData
+        struct Hash
+        {
+            size_t operator()(const FrontierWithMetaData &key) const
+            {
+                // Calculate hash based on some combination of member variables
+                size_t hash = 0;
+                hash = std::hash<size_t>()(key.information_) ^
+                       std::hash<double>()(key.theta_s_star_) ^
+                       std::hash<int>()(key.path_length_) ^
+                       std::hash<double>()(key.frontier_.initial.x) ^
+                       std::hash<double>()(key.frontier_.initial.y) ^
+                       std::hash<double>()(key.frontier_.centroid.x) ^
+                       std::hash<double>()(key.frontier_.centroid.y) ^
+                       std::hash<double>()(key.frontier_.middle.x) ^
+                       std::hash<double>()(key.frontier_.middle.y) ^
+                       std::hash<double>()(key.frontier_.min_distance);
+                return hash;
+            }
+        };
 
         frontier_msgs::msg::Frontier frontier_; ///< frontier location
         size_t information_;                    ///< information on arrival
@@ -104,7 +126,7 @@ namespace frontier_exploration
         frontier_msgs::msg::Frontier frontier;
         geometry_msgs::msg::Quaternion orientation;
         bool success;
-        std::map<FrontierWithMetaData, double> frontier_costs;
+        std::unordered_map<FrontierWithMetaData, double, FrontierWithMetaData::Hash> frontier_costs;
     };
 
     /**
@@ -176,7 +198,7 @@ namespace frontier_exploration
      * @brief Functor class for comparing frontiers based on their associated costs.
      * This class provides a functor for comparing frontiers based on the costs associated with them.
      */
-    class FrontierU1Comparator
+    class FrontierU1ComparatorCost
     {
     public:
         /**
@@ -192,6 +214,26 @@ namespace frontier_exploration
         bool operator()(const std::pair<FrontierWithMetaData, double> &a, const std::pair<FrontierWithMetaData, double> &b) const
         {
             return a.second < b.second;
+        }
+    };
+
+    class FrontierU1ComparatorUnique
+    {
+    public:
+        /**
+         * @brief Function call operator for comparing frontiers.
+         *
+         * This operator compares two pairs of frontier-metadata and cost based on their associated costs.
+         *
+         * @param a The first pair of frontier-metadata and cost.
+         * @param b The second pair of frontier-metadata and cost.
+         * @return bool True if the cost associated with the first pair is
+         * less than the cost associated with the second pair, false otherwise.
+         */
+        bool operator()(const std::pair<FrontierWithMetaData, double> &a, const std::pair<FrontierWithMetaData, double> &b) const
+        {
+            return a.first.frontier_.initial.x + a.first.frontier_.initial.y + a.first.frontier_.centroid.x + a.first.frontier_.centroid.y + a.first.frontier_.middle.x + a.first.frontier_.middle.y + a.first.frontier_.min_distance
+                 < b.first.frontier_.initial.x + b.first.frontier_.initial.y + b.first.frontier_.centroid.x + b.first.frontier_.centroid.y + b.first.frontier_.middle.x + b.first.frontier_.middle.y + b.first.frontier_.min_distance;
         }
     };
 

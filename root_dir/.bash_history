@@ -1,383 +1,3 @@
-./shell_scripts/uni_launch.nodes.sh 
-l
-ls
-tmux
-./shell_scripts/uni_launch.nodes.sh 
-ros2 bag play rosbag2_2024_04_11-00_43_07/
-ros2 bag play rosbag2_2024_04_11-00_43_07/
-./shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-ros2 bag info rosbag2_2024_04_1
-ros2 bag info rosbag2_2024_04_11-00_43_07/
-./shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-rviz2
-rviz2
-nano ~/.bash_history 
-ros2 bag record /scout_2/odom /scout_2/velodyne_points /scout_2/camera/image_raw /scout_2/imu /scout_2/camera/depth/image_raw
-ros2 bag record /scout_2/odom /scout_2/velodyne_points /scout_2/camera/image_raw /scout_2/imu /scout_2/camera/depth/image_raw
-ls
-ls
-rm -rf rosbag2_2024_04_11-16_5*
-ros2 bag record /scout_2/odom /scout_2/velodyne_points /scout_2/camera/image_raw /scout_2/imu /scout_2/camera/depth/image_raw
-rm -rf rosbag2_2024_04_11-17_02_04/
-ls
-ros2 bag play rosbag2_2024_04_11-00_43_07/
-./shell_scripts/uni_launch.nodes.sh 
-ros2 bag play rosbag2_2024_04_11-00_43_07/
-tmux
-ros2 bag record /scout_2/odom /scout_2/velodyne_points /scout_2/camera/image_raw /scout_2/imu /scout_2/camera/depth/image_raw
-rm -rf rosbag2_2024_04_11-19_20_51/
-rm -rf rosbag2_2024_04_11-19_20_51/
-ros2 bag record /scout_2/odom /scout_2/velodyne_points /scout_2/camera/image_raw /scout_2/imu /scout_2/camera/depth/image_raw
-rm -rf rosbag2_2024_04_11-19_26_54/
-rm -rf rosbag2_2024_04_11-19_26_54/
-ros2 bag record /scout_2/odom /scout_2/velodyne_points /scout_2/camera/image_raw /scout_2/imu /scout_2/camera/depth/image_raw
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag record rosbag2_2024_04_11-19_29_32/
-ros2 bag record rosbag2_2024_04_11-19_29_32/ 
-ros2 bag play rosbag2_2024_04_11-00_43_07/
-ros2 bag play rosbag2_2024_04_11-00_43_07/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-00_43_07/
-ros2 bag play rosbag2_2024_04_11-00_43_07/
-ros2 bag record /scout_2/odom /scout_2/velodyne_points /scout_2/camera/image_raw /scout_2/imu /scout_2/camera/depth/image_raw
-ros2 bag record /scout_2/odom /scout_2/velodyne_points /scout_2/camera/image_raw /scout_2/imu /scout_2/camera/depth/image_raw
-ros2 bag play rosbag2_2024_04_12-01_04_23/
-ros2 bag play rosbag2_2024_04_12-00_55_14/
-ros2 bag play rosbag2_2024_04_12-00_55_14/
-ros2 bag play rosbag2_2024_04_12-00_55_14/
-ros2 bag play rosbag2_2024_04_12-00_55_14/
-ros2 bag play rosbag2_2024_04_12-00_55_14/
-ros2 bag play rosbag2_2024_04_12-00_55_14/
-ros2 bag play rosbag2_2024_04_12-00_55_14/
-ros2 bag play rosbag2_2024_04_12-01_04_23/
-ros2 bag play rosbag2_2024_04_12-01_04_23/
-ros2 bag play rosbag2_2024_04_12-01_04_23/
-ros2 bag play rosbag2_2024_04_11-00_43_07/
-ros2 bag play rosbag2_2024_04_11-00_43_07/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-./shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-rviz2
-rviz2
-rviz2
-rviz2
-rviz2
-rviz2
-./shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-rviz2
-rviz2
-rviz2
-ros2 topic echo /scout_2/RTQuadtree_struct
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-cd dev_ws/
-vsc
-rviz2
-rviz2
-cd dev_ws/
-vsc
-vsc
-bash
-tmux
-rviz2
-rviz2
-rviz2
-./shell_scripts/uni_launch.nodes.sh 
-bash
-ros2 bag play rosbag2_2024_04_11-00_43_07/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-bash
-cd dev_ws/
-vsc
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-rviz2
-rviz2
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-tmux
-cd dev_ws/
-vsc
-ros2 bag play rosbag2_2024_04_11-19_29_32/
-ros2 launch scout_gazebo start_world.launch.py 
-kill -9 %1
-ros2 launch scout_gazebo start_world.launch.py 
-kill -9 %1
-ros2 launch scout_gazebo start_world.launch.py 
-kill -9 %1
-ros2 launch scout_gazebo start_world.launch.py 
-cd ros2_ws/
-colcon build --symlink-install --packages-select scout_gazebo
-ros2 launch scout_gazebo start_world.launch.py 
-ls
-cd
-ls
-ros2 launch scout_gazebo start_world.launch.py 
-kill -9 %1
-ros2 launch scout_gazebo start_world.launch.py 
-ls
-cd ros2_ws/
-ls
-cd
-cd shell_scripts/
-ls
-nano uni_launch.nodes.sh 
-cd
-ls
-nano uni_launch.nodes.sh 
-nano shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-ros2 launch scout_gazebo start_world.launch.py 
-kill -9 %1
-ros2 launch scout_gazebo start_world.launch.py 
-cd ros
-ls
-cd ros2_ws/
-ls
-colcon build --symlink-install
-ls
-./shell_scripts/uni_launch.nodes.sh 
-bash
-bash
-./shell_scripts/uni_launch.nodes.sh 
-nano shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-nano shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-ls
-cd ros2_ws/
-ls
-cd
-git clone https://gitlab.com/clutterbot/rs/tools/gazebo-sim
-ls
-cd gazebo
-cd gazebo-sim/
-ls
-git fetch
-git checkout development-ros2
-git status
-ls
-rm -rf docker-compose.yml Dockerfile shell_scripts/ dep_ws/
-ls
-colcon build --symlink-install
-source install/setup.bash
-ros2 launch dusty_description spawn_dusty.launch.py 
-cd
-rm -rf gazebo-sim/
-ls
-nano shell_scripts/uni_launch.nodes.sh 
-bash
-nano shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_launch.nodes.sh 
-bash
-cd gazebo_models_worlds_collection/
-vsc
-cd
-bash
-ros2 bag record /scout_2/traversability_grid
-ros2 bag record /scout_2/traversability_grid /tf /tf_static
-ros2 bag record /scout_2/traversability_grid /tf /tf_static
-ls
-git clone https://github.com/leonhartyao/gazebo_models_worlds_collection
-ls
-cd gazebo_models_worlds_collection/
-ls
-vsc
-as
-bash
-cd ros2_ws/
-vsc
-colcon build --symlink-install
-ros2 bag record /tf /tf_static /scout_2/traversability_grid
-cd ros2_ws/
-vsc
-bash
-tmux
-rviz2
-rviz2
-ros2 topic list
-cd ros
-cd ros2_ws/
-ros2 run tf2_tools view_frames 
-ros2 topic list
-ros2 topic echo /traversability_thresholded 
-ros2 topic info /traversability_thresholded 
-ros2 topic info -v /traversability_thresholded 
-ros2 topic list
-ros2 topic info -v /traversability_thresholded 
-ros2 topic list
-ls
-cd ros
-cd ros2_ws/
-bash
-bash
-ros2 action send_goal /scout_1/navigate_to_pose nav2_msgs/action/NavigateToPose "{}"
-ros2 action list
-ros2 action send_goal /scout_1/navigate_to_pose nav2_msgs/action/NavigateToPose "{}"
-rviz2
-bash
-./shell_scripts/only_exploration.sh 
-ls
-kill -9 %1
-ros2 action list
-ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: pose: position: x: 0.5"}
-ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{}"
-ros2 action send_goal /scout_2/navigate_to_pose nav2_msgs/action/NavigateToPose "{}"
-bash
-vsc
-bash
-cd dev_ws/
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-vsc
-colcon build --symlink-install
-colcon build --symlink-install --packages-select exploration_sim
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install --packages-select exploration_sim
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install --packages-select exploration_sim
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install --packages-select exploration_sim
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install --packages-select exploration_sim
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install --packages-select exploration_sim
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install --packages-select exploration_sim
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install --packages-select exploration_sim
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install --packages-select exploration_sim
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install --packages-select exploration_sim
-ros2 run exploration_sim explore_sim 
-ls
-cd ros2_ws/
-ls
-cd src/
-ls
-cd
-cd dev_ws/
-ls
-colcon build --symlink-install
-ls
-bash
-ls
-tmuxx
-tmux
-cd dev_ws/
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-rviz2
-cd dev_ws/
-vsc
-rviz2
-bash
-ros2 topic list
-ros2 topic info -v /simulation_costmap
-bash
-ros2 topic list
-./shell_scripts/only_exploration.sh 
-cd dev_ws/
-colcon build --symlink-install
-cd
-./shell_scripts/only_exploration.sh 
-./shell_scripts/uni_only_exploration.sh 
-[A
-./shell_scripts/uni_only_exploration.sh 
-ls
-cd dev_ws/
-ls
-colcon build --symlink-install
-cd
-./shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_only_exploration.sh 
-ls
-./shell_scripts/uni_only_exploration.sh 
-bash
-ros2 topic list
-ros2 run exploration_sim explore_sim 
-cd dev_ws/
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-colcon build --symlink-install
-kill -9 %1
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-bash
-ls
 tmux
 ros2 run exploration_sim explore_sim 
 kill -9 %1
@@ -504,3 +124,377 @@ ls
 cd dev_ws/
 ls
 vsc
+./shell_scripts/only_exploration.sh 
+bash
+cd dev_ws/
+kill -9 %1
+colcon build --symlink-install
+bash
+rviz2
+bash
+ls
+cd dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make
+make install
+bash
+ros2 run exploration_sim explore_sim 
+kk
+k
+cd dev_ws/
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+bash
+cd dev_ws/
+ls
+colcon build --symlink-install
+tmux
+cd dev_ws/
+vsc
+ls
+cd src/frontier_exploration/frontier_multirobot_allocator/hungarian/
+ls
+cd hungarian-algorithm-cpp/
+make
+ls
+./test 
+nano makefile 
+make
+nano makefile 
+ll -t
+rm -rf test hung.o main.o 
+ls
+make
+nano makefile 
+make
+sudo chmod +x hung.o main.o 
+./main.o 
+ls
+cat main
+./main.o 
+ls
+sudo chmod +x main
+./main
+clear
+ls
+git status
+git add .
+git stash
+git status
+make
+ls
+at makefile 
+cat makefile 
+make clean
+ls
+make test
+./test 
+make
+./test 
+make
+./test 
+make
+./test 
+make
+./test 
+make
+./test 
+make
+./test 
+make
+./test 
+cd
+cd dev_ws/src/frontier_exploration/
+ls
+sudo chmod -R a+rw *
+ls
+cd ../..
+colcon build --symlink-install
+./build/frontier_multirobot_allocator/hungarian
+colcon build --symlink-install
+./build/frontier_multirobot_allocator/hungarian
+colcon build --symlink-install
+./build/frontier_multirobot_allocator/hungarian_task 
+./build/frontier_multirobot_allocator/hungarian
+colcon build --symlink-install
+./build/frontier_multirobot_allocator/hungarian
+./build/frontier_multirobot_allocator/hungarian_task 
+colcon build --symlink-install
+./build/frontier_multirobot_allocator/hungarian_task 
+vsc
+colcon build --symlink-install
+ls
+cd src/frontier_exploration/frontier_multirobot_allocator/
+ls
+mkdir build
+make
+ls
+cmake ..
+cd build/
+cmake ..
+make
+cd ..
+cd build/
+make install
+cd ..
+ls
+touch COLCON_IGNORE
+ls
+cd ../../..
+ls
+cd install/
+ls
+rm -rf frontier_multirobot_allocator/
+ls
+cd ..
+ls
+cd build/
+rm -rf frontier_multirobot_allocator/
+ls
+cd ..
+bash
+l
+cd dev_ws/
+ls
+vsc
+tmux
+bash
+rviz2
+bash
+./shell_scripts/uni_launch.nodes.sh 
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+\kk
+kk
+baswh
+bash
+cd colo
+cd dev_ws/
+vsc
+colcon build --symlink-install
+ls
+colcon build --symlink-install
+cd
+./shell_scripts/only_exploration.sh 
+./shell_scripts/scout_1_exploration.sh 
+./shell_scripts/only_exploration.sh 
+./shell_scripts/scout_1_exploration.sh 
+clear
+./shell_scripts/scout_1_exploration.sh 
+clear
+./shell_scripts/scout_1_exploration.sh 
+clear
+./shell_scripts/scout_1_exploration.sh 
+./shell_scripts/only_exploration.sh 
+bash
+./shell_scripts/scout_2_exploration.sh 
+bash
+cd dev_ws/
+ls
+cd src/frontier_exploration/frontier_multirobot_allocator/
+ls
+cd build/
+cmake ..
+make
+make install
+bash
+cd dev_ws/
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+bash
+tmux
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+k
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+bash
+./shell_scripts/only_exploration.sh 
+./shell_scripts/scout_1_exploration.sh 
+./shell_scripts/only_exploration.sh 
+./shell_scripts/scout_1_exploration.sh 
+bash
+./shell_scripts/scout_2_exploration.sh 
+bash
+cd dev_ws/
+rm -rf build/ install/ log/
+colcon build --symlink-install
+vsc
+colcon build --symlink-install
+bash
+rviz2
+bash
+ls
+cd dev_ws/src/frontier_exploration/frontier_multirobot_allocator/
+ls
+cd build/
+cmake ..
+make
+make install
+cd
+cd -
+bash
+ls
+tmux
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+kkk
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+bash
+./shell_scripts/only_exploration.sh
+cd dev_ws/
+vsc
+colcon build --symlink-install
+cd
+./shell_scripts/only_exploration.sh 
+colcon build --symlink-install
+ls
+rm -rf build install/ log/
+./shell_scripts/only_exploration.sh 
+bash
+cd dev_ws/src/frontier_exploration/frontier_multirobot_allocator/
+ls
+cd build/
+cmake ..
+make
+make install
+cmake ..
+make
+make install
+ls
+cd ..
+ls
+cd build/
+ls
+bash
+rviz2
+bash
+cd dev_ws/
+colcon build --symlink-install
+bash
+tmu
+tmux
+rviz2
+bash
+cd dev_ws/src/frontier_exploration/frontier_multirobot_allocator/
+ls
+cd build/
+make install
+bash
+./shell_scripts/only_exploration.sh 
+bash
+cd dev_ws/
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+kk
+bash
+rviz2
+bash
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 1.0 0.0 0.0 0.0 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 0.0 0.0 -0.3 0.0 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 1.0 0.0 -0.3 0.0 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 1.0 0.0 0.3 0.0 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 1.0 0.0 0.3 0.3 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 1.0 0.3 0.3 0.0 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 1.0 -0.3 0.3 0.0 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 0.0 -0.3 0.3 0.0 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 0.0 -0.3 0.3 0.2 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 0.0 -0.3 0.3 -0.2 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 0.0 -0.3 0.4 -0.2 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 0.0 -0.4 0.4 -0.2 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 0.0 -0.6 0.4 -0.2 base_link pcd_link
+ros2 run tf2_ros static_transform_publisher 0.0 0.0 0.0 -0.6 0.4 -0.25 base_link pcd_link
+vsc
+pip install open3d
+bash
+ls
+ls
+pwd
+touch data_stereo.py
+nano data_stereo.py 
+vsc
+bash
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points17.pcd
+python3 data_stereo.py 
+kill -9 %1
+ll -t
+python3 data_stereo.py 
+-t
+ll -t
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points17.pcd
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points13.pcd
+python3 data_stereo.py 
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points13.pcd
+python3 data_stereo.py 
+ll -t
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points13.pcd
+python3 data_stereo.py 
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points13.pcd
+python3 data_stereo.py 
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points13.pcd
+python3 data_stereo.py 
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points13.pcd
+python3 data_stereo.py 
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points13.pcd
+python3 data_stereo.py 
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points13.pcd
+python3 data_stereo.py 
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points13.pcd
+bash
+ls
+bash
+ls
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd 
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd file_name:=right_points17.pcd 
+ros2 run pcl_ros pcd_to_pointcloud right_points17.pcd --ros-args -p file_name:=right_points17.pcd 
+tmux
+zsh
+ls
+nano shell_scripts/install_hotspot.sh 

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libhungarian_lib.a CMakeFiles/hungarian_lib.dir/src/hungarian/Hungarian.cpp.o CMakeFiles/hungarian_lib.dir/src/taskAllocator.cpp.o
+/usr/bin/ranlib libhungarian_lib.a

@@ -31,9 +31,8 @@ namespace frontier_exploration
         declareParameter("frontier_travel_point", rclcpp::ParameterValue(std::string("closest")));
         declareParameter("enabled", rclcpp::ParameterValue(true));
         declareParameter("min_frontier_cluster_size", rclcpp::ParameterValue(1));
+        declareParameter("max_frontier_cluster_size", rclcpp::ParameterValue(20));
         declareParameter("exploration_mode", rclcpp::ParameterValue(std::string("ours")));
-        robot_namespaces_ = {"/scout_1", "/scout_2"};
-        declareParameter("robot_namespaces", rclcpp::ParameterValue(robot_namespaces_));
 
         node = node_.lock();
         if (!node)
@@ -47,8 +46,8 @@ namespace frontier_exploration
         node->get_parameter(name_ + "." + "frontier_travel_point", frontier_travel_point_);
         node->get_parameter(name_ + "." + "enabled", enabledLayer_);
         node->get_parameter(name_ + "." + "min_frontier_cluster_size", min_frontier_cluster_size_);
+        node->get_parameter(name_ + "." + "max_frontier_cluster_size", max_frontier_cluster_size_);
         node->get_parameter(name_ + "." + "exploration_mode", exploration_mode_);
-        node->get_parameter(name_ + "." + "robot_namespaces", robot_namespaces_);
         if (explore_clear_space_)
         {
             default_value_ = NO_INFORMATION;
@@ -89,9 +88,6 @@ namespace frontier_exploration
             internal_executor_->spin();
         });
         t1.detach();
-
-        current_robot_namespace_ = node->get_namespace();
-        current_robot_namespace_ = current_robot_namespace_.substr(0, current_robot_namespace_.find('/', current_robot_namespace_.find('/') + 1));
     }
 
     void BoundedExploreLayer::matchSize()
@@ -256,7 +252,7 @@ namespace frontier_exploration
             RCLCPP_INFO(logger_, "BoundedExploreLayer::getNextFrontierService");
             RCLCPP_INFO(logger_, "Get next frontier called from within.");
             // initialize frontier search implementation
-            frontier_exploration::FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_cluster_size_);
+            frontier_exploration::FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_);
             // get list of frontiers from search implementation
             //  Initialize zero point to start search.
             geometry_msgs::msg::Point search_start_pose;
@@ -265,48 +261,6 @@ namespace frontier_exploration
             every_frontier = frontierSearch.getAllFrontiers();
             RCLCPP_WARN_STREAM(logger_, "Clusterred frontier size: " << frontier_list.size());
 
-            // process for all robots
-            for (auto robot_name : robot_namespaces_)
-            {
-                RCLCPP_INFO_STREAM(logger_, "Picked: " << robot_name << " from " << current_robot_namespace_);
-                if (robot_name != current_robot_namespace_)
-                {
-                    RCLCPP_INFO_STREAM(logger_, "Processing robot: " << robot_name);
-                    client_get_frontier_costs_ = internal_node_->create_client<frontier_msgs::srv::GetFrontierCosts>(robot_name + "/multirobot_get_frontier_costs");
-                    auto request_frontier_costs = std::make_shared<frontier_msgs::srv::GetFrontierCosts::Request>();
-                    request_frontier_costs->requested_frontier_list = frontier_list;
-                    request_frontier_costs->robot_namespace = robot_name;
-                    while (!client_get_frontier_costs_->wait_for_service(std::chrono::seconds(1))) {
-                        if(!rclcpp::ok()) {
-                            RCLCPP_INFO(logger_, "ROS shutdown request in between waiting for service.");
-                        }
-                        RCLCPP_INFO_STREAM(logger_, "Waiting for get frontier costs service from " << robot_name);
-                    }
-                    RCLCPP_INFO_STREAM(logger_, "Got get frontier costs service from" << robot_name);
-                    auto result_frontier_costs = client_get_frontier_costs_->async_send_request(request_frontier_costs);
-                    std::shared_ptr<frontier_msgs::srv::GetFrontierCosts_Response> frontier_costs_srv_res;
-                    if (result_frontier_costs.wait_for(std::chrono::seconds(200)) == std::future_status::ready)
-                    {
-                        frontier_costs_srv_res = result_frontier_costs.get();
-                        if (!frontier_costs_srv_res)
-                        {
-                            RCLCPP_ERROR(logger_, "Did not recieve a response.");
-                        }
-                        if (frontier_costs_srv_res->success == true)
-                        {
-                            RCLCPP_INFO_STREAM(logger_, "Processed: " << robot_name);
-                        }
-                        else if (frontier_costs_srv_res->success == false)
-                        {
-                            RCLCPP_ERROR_STREAM(logger_, "Server returned false of robot " << robot_name << ". Probably busy.");
-                        }
-                    }
-                    else
-                    {
-                        RCLCPP_ERROR(logger_, "Failed to call the frontier costs handler for another robot.");
-                    }
-                }
-            }
             // Visualize the frontiers only if frontier list is not overriden.
             frontierSelect_->visualizeFrontier(frontier_list, every_frontier, layered_costmap_->getGlobalFrameID());
         }
@@ -364,7 +318,15 @@ namespace frontier_exploration
             res->next_frontier.pose.orientation = selection_result.orientation;
             std::vector<frontier_msgs::msg::Frontier> frontiers_list;
             std::vector<double> frontier_costs;
+            RCLCPP_WARN_STREAM(logger_, "Selection result's frontier costs size: " << selection_result.frontier_costs.size());
+            std::vector<std::pair<frontier_exploration::FrontierWithMetaData, double>> frontier_costs_vector;
             for (auto pair : selection_result.frontier_costs)
+            {
+                frontier_costs_vector.push_back(pair);
+            }
+            frontier_exploration::FrontierU1ComparatorUnique frontier_u1_comp;
+            std::sort(frontier_costs_vector.begin(), frontier_costs_vector.end(), frontier_u1_comp);
+            for (auto pair : frontier_costs_vector)
             {
                 // Extract key and value
                 auto key = pair.first.frontier_; // frontier with meta data
@@ -383,6 +345,8 @@ namespace frontier_exploration
             RCLCPP_ERROR(logger_, "Invalid mode of exploration");
             rclcpp::shutdown();
         }
+        RCLCPP_INFO_STREAM(logger_, "Res frontier costs size: " << res->frontier_costs.size());
+        RCLCPP_INFO_STREAM(logger_, "Res frontier list size: " << res->frontier_list.size());
         RCLCPP_INFO_STREAM(logger_, "Is the list overriden? : " << req->override_frontier_list);
         RCLCPP_INFO_STREAM(logger_, "Is the list overriden? : " << req->override_frontier_list);
         RCLCPP_INFO_STREAM(logger_, "Is the list overriden? : " << req->override_frontier_list);

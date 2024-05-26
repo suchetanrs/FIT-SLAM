@@ -25,6 +25,7 @@ find_package(nav2_util)
 find_package(PCL REQUIRED)
 find_package(octomap REQUIRED)
 find_package(example_interfaces REQUIRED)
+find_package(frontier_multirobot_allocator REQUIRED)
 
 set(dependencies
 ament_cmake
@@ -50,6 +51,7 @@ PCL
 octomap
 nav2_util
 example_interfaces
+frontier_multirobot_allocator
 )
 
 
@@ -69,11 +71,12 @@ target_link_libraries(frontier_exploration_core ${PCL_LIBRARIES} ${OCTOMAP_LIBRA
 
 # Add executable 1
 add_executable(explore_client src/explore_client.cpp)
-ament_target_dependencies(explore_client rclcpp geometry_msgs std_msgs nav2_msgs nav2_costmap_2d visualization_msgs frontier_msgs rclcpp_action)
+ament_target_dependencies(explore_client rclcpp geometry_msgs std_msgs nav2_msgs nav2_costmap_2d visualization_msgs frontier_msgs rclcpp_action frontier_multirobot_allocator)
 
 # Add executable 2
 add_executable(explore_server src/explore_server.cpp)
-ament_target_dependencies(explore_server rclcpp nav2_msgs nav2_costmap_2d visualization_msgs frontier_msgs rclcpp_action action_msgs)
+ament_target_dependencies(explore_server rclcpp nav2_msgs nav2_costmap_2d visualization_msgs frontier_msgs rclcpp_action action_msgs frontier_multirobot_allocator)
+target_link_libraries(explore_server hungarian_lib)
 
 # Add executable 5
 add_executable(localization_pose_sub src/viz/localization_pose_sub.cpp)

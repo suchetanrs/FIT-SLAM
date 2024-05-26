@@ -18,6 +18,7 @@
 #include <frontier_msgs/srv/get_next_frontier.hpp>
 #include <frontier_msgs/srv/update_boundary_polygon.hpp>
 #include <frontier_msgs/srv/get_frontier_costs.hpp>
+#include <frontier_multirobot_allocator/taskAllocator.hpp>
 
 namespace frontier_exploration
 {
@@ -68,15 +69,17 @@ namespace frontier_exploration
         NavigateToPose::Goal nav2_goal_;
         NavigateToPose::Goal old_goal; // previously was old_goal
 
-        std::vector<std::string> robot_namespaces_;
         bool currently_processing_ = false;
         std::mutex currently_processing_lock_;
         rclcpp::Client<frontier_msgs::srv::UpdateBoundaryPolygon>::SharedPtr updateBoundaryPolygon;
         rclcpp::Client<frontier_msgs::srv::GetNextFrontier>::SharedPtr getNextFrontier;
         rclcpp::Client<frontier_msgs::srv::GetNextFrontier>::SharedPtr getNextFrontierMultiRobot;
+        rclcpp::Client<frontier_msgs::srv::GetFrontierCosts>::SharedPtr client_get_frontier_costs_;
         rclcpp::Service<frontier_msgs::srv::GetFrontierCosts>::SharedPtr service_get_costs_;
+        std::vector<std::string> robot_namespaces_;
         bool layer_configured_;
         bool use_custom_sim_;
+        bool wait_for_other_robot_costs_;
 
         rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID &uuid,
                                                 std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal);

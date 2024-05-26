@@ -180,6 +180,10 @@ namespace frontier_exploration
             input_.polygon.points.push_back(point);
         }
         goal.explore_boundary = input_;
+        goal.explore_boundary.header.frame_id = "map";
+        goal.explore_center.header.frame_id = "map";
+        goal.explore_center.point.x = 5.5;
+        goal.explore_center.point.y = 5.5;
         exploreClient_->async_send_goal(goal);
         for (const auto &point : goal.explore_boundary.polygon.points)
         {
