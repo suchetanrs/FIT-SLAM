@@ -14,7 +14,9 @@ explore_server:
     use_custom_sim: true
     robot_namespaces: ['/scout_1', '/scout_2']
     # robot_namespaces: ['/scout_1']
-    wait_for_other_robot_costs: false
+    # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']
+    wait_for_other_robot_costs: true # if false, will not give result to other robots if server is busy
+    process_other_robots: true #true if you want to do multirobot
 
 polygon_point_publisher:
   ros__parameters:
@@ -22,7 +24,7 @@ polygon_point_publisher:
     
 frontier_selection_node:
   ros__parameters:
-    exploration_mode: ours
+    exploration_mode: greedy
     counter: 031150
     alpha: 0.50 #set to 1.0 for maximum weight to arrival information and 0.0 for maximum weight to frontier path distance.
     beta: 0.50 #set to 1.0 for maximum weight to u1 and 0.0 for maximum weight to information on path.
@@ -32,7 +34,7 @@ frontier_selection_node:
 
 localization_pose_sub_node:
   ros__parameters:
-    exploration_mode: ours
+    exploration_mode: greedy
     counter: 031150
 
 explore_costmap:
@@ -56,7 +58,7 @@ explore_costmap:
         enabled: true
         resize_to_boundary: true
         frontier_travel_point: closest
-        exploration_mode: ours
+        exploration_mode: greedy
         explore_clear_space: false
         min_frontier_cluster_size: 1
         max_frontier_cluster_size: 21

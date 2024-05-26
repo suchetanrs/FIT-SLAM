@@ -182,9 +182,9 @@ namespace frontier_exploration
             else
             {
                 // Process the received poses as needed
-                RCLCPP_WARN_STREAM(logger_, "Map data has " << response_map_data->data.graph.poses.size() << " poses");
-                RCLCPP_WARN_STREAM(logger_, "Map data has " << response_map_data->data.graph.poses_id.size() << " pose ids");
-                RCLCPP_WARN_STREAM(logger_, "Map data has " << response_map_data->data.nodes.size() << " keyframes");
+                RCLCPP_WARN_STREAM(logger_, COLOR_STR("Map data has " << response_map_data->data.graph.poses.size() << " poses"));
+                RCLCPP_WARN_STREAM(logger_, COLOR_STR("Map data has " << response_map_data->data.graph.poses_id.size() << " pose ids"));
+                RCLCPP_WARN_STREAM(logger_, COLOR_STR("Map data has " << response_map_data->data.nodes.size() << " keyframes"));
             }
         }
         else
@@ -259,7 +259,7 @@ namespace frontier_exploration
             search_start_pose = req->start_pose.pose.position;
             frontier_list = frontierSearch.searchFrom(search_start_pose);
             every_frontier = frontierSearch.getAllFrontiers();
-            RCLCPP_WARN_STREAM(logger_, "Clusterred frontier size: " << frontier_list.size());
+            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Clusterred frontier size: " + std::to_string(frontier_list.size()), logger_.get_name()));
 
             // Visualize the frontiers only if frontier list is not overriden.
             frontierSelect_->visualizeFrontier(frontier_list, every_frontier, layered_costmap_->getGlobalFrameID());
@@ -318,7 +318,7 @@ namespace frontier_exploration
             res->next_frontier.pose.orientation = selection_result.orientation;
             std::vector<frontier_msgs::msg::Frontier> frontiers_list;
             std::vector<double> frontier_costs;
-            RCLCPP_WARN_STREAM(logger_, "Selection result's frontier costs size: " << selection_result.frontier_costs.size());
+            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Selection result's frontier costs size: " + std::to_string(selection_result.frontier_costs.size()), logger_.get_name()));
             std::vector<std::pair<frontier_exploration::FrontierWithMetaData, double>> frontier_costs_vector;
             for (auto pair : selection_result.frontier_costs)
             {
@@ -345,12 +345,12 @@ namespace frontier_exploration
             RCLCPP_ERROR(logger_, "Invalid mode of exploration");
             rclcpp::shutdown();
         }
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Res frontier costs size: " + res->frontier_costs.size(), logger_.get_name()));
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Res frontier list size: " + res->frontier_list.size(), logger_.get_name()));
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + req->override_frontier_list, logger_.get_name()));
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + req->override_frontier_list, logger_.get_name()));
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + req->override_frontier_list, logger_.get_name()));
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + req->override_frontier_list, logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Res frontier costs size: " + std::to_string(res->frontier_costs.size()), logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Res frontier list size: " + std::to_string(res->frontier_list.size()), logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + std::to_string(req->override_frontier_list), logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + std::to_string(req->override_frontier_list), logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + std::to_string(req->override_frontier_list), logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + std::to_string(req->override_frontier_list), logger_.get_name()));
 
         // set goal pose to next frontier
         res->next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();

@@ -293,7 +293,7 @@ namespace frontier_exploration
         int min_traversable_distance = std::numeric_limits<int>::max();
         int max_arrival_info_per_frontier = 0.0;
         // Iterate through each frontier
-        RCLCPP_WARN_STREAM(logger_, "Frontier list size is (loop): " << frontier_list.size());
+        RCLCPP_WARN_STREAM(logger_, COLOR_STR("Frontier list size is (loop): " + std::to_string(frontier_list.size()), logger_.get_name()));
         auto frontier_list_duplicates = findDuplicates(frontier_list);
         RCLCPP_INFO_STREAM(logger_, COLOR_STR("Duplicates size is: " + std::to_string(frontier_list_duplicates.size()), logger_.get_name()));
         RCLCPP_INFO_STREAM(logger_, COLOR_STR("Blacklist size is: " + std::to_string(frontier_list_duplicates.size()), logger_.get_name()));
@@ -307,7 +307,7 @@ namespace frontier_exploration
             // Continue to next frontier if path length is zero
             if (length_to_frontier == 0 || plan_of_frontier.second == false)
             {
-                RCLCPP_WARN(logger_, "Path length is zero or false");
+                RCLCPP_WARN_STREAM(logger_, COLOR_STR("Path length is zero or false", logger_.get_name()));
                 FrontierWithMetaData f_info_blacklisted(frontier, std::numeric_limits<int>::lowest(), std::numeric_limits<double>::max(), std::numeric_limits<int>::lowest());
                 frontier_costs[f_info_blacklisted] = std::numeric_limits<double>::max();
                 continue;
@@ -365,7 +365,7 @@ namespace frontier_exploration
                     double dist = std::hypot(dx_full, dy_full);
                     if (dist < min_length)
                     {
-                        RCLCPP_WARN(logger_, "Distance to ray trace is lesser than minimum distance. Proceeding to next frontier.");
+                        RCLCPP_WARN_STREAM(logger_, COLOR_STR("Distance to ray trace is lesser than minimum distance. Proceeding to next frontier.", logger_.get_name()));
                         SelectionResult selection_result;
                         selection_result.frontier = selected_frontier;
                         selection_result.orientation = selected_orientation;
@@ -462,8 +462,8 @@ namespace frontier_exploration
                 frontier_costs[f_info_blacklisted] = std::numeric_limits<double>::max();
             }
         } // frontier end
-        RCLCPP_WARN_STREAM(logger_, "(before) Frontier u1 with utility size is: " << frontier_with_u1_utility.size());
-        RCLCPP_WARN_STREAM(logger_, "(before) Frontier costs size u1 is: " << frontier_costs.size());
+        RCLCPP_WARN_STREAM(logger_, COLOR_STR("(before) Frontier u1 with utility size is: " + std::to_string(frontier_with_u1_utility.size()), logger_.get_name()));
+        RCLCPP_WARN_STREAM(logger_, COLOR_STR("(before) Frontier costs size u1 is: " + std::to_string(frontier_costs.size()), logger_.get_name()));
 
         // U1 Utility
         double max_u1_utility = 0;
@@ -492,8 +492,8 @@ namespace frontier_exploration
                 RCLCPP_DEBUG_STREAM(logger_, "Min distance " << min_traversable_distance);
             }
         }
-        RCLCPP_WARN_STREAM(logger_, "(after) Frontier u1 with utility size is: " << static_cast<int>(frontier_with_u1_utility.size()));
-        RCLCPP_WARN_STREAM(logger_, "(after) Frontier costs size after u1 is: " << static_cast<int>(frontier_costs.size()));
+        RCLCPP_WARN_STREAM(logger_, COLOR_STR("(after) Frontier u1 with utility size is: " + std::to_string(frontier_with_u1_utility.size()), logger_.get_name()));
+        RCLCPP_WARN_STREAM(logger_, COLOR_STR("(after) Frontier costs size after u1 is: " + std::to_string(frontier_costs.size()), logger_.get_name()));
 
         RCLCPP_DEBUG_STREAM(logger_, "Alpha_: " << alpha_);
         RCLCPP_DEBUG_STREAM(logger_, "Beta_: " << beta_);
@@ -557,7 +557,7 @@ namespace frontier_exploration
         // }
         // else
         // {
-        //     RCLCPP_WARN(logger_, "The number of frontiers after U1 compute is zero.");
+        //     RCLCPP_WARN_STREAM(logger_, COLOR_STR("The number of frontiers after U1 compute is zero.", logger_.get_name()));
         //     SelectionResult selection_result;
         //     selection_result.frontier = selected_frontier;
         //     selection_result.orientation = selected_orientation;
@@ -588,9 +588,9 @@ namespace frontier_exploration
         }
         else
         {
-            RCLCPP_WARN(logger_, "The selected frontier was not updated after U2 computation.");
-            RCLCPP_WARN_STREAM(logger_, "Returning for input list size: " << frontier_list.size());
-            RCLCPP_WARN_STREAM(logger_, "Returning frontier costs size: " << frontier_costs.size());
+            RCLCPP_WARN_STREAM(logger_, COLOR_STR("The selected frontier was not updated after U2 computation.", logger_.get_name()));
+            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Returning for input list size: " + std::to_string(frontier_list.size()), logger_.get_name()));
+            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Returning frontier costs size: " + std::to_string(frontier_costs.size()), logger_.get_name()));
             frontier_blacklist_.push_back(selected_frontier);
             SelectionResult selection_result;
             selection_result.frontier = selected_frontier;
@@ -611,7 +611,7 @@ namespace frontier_exploration
         bool frontierSelectionFlag = false;
         if (frontier_list.size() == 0)
         {
-            RCLCPP_ERROR(logger_, "No frontiers found, exploration complete");
+            RCLCPP_ERROR(logger_, "No frontiers found");
             frontierSelectionFlag = false;
             return std::make_pair(selected, false);
         }
@@ -660,7 +660,7 @@ namespace frontier_exploration
         bool frontierSelectionFlag = false;
         if (frontier_list.size() == 0)
         {
-            RCLCPP_ERROR(logger_, "No frontiers found, exploration complete");
+            RCLCPP_ERROR(logger_, "No frontiers found");
             frontierSelectionFlag = false;
             return std::make_pair(selected, false);
         }
@@ -744,11 +744,7 @@ namespace frontier_exploration
         unsigned int mx, my;
         if (!traversability_costmap_->worldToMap(start_point_w.x, start_point_w.y, mx, my))
         {
-            RCLCPP_WARN(
-                logger_,
-                "Cannot create a plan: the robot's start position is off the global"
-                " costmap. Planning will always fail, are you sure"
-                " the robot has been properly localized?");
+            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Cannot create a plan: the robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?", logger_.get_name()));
             struct_obj.path = plan;
             struct_obj.information_total = -1;
             return std::make_pair(struct_obj, false);
@@ -760,10 +756,7 @@ namespace frontier_exploration
         // goal point
         if (!traversability_costmap_->worldToMap(goal_point_w.initial.x, goal_point_w.initial.y, mx, my))
         {
-            RCLCPP_WARN(
-                logger_,
-                "The goal sent to the planner is off the global costmap."
-                " Planning will always fail to this goal.");
+            RCLCPP_WARN_STREAM(logger_, COLOR_STR("The goal sent to the planner is off the global costmap Planning will always fail to this goal.", logger_.get_name()));
             struct_obj.path = plan;
             struct_obj.information_total = -1;
             return std::make_pair(struct_obj, false);
@@ -789,7 +782,7 @@ namespace frontier_exploration
         int path_len = planner_->calcPath(max_cycles);
         if (path_len == 0)
         {
-            RCLCPP_WARN(logger_, "Path length is zero");
+            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Path length is zero", logger_.get_name()));
             struct_obj.path = plan;
             struct_obj.information_total = -1;
             return std::make_pair(struct_obj, false);

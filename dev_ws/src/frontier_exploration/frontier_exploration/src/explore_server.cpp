@@ -12,6 +12,7 @@ namespace frontier_exploration
         robot_namespaces_ = {};
         this->declare_parameter("robot_namespaces", rclcpp::ParameterValue(robot_namespaces_));
         this->declare_parameter("wait_for_other_robot_costs", false);
+        this->declare_parameter("process_other_robots", false);
 
         this->get_parameter("goal_aliasing", goal_aliasing_);
         this->get_parameter("retry_count", retry_);
@@ -19,6 +20,7 @@ namespace frontier_exploration
         this->get_parameter("use_custom_sim", use_custom_sim_);
         this->get_parameter("robot_namespaces", robot_namespaces_);
         this->get_parameter("wait_for_other_robot_costs", wait_for_other_robot_costs_);
+        this->get_parameter("process_other_robots", process_other_robots_);
 
         //--------------------------------------------NAV2 CLIENT RELATED--------------------------------
         nav2_client_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -65,12 +67,6 @@ namespace frontier_exploration
 
         //---------------------------------------------ROS RELATED------------------------------------------
         tf_listener_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
-        dyn_params_handler_ = this->add_on_set_parameters_callback(
-            std::bind(
-                &FrontierExplorationServer::dynamicParametersCallback,
-                this, std::placeholders::_1));
-        layer_configured_ = false;
-
         RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR(COLOR_STR("FrontierExplorationServer::FrontierExplorationServer()", this->get_namespace()), this->get_namespace()));
     }
 
@@ -80,40 +76,6 @@ namespace frontier_exploration
         explore_costmap_ros_->deactivate();
         explore_costmap_ros_->cleanup();
         explore_costmap_thread_.reset();
-    }
-
-    rcl_interfaces::msg::SetParametersResult FrontierExplorationServer::dynamicParametersCallback(
-        std::vector<rclcpp::Parameter> parameters)
-    {
-        rcl_interfaces::msg::SetParametersResult result;
-
-        for (auto parameter : parameters)
-        {
-            const auto &param_type = parameter.get_type();
-            const auto &param_name = parameter.get_name();
-
-            if (param_type == rclcpp::ParameterType::PARAMETER_DOUBLE)
-            {
-                if (param_name == "goal_aliasing")
-                {
-                    goal_aliasing_ = parameter.as_double();
-                }
-            }
-            else if (param_type == rclcpp::ParameterType::PARAMETER_INTEGER)
-            {
-                if (param_name == "retry_count")
-                {
-                    retry_ = parameter.as_int();
-                }
-                else if (param_name == "nav2_goal_timeout_sec")
-                {
-                    nav2WaitTime_ = parameter.as_int();
-                }
-            }
-        }
-
-        result.successful = true;
-        return result;
     }
 
     rclcpp_action::GoalResponse FrontierExplorationServer::handle_goal(const rclcpp_action::GoalUUID &uuid, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal)
@@ -126,7 +88,7 @@ namespace frontier_exploration
     rclcpp_action::CancelResponse FrontierExplorationServer::handle_cancel(const std::shared_ptr<GoalHandleExplore> goal_handle)
     {
         nav2Client_->async_cancel_all_goals();
-        RCLCPP_WARN(this->get_logger(), "Current exploration task cancelled");
+        RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Current exploration task cancelled", this->get_namespace()));
         (void)goal_handle;
         return rclcpp_action::CancelResponse::ACCEPT;
     }
@@ -135,6 +97,71 @@ namespace frontier_exploration
     {
         // std::thread{std::bind(&FrontierExplorationServer::executeCb, this, std::placeholders::_1, std::placeholders::_2), goal_handle, frontier_goal}.detach();
         executeCb(goal_handle, frontier_goal);
+    }
+
+    void FrontierExplorationServer::processAllRobots(std::shared_ptr<TaskAllocator> taskAllocator, std::vector<frontier_msgs::msg::Frontier>& globalFrontierList, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> srv_res)
+    {
+        // process for all robots
+        for (auto robot_name : robot_namespaces_)
+        {
+            if(!process_other_robots_) continue;
+            RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Picked: " + robot_name + " from " + this->get_namespace(), this->get_namespace()));
+            if (robot_name != this->get_namespace())
+            {
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Processing robot: " + robot_name, this->get_namespace()));
+                client_get_frontier_costs_ = this->create_client<frontier_msgs::srv::GetFrontierCosts>(robot_name + "/multirobot_get_frontier_costs");
+                auto request_frontier_costs = std::make_shared<frontier_msgs::srv::GetFrontierCosts::Request>();
+                request_frontier_costs->requested_frontier_list = srv_res->frontier_list;
+                request_frontier_costs->robot_namespace = robot_name;
+                while (!client_get_frontier_costs_->wait_for_service(std::chrono::seconds(1)))
+                {
+                    if (!rclcpp::ok())
+                    {
+                        RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("ROS shutdown request in between waiting for service.", this->get_namespace()));
+                    }
+                    RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Waiting for get frontier costs service from " + robot_name, this->get_namespace()));
+                }
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Got get frontier costs service from" + robot_name, this->get_namespace()));
+                auto result_frontier_costs = client_get_frontier_costs_->async_send_request(request_frontier_costs);
+                std::shared_ptr<frontier_msgs::srv::GetFrontierCosts_Response> frontier_costs_srv_res;
+                if (result_frontier_costs.wait_for(std::chrono::seconds(200)) == std::future_status::ready)
+                {
+                    frontier_costs_srv_res = result_frontier_costs.get();
+                    if (!frontier_costs_srv_res)
+                    {
+                        RCLCPP_ERROR(this->get_logger(), "Did not recieve a response.");
+                    }
+                    if (frontier_costs_srv_res->success == true)
+                    {
+                        RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Processed: " + robot_name, this->get_namespace()));
+                        auto frontierCosts = frontier_costs_srv_res->frontier_costs;
+                        RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Size of the frontier list (request) for " + robot_name + " is: " + std::to_string(request_frontier_costs->requested_frontier_list.size()), this->get_namespace()));
+                        RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Frontier costs size (response): " + std::to_string(frontierCosts.size()), this->get_namespace()));
+                        taskAllocator->addRobotTasks(frontierCosts, robot_name);
+                        if(globalFrontierList.empty())
+                        {
+                            globalFrontierList = frontier_costs_srv_res->frontier_list;
+                        }
+                        else
+                        {
+                            if(frontier_costs_srv_res->frontier_list != globalFrontierList)
+                            {
+                                throw std::runtime_error("The frontier lists are not same for other robot");
+                            }
+                        }
+                    }
+                    else if (frontier_costs_srv_res->success == false)
+                    {
+                        RCLCPP_ERROR_STREAM(this->get_logger(), "Server returned false of robot " << robot_name << ". Probably busy.");
+                        // add check to solve hungarian or not
+                    }
+                }
+                else
+                {
+                    RCLCPP_ERROR(this->get_logger(), "Failed to call the frontier costs handler for another robot.");
+                }
+            }
+        }
     }
 
     void FrontierExplorationServer::executeCb(const std::shared_ptr<GoalHandleExplore> goal_handle, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal)
@@ -224,14 +251,14 @@ namespace frontier_exploration
             }
             if (currently_processing_ == true)
             {
-                RCLCPP_WARN(this->get_logger(), "Cannot process getNextFrontier from within, server busy.");
+                RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Cannot process getNextFrontier from within, server busy.", this->get_namespace()));
                 rclcpp::sleep_for(std::chrono::milliseconds(50));
                 continue;
             }
             currently_processing_lock_.lock();
             currently_processing_ = true;
             currently_processing_lock_.unlock();
-            RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Currently processing is: " + currently_processing_, this->get_namespace()));
+            RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Currently processing is: " + std::to_string(currently_processing_), this->get_namespace()));
             while (!getNextFrontier->wait_for_service(std::chrono::seconds(10)))
             {
                 if (!rclcpp::ok())
@@ -254,7 +281,7 @@ namespace frontier_exploration
             currently_processing_lock_.lock();
             currently_processing_ = false;
             currently_processing_lock_.unlock();
-            RCLCPP_WARN_STREAM(this->get_logger(), "Size of the frontier list for " << this->get_namespace() << " is: " << srv_res->frontier_list.size());
+            RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Size of the frontier list for is: " + std::to_string(srv_res->frontier_list.size()), this->get_namespace()));
 
             // check if robot is not within exploration boundary and needs to return to center of search area
             if (goal->explore_boundary.polygon.points.size() > 0 && !pointInPolygon(eval_pose.pose.position, goal->explore_boundary.polygon))
@@ -288,66 +315,8 @@ namespace frontier_exploration
             else if (srv_res->success == true)
             {
                 std::vector<frontier_msgs::msg::Frontier> globalFrontierList = {};
-                // process for all robots
-                for (auto robot_name : robot_namespaces_)
-                {
-                    RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Picked: " + robot_name + " from " + this->get_namespace(), this->get_namespace()));
-                    if (robot_name != this->get_namespace())
-                    {
-                        RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Processing robot: " + robot_name, this->get_namespace()));
-                        client_get_frontier_costs_ = this->create_client<frontier_msgs::srv::GetFrontierCosts>(robot_name + "/multirobot_get_frontier_costs");
-                        auto request_frontier_costs = std::make_shared<frontier_msgs::srv::GetFrontierCosts::Request>();
-                        request_frontier_costs->requested_frontier_list = srv_res->frontier_list;
-                        request_frontier_costs->robot_namespace = robot_name;
-                        while (!client_get_frontier_costs_->wait_for_service(std::chrono::seconds(1)) && wait_for_other_robot_costs_)
-                        {
-                            if (!rclcpp::ok())
-                            {
-                                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("ROS shutdown request in between waiting for service.", this->get_namespace()));
-                            }
-                            RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Waiting for get frontier costs service from " + robot_name, this->get_namespace()));
-                        }
-                        RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Got get frontier costs service from" + robot_name, this->get_namespace()));
-                        auto result_frontier_costs = client_get_frontier_costs_->async_send_request(request_frontier_costs);
-                        std::shared_ptr<frontier_msgs::srv::GetFrontierCosts_Response> frontier_costs_srv_res;
-                        if (result_frontier_costs.wait_for(std::chrono::seconds(200)) == std::future_status::ready)
-                        {
-                            frontier_costs_srv_res = result_frontier_costs.get();
-                            if (!frontier_costs_srv_res)
-                            {
-                                RCLCPP_ERROR(this->get_logger(), "Did not recieve a response.");
-                            }
-                            if (frontier_costs_srv_res->success == true)
-                            {
-                                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Processed: " + robot_name, this->get_namespace()));
-                                auto frontierCosts = frontier_costs_srv_res->frontier_costs;
-                                RCLCPP_WARN_STREAM(this->get_logger(), "Size of the frontier list (request) for " << robot_name << " is: " << request_frontier_costs->requested_frontier_list.size());
-                                RCLCPP_WARN_STREAM(this->get_logger(), "Frontier costs size (response): " << frontierCosts.size());
-                                taskAllocator->addRobotTasks(frontierCosts, robot_name);
-                                if(globalFrontierList.empty())
-                                {
-                                    globalFrontierList = frontier_costs_srv_res->frontier_list;
-                                }
-                                else
-                                {
-                                    if(frontier_costs_srv_res->frontier_list != globalFrontierList)
-                                    {
-                                        throw std::runtime_error("The frontier lists are not same for other robot");
-                                    }
-                                }
-                            }
-                            else if (frontier_costs_srv_res->success == false)
-                            {
-                                RCLCPP_ERROR_STREAM(this->get_logger(), "Server returned false of robot " << robot_name << ". Probably busy.");
-                                // add check to solve hungarian or not
-                            }
-                        }
-                        else
-                        {
-                            RCLCPP_ERROR(this->get_logger(), "Failed to call the frontier costs handler for another robot.");
-                        }
-                    }
-                }
+
+                processAllRobots(taskAllocator, globalFrontierList, srv_res);
 
                 taskAllocator->addRobotTasks(srv_res->frontier_costs, this->get_namespace());
                 if(globalFrontierList.empty())
@@ -365,12 +334,6 @@ namespace frontier_exploration
                 taskAllocator->solveAllocationHungarian();
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Next frontier Result success. Sending goal to Nav2", this->get_namespace()));
                 success_ = true;
-                // Get the allocated tasks
-                // std::vector<std::vector<double>> allocatedTasks = taskAllocator->getAllocatedTasks();
-                // RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated Tasks:", this->get_namespace()));
-                // for (const auto& task : allocatedTasks) {
-                //     RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Task " << task[0] << " allocated to Robot " << task[1], this->get_namespace()));
-                // }
                 goal_pose = srv_res->next_frontier;
             }
             else if (srv_res->success == false)
@@ -382,7 +345,7 @@ namespace frontier_exploration
                 // (TODO: suchetan) evaluate the usefulness of success variable.
                 if (retry_ == 0 && success_)
                 {
-                    RCLCPP_WARN(this->get_logger(), "Finished exploring room");
+                    RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Finished exploring room", this->get_namespace()));
                     goal_handle->succeed(explore_action_res);
                     std::unique_lock<std::mutex> lock(nav2Clientlock_);
                     nav2Client_->async_cancel_goals_before(rclcpp::Clock().now());
@@ -396,7 +359,7 @@ namespace frontier_exploration
                     return;
                 }
 
-                RCLCPP_WARN(this->get_logger(), "Retrying...");
+                RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Retrying...", this->get_namespace()));
                 retry_--;
                 // try to find frontier again
                 if (retry_ <= this->get_parameter("retry_count").as_int() / 3.0)
@@ -427,7 +390,7 @@ namespace frontier_exploration
                     // rclcpp::Rate(1).sleep();
                     rclcpp::sleep_for(std::chrono::milliseconds(20));
                     waitCount_++;
-                    RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Wait count goal is: " + waitCount_, this->get_namespace()));
+                    RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Wait count goal is: " + std::to_string(waitCount_), this->get_namespace()));
                     if (waitCount_ > nav2WaitTime_)
                     {
                         minuteWait = true;
@@ -447,7 +410,7 @@ namespace frontier_exploration
 
     void FrontierExplorationServer::performBackupRotation()
     {
-        RCLCPP_WARN(this->get_logger(), "FrontierExplorationServer::performBackupRotation");
+        RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("FrontierExplorationServer::performBackupRotation", this->get_namespace()));
         geometry_msgs::msg::PoseStamped robot_pose;
         explore_costmap_ros_->getRobotPose(robot_pose);
         tf2::Quaternion quaternion;
@@ -496,7 +459,7 @@ namespace frontier_exploration
         twist_msg.linear.x = 0.0;
         publisher->publish(twist_msg);
         // Log the action
-        RCLCPP_WARN(this->get_logger(), "FrontierExplorationServer::performBackupReverse");
+        RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("FrontierExplorationServer::performBackupReverse", this->get_namespace()));
         moving_ = false;
     }
 
@@ -511,13 +474,12 @@ namespace frontier_exploration
             response->success = false;
             return;
         }
-        RCLCPP_WARN_STREAM(this->get_logger(), "Multirobot frontier costs handle called with cp as: " << currently_processing_);
-        RCLCPP_ERROR_STREAM(this->get_logger(), "wait_for_other_robot_costs is: " << wait_for_other_robot_costs_);
+        RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Multirobot frontier costs handle called with cp as: " + std::to_string(currently_processing_), this->get_namespace()));
         if (wait_for_other_robot_costs_)
         {
             while (currently_processing_ == true)
             {
-                RCLCPP_WARN(this->get_logger(), "Waiting for currently processing to become false");
+                RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Waiting for currently processing to become false", this->get_namespace()));
                 rclcpp::sleep_for(std::chrono::milliseconds(100));
             }
         }
@@ -592,7 +554,7 @@ namespace frontier_exploration
         switch (result.code)
         {
         case rclcpp_action::ResultCode::SUCCEEDED:
-            RCLCPP_WARN(this->get_logger(), "Goal succeeded");
+            RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Goal succeeded", this->get_namespace()));
             moving_ = false;
             break;
         case rclcpp_action::ResultCode::ABORTED:
@@ -608,7 +570,7 @@ namespace frontier_exploration
             }
             else
             {
-                RCLCPP_WARN(this->get_logger(), "Nav2 internal fault! Nav2 canceled the goal without explicit cancel request from Explore client!");
+                RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Nav2 internal fault! Nav2 canceled the goal without explicit cancel request from Explore client!", this->get_namespace()));
             }
             moving_ = false;
             break;

@@ -42,13 +42,9 @@ namespace frontier_exploration
 
         ~FrontierExplorationServer();
 
-        rcl_interfaces::msg::SetParametersResult dynamicParametersCallback(
-            std::vector<rclcpp::Parameter> parameters);
-
     private:
         // ROS Internal
         std::shared_ptr<tf2_ros::Buffer> tf_listener_;
-        rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
         rclcpp::CallbackGroup::SharedPtr explore_server_callback_group_;
         rclcpp::CallbackGroup::SharedPtr nav2_client_callback_group_;
         rclcpp::CallbackGroup::SharedPtr multirobot_service_callback_group_;
@@ -81,6 +77,7 @@ namespace frontier_exploration
         bool layer_configured_;
         bool use_custom_sim_;
         bool wait_for_other_robot_costs_;
+        bool process_other_robots_;
 
         rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID &uuid,
                                                 std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal);
@@ -94,8 +91,10 @@ namespace frontier_exploration
          * @param goal ActionGoal containing boundary of area to explore, and a valid centerpoint for the area.
          */
 
-        void executeCb(const std::shared_ptr<GoalHandleExplore> goal_handle, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal);
+        void processAllRobots(std::shared_ptr<TaskAllocator> taskAllocator, std::vector<frontier_msgs::msg::Frontier>& globalFrontierList, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> srv_res);
 
+        void executeCb(const std::shared_ptr<GoalHandleExplore> goal_handle, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal);
+        
         void performBackupRotation();
 
         void performBackupReverse();

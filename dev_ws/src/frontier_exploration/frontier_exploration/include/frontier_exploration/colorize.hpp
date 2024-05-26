@@ -49,11 +49,11 @@ Attributes	        Foreground color	   Background color
 inline std::string COLOR_STR(const std::string &str, const char *robotName)
 {
     if (static_cast<std::string>(robotName).compare(0, 8, "/scout_1") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_1") == 0)
-        return "\e[04[01;43m" + str + "\e[m";
+        return "\e[0;42m" + str + "\e[m";
     else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_2") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_2") == 0)
-        return "\e[01;44m" + str + "\e[m";
+        return "\e[0;44m" + str + "\e[m";
     else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_3") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
-        return "\e[0;102m" + str + "\e[m";
+        return "\e[0;41m" + str + "\e[m";
     return static_cast<std::string>(robotName);
 }
 
