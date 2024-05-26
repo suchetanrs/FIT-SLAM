@@ -41,6 +41,8 @@
 #include <geometry_msgs/msg/pose_array.hpp>
 
 #include <slam_msgs/srv/get_map.hpp>
+#include <frontier_exploration/colorize.hpp>
+
 namespace frontier_exploration
 {
     /**

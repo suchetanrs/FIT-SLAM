@@ -253,7 +253,7 @@ namespace frontier_exploration
     SelectionResult FrontierSelectionNode::selectFrontierOurs(const std::vector<frontier_msgs::msg::Frontier> &frontier_list, std::vector<double> polygon_xy_min_max,
                                                               geometry_msgs::msg::Point start_point_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, nav2_costmap_2d::Costmap2D *traversability_costmap)
     {
-        RCLCPP_INFO(logger_, "FrontierSelectionNode::selectFrontierOurs");
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("FrontierSelectionNode::selectFrontierOurs", logger_.get_name()));
         traversability_costmap_ = traversability_costmap;
         std::unordered_map<frontier_exploration::FrontierWithMetaData, double, frontier_exploration::FrontierWithMetaData::Hash> frontier_costs;
         frontier_msgs::msg::Frontier selected_frontier;
@@ -295,8 +295,8 @@ namespace frontier_exploration
         // Iterate through each frontier
         RCLCPP_WARN_STREAM(logger_, "Frontier list size is (loop): " << frontier_list.size());
         auto frontier_list_duplicates = findDuplicates(frontier_list);
-        RCLCPP_INFO_STREAM(logger_, "Duplicates size is: " << frontier_list_duplicates.size());
-        RCLCPP_INFO_STREAM(logger_, "Blacklist size is: " << frontier_list_duplicates.size());
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Duplicates size is: " + std::to_string(frontier_list_duplicates.size()), logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Blacklist size is: " + std::to_string(frontier_list_duplicates.size()), logger_.get_name()));
         for (auto frontier : frontier_list)
         {
             // Preliminary checks and path planning for each frontier
@@ -567,7 +567,7 @@ namespace frontier_exploration
         // }
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = (endTime - startTime).count() / 1.0;
-        RCLCPP_INFO_STREAM(logger_, "Time taken to search is: " << duration);
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Time taken to search is: " + std::to_string(duration), logger_.get_name()));
 
         if(frontier_costs.size() != frontier_list.size())
         {

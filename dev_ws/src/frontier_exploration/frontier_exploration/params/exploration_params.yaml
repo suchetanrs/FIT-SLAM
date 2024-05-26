@@ -13,7 +13,8 @@ explore_server:
     use_traversability: true
     use_custom_sim: true
     robot_namespaces: ['/scout_1', '/scout_2']
-    wait_for_other_robot_costs: true
+    # robot_namespaces: ['/scout_1']
+    wait_for_other_robot_costs: false
 
 polygon_point_publisher:
   ros__parameters:

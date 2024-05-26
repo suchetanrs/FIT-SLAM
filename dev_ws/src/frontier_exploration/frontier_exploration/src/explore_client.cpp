@@ -14,7 +14,7 @@ namespace frontier_exploration
         point_viz_timer_ = create_wall_timer(std::chrono::milliseconds(100),
                                              std::bind(&FrontierExplorationClient::vizPubCb, this));
 
-        RCLCPP_INFO(this->get_logger(),
+        RCLCPP_INFO_STREAM(this->get_logger(),
                     "Please use the 'Point' tool in Rviz to select an exporation boundary.");
 
         this->declare_parameter("costmap_resolution", rclcpp::ParameterValue(0.05));
@@ -39,7 +39,7 @@ namespace frontier_exploration
         }
         else
         {
-            RCLCPP_INFO(this->get_logger(), "Found explore action server");
+            RCLCPP_INFO_STREAM(this->get_logger(), "Found explore action server");
         }
 
         if (use_config_)
@@ -57,7 +57,7 @@ namespace frontier_exploration
         point_.reset();
         point_viz_timer_.reset();
         point_viz_pub_.reset();
-        RCLCPP_INFO(this->get_logger(), "Shutting down explore client.");
+        RCLCPP_INFO_STREAM(this->get_logger(), "Shutting down explore client.");
     }
 
     void FrontierExplorationClient::vizPubCb()
@@ -109,7 +109,7 @@ namespace frontier_exploration
 
     void FrontierExplorationClient::pointCb(const std::shared_ptr<const geometry_msgs::msg::PointStamped> point)
     {
-        RCLCPP_INFO(this->get_logger(), "Point clicked");
+        RCLCPP_INFO_STREAM(this->get_logger(), "Point clicked");
 
         double average_distance = polygonPerimeter(input_.polygon) / input_.polygon.points.size();
 
@@ -164,7 +164,7 @@ namespace frontier_exploration
             // otherwise, must be a regular point inside boundary polygon
             input_.polygon.points.push_back(nav2_costmap_2d::toPoint32(point->point));
             input_.header.stamp = rclcpp::Clock().now();
-            RCLCPP_INFO(this->get_logger(), "Point taken into account.");
+            RCLCPP_INFO_STREAM(this->get_logger(), "Point taken into account.");
         }
     }
 
@@ -187,8 +187,8 @@ namespace frontier_exploration
         exploreClient_->async_send_goal(goal);
         for (const auto &point : goal.explore_boundary.polygon.points)
         {
-            RCLCPP_INFO(this->get_logger(), "Sending Polygon from config x: %f, y: %f, z: %f",
-                        point.x, point.y, point.z);
+            // RCLCPP_INFO_STREAM(this->get_logger(), "Sending Polygon from config x: %f, y: %f, z: %f",
+            //             point.x, point.y, point.z);
         }
     }
 

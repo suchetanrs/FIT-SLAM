@@ -77,7 +77,7 @@ namespace frontier_exploration
         tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
         matchSize();
-        RCLCPP_INFO(logger_, "BoundedExploreLayer::onInitialize");
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::onInitialize", logger_.get_name()));
 
         internal_node_ = rclcpp::Node::make_shared("layer_node_bel");
         internal_executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
@@ -92,7 +92,7 @@ namespace frontier_exploration
 
     void BoundedExploreLayer::matchSize()
     {
-        RCLCPP_INFO_STREAM(logger_, "BoundedExploreLayer::matchSize");
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::matchSize", logger_.get_name()));
         Costmap2D *master = layered_costmap_->getCostmap();
         resizeMap(master->getSizeInCellsX(), master->getSizeInCellsY(), master->getResolution(),
                   master->getOriginX(), master->getOriginY());
@@ -147,7 +147,7 @@ namespace frontier_exploration
 
     SelectionResult BoundedExploreLayer::processOurApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list, geometry_msgs::msg::Point& start_point_w)
     {
-        RCLCPP_INFO(logger_, "BoundedExploreLayer::processOurApproach");
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::processOurApproach", logger_.get_name()));
         auto startTime = std::chrono::high_resolution_clock::now();
 
         // Getting map data
@@ -165,13 +165,13 @@ namespace frontier_exploration
         request_map_data->kf_id_for_landmarks = kf_id_for_landmarks;
         while (!client_get_map_data2_->wait_for_service(std::chrono::seconds(1))) {
             if(!rclcpp::ok()) {
-                RCLCPP_INFO(logger_, "ROS shutdown request in between waiting for service.");
+                RCLCPP_INFO_STREAM(logger_, COLOR_STR("ROS shutdown request in between waiting for service.", logger_.get_name()));
             }
-            RCLCPP_INFO(logger_, "Waiting for get map data service");
+            RCLCPP_INFO_STREAM(logger_, COLOR_STR("Waiting for get map data service", logger_.get_name()));
         }
-        RCLCPP_INFO(logger_, "Got get map data service.");
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Got get map data service.", logger_.get_name()));
         auto result_map_data = client_get_map_data2_->async_send_request(request_map_data);
-        RCLCPP_INFO(logger_, "BoundedExploreLayer -- Start map data.");
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer -- Start map data.", logger_.get_name()));
         if (result_map_data.wait_for(std::chrono::seconds(20)) == std::future_status::ready)
         {
             response_map_data = result_map_data.get();
@@ -191,7 +191,7 @@ namespace frontier_exploration
         {
             RCLCPP_ERROR(logger_, "Failed to call the service map_data.");
         }
-        RCLCPP_INFO(logger_, "BoundedExploreLayer -- End map data.");
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer -- End map data.", logger_.get_name()));
         */
         // Select the frontier
         SelectionResult selection_result;
@@ -204,20 +204,20 @@ namespace frontier_exploration
 
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = (endTime - startTime).count() / 1.0;
-        RCLCPP_INFO_STREAM(logger_, "Time taken to plan to all frontiers is: " << duration);
+        // RCLCPP_INFO_STREAM(logger_, COLOR_STR("Time taken to plan to all frontiers is: " + duration, logger_.get_name()));
         return selection_result;
     }
 
     std::pair<frontier_msgs::msg::Frontier, bool> BoundedExploreLayer::processGreedyApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list)
     {
         auto selection_result = frontierSelect_->selectFrontierClosest(frontier_list);
-        RCLCPP_INFO(logger_, "BoundedExploreLayer::processGreedyApproach");
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::processGreedyApproach", logger_.get_name()));
         return selection_result;
     }
 
     std::pair<frontier_msgs::msg::Frontier, bool> BoundedExploreLayer::processRandomApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list)
     {
-        RCLCPP_INFO(logger_, "BoundedExploreLayer::processRandomApproach");
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::processRandomApproach", logger_.get_name()));
         auto selection_result = frontierSelect_->selectFrontierRandom(frontier_list);
         return selection_result;
     }
@@ -249,8 +249,8 @@ namespace frontier_exploration
         std::vector<std::vector<double>> every_frontier;
         if (req->override_frontier_list == false)
         {
-            RCLCPP_INFO(logger_, "BoundedExploreLayer::getNextFrontierService");
-            RCLCPP_INFO(logger_, "Get next frontier called from within.");
+            RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::getNextFrontierService", logger_.get_name()));
+            RCLCPP_INFO_STREAM(logger_, COLOR_STR("Get next frontier called from within.", logger_.get_name()));
             // initialize frontier search implementation
             frontier_exploration::FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_);
             // get list of frontiers from search implementation
@@ -267,7 +267,7 @@ namespace frontier_exploration
         if (req->override_frontier_list == true)
         {
             frontier_list = req->frontier_list_to_override;
-            RCLCPP_INFO(logger_, "BoundedExploreLayer::getNextFrontierService another robot");
+            RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::getNextFrontierService another robot", logger_.get_name()));
         }
 
         // Select the frontier (Modify this for different algorithms)
@@ -345,12 +345,12 @@ namespace frontier_exploration
             RCLCPP_ERROR(logger_, "Invalid mode of exploration");
             rclcpp::shutdown();
         }
-        RCLCPP_INFO_STREAM(logger_, "Res frontier costs size: " << res->frontier_costs.size());
-        RCLCPP_INFO_STREAM(logger_, "Res frontier list size: " << res->frontier_list.size());
-        RCLCPP_INFO_STREAM(logger_, "Is the list overriden? : " << req->override_frontier_list);
-        RCLCPP_INFO_STREAM(logger_, "Is the list overriden? : " << req->override_frontier_list);
-        RCLCPP_INFO_STREAM(logger_, "Is the list overriden? : " << req->override_frontier_list);
-        RCLCPP_INFO_STREAM(logger_, "Is the list overriden? : " << req->override_frontier_list);
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Res frontier costs size: " + res->frontier_costs.size(), logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Res frontier list size: " + res->frontier_list.size(), logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + req->override_frontier_list, logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + req->override_frontier_list, logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + req->override_frontier_list, logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + req->override_frontier_list, logger_.get_name()));
 
         // set goal pose to next frontier
         res->next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
@@ -377,7 +377,7 @@ namespace frontier_exploration
 
     void BoundedExploreLayer::updateBoundaryPolygonService(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Request> req, std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Response> res)
     {
-        RCLCPP_INFO(logger_, "BoundedExploreLayer::updateBoundaryPolygonService");
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::updateBoundaryPolygonService", logger_.get_name()));
         // clear existing boundary, if any
         polygon_.points.clear();
         std::string tf_error;

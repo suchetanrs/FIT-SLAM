@@ -31,6 +31,7 @@
 #include <frontier_msgs/srv/get_frontier_costs.hpp>
 
 #include <frontier_exploration/frontier_selection.hpp>
+#include <frontier_exploration/colorize.hpp>
 
 #include <tf2_ros/buffer.h>
 #include <tf2/LinearMath/Quaternion.h>

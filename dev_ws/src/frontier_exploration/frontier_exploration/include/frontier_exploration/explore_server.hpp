@@ -19,6 +19,7 @@
 #include <frontier_msgs/srv/update_boundary_polygon.hpp>
 #include <frontier_msgs/srv/get_frontier_costs.hpp>
 #include <frontier_multirobot_allocator/taskAllocator.hpp>
+#include <frontier_exploration/colorize.hpp>
 
 namespace frontier_exploration
 {
