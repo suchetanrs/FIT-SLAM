@@ -6,6 +6,7 @@
 #include <thread>
 #include <random>
 #include <unordered_map>
+#include <cmath>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -61,7 +62,7 @@ namespace frontier_exploration
          * @param theta_s_star Optimal orientation for the frontier.
          * @param path_length Path length to the frontier.
          */
-        FrontierWithMetaData(frontier_msgs::msg::Frontier frontier, int information, double theta_s_star, int path_length)
+        FrontierWithMetaData(frontier_msgs::msg::Frontier frontier, int information, double theta_s_star, double path_length)
         {
             frontier_ = frontier;
             information_ = information;
@@ -88,10 +89,17 @@ namespace frontier_exploration
             {
                 // Calculate hash based on some combination of member variables
                 size_t hash = 0;
-                hash = std::hash<size_t>()(key.information_) ^
-                       std::hash<double>()(key.theta_s_star_) ^
-                       std::hash<int>()(key.path_length_) ^
-                       std::hash<double>()(key.frontier_.initial.x) ^
+                // hash = std::hash<size_t>()(key.information_) ^
+                //        std::hash<double>()(key.theta_s_star_) ^
+                //        std::hash<double>()(key.path_length_) ^
+                //        std::hash<double>()(key.frontier_.initial.x) ^
+                //        std::hash<double>()(key.frontier_.initial.y) ^
+                //        std::hash<double>()(key.frontier_.centroid.x) ^
+                //        std::hash<double>()(key.frontier_.centroid.y) ^
+                //        std::hash<double>()(key.frontier_.middle.x) ^
+                //        std::hash<double>()(key.frontier_.middle.y) ^
+                //        std::hash<double>()(key.frontier_.min_distance);
+                hash = std::hash<double>()(key.frontier_.initial.x) ^
                        std::hash<double>()(key.frontier_.initial.y) ^
                        std::hash<double>()(key.frontier_.centroid.x) ^
                        std::hash<double>()(key.frontier_.centroid.y) ^
@@ -105,7 +113,7 @@ namespace frontier_exploration
         frontier_msgs::msg::Frontier frontier_; ///< frontier location
         size_t information_;                    ///< information on arrival
         double theta_s_star_;                   ///< optimal orientation for frontier
-        int path_length_;                       ///< path length to frontier
+        double path_length_;                       ///< path length to frontier
     };
 
     /**
@@ -263,6 +271,11 @@ namespace frontier_exploration
             return x > 0 ? 1.0 : -1.0;
         }
 
+        void landmarkViz(std::vector<geometry_msgs::msg::Pose> &points, visualization_msgs::msg::Marker &marker_msg_);
+
+        void landmarkViz(std::vector<Eigen::Vector3f> &points, visualization_msgs::msg::Marker &marker_msg_);
+
+
         /**
          * @brief Performs 2D Bresenham ray tracing.
          *
@@ -290,15 +303,15 @@ namespace frontier_exploration
          * @param res Response object.
          * @param start_point_w Start point in world frame.
          * @param map_data Map data from the SLAM.
-         * @param traversability_costmap Traversability costmap.
+         * @param exploration_costmap Traversability costmap.
          * @return SelectionResult The selected frontier along with success status.
          */
         SelectionResult selectFrontierOurs(
-            const std::vector<frontier_msgs::msg::Frontier> &frontier_list,
+            std::vector<frontier_msgs::msg::Frontier> &frontier_list,
             std::vector<double> polygon_xy_min_max,
             geometry_msgs::msg::Point start_point_w,
             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
-            nav2_costmap_2d::Costmap2D *traversability_costmap);
+            nav2_costmap_2d::Costmap2D *exploration_costmap);
 
         /**
          * @brief Selects the closest frontier.
@@ -365,13 +378,14 @@ namespace frontier_exploration
         rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseStamped>::SharedPtr viz_pose_publisher_;   ///< Publisher for the best pose after u1 computation.
 
         nav2_costmap_2d::Costmap2D *costmap_;
-        nav2_costmap_2d::Costmap2D *traversability_costmap_;
+        nav2_costmap_2d::Costmap2D *exploration_costmap_;
         rclcpp::Node::SharedPtr frontier_selection_node_;
         std::vector<frontier_msgs::msg::Frontier> frontier_blacklist_; ///< Stores the blacklisted frontiers.
         int counter_value_;                                            ///< Variable used to give a unique value for each run. This is used as a prefix for the csv files.
         std::string mode_;
         rclcpp::Logger logger_ = rclcpp::get_logger("frontier_selection");
         bool planner_allow_unknown_;
+        bool use_planning_;
 
         double frontierDetectRadius_; ///< Sets the minimum detection radius for frontiers.
         double alpha_;                ///< Stores the alpha value used for weights.

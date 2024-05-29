@@ -64,6 +64,7 @@ CMAKE_BINARY_DIR = /root/dev_ws/src/frontier_exploration/frontier_multirobot_all
 
 # The main recursive "all" target.
 all: CMakeFiles/hungarian_lib.dir/all
+all: CMakeFiles/hungExec.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -72,6 +73,7 @@ preinstall:
 
 # The main recursive "clean" target.
 clean: CMakeFiles/hungarian_lib.dir/clean
+clean: CMakeFiles/hungExec.dir/clean
 .PHONY : clean
 
 #=============================================================================
@@ -81,7 +83,7 @@ clean: CMakeFiles/hungarian_lib.dir/clean
 CMakeFiles/hungarian_lib.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles --progress-num=1,2,3 "Built target hungarian_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles --progress-num=4,5,6 "Built target hungarian_lib"
 .PHONY : CMakeFiles/hungarian_lib.dir/all
 
 # Build rule for subdir invocation for target.
@@ -99,6 +101,32 @@ hungarian_lib: CMakeFiles/hungarian_lib.dir/rule
 CMakeFiles/hungarian_lib.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/clean
 .PHONY : CMakeFiles/hungarian_lib.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/hungExec.dir
+
+# All Build rule for target.
+CMakeFiles/hungExec.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles --progress-num=1,2,3 "Built target hungExec"
+.PHONY : CMakeFiles/hungExec.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/hungExec.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles 3
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/hungExec.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles 0
+.PHONY : CMakeFiles/hungExec.dir/rule
+
+# Convenience name for target.
+hungExec: CMakeFiles/hungExec.dir/rule
+.PHONY : hungExec
+
+# clean rule for target.
+CMakeFiles/hungExec.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/clean
+.PHONY : CMakeFiles/hungExec.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

@@ -21,14 +21,14 @@ void TaskAllocator::solveAllocationHungarian() {
     double cost = HungAlgo.Solve(costMatrix, assignment);
     std::cout << "Assignment size: " << assignment.size() << std::endl;
     std::cout << "Optimal Assignment:" << std::endl;
-    // for (unsigned int i = 0; i < costMatrix.size(); ++i) {
-    //     int robotIndex = assignment[i];
-    //     std::cout << "Task " << i << " allocated to Robot " << robotNames[robotIndex] << std::endl;
-    //     // tasksAllocated.push_back({(double)i + 1, (double)robotIndex + 1});
-    // }
-    // std::cout << "Total cost: " << cost << std::endl;
+    for (unsigned int i = 0; i < costMatrix.size(); ++i) {
+        int robotIndex = assignment[i];
+        std::cout << "Task " << robotIndex << " allocated to Robot " << robotNames[i] << std::endl;
+        tasksAllocated[robotNames[i]] = robotIndex;
+    }
+    std::cout << "Total cost: " << cost << std::endl;
 }
 
-std::vector<std::vector<double>> TaskAllocator::getAllocatedTasks() {
+std::map<std::string, int> TaskAllocator::getAllocatedTasks() {
     return tasksAllocated;
 }

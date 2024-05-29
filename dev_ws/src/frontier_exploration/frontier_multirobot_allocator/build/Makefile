@@ -174,12 +174,26 @@ hungarian_lib/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/build
 .PHONY : hungarian_lib/fast
 
+#=============================================================================
+# Target rules for targets named hungExec
+
+# Build rule for target.
+hungExec: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 hungExec
+.PHONY : hungExec
+
+# fast build rule for target.
+hungExec/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/build
+.PHONY : hungExec/fast
+
 src/hungarian/Hungarian.o: src/hungarian/Hungarian.cpp.o
 .PHONY : src/hungarian/Hungarian.o
 
 # target to build an object file
 src/hungarian/Hungarian.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/src/hungarian/Hungarian.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/src/hungarian/Hungarian.cpp.o
 .PHONY : src/hungarian/Hungarian.cpp.o
 
 src/hungarian/Hungarian.i: src/hungarian/Hungarian.cpp.i
@@ -188,6 +202,7 @@ src/hungarian/Hungarian.i: src/hungarian/Hungarian.cpp.i
 # target to preprocess a source file
 src/hungarian/Hungarian.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/src/hungarian/Hungarian.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/src/hungarian/Hungarian.cpp.i
 .PHONY : src/hungarian/Hungarian.cpp.i
 
 src/hungarian/Hungarian.s: src/hungarian/Hungarian.cpp.s
@@ -196,7 +211,32 @@ src/hungarian/Hungarian.s: src/hungarian/Hungarian.cpp.s
 # target to generate assembly for a file
 src/hungarian/Hungarian.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/src/hungarian/Hungarian.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/src/hungarian/Hungarian.cpp.s
 .PHONY : src/hungarian/Hungarian.cpp.s
+
+src/hungarian/testMain.o: src/hungarian/testMain.cpp.o
+.PHONY : src/hungarian/testMain.o
+
+# target to build an object file
+src/hungarian/testMain.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/src/hungarian/testMain.cpp.o
+.PHONY : src/hungarian/testMain.cpp.o
+
+src/hungarian/testMain.i: src/hungarian/testMain.cpp.i
+.PHONY : src/hungarian/testMain.i
+
+# target to preprocess a source file
+src/hungarian/testMain.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/src/hungarian/testMain.cpp.i
+.PHONY : src/hungarian/testMain.cpp.i
+
+src/hungarian/testMain.s: src/hungarian/testMain.cpp.s
+.PHONY : src/hungarian/testMain.s
+
+# target to generate assembly for a file
+src/hungarian/testMain.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/src/hungarian/testMain.cpp.s
+.PHONY : src/hungarian/testMain.cpp.s
 
 src/taskAllocator.o: src/taskAllocator.cpp.o
 .PHONY : src/taskAllocator.o
@@ -234,10 +274,14 @@ help:
 	@echo "... install/strip"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
+	@echo "... hungExec"
 	@echo "... hungarian_lib"
 	@echo "... src/hungarian/Hungarian.o"
 	@echo "... src/hungarian/Hungarian.i"
 	@echo "... src/hungarian/Hungarian.s"
+	@echo "... src/hungarian/testMain.o"
+	@echo "... src/hungarian/testMain.i"
+	@echo "... src/hungarian/testMain.s"
 	@echo "... src/taskAllocator.o"
 	@echo "... src/taskAllocator.i"
 	@echo "... src/taskAllocator.s"

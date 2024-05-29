@@ -1,230 +1,3 @@
-tmux
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-./shell_scripts/uni_only_exploration.sh 
-./shell_scripts/uni_launch.nodes.sh 
-./shell_scripts/uni_only_exploration.sh 
-kill -9 %1
-./shell_scripts/uni_only_exploration.sh 
-kill -9 %1
-./shell_scripts/uni_only_exploration.sh 
-kill -9 %1
-bash
-ls
-cd hotspot/
-ls
-./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
-sudo apt install fuse
-./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
-./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
-clear
-./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
-clear
-./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
-apt-get install linux-tools-common linux-tools-generic linux-tools-`uname -r`
-sudo apt-get install linux-tools
-sudo apt-get install linux-tools-*
-sudo apt-get install linux-tools-common linux-tools-generic
-apt-get install --fix-missing
-apt-get update --fix-missing
-./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
-perf record  /bin/ls
-perf --version
-apt-get install linux-tools-generic
-apt-get install linux-tools-common
-perf --version
-./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
- linux-tools-6.5.0-28-generic
-apt-get install linux-tools-6.5.0-28-generic
-./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
-./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
-./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
-./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
-bash
-ls
-cd dev_ws/
-vsc
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-colcon build --symlink-install
-kill -9 %1
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kill =9 %1
-kill -9 %1
-colcon build --symlink-install
-kill -9 %1
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-bash
-ros2 topic hz /simulation_costmap 
-rviz2
-ros2 topic hz /simulation_costmap
-rviz2
-bash
-ros2 topic list
-ros2 topic hz /simulation_costmap
-bash
-ls
-tmux
-ls
-l
-ls
-cd dev_ws/
-ls
-vsc
-./shell_scripts/only_exploration.sh 
-bash
-cd dev_ws/
-kill -9 %1
-colcon build --symlink-install
-bash
-rviz2
-bash
-ls
-cd dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
-cmake ..
-make
-make install
-bash
-ros2 run exploration_sim explore_sim 
-kk
-k
-cd dev_ws/
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-bash
-cd dev_ws/
-ls
-colcon build --symlink-install
-tmux
-cd dev_ws/
-vsc
-ls
-cd src/frontier_exploration/frontier_multirobot_allocator/hungarian/
-ls
-cd hungarian-algorithm-cpp/
-make
-ls
-./test 
-nano makefile 
-make
-nano makefile 
-ll -t
-rm -rf test hung.o main.o 
-ls
-make
-nano makefile 
-make
-sudo chmod +x hung.o main.o 
-./main.o 
-ls
-cat main
-./main.o 
-ls
-sudo chmod +x main
-./main
-clear
-ls
-git status
-git add .
-git stash
-git status
-make
-ls
-at makefile 
-cat makefile 
-make clean
-ls
-make test
-./test 
-make
-./test 
-make
-./test 
-make
-./test 
-make
-./test 
-make
-./test 
-make
-./test 
-make
-./test 
-cd
-cd dev_ws/src/frontier_exploration/
-ls
-sudo chmod -R a+rw *
-ls
-cd ../..
-colcon build --symlink-install
-./build/frontier_multirobot_allocator/hungarian
-colcon build --symlink-install
-./build/frontier_multirobot_allocator/hungarian
-colcon build --symlink-install
-./build/frontier_multirobot_allocator/hungarian_task 
-./build/frontier_multirobot_allocator/hungarian
-colcon build --symlink-install
-./build/frontier_multirobot_allocator/hungarian
-./build/frontier_multirobot_allocator/hungarian_task 
-colcon build --symlink-install
-./build/frontier_multirobot_allocator/hungarian_task 
-vsc
-colcon build --symlink-install
-ls
-cd src/frontier_exploration/frontier_multirobot_allocator/
 ls
 mkdir build
 make
@@ -498,3 +271,230 @@ tmux
 zsh
 ls
 nano shell_scripts/install_hotspot.sh 
+ls
+bash
+ls
+cd ros
+ls
+cd ros2_ws/
+ls
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+bash
+./shell_scripts/only_exploration.sh 
+./shell_scripts/scout_1_exploration.sh 
+bash
+rviz2
+bash
+cd dev_ws/
+colcon build --symlink-install
+ros2 topic list
+bash
+ls
+cd dev_ws/
+ls
+cd src/
+ls
+cd frontier_exploration/
+ls
+cd frontier_m
+cd frontier_multirobot_allocator/
+ls
+cd ..
+cd frontier_m
+cd frontier_multirobot_allocator/
+ls
+cd
+cd dev_ws/
+vsc
+rm -rf build/ install/ log/
+colcon build --symlink-install
+ls
+cd src/frontier_exploration/frontier_multirobot_allocator/
+ls
+cd build/
+ls
+cmake ..
+make
+make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+tmux
+cd ros2_ws/
+colcon build --symlink-install
+colcon build --symlink-install --allow-overriding controller_manager gazebo_ros hardware_interface nav2_bringup nav2_costmap_2d nav2_map_server nav2_msgs pcl_conversions pcl_ros perception_pcl ros2_control_test_assets turtlebot3
+ls
+cd src/
+ls
+cd ..
+colcon build --symlink-install --allow-overriding controller_manager gazebo_ros hardware_interface nav2_bringup nav2_costmap_2d nav2_map_server nav2_msgs pcl_conversions pcl_ros perception_pcl ros2_control_test_assets turtlebot3
+cd
+cd dev_ws/
+rm -rf build/ install/ log/
+colcon build --symlink-install
+bahs
+bash
+ros2 run exploration_sim explore_sim 
+cd dev_ws/
+vsc
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+bash
+./shell_scripts/scout_
+./shell_scripts/scout_1_exploration.sh 
+python3 dev_ws/src/exploration_sim/scripts/action_sim.py 
+./shell_scripts/scout_1_exploration.sh 
+nano dev_ws/src/exploration_sim/scripts/action_sim.py 
+python3 dev_ws/src/exploration_sim/scripts/action_sim.py 
+nano dev_ws/src/exploration_sim/scripts/action_sim.py 
+./shell_scripts/scout_1_exploration.sh 
+nano dev_ws/src/exploration_sim/scripts/action_sim.py 
+python3 dev_ws/src/exploration_sim/scripts/action_sim.py 
+./shell_scripts/scout_1_exploration.sh 
+bash
+rviz2
+rviz2
+bash
+bsah
+bash
+ls
+cd dev_ws/
+colcon build --symlink-install
+ls
+cd src/
+ls
+cd frontier_exploration/
+ls
+cd frontier_m
+cd frontier_multirobot_allocator/
+ls
+cd build/
+cmake ..
+make
+make install
+cd ../..
+ls
+cd ../..
+colcon build --symlink-install
+ls
+bash
+bash
+tmux
+cd dev_ws/
+colcon build --symlink-install
+rm -rf build/ install/ log/
+colcon build --symlink-install
+bahs
+bash
+ros2 run exploration_sim explore_sim 
+ll
+kk
+k
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+k
+kk
+ros2 run exploration_sim explore_sim 
+bash
+rviz2
+bash
+ls
+cd dev_ws/
+vsc
+colcon build --symlink-install
+cd
+./shell_scripts/scout_1_exploration.sh 
+ls
+./shell_scripts/scout_1_exploration.sh 
+./shell_scripts/only_exploration.sh 
+./shell_scripts/scout_1_exploration.sh 
+./shell_scripts/only_exploration.sh 
+./shell_scripts/scout_1_exploration.sh 
+./shell_scripts/only_exploration.sh 
+bash
+./shell_scripts/scout_2_exploration.sh 
+bash
+ls
+cd dev_ws/src/frontier_exploration/frontier_multirobot_allocator/
+ls
+cd build/
+cmake ..
+make
+make install
+bash
+ls
+tmux
+cd /
+ls
+cd
+cd dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make
+make install
+pidof explore_server
+kill -9 4068
+pidof explore_server
+kill -9 3647
+pidof explore_server
+pidof frontier_multirobot_allocatorConfig
+pidof explore_server
+pidof frontier_multirobot_allocatorConfig
+pidof explore_server
+htop -p 16140
+top -p 16140
+pidof explore_server
+kill -9 %1
+kill -9 16140
+pidof explore_server
+kill -9 18675
+pidof explore_server
+kill -9 18675
+pidof explore_server
+kill -9 18866
+pidof explore_server
+kill -9 20073 20069
+pidof explore_server
+cd
+ls
+clear
+ls
+cd dev_ws/
+ls
+cd
+ls
+rm -r 12904_greedy_frontier_map_data_coverage_.csv 
+ls
+rm -r 12904_*
+ls
+nano shell_scripts/3_exploration.sh 
+ls
+clear
+ls
+cd /home/
+ls
+cd scout_
+cd scout_1/
+ls
+cd
+ls
+cd dev_ws/src/
+ls
+cd frontier_exploration/
+ls
+cd
+ls
+s
+ls
+rm -rf scout_*
+pidof explore_server
+kill -9 24524
+pidof explore_server
+ls
+nano scout_1_12904_ours_frontier_map_data_coverage.csv 
+bash

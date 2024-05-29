@@ -78,6 +78,7 @@ namespace frontier_exploration
         bool use_custom_sim_;
         bool wait_for_other_robot_costs_;
         bool process_other_robots_;
+        bool use_pose_from_multirobot_allocator_;
 
         rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID &uuid,
                                                 std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal);
@@ -109,5 +110,7 @@ namespace frontier_exploration
         void nav2GoalResultCallback(const GoalHandleNav2::WrappedResult &result);
 
         void nav2GoalResponseCallback(const GoalHandleNav2::SharedPtr &goal_handle);
+
+        bool equateFrontierList(const std::vector<frontier_msgs::msg::Frontier>& list1, const std::vector<frontier_msgs::msg::Frontier>& list2);
     };
 }

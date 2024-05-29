@@ -14,9 +14,16 @@ set(dependencies
 
 # Create library target
 add_library(hungarian_lib src/hungarian/Hungarian.cpp src/taskAllocator.cpp)
-
+add_executable(hungExec src/hungarian/Hungarian.cpp src/hungarian/testMain.cpp)
 # Set include directory
 target_include_directories(hungarian_lib
+    PUBLIC 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+        ${EIGEN3_INCLUDE_DIR}
+)
+
+target_include_directories(hungExec
     PUBLIC 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
@@ -26,6 +33,9 @@ target_include_directories(hungarian_lib
 # Link libraries
 target_link_libraries(hungarian_lib
     ${EIGEN3_LIBS}
+)
+target_link_libraries(hungExec
+   ${EIGEN3_LIBS}
 )
 
 # Generate and install CMake configuration file

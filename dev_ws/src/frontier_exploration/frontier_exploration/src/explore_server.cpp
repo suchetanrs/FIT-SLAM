@@ -13,6 +13,7 @@ namespace frontier_exploration
         this->declare_parameter("robot_namespaces", rclcpp::ParameterValue(robot_namespaces_));
         this->declare_parameter("wait_for_other_robot_costs", false);
         this->declare_parameter("process_other_robots", false);
+        this->declare_parameter("use_pose_from_multirobot_allocator", true);
 
         this->get_parameter("goal_aliasing", goal_aliasing_);
         this->get_parameter("retry_count", retry_);
@@ -21,6 +22,7 @@ namespace frontier_exploration
         this->get_parameter("robot_namespaces", robot_namespaces_);
         this->get_parameter("wait_for_other_robot_costs", wait_for_other_robot_costs_);
         this->get_parameter("process_other_robots", process_other_robots_);
+        this->get_parameter("use_pose_from_multirobot_allocator", use_pose_from_multirobot_allocator_);
 
         //--------------------------------------------NAV2 CLIENT RELATED--------------------------------
         nav2_client_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -101,6 +103,7 @@ namespace frontier_exploration
 
     void FrontierExplorationServer::processAllRobots(std::shared_ptr<TaskAllocator> taskAllocator, std::vector<frontier_msgs::msg::Frontier>& globalFrontierList, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> srv_res)
     {
+        RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("PROCESSING ALL ROBOTS!!!!!!!!!!!!!!!!!!!!!!", this->get_namespace()));
         // process for all robots
         for (auto robot_name : robot_namespaces_)
         {
@@ -144,9 +147,10 @@ namespace frontier_exploration
                         }
                         else
                         {
-                            if(frontier_costs_srv_res->frontier_list != globalFrontierList)
+                            if(!equateFrontierList(frontier_costs_srv_res->frontier_list, globalFrontierList))
                             {
-                                throw std::runtime_error("The frontier lists are not same for other robot");
+                                auto gfl_size = globalFrontierList.size();
+                                throw std::runtime_error("The frontier lists are not same for other robot" + std::to_string(gfl_size));
                             }
                         }
                     }
@@ -217,9 +221,12 @@ namespace frontier_exploration
             }
         }
 
+        rclcpp::sleep_for(std::chrono::seconds(5));
+
         // The exploration is active until this while loop runs.
         while (rclcpp::ok() && goal_handle->is_active())
         {
+            RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("NEW ITERATION!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this->get_namespace()));
             std::shared_ptr<TaskAllocator> taskAllocator = std::make_shared<TaskAllocator>();
             if (!layer_configured_)
             {
@@ -281,7 +288,7 @@ namespace frontier_exploration
             currently_processing_lock_.lock();
             currently_processing_ = false;
             currently_processing_lock_.unlock();
-            RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Size of the frontier list for is: " + std::to_string(srv_res->frontier_list.size()), this->get_namespace()));
+            RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Size of the frontier list being used for multirobot is: " + std::to_string(srv_res->frontier_list.size()), this->get_namespace()));
 
             // check if robot is not within exploration boundary and needs to return to center of search area
             if (goal->explore_boundary.polygon.points.size() > 0 && !pointInPolygon(eval_pose.pose.position, goal->explore_boundary.polygon))
@@ -317,7 +324,6 @@ namespace frontier_exploration
                 std::vector<frontier_msgs::msg::Frontier> globalFrontierList = {};
 
                 processAllRobots(taskAllocator, globalFrontierList, srv_res);
-
                 taskAllocator->addRobotTasks(srv_res->frontier_costs, this->get_namespace());
                 if(globalFrontierList.empty())
                 {
@@ -325,16 +331,51 @@ namespace frontier_exploration
                 }
                 else
                 {
-                    if(srv_res->frontier_list != globalFrontierList)
+                    if(!equateFrontierList(globalFrontierList, srv_res->frontier_list))
                     {
-                        throw std::runtime_error("The frontier lists are not same for current robot");
+                        throw std::runtime_error("The frontier lists are not same for current robot: " + static_cast<std::string>(this->get_namespace()) + " srv_res size: " + std::to_string(srv_res->frontier_list.size()) + " globalFrontier list size: " + std::to_string(globalFrontierList.size()));
                     }
                 }
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Solving hungarian", this->get_namespace()));
                 taskAllocator->solveAllocationHungarian();
+                auto allocatedIndex = taskAllocator->getAllocatedTasks()[this->get_namespace()];
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated index" + std::to_string(allocatedIndex), this->get_namespace()));
+                auto allocatedFrontier = globalFrontierList[allocatedIndex];
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier x:" + std::to_string(allocatedFrontier.initial.x), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier y:" + std::to_string(allocatedFrontier.initial.y), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier z:" + std::to_string(allocatedFrontier.initial.z), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier oz:" + std::to_string(allocatedFrontier.best_orientation.z), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier ow:" + std::to_string(allocatedFrontier.best_orientation.w), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier ox:" + std::to_string(allocatedFrontier.best_orientation.x), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier oy:" + std::to_string(allocatedFrontier.best_orientation.y), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier x:" + std::to_string(srv_res->next_frontier.pose.position.x), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier y:" + std::to_string(srv_res->next_frontier.pose.position.y), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier z:" + std::to_string(srv_res->next_frontier.pose.position.z), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier oz:" + std::to_string(srv_res->next_frontier.pose.orientation.z), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier ow:" + std::to_string(srv_res->next_frontier.pose.orientation.w), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier ox:" + std::to_string(srv_res->next_frontier.pose.orientation.x), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier oy:" + std::to_string(srv_res->next_frontier.pose.orientation.y), this->get_namespace()));
+                // if(allocatedFrontier.best_orientation != srv_res->next_frontier.pose.orientation)
+                // {
+                    // throw std::runtime_error("The orientations are not same. What are you doing?");
+                // }
+                // if(allocatedFrontier.initial != srv_res->next_frontier.pose.position)
+                // {
+                    // throw std::runtime_error("The initial positions are not same. What are you doing?");
+                // }
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Next frontier Result success. Sending goal to Nav2", this->get_namespace()));
                 success_ = true;
-                goal_pose = srv_res->next_frontier;
+                if(use_pose_from_multirobot_allocator_)
+                {
+                    RCLCPP_ERROR(this->get_logger(), "USING MULTIROBOT FRONTIER");
+                    goal_pose.pose.position = allocatedFrontier.initial;
+                    goal_pose.pose.orientation = allocatedFrontier.best_orientation;
+                }
+                else
+                {
+                    // the orientation is set inside the server in next_frontier
+                    goal_pose = srv_res->next_frontier;
+                }
             }
             else if (srv_res->success == false)
             {
@@ -590,6 +631,45 @@ namespace frontier_exploration
         {
             RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Goal accepted by Nav2 server, waiting for result", this->get_namespace()));
         }
+    }
+
+    bool FrontierExplorationServer::equateFrontierList(const std::vector<frontier_msgs::msg::Frontier>& list1, const std::vector<frontier_msgs::msg::Frontier>& list2)
+    {
+        bool listflag = true;
+        // Check if the lists have the same size
+        if (list1.size() != list2.size()) {
+            return false;
+        }
+
+        // Compare each corresponding element in both lists
+        for (size_t i = 0; i < list1.size(); ++i) {
+            auto f1 = list1[i];
+            auto f2 = list2[i];
+            if (list1[i].initial != list2[i].initial || 
+                list1[i].centroid != list2[i].centroid || 
+                list1[i].middle != list2[i].middle || 
+                list1[i].size != list2[i].size) {
+                RCLCPP_INFO_STREAM(this->get_logger(), "Comparing elements at index " << i);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list1.initial: " << f1.initial.x);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list1.initial: " << f1.initial.y);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list1.centroid: " << f1.centroid.x);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list1.centroid: " << f1.centroid.y);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list1.middle: " << f1.middle.x);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list1.middle: " << f1.middle.y);
+                RCLCPP_INFO_STREAM(this->get_logger(), "********************");
+                RCLCPP_INFO_STREAM(this->get_logger(), "list2.initial: " << f2.initial.x);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list2.initial: " << f2.initial.y);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list2.centroid: " << f2.centroid.x);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list2.centroid: " << f2.centroid.y);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list2.middle: " << f2.middle.x);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list2.middle: " << f2.middle.y);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list1.size: " << f1.size);
+                RCLCPP_INFO_STREAM(this->get_logger(), "list2.size: " << f2.size);  
+                RCLCPP_INFO_STREAM(this->get_logger(), "********************");                  
+                listflag = false;
+            }
+        }
+        return listflag;
     }
 };
 

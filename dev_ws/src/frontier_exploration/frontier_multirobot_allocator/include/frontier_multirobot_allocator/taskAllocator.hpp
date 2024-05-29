@@ -3,19 +3,20 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 class TaskAllocator {
 private:
     std::vector<std::vector<double>> costMatrix;
     std::vector<std::string> robotNames;
-    std::vector<std::vector<double>> tasksAllocated;
+    std::map<std::string, int> tasksAllocated;
 
 public:
     TaskAllocator();
 
     void addRobotTasks(std::vector<double> tasks, std::string robotName);
     void solveAllocationHungarian();
-    std::vector<std::vector<double>> getAllocatedTasks();
+    std::map<std::string, int> getAllocatedTasks();
 };
 
 #endif // TASK_ALLOCATOR_HPP

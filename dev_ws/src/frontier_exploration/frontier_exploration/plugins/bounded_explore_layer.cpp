@@ -263,15 +263,16 @@ namespace frontier_exploration
 
             // Visualize the frontiers only if frontier list is not overriden.
             frontierSelect_->visualizeFrontier(frontier_list, every_frontier, layered_costmap_->getGlobalFrameID());
+            frontierSelect_->exportMapCoverage(polygon_xy_min_max_, startTime_);
         }
         if (req->override_frontier_list == true)
         {
             frontier_list = req->frontier_list_to_override;
             RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::getNextFrontierService another robot", logger_.get_name()));
+            RCLCPP_ERROR_STREAM(logger_, "OVERRIDE LIST SIZE: " << req->frontier_list_to_override.size());
         }
 
         // Select the frontier (Modify this for different algorithms)
-        frontierSelect_->exportMapCoverage(polygon_xy_min_max_, startTime_);
         frontier_msgs::msg::Frontier selected;
         if (exploration_mode_ == "greedy")
         {
@@ -331,7 +332,7 @@ namespace frontier_exploration
                 // Extract key and value
                 auto key = pair.first.frontier_; // frontier with meta data
                 auto value = pair.second;        // cost.
-
+                key.best_orientation = nav2_util::geometry_utils::orientationAroundZAxis(pair.first.theta_s_star_);
                 // Push them into respective vectors
                 frontiers_list.push_back(key);
                 frontier_costs.push_back(value);

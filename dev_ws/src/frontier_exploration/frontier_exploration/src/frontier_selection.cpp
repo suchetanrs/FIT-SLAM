@@ -53,6 +53,9 @@ namespace frontier_exploration
         frontier_selection_node_->declare_parameter("N_best_for_u2", 6);
         frontier_selection_node_->get_parameter("N_best_for_u2", N_best_for_u2_);
 
+        frontier_selection_node_->declare_parameter("use_planning", true);
+        frontier_selection_node_->get_parameter("use_planning", use_planning_);
+
         costmap_ = costmap;
     }
 
@@ -96,7 +99,7 @@ namespace frontier_exploration
      * @param points A vector containing geometry_msgs::msg::Pose representing the landmarks' positions.
      * @param marker_msg_ Reference to a visualization_msgs::msg::Marker message to be filled with landmark information.
      */
-    void landmarkViz(std::vector<geometry_msgs::msg::Pose> &points, visualization_msgs::msg::Marker &marker_msg_)
+    void FrontierSelectionNode::landmarkViz(std::vector<geometry_msgs::msg::Pose> &points, visualization_msgs::msg::Marker &marker_msg_)
     {
 
         // Initialize the Marker message
@@ -105,8 +108,8 @@ namespace frontier_exploration
         marker_msg_.action = visualization_msgs::msg::Marker::ADD;
 
         // Set the scale of the points
-        marker_msg_.scale.x = 0.1; // Point size
-        marker_msg_.scale.y = 0.1;
+        marker_msg_.scale.x = costmap_->getResolution(); // Point size
+        marker_msg_.scale.y = costmap_->getResolution();
 
         // Set the color (green in RGBA format)
         marker_msg_.color.r = 0.0;
@@ -127,7 +130,7 @@ namespace frontier_exploration
      * @param points A vector containing geometry_msgs::msg::Pose representing the landmarks' positions.
      * @param marker_msg_ Reference to a visualization_msgs::msg::Marker message to be filled with landmark information.
      */
-    void landmarkViz(std::vector<Eigen::Vector3f> &points, visualization_msgs::msg::Marker &marker_msg_)
+    void FrontierSelectionNode::landmarkViz(std::vector<Eigen::Vector3f> &points, visualization_msgs::msg::Marker &marker_msg_)
     {
 
         // Initialize the Marker message
@@ -216,7 +219,7 @@ namespace frontier_exploration
             }
         }
         std::ofstream file;
-        file.open(std::to_string(counter_value_) + "_" + mode_ + "_frontier_map_data_coverage_.csv", std::ios::app);
+        file.open(static_cast<std::string>(logger_.get_name()).substr(1, 7) + "_" + std::to_string(counter_value_) + "_" + mode_ + "_frontier_map_data_coverage.csv", std::ios::app);
         if (!file.is_open())
         {
             RCLCPP_ERROR(logger_, "Failed to open the CSV file for writing.");
@@ -250,11 +253,11 @@ namespace frontier_exploration
         return duplicates;
     }
 
-    SelectionResult FrontierSelectionNode::selectFrontierOurs(const std::vector<frontier_msgs::msg::Frontier> &frontier_list, std::vector<double> polygon_xy_min_max,
-                                                              geometry_msgs::msg::Point start_point_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, nav2_costmap_2d::Costmap2D *traversability_costmap)
+    SelectionResult FrontierSelectionNode::selectFrontierOurs(std::vector<frontier_msgs::msg::Frontier> &frontier_list, std::vector<double> polygon_xy_min_max,
+                                                              geometry_msgs::msg::Point start_point_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, nav2_costmap_2d::Costmap2D *exploration_costmap)
     {
         RCLCPP_INFO_STREAM(logger_, COLOR_STR("FrontierSelectionNode::selectFrontierOurs", logger_.get_name()));
-        traversability_costmap_ = traversability_costmap;
+        exploration_costmap_ = exploration_costmap;
         std::unordered_map<frontier_exploration::FrontierWithMetaData, double, frontier_exploration::FrontierWithMetaData::Hash> frontier_costs;
         frontier_msgs::msg::Frontier selected_frontier;
         geometry_msgs::msg::Quaternion selected_orientation;
@@ -290,29 +293,15 @@ namespace frontier_exploration
         std::vector<std::pair<FrontierWithMetaData, double>> frontier_with_u1_utility;
 
         // Variables to track minimum traversable distance and maximum arrival information per frontier
-        int min_traversable_distance = std::numeric_limits<int>::max();
+        double min_traversable_distance = std::numeric_limits<double>::max();
         int max_arrival_info_per_frontier = 0.0;
         // Iterate through each frontier
         RCLCPP_WARN_STREAM(logger_, COLOR_STR("Frontier list size is (loop): " + std::to_string(frontier_list.size()), logger_.get_name()));
         auto frontier_list_duplicates = findDuplicates(frontier_list);
         RCLCPP_INFO_STREAM(logger_, COLOR_STR("Duplicates size is: " + std::to_string(frontier_list_duplicates.size()), logger_.get_name()));
         RCLCPP_INFO_STREAM(logger_, COLOR_STR("Blacklist size is: " + std::to_string(frontier_list_duplicates.size()), logger_.get_name()));
-        for (auto frontier : frontier_list)
+        for (auto& frontier : frontier_list)
         {
-            // Preliminary checks and path planning for each frontier
-            auto plan_of_frontier = getPlanForFrontier(start_point_w, frontier, map_data, false);
-            // frontier_plan_pub_->publish(plan_of_frontier.first.path);
-            int length_to_frontier = plan_of_frontier.first.path.poses.size();
-
-            // Continue to next frontier if path length is zero
-            if (length_to_frontier == 0 || plan_of_frontier.second == false)
-            {
-                RCLCPP_WARN_STREAM(logger_, COLOR_STR("Path length is zero or false", logger_.get_name()));
-                FrontierWithMetaData f_info_blacklisted(frontier, std::numeric_limits<int>::lowest(), std::numeric_limits<double>::max(), std::numeric_limits<int>::lowest());
-                frontier_costs[f_info_blacklisted] = std::numeric_limits<double>::max();
-                continue;
-            }
-            
             // Continue to next frontier if frontier is in blacklist
             bool frontier_exists_ = false;
             for (auto blacklisted_frontier_ : frontier_blacklist_)
@@ -324,13 +313,40 @@ namespace frontier_exploration
                 }
             }
 
+            // Preliminary checks and path planning for each frontier
+            auto startTimePlan = std::chrono::high_resolution_clock::now();
+            double length_to_frontier;
+            if(use_planning_)
+            {
+                auto plan_of_frontier = getPlanForFrontier(start_point_w, frontier, map_data, false);
+                length_to_frontier = static_cast<double>(plan_of_frontier.first.path.poses.size());
+                // Continue to next frontier if path length is zero
+                if (length_to_frontier == 0 || plan_of_frontier.second == false)
+                {
+                    RCLCPP_WARN_STREAM(logger_, COLOR_STR("Path length is zero or false", logger_.get_name()));
+                    FrontierWithMetaData f_info_blacklisted(frontier, std::numeric_limits<int>::lowest(), std::numeric_limits<double>::max(), std::numeric_limits<int>::lowest());
+                    frontier_costs[f_info_blacklisted] = std::numeric_limits<double>::max();
+                    continue;
+                }
+                // frontier_plan_pub_->publish(plan_of_frontier.first.path);
+            }
+            else
+            {
+                length_to_frontier = frontier.min_distance;
+            }
+            auto endTimePlan = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> durationPlan = (endTimePlan - startTimePlan);
+            RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("Time taken to Plan is: " + std::to_string(durationPlan.count()), logger_.get_name()));
+
+
             // Proceed to the function only if frontier is above the detection radius.
             if (frontier.min_distance > frontierDetectRadius_ && frontier_exists_ == false)
             {
+                auto startTime = std::chrono::high_resolution_clock::now();
                 double sx, sy; // sensor x, sensor y, sensor orientation
                 double wx, wy;
                 unsigned int min_length = 0.0;
-                int resolution_cut_factor = 5;
+                int resolution_cut_factor = 1;
                 unsigned int max_length = radius / (costmap_->getResolution());
                 sx = frontier.initial.x;
                 sy = frontier.initial.y;
@@ -416,20 +432,23 @@ namespace frontier_exploration
 
                     auto info_addition = cell_gatherer.getCells();
                     information_along_ray.push_back(info_addition.size());
-                    for (size_t z = 0; z < info_addition.size(); z++)
-                    {
-                        double wmx, wmy;
-                        costmap_->mapToWorld(info_addition[z].x, info_addition[z].y, wmx, wmy);
-                        geometry_msgs::msg::Pose pnts;
-                        pnts.position.x = wmx;
-                        pnts.position.y = wmy;
-                        vizpoints.push_back(pnts);
-                    }
+                    // loop for visualization
+                    // for (size_t counter_info = 0; counter_info < info_addition.size(); counter_info++)
+                    // {
+                    //     double wmx, wmy;
+                    //     costmap_->mapToWorld(info_addition[counter_info].x, info_addition[counter_info].y, wmx, wmy);
+                    //     geometry_msgs::msg::Pose pnts;
+                    //     pnts.position.x = wmx;
+                    //     pnts.position.y = wmy;
+                    //     vizpoints.push_back(pnts);
+                    // }
                 } // theta end
 
                 std::vector<int> kernel(static_cast<int>(camera_fov / delta_theta), 1); // initialize a kernal vector of size 6 and all elements = 1
                 int n = information_along_ray.size();                                   // number of rays computed in 2PI
+                RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("n is: " + std::to_string(n), logger_.get_name()));
                 int k = kernel.size();
+                RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("k is: " + std::to_string(k), logger_.get_name()));
                 std::vector<int> result(n - k + 1, 0);
                 for (int i = 0; i < n - k + 1; ++i)
                 {
@@ -455,13 +474,24 @@ namespace frontier_exploration
                 frontier_meta_data_vector.push_back(f_info);
                 max_arrival_info_per_frontier = std::max(max_arrival_info_per_frontier, maxValue);
                 min_traversable_distance = std::min(min_traversable_distance, length_to_frontier);
+                auto endTime = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double> duration = (endTime - startTime);
+                RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("Time taken to raytrace is: " + std::to_string(duration.count()), logger_.get_name()));
+                RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("Total unknown cells is: " + std::to_string(std::accumulate(information_along_ray.begin(), information_along_ray.end(), 0)), logger_.get_name()));
+                
+                // visualize raytraced points
+                // visualization_msgs::msg::Marker marker_msg_raytraced_;
+                // landmarkViz(vizpoints, marker_msg_raytraced_);
+                // landmark_publisher_->publish(marker_msg_raytraced_);
             }
             else
             {
                 FrontierWithMetaData f_info_blacklisted(frontier, std::numeric_limits<int>::lowest(), std::numeric_limits<double>::max(), std::numeric_limits<int>::lowest());
                 frontier_costs[f_info_blacklisted] = std::numeric_limits<double>::max();
             }
+            
         } // frontier end
+        // rclcpp::sleep_for(std::chrono::milliseconds(1000));
         RCLCPP_WARN_STREAM(logger_, COLOR_STR("(before) Frontier u1 with utility size is: " + std::to_string(frontier_with_u1_utility.size()), logger_.get_name()));
         RCLCPP_WARN_STREAM(logger_, COLOR_STR("(before) Frontier costs size u1 is: " + std::to_string(frontier_costs.size()), logger_.get_name()));
 
@@ -473,21 +503,26 @@ namespace frontier_exploration
             auto utility = (alpha_ * (static_cast<double>(frontier_with_properties.information_) / static_cast<double>(max_arrival_info_per_frontier))) +
                            ((1.0 - alpha_) * (static_cast<double>(min_traversable_distance) / frontier_with_properties.path_length_));
 
+            RCLCPP_DEBUG_STREAM(logger_, "Utility U1 information:" << frontier_with_properties.information_);
+            RCLCPP_DEBUG_STREAM(logger_, "Utility U1 distance:" << min_traversable_distance);
+            RCLCPP_DEBUG_STREAM(logger_, "Utility U1 max info:" << max_arrival_info_per_frontier);
+            RCLCPP_DEBUG_STREAM(logger_, "Utility U1 max distance:" << frontier_with_properties.path_length_);
             // It is added with Beta multiplied. If the frontier lies in the N best then this value will be replaced with information on path.
             // If it does not lie in the N best then the information on path is treated as 0 and hence it is appropriate to multiply with beta.
             if(frontier_costs.count(frontier_with_properties) == 1)
-                throw std::runtime_error("Something is wrong. Duplicates?");
-            frontier_costs[frontier_with_properties] = beta_ * utility;
-            frontier_with_u1_utility.push_back(std::make_pair(frontier_with_properties, utility));
-            RCLCPP_DEBUG_STREAM(logger_, "Utility U1:" << utility);
-            if (utility > max_u1_utility)
+                throw std::runtime_error("Something is wrong. Duplicate frontiers?");
+            frontier_costs[frontier_with_properties] = (beta_ * utility) == 0 ? std::numeric_limits<double>::max() : 1 / (beta_ * utility);
+            frontier_with_u1_utility.push_back(std::make_pair(frontier_with_properties, beta_ * utility));
+            RCLCPP_DEBUG_STREAM(logger_, "Utility U1:" << 1 / (beta_ * utility));
+            if (beta_ * utility > max_u1_utility)
             {
-                max_u1_utility = utility;
+                max_u1_utility = beta_ * utility;
                 theta_s_star = frontier_with_properties.theta_s_star_;
                 selected_frontier = frontier_with_properties.frontier_;
                 selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(theta_s_star);
 
                 RCLCPP_DEBUG_STREAM(logger_, "Max u1 utility: " << max_u1_utility);
+                RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("Min u1 cost: " + std::to_string(1 / max_u1_utility), logger_.get_name()));
                 RCLCPP_DEBUG_STREAM(logger_, "Max information: " << max_arrival_info_per_frontier);
                 RCLCPP_DEBUG_STREAM(logger_, "Min distance " << min_traversable_distance);
             }
@@ -503,7 +538,6 @@ namespace frontier_exploration
         vizpose.pose.position.y = selected_frontier.initial.y;
         vizpose.pose.orientation = selected_orientation;
         viz_pose_publisher_->publish(vizpose);
-
         // FrontierU1ComparatorCost frontier_u1_comp;
         // // sort the frontier list based on the utility value
         // std::sort(frontier_with_u1_utility.begin(), frontier_with_u1_utility.end(), frontier_u1_comp);
@@ -566,8 +600,8 @@ namespace frontier_exploration
         //     return selection_result;
         // }
         auto endTime = std::chrono::high_resolution_clock::now();
-        auto duration = (endTime - startTime).count() / 1.0;
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Time taken to search is: " + std::to_string(duration), logger_.get_name()));
+        std::chrono::duration<double> duration = (endTime - startTime);
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Time taken to search is: " + std::to_string(duration.count()), logger_.get_name()));
 
         if(frontier_costs.size() != frontier_list.size())
         {
@@ -736,13 +770,13 @@ namespace frontier_exploration
         nav_msgs::msg::Path plan;
         plan.header.frame_id = "map";
         std::unique_ptr<frontier_exploration::NavFn> planner_;
-        planner_ = std::make_unique<frontier_exploration::NavFn>(traversability_costmap_->getSizeInCellsX(), traversability_costmap_->getSizeInCellsY());
-        planner_->setNavArr(traversability_costmap_->getSizeInCellsX(), traversability_costmap_->getSizeInCellsY());
-        planner_->setCostmap(traversability_costmap_->getCharMap(), true, planner_allow_unknown_);
+        planner_ = std::make_unique<frontier_exploration::NavFn>(exploration_costmap_->getSizeInCellsX(), exploration_costmap_->getSizeInCellsY());
+        planner_->setNavArr(exploration_costmap_->getSizeInCellsX(), exploration_costmap_->getSizeInCellsY());
+        planner_->setCostmap(exploration_costmap_->getCharMap(), true, planner_allow_unknown_);
 
         // start point
         unsigned int mx, my;
-        if (!traversability_costmap_->worldToMap(start_point_w.x, start_point_w.y, mx, my))
+        if (!exploration_costmap_->worldToMap(start_point_w.x, start_point_w.y, mx, my))
         {
             RCLCPP_WARN_STREAM(logger_, COLOR_STR("Cannot create a plan: the robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?", logger_.get_name()));
             struct_obj.path = plan;
@@ -754,7 +788,7 @@ namespace frontier_exploration
         map_start[1] = my;
 
         // goal point
-        if (!traversability_costmap_->worldToMap(goal_point_w.initial.x, goal_point_w.initial.y, mx, my))
+        if (!exploration_costmap_->worldToMap(goal_point_w.initial.x, goal_point_w.initial.y, mx, my))
         {
             RCLCPP_WARN_STREAM(logger_, COLOR_STR("The goal sent to the planner is off the global costmap Planning will always fail to this goal.", logger_.get_name()));
             struct_obj.path = plan;
@@ -778,7 +812,7 @@ namespace frontier_exploration
             return std::make_pair(struct_obj, false);
         }
 
-        const int &max_cycles = (traversability_costmap_->getSizeInCellsX() >= traversability_costmap_->getSizeInCellsY()) ? (traversability_costmap_->getSizeInCellsX() * 4) : (traversability_costmap_->getSizeInCellsY() * 4);
+        const int &max_cycles = (exploration_costmap_->getSizeInCellsX() >= exploration_costmap_->getSizeInCellsY()) ? (exploration_costmap_->getSizeInCellsX() * 4) : (exploration_costmap_->getSizeInCellsY() * 4);
         int path_len = planner_->calcPath(max_cycles);
         if (path_len == 0)
         {
@@ -800,7 +834,7 @@ namespace frontier_exploration
         {
             // convert the plan to world coordinates
             double world_x, world_y;
-            traversability_costmap_->mapToWorld(x[i], y[i], world_x, world_y);
+            exploration_costmap_->mapToWorld(x[i], y[i], world_x, world_y);
             geometry_msgs::msg::PoseStamped pose_from;
             pose_from.pose.position.x = world_x;
             pose_from.pose.position.y = world_y;
@@ -809,12 +843,12 @@ namespace frontier_exploration
             path_cut_count++;
             // If the path_cut_count variable is above a certain metric. The following block is executed.
             // This is done so as to prevent excessive information computation.
-            if (path_cut_count > static_cast<int>(1.5 / traversability_costmap_->getResolution()) && compute_information == true)
+            if (path_cut_count > static_cast<int>(1.5 / exploration_costmap_->getResolution()) && compute_information == true)
             {
                 number_of_wayp++;
                 visualization_msgs::msg::Marker marker_msg_points_;
                 double world_x2, world_y2;
-                traversability_costmap_->mapToWorld(x[std::max(i - 10, 0)], y[std::max(i - 10, 0)], world_x2, world_y2);
+                exploration_costmap_->mapToWorld(x[std::max(i - 10, 0)], y[std::max(i - 10, 0)], world_x2, world_y2);
                 geometry_msgs::msg::PoseStamped pose_to;
                 pose_to.pose.position.x = world_x2;
                 pose_to.pose.position.y = world_y2;
