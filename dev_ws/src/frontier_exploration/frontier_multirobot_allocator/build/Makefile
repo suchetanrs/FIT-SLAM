@@ -162,17 +162,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named hungarian_lib
+# Target rules for targets named taskAllocator_lib
 
 # Build rule for target.
-hungarian_lib: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 hungarian_lib
-.PHONY : hungarian_lib
+taskAllocator_lib: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 taskAllocator_lib
+.PHONY : taskAllocator_lib
 
 # fast build rule for target.
-hungarian_lib/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/build
-.PHONY : hungarian_lib/fast
+taskAllocator_lib/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/build
+.PHONY : taskAllocator_lib/fast
 
 #=============================================================================
 # Target rules for targets named hungExec
@@ -187,13 +187,27 @@ hungExec/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/build
 .PHONY : hungExec/fast
 
+#=============================================================================
+# Target rules for targets named minPosExec
+
+# Build rule for target.
+minPosExec: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 minPosExec
+.PHONY : minPosExec
+
+# fast build rule for target.
+minPosExec/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/build
+.PHONY : minPosExec/fast
+
 src/hungarian/Hungarian.o: src/hungarian/Hungarian.cpp.o
 .PHONY : src/hungarian/Hungarian.o
 
 # target to build an object file
 src/hungarian/Hungarian.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/src/hungarian/Hungarian.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/src/hungarian/Hungarian.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/src/hungarian/Hungarian.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/src/hungarian/Hungarian.cpp.o
 .PHONY : src/hungarian/Hungarian.cpp.o
 
 src/hungarian/Hungarian.i: src/hungarian/Hungarian.cpp.i
@@ -201,8 +215,9 @@ src/hungarian/Hungarian.i: src/hungarian/Hungarian.cpp.i
 
 # target to preprocess a source file
 src/hungarian/Hungarian.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/src/hungarian/Hungarian.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/src/hungarian/Hungarian.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/src/hungarian/Hungarian.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/src/hungarian/Hungarian.cpp.i
 .PHONY : src/hungarian/Hungarian.cpp.i
 
 src/hungarian/Hungarian.s: src/hungarian/Hungarian.cpp.s
@@ -210,8 +225,9 @@ src/hungarian/Hungarian.s: src/hungarian/Hungarian.cpp.s
 
 # target to generate assembly for a file
 src/hungarian/Hungarian.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/src/hungarian/Hungarian.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/src/hungarian/Hungarian.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/src/hungarian/Hungarian.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/src/hungarian/Hungarian.cpp.s
 .PHONY : src/hungarian/Hungarian.cpp.s
 
 src/hungarian/testMain.o: src/hungarian/testMain.cpp.o
@@ -238,12 +254,63 @@ src/hungarian/testMain.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/src/hungarian/testMain.cpp.s
 .PHONY : src/hungarian/testMain.cpp.s
 
+src/minPos/minPos.o: src/minPos/minPos.cpp.o
+.PHONY : src/minPos/minPos.o
+
+# target to build an object file
+src/minPos/minPos.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/src/minPos/minPos.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/src/minPos/minPos.cpp.o
+.PHONY : src/minPos/minPos.cpp.o
+
+src/minPos/minPos.i: src/minPos/minPos.cpp.i
+.PHONY : src/minPos/minPos.i
+
+# target to preprocess a source file
+src/minPos/minPos.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/src/minPos/minPos.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/src/minPos/minPos.cpp.i
+.PHONY : src/minPos/minPos.cpp.i
+
+src/minPos/minPos.s: src/minPos/minPos.cpp.s
+.PHONY : src/minPos/minPos.s
+
+# target to generate assembly for a file
+src/minPos/minPos.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/src/minPos/minPos.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/src/minPos/minPos.cpp.s
+.PHONY : src/minPos/minPos.cpp.s
+
+src/minPos/minPos_test.o: src/minPos/minPos_test.cpp.o
+.PHONY : src/minPos/minPos_test.o
+
+# target to build an object file
+src/minPos/minPos_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/src/minPos/minPos_test.cpp.o
+.PHONY : src/minPos/minPos_test.cpp.o
+
+src/minPos/minPos_test.i: src/minPos/minPos_test.cpp.i
+.PHONY : src/minPos/minPos_test.i
+
+# target to preprocess a source file
+src/minPos/minPos_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/src/minPos/minPos_test.cpp.i
+.PHONY : src/minPos/minPos_test.cpp.i
+
+src/minPos/minPos_test.s: src/minPos/minPos_test.cpp.s
+.PHONY : src/minPos/minPos_test.s
+
+# target to generate assembly for a file
+src/minPos/minPos_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/src/minPos/minPos_test.cpp.s
+.PHONY : src/minPos/minPos_test.cpp.s
+
 src/taskAllocator.o: src/taskAllocator.cpp.o
 .PHONY : src/taskAllocator.o
 
 # target to build an object file
 src/taskAllocator.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/src/taskAllocator.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/src/taskAllocator.cpp.o
 .PHONY : src/taskAllocator.cpp.o
 
 src/taskAllocator.i: src/taskAllocator.cpp.i
@@ -251,7 +318,7 @@ src/taskAllocator.i: src/taskAllocator.cpp.i
 
 # target to preprocess a source file
 src/taskAllocator.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/src/taskAllocator.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/src/taskAllocator.cpp.i
 .PHONY : src/taskAllocator.cpp.i
 
 src/taskAllocator.s: src/taskAllocator.cpp.s
@@ -259,7 +326,7 @@ src/taskAllocator.s: src/taskAllocator.cpp.s
 
 # target to generate assembly for a file
 src/taskAllocator.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/src/taskAllocator.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/src/taskAllocator.cpp.s
 .PHONY : src/taskAllocator.cpp.s
 
 # Help Target
@@ -275,13 +342,20 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... hungExec"
-	@echo "... hungarian_lib"
+	@echo "... minPosExec"
+	@echo "... taskAllocator_lib"
 	@echo "... src/hungarian/Hungarian.o"
 	@echo "... src/hungarian/Hungarian.i"
 	@echo "... src/hungarian/Hungarian.s"
 	@echo "... src/hungarian/testMain.o"
 	@echo "... src/hungarian/testMain.i"
 	@echo "... src/hungarian/testMain.s"
+	@echo "... src/minPos/minPos.o"
+	@echo "... src/minPos/minPos.i"
+	@echo "... src/minPos/minPos.s"
+	@echo "... src/minPos/minPos_test.o"
+	@echo "... src/minPos/minPos_test.i"
+	@echo "... src/minPos/minPos_test.s"
 	@echo "... src/taskAllocator.o"
 	@echo "... src/taskAllocator.i"
 	@echo "... src/taskAllocator.s"

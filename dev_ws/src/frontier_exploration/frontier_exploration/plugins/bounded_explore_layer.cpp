@@ -28,7 +28,6 @@ namespace frontier_exploration
 
         declareParameter("explore_clear_space", rclcpp::ParameterValue(true));
         declareParameter("resize_to_boundary", rclcpp::ParameterValue(true));
-        declareParameter("frontier_travel_point", rclcpp::ParameterValue(std::string("closest")));
         declareParameter("enabled", rclcpp::ParameterValue(true));
         declareParameter("min_frontier_cluster_size", rclcpp::ParameterValue(1));
         declareParameter("max_frontier_cluster_size", rclcpp::ParameterValue(20));
@@ -43,7 +42,6 @@ namespace frontier_exploration
         frontierSelect_ = std::make_shared<frontier_exploration::FrontierSelectionNode>(node, layered_costmap_->getCostmap());
         node->get_parameter(name_ + "." + "explore_clear_space", explore_clear_space_);
         node->get_parameter(name_ + "." + "resize_to_boundary", resize_to_boundary_);
-        node->get_parameter(name_ + "." + "frontier_travel_point", frontier_travel_point_);
         node->get_parameter(name_ + "." + "enabled", enabledLayer_);
         node->get_parameter(name_ + "." + "min_frontier_cluster_size", min_frontier_cluster_size_);
         node->get_parameter(name_ + "." + "max_frontier_cluster_size", max_frontier_cluster_size_);
@@ -122,14 +120,6 @@ namespace frontier_exploration
                 else if (param_name == "enabled")
                 {
                     enabledLayer_ = parameter.as_bool();
-                }
-            }
-
-            else if (param_type == ParameterType::PARAMETER_STRING)
-            {
-                if (param_name == "frontier_travel_point")
-                {
-                    frontier_travel_point_ = parameter.as_string();
                 }
             }
             else if (param_type == ParameterType::PARAMETER_INTEGER)
@@ -247,6 +237,7 @@ namespace frontier_exploration
 
         std::vector<frontier_msgs::msg::Frontier> frontier_list;
         std::vector<std::vector<double>> every_frontier;
+        frontierSelect_->setFrontierBlacklist(req->prohibited_frontiers);
         if (req->override_frontier_list == false)
         {
             RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::getNextFrontierService", logger_.get_name()));
@@ -283,9 +274,7 @@ namespace frontier_exploration
                 return;
             }
             res->success = true;
-            selected = selection_result.first;
-            // set orientation here. The position is set later in the code based on ```frontier_travel_point_```
-            res->next_frontier.pose.orientation = createQuaternionMsgFromYaw(yawOfVector(req->start_pose.pose.position, res->next_frontier.pose.position));
+            res->next_frontier = selection_result.first;
         }
 
         else if (exploration_mode_ == "random")
@@ -297,9 +286,7 @@ namespace frontier_exploration
                 return;
             }
             res->success = true;
-            selected = selection_result.first;
-            // set orientation here. The position is set later in the code based on ```frontier_travel_point_```
-            res->next_frontier.pose.orientation = createQuaternionMsgFromYaw(yawOfVector(req->start_pose.pose.position, res->next_frontier.pose.position));
+            res->next_frontier = selection_result.first;
         }
 
         else if (exploration_mode_ == "ours")
@@ -316,9 +303,13 @@ namespace frontier_exploration
             res->success = true;
             selected = selection_result.frontier;
             // Uncomment the next line if you are using information acquired after reaching. The pose is important in that case.
-            res->next_frontier.pose.orientation = selection_result.orientation;
+            res->next_frontier = selected;
+            res->next_frontier.best_orientation = selection_result.orientation;
             std::vector<frontier_msgs::msg::Frontier> frontiers_list;
             std::vector<double> frontier_costs;
+            std::vector<double> frontier_distances;
+            std::vector<double> frontier_arrival_information;
+            std::vector<double> frontier_path_information;
             RCLCPP_WARN_STREAM(logger_, COLOR_STR("Selection result's frontier costs size: " + std::to_string(selection_result.frontier_costs.size()), logger_.get_name()));
             std::vector<std::pair<frontier_exploration::FrontierWithMetaData, double>> frontier_costs_vector;
             for (auto pair : selection_result.frontier_costs)
@@ -327,18 +318,24 @@ namespace frontier_exploration
             }
             frontier_exploration::FrontierU1ComparatorUnique frontier_u1_comp;
             std::sort(frontier_costs_vector.begin(), frontier_costs_vector.end(), frontier_u1_comp);
+            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Making list", logger_.get_name()));
             for (auto pair : frontier_costs_vector)
             {
                 // Extract key and value
                 auto key = pair.first.frontier_; // frontier with meta data
                 auto value = pair.second;        // cost.
+                // RCLCPP_WARN_STREAM(logger_, COLOR_STR("UID: " + std::to_string(key.unique_id) + " Cost: " + std::to_string(value), logger_.get_name()));
                 key.best_orientation = nav2_util::geometry_utils::orientationAroundZAxis(pair.first.theta_s_star_);
                 // Push them into respective vectors
                 frontiers_list.push_back(key);
                 frontier_costs.push_back(value);
+                frontier_distances.push_back(pair.first.path_length_);
+                frontier_arrival_information.push_back(pair.first.information_);
             }
-            res->frontier_costs = frontier_costs;
             res->frontier_list = frontiers_list;
+            res->frontier_costs = frontier_costs;
+            res->frontier_distances = frontier_distances;
+            res->frontier_arrival_information = frontier_arrival_information;
         }
 
         else
@@ -354,26 +351,8 @@ namespace frontier_exploration
         RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + std::to_string(req->override_frontier_list), logger_.get_name()));
 
         // set goal pose to next frontier
-        res->next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
-        res->next_frontier.header.stamp = rclcpp::Clock().now();
-
-        if (frontier_travel_point_ == "closest")
-        {
-            res->next_frontier.pose.position = selected.initial;
-        }
-        else if (frontier_travel_point_ == "middle")
-        {
-            res->next_frontier.pose.position = selected.middle;
-        }
-        else if (frontier_travel_point_ == "centroid")
-        {
-            res->next_frontier.pose.position = selected.centroid;
-        }
-        else
-        {
-            RCLCPP_ERROR(logger_, "Invalid 'frontier_travel_point' parameter, falling back to 'closest'");
-            res->next_frontier.pose.position = selected.initial;
-        }
+        // res->next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
+        // res->next_frontier.header.stamp = rclcpp::Clock().now();
     }
 
     void BoundedExploreLayer::updateBoundaryPolygonService(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Request> req, std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Response> res)

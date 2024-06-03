@@ -76,6 +76,12 @@ namespace frontier_exploration
                     {
                         if (curr_frontier.size > min_frontier_cluster_size_)
                         {
+                            // std::cout << "PUSHING NEW FRONTIER TO LIST: UID: " << curr_frontier.unique_id << std::endl;
+                            // std::cout << "Size: " << curr_frontier.size << std::endl;
+                            // std::cout << "Minimum Distance: " << curr_frontier.min_distance << std::endl;
+                            // std::cout << "Initial Point: (" << curr_frontier.initial.x << ", " << curr_frontier.initial.y << ", " << curr_frontier.initial.z << ")" << std::endl;
+                            // std::cout << "Centroid Point: (" << curr_frontier.centroid.x << ", " << curr_frontier.centroid.y << ", " << curr_frontier.centroid.z << ")" << std::endl;
+                            // std::cout << "Middle Point: (" << curr_frontier.middle.x << ", " << curr_frontier.middle.y << ", " << curr_frontier.middle.z << ")" << std::endl;
                             frontier_list.push_back(curr_frontier);
                         }
                     }
@@ -162,6 +168,14 @@ namespace frontier_exploration
                         // push to output vector
                         output.centroid.x /= output.size;
                         output.centroid.y /= output.size;
+                        output.unique_id = generateUID(output);
+                        // std::cout << "1PUSHING NEW FRONTIER TO LIST: UID: " << output.unique_id << std::endl;
+                        // std::cout << "1Size: " << output.size << std::endl;
+                        // std::cout << "1Minimum Distance: " << output.min_distance << std::endl;
+                        // std::cout << "1Initial Point: (" << output.initial.x << ", " << output.initial.y << ", " << output.initial.z << ")" << std::endl;
+                        // std::cout << "1Centroid Point: (" << output.centroid.x << ", " << output.centroid.y << ", " << output.centroid.z << ")" << std::endl;
+                        // std::cout << "1Middle Point: (" << output.middle.x << ", " << output.middle.y << ", " << output.middle.z << ")" << std::endl;
+                        // std::cout << "**************" << std::endl;
                         calculated_frontiers.push_back(output);
 
                         // reset frontier structure
@@ -181,6 +195,14 @@ namespace frontier_exploration
         // average out frontier centroid
         output.centroid.x /= output.size;
         output.centroid.y /= output.size;
+        output.unique_id = generateUID(output);
+        // std::cout << "1PUSHING NEW FRONTIER TO LIST: UID: " << output.unique_id << std::endl;
+        // std::cout << "1Size: " << output.size << std::endl;
+        // std::cout << "1Minimum Distance: " << output.min_distance << std::endl;
+        // std::cout << "1Initial Point: (" << output.initial.x << ", " << output.initial.y << ", " << output.initial.z << ")" << std::endl;
+        // std::cout << "1Centroid Point: (" << output.centroid.x << ", " << output.centroid.y << ", " << output.centroid.z << ")" << std::endl;
+        // std::cout << "1Middle Point: (" << output.middle.x << ", " << output.middle.y << ", " << output.middle.z << ")" << std::endl;
+        // std::cout << "**************====================" << std::endl;
         calculated_frontiers.push_back(output);
         return calculated_frontiers;
     }

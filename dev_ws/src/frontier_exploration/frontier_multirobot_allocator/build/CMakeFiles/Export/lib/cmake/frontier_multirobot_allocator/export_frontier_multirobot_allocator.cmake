@@ -16,7 +16,7 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 set(_targetsDefined)
 set(_targetsNotDefined)
 set(_expectedTargets)
-foreach(_expectedTarget hungarian_lib)
+foreach(_expectedTarget taskAllocator_lib)
   list(APPEND _expectedTargets ${_expectedTarget})
   if(NOT TARGET ${_expectedTarget})
     list(APPEND _targetsNotDefined ${_expectedTarget})
@@ -50,10 +50,10 @@ if(_IMPORT_PREFIX STREQUAL "/")
   set(_IMPORT_PREFIX "")
 endif()
 
-# Create imported target hungarian_lib
-add_library(hungarian_lib STATIC IMPORTED)
+# Create imported target taskAllocator_lib
+add_library(taskAllocator_lib STATIC IMPORTED)
 
-set_target_properties(hungarian_lib PROPERTIES
+set_target_properties(taskAllocator_lib PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/usr/include/eigen3"
 )
 

@@ -12,9 +12,10 @@ explore_server:
     nav2_goal_timeout_sec: 50 #secs
     use_traversability: false
     use_custom_sim: true
-    # robot_namespaces: ['/scout_1', '/scout_2']
+    frontier_travel_point: closest
+    robot_namespaces: ['/scout_1', '/scout_2']
     # robot_namespaces: ['/scout_1']
-    robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']
+    # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']
     wait_for_other_robot_costs: true # if false, will not give result to other robots if server is busy
     process_other_robots: true #true if you want to do multirobot
     use_pose_from_multirobot_allocator: true #if true, uses the pose from multirobot allocator, else uses the pose given by u1 u2 computation
@@ -27,12 +28,12 @@ frontier_selection_node:
   ros__parameters:
     exploration_mode: ours
     counter: 031150
-    alpha: 1.0 #set to 1.0 for maximum weight to arrival information and 0.0 for maximum weight to frontier path distance.
+    alpha: 0.0 #set to 1.0 for maximum weight to arrival information and 0.0 for maximum weight to frontier path distance.
     beta: 0.50 #set to 1.0 for maximum weight to u1 and 0.0 for maximum weight to information on path.
     N_best_for_u2: 100000 #set to -1 for considering all the frontier for path computation (this will make the algorithm very time instensive!)
     planner_allow_unknown: true
     frontier_detect_radius: 0.0
-    use_planning: false #if false, uses euclidean distance to frontier(cannot use FIMs to compute path information). If true, plans to the frontier.
+    use_planning: true #if false, uses euclidean distance to frontier(cannot use FIMs to compute path information). If true, plans to the frontier.
 
 localization_pose_sub_node:
   ros__parameters:
@@ -59,10 +60,9 @@ explore_costmap:
         plugin: "frontier_exploration/BoundedExploreLayer"
         enabled: true
         resize_to_boundary: true
-        frontier_travel_point: closest
         exploration_mode: ours
         explore_clear_space: false
-        min_frontier_cluster_size: 1
+        min_frontier_cluster_size: 5
         max_frontier_cluster_size: 21
         use_traversability: false
       always_send_full_costmap: false

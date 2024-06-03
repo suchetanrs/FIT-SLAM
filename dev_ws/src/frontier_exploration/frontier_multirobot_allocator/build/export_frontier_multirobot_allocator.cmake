@@ -16,7 +16,7 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 set(_targetsDefined)
 set(_targetsNotDefined)
 set(_expectedTargets)
-foreach(_expectedTarget hungarian_lib)
+foreach(_expectedTarget taskAllocator_lib)
   list(APPEND _expectedTargets ${_expectedTarget})
   if(NOT TARGET ${_expectedTarget})
     list(APPEND _targetsNotDefined ${_expectedTarget})
@@ -41,18 +41,18 @@ unset(_targetsNotDefined)
 unset(_expectedTargets)
 
 
-# Create imported target hungarian_lib
-add_library(hungarian_lib STATIC IMPORTED)
+# Create imported target taskAllocator_lib
+add_library(taskAllocator_lib STATIC IMPORTED)
 
-set_target_properties(hungarian_lib PROPERTIES
+set_target_properties(taskAllocator_lib PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "/root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/include;/usr/include/eigen3"
 )
 
-# Import target "hungarian_lib" for configuration ""
-set_property(TARGET hungarian_lib APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
-set_target_properties(hungarian_lib PROPERTIES
+# Import target "taskAllocator_lib" for configuration ""
+set_property(TARGET taskAllocator_lib APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+set_target_properties(taskAllocator_lib PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_NOCONFIG "CXX"
-  IMPORTED_LOCATION_NOCONFIG "/root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/libhungarian_lib.a"
+  IMPORTED_LOCATION_NOCONFIG "/root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/libtaskAllocator_lib.a"
   )
 
 # This file does not depend on other imported targets which have

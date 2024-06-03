@@ -63,8 +63,9 @@ CMAKE_BINARY_DIR = /root/dev_ws/src/frontier_exploration/frontier_multirobot_all
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/hungarian_lib.dir/all
+all: CMakeFiles/taskAllocator_lib.dir/all
 all: CMakeFiles/hungExec.dir/all
+all: CMakeFiles/minPosExec.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -72,35 +73,36 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/hungarian_lib.dir/clean
+clean: CMakeFiles/taskAllocator_lib.dir/clean
 clean: CMakeFiles/hungExec.dir/clean
+clean: CMakeFiles/minPosExec.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/hungarian_lib.dir
+# Target rules for target CMakeFiles/taskAllocator_lib.dir
 
 # All Build rule for target.
-CMakeFiles/hungarian_lib.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles --progress-num=4,5,6 "Built target hungarian_lib"
-.PHONY : CMakeFiles/hungarian_lib.dir/all
+CMakeFiles/taskAllocator_lib.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles --progress-num=8,9,10,11 "Built target taskAllocator_lib"
+.PHONY : CMakeFiles/taskAllocator_lib.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/hungarian_lib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles 3
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/hungarian_lib.dir/all
+CMakeFiles/taskAllocator_lib.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles 4
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/taskAllocator_lib.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles 0
-.PHONY : CMakeFiles/hungarian_lib.dir/rule
+.PHONY : CMakeFiles/taskAllocator_lib.dir/rule
 
 # Convenience name for target.
-hungarian_lib: CMakeFiles/hungarian_lib.dir/rule
-.PHONY : hungarian_lib
+taskAllocator_lib: CMakeFiles/taskAllocator_lib.dir/rule
+.PHONY : taskAllocator_lib
 
 # clean rule for target.
-CMakeFiles/hungarian_lib.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungarian_lib.dir/build.make CMakeFiles/hungarian_lib.dir/clean
-.PHONY : CMakeFiles/hungarian_lib.dir/clean
+CMakeFiles/taskAllocator_lib.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/taskAllocator_lib.dir/build.make CMakeFiles/taskAllocator_lib.dir/clean
+.PHONY : CMakeFiles/taskAllocator_lib.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/hungExec.dir
@@ -127,6 +129,32 @@ hungExec: CMakeFiles/hungExec.dir/rule
 CMakeFiles/hungExec.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hungExec.dir/build.make CMakeFiles/hungExec.dir/clean
 .PHONY : CMakeFiles/hungExec.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/minPosExec.dir
+
+# All Build rule for target.
+CMakeFiles/minPosExec.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles --progress-num=4,5,6,7 "Built target minPosExec"
+.PHONY : CMakeFiles/minPosExec.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/minPosExec.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles 4
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/minPosExec.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/CMakeFiles 0
+.PHONY : CMakeFiles/minPosExec.dir/rule
+
+# Convenience name for target.
+minPosExec: CMakeFiles/minPosExec.dir/rule
+.PHONY : minPosExec
+
+# clean rule for target.
+CMakeFiles/minPosExec.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/minPosExec.dir/build.make CMakeFiles/minPosExec.dir/clean
+.PHONY : CMakeFiles/minPosExec.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

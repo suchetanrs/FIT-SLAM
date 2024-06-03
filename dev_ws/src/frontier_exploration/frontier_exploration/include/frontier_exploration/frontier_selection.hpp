@@ -89,23 +89,15 @@ namespace frontier_exploration
             {
                 // Calculate hash based on some combination of member variables
                 size_t hash = 0;
-                // hash = std::hash<size_t>()(key.information_) ^
-                //        std::hash<double>()(key.theta_s_star_) ^
-                //        std::hash<double>()(key.path_length_) ^
-                //        std::hash<double>()(key.frontier_.initial.x) ^
-                //        std::hash<double>()(key.frontier_.initial.y) ^
-                //        std::hash<double>()(key.frontier_.centroid.x) ^
-                //        std::hash<double>()(key.frontier_.centroid.y) ^
-                //        std::hash<double>()(key.frontier_.middle.x) ^
-                //        std::hash<double>()(key.frontier_.middle.y) ^
-                //        std::hash<double>()(key.frontier_.min_distance);
-                hash = std::hash<double>()(key.frontier_.initial.x) ^
-                       std::hash<double>()(key.frontier_.initial.y) ^
-                       std::hash<double>()(key.frontier_.centroid.x) ^
-                       std::hash<double>()(key.frontier_.centroid.y) ^
-                       std::hash<double>()(key.frontier_.middle.x) ^
-                       std::hash<double>()(key.frontier_.middle.y) ^
-                       std::hash<double>()(key.frontier_.min_distance);
+                hash =  std::hash<double>()(key.frontier_.initial.x) ^
+                        std::hash<double>()(key.frontier_.initial.y) ^
+                        std::hash<double>()(key.frontier_.centroid.x) ^
+                        std::hash<double>()(key.frontier_.centroid.y) ^
+                        std::hash<double>()(key.frontier_.middle.x) ^
+                        std::hash<double>()(key.frontier_.middle.y) ^
+                        std::hash<uint32_t>()(key.frontier_.size) ^
+                        std::hash<double>()(key.frontier_.min_distance) ^
+                        std::hash<double>()(key.frontier_.unique_id);
                 return hash;
             }
         };
@@ -240,10 +232,9 @@ namespace frontier_exploration
          * @return bool True if the cost associated with the first pair is
          * less than the cost associated with the second pair, false otherwise.
          */
-        bool operator()(const std::pair<FrontierWithMetaData, double> &a, const std::pair<FrontierWithMetaData, double> &b) const
+        bool operator()(std::pair<FrontierWithMetaData, double> &a, std::pair<FrontierWithMetaData, double> &b) const
         {
-            return a.first.frontier_.initial.x + a.first.frontier_.initial.y + a.first.frontier_.centroid.x + a.first.frontier_.centroid.y + a.first.frontier_.middle.x + a.first.frontier_.middle.y + a.first.frontier_.min_distance
-                 < b.first.frontier_.initial.x + b.first.frontier_.initial.y + b.first.frontier_.centroid.x + b.first.frontier_.centroid.y + b.first.frontier_.middle.x + b.first.frontier_.middle.y + b.first.frontier_.min_distance;
+            return generateUID(a.first.frontier_) < generateUID(b.first.frontier_);
         }
     };
 
@@ -323,7 +314,7 @@ namespace frontier_exploration
          * @return std::pair<frontier_msgs::msg::Frontier, bool> The selected frontier along with success status.
          */
         std::pair<frontier_msgs::msg::Frontier, bool> selectFrontierClosest(
-            const std::vector<frontier_msgs::msg::Frontier> &frontier_list);
+            std::vector<frontier_msgs::msg::Frontier> &frontier_list);
 
         /**
          * @brief Selects a random frontier.
@@ -335,7 +326,7 @@ namespace frontier_exploration
          * @return std::pair<frontier_msgs::msg::Frontier, bool> The selected frontier along with success status.
          */
         std::pair<frontier_msgs::msg::Frontier, bool> selectFrontierRandom(
-            const std::vector<frontier_msgs::msg::Frontier> &frontier_list);
+            std::vector<frontier_msgs::msg::Frontier> &frontier_list);
 
         /**
          * @brief Visualizes frontiers.
@@ -367,6 +358,8 @@ namespace frontier_exploration
         std::pair<PathWithInfo, bool> getPlanForFrontier(geometry_msgs::msg::Point start_point_w, frontier_msgs::msg::Frontier goal_point_w,
                                                          std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information);
 
+        void setFrontierBlacklist(std::vector<frontier_msgs::msg::Frontier>& blacklist);
+
     private:
         // ROS Publishers.
         rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::PointCloud2>::SharedPtr frontier_cloud_pub_;     ///< Publisher for frontier cloud.
@@ -376,16 +369,18 @@ namespace frontier_exploration
         rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)
         rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::Marker>::SharedPtr landmark_publisher_;   ///< Publisher for landmarks in the path FOVs
         rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseStamped>::SharedPtr viz_pose_publisher_;   ///< Publisher for the best pose after u1 computation.
+        rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseArray>::SharedPtr path_pose_array_;
 
         nav2_costmap_2d::Costmap2D *costmap_;
         nav2_costmap_2d::Costmap2D *exploration_costmap_;
         rclcpp::Node::SharedPtr frontier_selection_node_;
-        std::vector<frontier_msgs::msg::Frontier> frontier_blacklist_; ///< Stores the blacklisted frontiers.
+        std::unordered_map<frontier_msgs::msg::Frontier, bool, FrontierHash, FrontierEquality> frontier_blacklist_; ///< Stores the blacklisted frontiers.
         int counter_value_;                                            ///< Variable used to give a unique value for each run. This is used as a prefix for the csv files.
         std::string mode_;
         rclcpp::Logger logger_ = rclcpp::get_logger("frontier_selection");
         bool planner_allow_unknown_;
         bool use_planning_;
+        std::mutex blacklist_mutex_;
 
         double frontierDetectRadius_; ///< Sets the minimum detection radius for frontiers.
         double alpha_;                ///< Stores the alpha value used for weights.

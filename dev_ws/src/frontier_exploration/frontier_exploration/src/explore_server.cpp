@@ -14,6 +14,7 @@ namespace frontier_exploration
         this->declare_parameter("wait_for_other_robot_costs", false);
         this->declare_parameter("process_other_robots", false);
         this->declare_parameter("use_pose_from_multirobot_allocator", true);
+        this->declare_parameter("frontier_travel_point", rclcpp::ParameterValue(std::string("closest")));
 
         this->get_parameter("goal_aliasing", goal_aliasing_);
         this->get_parameter("retry_count", retry_);
@@ -23,6 +24,7 @@ namespace frontier_exploration
         this->get_parameter("wait_for_other_robot_costs", wait_for_other_robot_costs_);
         this->get_parameter("process_other_robots", process_other_robots_);
         this->get_parameter("use_pose_from_multirobot_allocator", use_pose_from_multirobot_allocator_);
+        this->get_parameter("frontier_travel_point", frontier_travel_point_);
 
         //--------------------------------------------NAV2 CLIENT RELATED--------------------------------
         nav2_client_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -111,11 +113,13 @@ namespace frontier_exploration
             RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Picked: " + robot_name + " from " + this->get_namespace(), this->get_namespace()));
             if (robot_name != this->get_namespace())
             {
+                rclcpp::Client<frontier_msgs::srv::GetFrontierCosts>::SharedPtr client_get_frontier_costs_;
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Processing robot: " + robot_name, this->get_namespace()));
                 client_get_frontier_costs_ = this->create_client<frontier_msgs::srv::GetFrontierCosts>(robot_name + "/multirobot_get_frontier_costs");
                 auto request_frontier_costs = std::make_shared<frontier_msgs::srv::GetFrontierCosts::Request>();
                 request_frontier_costs->requested_frontier_list = srv_res->frontier_list;
                 request_frontier_costs->robot_namespace = robot_name;
+                request_frontier_costs->prohibited_frontiers = blacklisted_frontiers_;
                 while (!client_get_frontier_costs_->wait_for_service(std::chrono::seconds(1)))
                 {
                     if (!rclcpp::ok())
@@ -138,9 +142,17 @@ namespace frontier_exploration
                     {
                         RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Processed: " + robot_name, this->get_namespace()));
                         auto frontierCosts = frontier_costs_srv_res->frontier_costs;
+                        // for (auto dist : frontier_costs_srv_res->frontier_distances)
+                        // {
+                        //     RCLCPP_ERROR_STREAM(this->get_logger(), COLOR_STR("Frontier distances: " + std::to_string(dist), this->get_namespace()));
+                        // }
+                        // for (auto dist : frontier_costs_srv_res->frontier_arrival_information)
+                        // {
+                        //     RCLCPP_ERROR_STREAM(this->get_logger(), COLOR_STR("Frontier arrival information: " + std::to_string(dist), this->get_namespace()));
+                        // }
                         RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Size of the frontier list (request) for " + robot_name + " is: " + std::to_string(request_frontier_costs->requested_frontier_list.size()), this->get_namespace()));
                         RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Frontier costs size (response): " + std::to_string(frontierCosts.size()), this->get_namespace()));
-                        taskAllocator->addRobotTasks(frontierCosts, robot_name);
+                        taskAllocator->addRobotTasks(frontierCosts, frontier_costs_srv_res->frontier_distances, robot_name);
                         if(globalFrontierList.empty())
                         {
                             globalFrontierList = frontier_costs_srv_res->frontier_list;
@@ -226,6 +238,7 @@ namespace frontier_exploration
         // The exploration is active until this while loop runs.
         while (rclcpp::ok() && goal_handle->is_active())
         {
+            RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Blacklist size: " + std::to_string(blacklisted_frontiers_.size()), this->get_namespace()));
             RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("NEW ITERATION!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this->get_namespace()));
             std::shared_ptr<TaskAllocator> taskAllocator = std::make_shared<TaskAllocator>();
             if (!layer_configured_)
@@ -235,6 +248,7 @@ namespace frontier_exploration
             }
             auto srv_req = std::make_shared<frontier_msgs::srv::GetNextFrontier::Request>();
             auto srv_res = std::make_shared<frontier_msgs::srv::GetNextFrontier::Response>();
+            srv_req->prohibited_frontiers = blacklisted_frontiers_;
 
             // placeholder for next goal to be sent to move base
             geometry_msgs::msg::PoseStamped goal_pose;
@@ -324,7 +338,15 @@ namespace frontier_exploration
                 std::vector<frontier_msgs::msg::Frontier> globalFrontierList = {};
 
                 processAllRobots(taskAllocator, globalFrontierList, srv_res);
-                taskAllocator->addRobotTasks(srv_res->frontier_costs, this->get_namespace());
+                taskAllocator->addRobotTasks(srv_res->frontier_costs, srv_res->frontier_distances, this->get_namespace());
+                // for (auto dist : srv_res->frontier_distances)
+                // {
+                //     RCLCPP_ERROR_STREAM(this->get_logger(), COLOR_STR("Other Frontier distances: " + std::to_string(dist), this->get_namespace()));
+                // }
+                // for (auto dist : srv_res->frontier_arrival_information)
+                // {
+                //     RCLCPP_ERROR_STREAM(this->get_logger(), COLOR_STR("Other Frontier arrival information: " + std::to_string(dist), this->get_namespace()));
+                // }
                 if(globalFrontierList.empty())
                 {
                     globalFrontierList = srv_res->frontier_list;
@@ -337,7 +359,8 @@ namespace frontier_exploration
                     }
                 }
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Solving hungarian", this->get_namespace()));
-                taskAllocator->solveAllocationHungarian();
+                // taskAllocator->solveAllocationHungarian();
+                taskAllocator->solveAllocationMinPos();
                 auto allocatedIndex = taskAllocator->getAllocatedTasks()[this->get_namespace()];
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated index" + std::to_string(allocatedIndex), this->get_namespace()));
                 auto allocatedFrontier = globalFrontierList[allocatedIndex];
@@ -348,13 +371,14 @@ namespace frontier_exploration
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier ow:" + std::to_string(allocatedFrontier.best_orientation.w), this->get_namespace()));
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier ox:" + std::to_string(allocatedFrontier.best_orientation.x), this->get_namespace()));
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier oy:" + std::to_string(allocatedFrontier.best_orientation.y), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier x:" + std::to_string(srv_res->next_frontier.pose.position.x), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier y:" + std::to_string(srv_res->next_frontier.pose.position.y), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier z:" + std::to_string(srv_res->next_frontier.pose.position.z), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier oz:" + std::to_string(srv_res->next_frontier.pose.orientation.z), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier ow:" + std::to_string(srv_res->next_frontier.pose.orientation.w), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier ox:" + std::to_string(srv_res->next_frontier.pose.orientation.x), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier oy:" + std::to_string(srv_res->next_frontier.pose.orientation.y), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier uid:" + std::to_string(allocatedFrontier.unique_id), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier x:" + std::to_string(srv_res->next_frontier.initial.x), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier y:" + std::to_string(srv_res->next_frontier.initial.y), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier z:" + std::to_string(srv_res->next_frontier.initial.z), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier oz:" + std::to_string(srv_res->next_frontier.best_orientation.z), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier ow:" + std::to_string(srv_res->next_frontier.best_orientation.w), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier ox:" + std::to_string(srv_res->next_frontier.best_orientation.x), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier oy:" + std::to_string(srv_res->next_frontier.best_orientation.y), this->get_namespace()));
                 // if(allocatedFrontier.best_orientation != srv_res->next_frontier.pose.orientation)
                 // {
                     // throw std::runtime_error("The orientations are not same. What are you doing?");
@@ -368,13 +392,57 @@ namespace frontier_exploration
                 if(use_pose_from_multirobot_allocator_)
                 {
                     RCLCPP_ERROR(this->get_logger(), "USING MULTIROBOT FRONTIER");
-                    goal_pose.pose.position = allocatedFrontier.initial;
+                    if (frontier_travel_point_ == "closest")
+                    {
+                        goal_pose.pose.position = allocatedFrontier.initial;
+                    }
+                    else if (frontier_travel_point_ == "middle")
+                    {
+                        goal_pose.pose.position = allocatedFrontier.middle;
+                    }
+                    else if (frontier_travel_point_ == "centroid")
+                    {
+                        goal_pose.pose.position = allocatedFrontier.centroid;
+                    }
+                    else
+                    {
+                        RCLCPP_ERROR(this->get_logger(), "Invalid 'frontier_travel_point' parameter, falling back to 'closest'");
+                        goal_pose.pose.position = allocatedFrontier.initial;
+                    }
                     goal_pose.pose.orientation = allocatedFrontier.best_orientation;
+                    goal_pose.header.frame_id = "map";
+                    goal_pose.header.stamp = rclcpp::Clock().now();
+                    RCLCPP_ERROR_STREAM(this->get_logger(), "UID: " << allocatedFrontier.unique_id);
+                    if (std::find(blacklisted_frontiers_.begin(), blacklisted_frontiers_.end(), allocatedFrontier) == blacklisted_frontiers_.end()) {
+                        blacklisted_frontiers_.push_back(allocatedFrontier);
+                    }
                 }
                 else
                 {
-                    // the orientation is set inside the server in next_frontier
-                    goal_pose = srv_res->next_frontier;
+                    if (frontier_travel_point_ == "closest")
+                    {
+                        goal_pose.pose.position = srv_res->next_frontier.initial;
+                    }
+                    else if (frontier_travel_point_ == "middle")
+                    {
+                        goal_pose.pose.position = srv_res->next_frontier.middle;
+                    }
+                    else if (frontier_travel_point_ == "centroid")
+                    {
+                        goal_pose.pose.position = srv_res->next_frontier.centroid;
+                    }
+                    else
+                    {
+                        RCLCPP_ERROR(this->get_logger(), "Invalid 'frontier_travel_point' parameter, falling back to 'closest'");
+                        goal_pose.pose.position = srv_res->next_frontier.initial;
+                    }
+                    goal_pose.pose.orientation = srv_res->next_frontier.best_orientation;
+                    goal_pose.header.frame_id = "map";
+                    goal_pose.header.stamp = rclcpp::Clock().now();
+                    RCLCPP_ERROR_STREAM(this->get_logger(), "UID: " << allocatedFrontier.unique_id);
+                    if (std::find(blacklisted_frontiers_.begin(), blacklisted_frontiers_.end(), allocatedFrontier) == blacklisted_frontiers_.end()) {
+                        blacklisted_frontiers_.push_back(srv_res->next_frontier);
+                    }
                 }
             }
             else if (srv_res->success == false)
@@ -542,6 +610,7 @@ namespace frontier_exploration
         srv_req->start_pose = robot_pose;
         srv_req->override_frontier_list = true;
         srv_req->frontier_list_to_override = request->requested_frontier_list;
+        srv_req->prohibited_frontiers = request->prohibited_frontiers;
 
         // evaluate if robot is within exploration boundary using robot_pose in boundary frame
         currently_processing_lock_.lock();
@@ -573,6 +642,8 @@ namespace frontier_exploration
             response->success = true;
             response->frontier_costs = srv_res->frontier_costs;
             response->frontier_list = srv_res->frontier_list;
+            response->frontier_distances = srv_res->frontier_distances;
+            response->frontier_arrival_information = srv_res->frontier_arrival_information;
         }
         else if (srv_res->success == false)
         {
@@ -645,27 +716,8 @@ namespace frontier_exploration
         for (size_t i = 0; i < list1.size(); ++i) {
             auto f1 = list1[i];
             auto f2 = list2[i];
-            if (list1[i].initial != list2[i].initial || 
-                list1[i].centroid != list2[i].centroid || 
-                list1[i].middle != list2[i].middle || 
-                list1[i].size != list2[i].size) {
-                RCLCPP_INFO_STREAM(this->get_logger(), "Comparing elements at index " << i);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list1.initial: " << f1.initial.x);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list1.initial: " << f1.initial.y);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list1.centroid: " << f1.centroid.x);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list1.centroid: " << f1.centroid.y);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list1.middle: " << f1.middle.x);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list1.middle: " << f1.middle.y);
-                RCLCPP_INFO_STREAM(this->get_logger(), "********************");
-                RCLCPP_INFO_STREAM(this->get_logger(), "list2.initial: " << f2.initial.x);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list2.initial: " << f2.initial.y);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list2.centroid: " << f2.centroid.x);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list2.centroid: " << f2.centroid.y);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list2.middle: " << f2.middle.x);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list2.middle: " << f2.middle.y);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list1.size: " << f1.size);
-                RCLCPP_INFO_STREAM(this->get_logger(), "list2.size: " << f2.size);  
-                RCLCPP_INFO_STREAM(this->get_logger(), "********************");                  
+            if(!equateFrontiers(f1, f2, true))
+            {
                 listflag = false;
             }
         }

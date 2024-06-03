@@ -1,4 +1,4 @@
-CMakeFiles/hungarian_lib.dir/src/hungarian/Hungarian.cpp.o: \
+CMakeFiles/taskAllocator_lib.dir/src/hungarian/Hungarian.cpp.o: \
  /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/src/hungarian/Hungarian.cpp \
  /usr/include/stdc-predef.h /usr/include/c++/11/stdlib.h \
  /usr/include/c++/11/cstdlib \

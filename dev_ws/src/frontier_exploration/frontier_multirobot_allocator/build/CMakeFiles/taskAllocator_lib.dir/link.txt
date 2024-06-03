@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtaskAllocator_lib.a CMakeFiles/taskAllocator_lib.dir/src/hungarian/Hungarian.cpp.o CMakeFiles/taskAllocator_lib.dir/src/minPos/minPos.cpp.o CMakeFiles/taskAllocator_lib.dir/src/taskAllocator.cpp.o
+/usr/bin/ranlib libtaskAllocator_lib.a

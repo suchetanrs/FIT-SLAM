@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <rclcpp/rclcpp.hpp>
+#include <frontier_msgs/msg/frontier.hpp>
 
 // Color_id	    Color
 //        1	    Aqua
@@ -87,4 +88,88 @@ inline std::string COLOR_STR(const std::string &str, const char *robotName)
     if (LOG_LEVEL > 0)                       \
         std::cout << GET_STR_STREAM("\033[1;94m" << functionName << " Execution Time: " << seconds << " Seconds\033[0m") << std::endl;
 
+
+inline bool equateFrontiers(frontier_msgs::msg::Frontier& f1, frontier_msgs::msg::Frontier& f2, bool printValues)
+{
+    if (f1.initial != f2.initial || 
+        f1.centroid != f2.centroid || 
+        f1.middle != f2.middle || 
+        f1.size != f2.size) {
+        if(printValues)
+        {
+            std::cout << "list1.initial: " << f1.initial.x << std::endl;
+            std::cout << "list1.initial: " << f1.initial.y << std::endl;
+            std::cout << "list1.centroid: " << f1.centroid.x << std::endl;
+            std::cout << "list1.centroid: " << f1.centroid.y << std::endl;
+            std::cout << "list1.middle: " << f1.middle.x << std::endl;
+            std::cout << "list1.middle: " << f1.middle.y << std::endl;
+            std::cout << "list1.middle: " << f1.min_distance << std::endl;
+            std::cout << "********************" << std::endl;
+            std::cout << "list2.initial: " << f2.initial.x << std::endl;
+            std::cout << "list2.initial: " << f2.initial.y << std::endl;
+            std::cout << "list2.centroid: " << f2.centroid.x << std::endl;
+            std::cout << "list2.centroid: " << f2.centroid.y << std::endl;
+            std::cout << "list2.middle: " << f2.middle.x << std::endl;
+            std::cout << "list2.middle: " << f2.middle.y << std::endl;
+            std::cout << "list2.middle: " << f2.min_distance << std::endl;
+            std::cout << "list1.size: " << f1.size << std::endl;
+            std::cout << "list2.size: " << f2.size << std::endl;
+            std::cout << "********************" << std::endl;
+        }
+        return false;
+    }
+    return true;
+}
+
+/** This is currently being used only to compare blacklisted frontiers. 
+  * Therefore, to verify if only the traversal point is the same, 
+  * we use the hash and equality as intial points.
+*/
+// Define hash function specialization for frontier_msgs::msg::Frontier
+struct FrontierHash
+{
+    size_t operator()(const frontier_msgs::msg::Frontier &key) const
+    {
+        // Calculate hash based on some combination of member variables
+        size_t hash = 0;
+        // hash = std::hash<double>()(key.initial.x) ^
+        //         std::hash<double>()(key.initial.y) ^
+        //         std::hash<double>()(key.centroid.x) ^
+        //         std::hash<double>()(key.centroid.y) ^
+        //         std::hash<double>()(key.middle.x) ^
+        //         std::hash<double>()(key.middle.y) ^
+        //         std::hash<uint32_t>()(key.size) ^
+        //         std::hash<double>()(key.min_distance) ^
+        //         std::hash<double>()(key.unique_id);
+
+        hash = std::hash<double>()(key.initial.x) ^
+                std::hash<double>()(key.initial.y);
+                // std::hash<double>()(key.centroid.x) ^
+                // std::hash<double>()(key.centroid.y) ^
+                // std::hash<double>()(key.middle.x) ^
+                // std::hash<double>()(key.middle.y) ^
+                // std::hash<uint32_t>()(key.size) ^
+                // std::hash<double>()(key.min_distance) ^
+                // std::hash<double>()(key.unique_id);
+        return hash;
+    }
+};
+
+// Custom equality function
+struct FrontierEquality {
+    bool operator()(const frontier_msgs::msg::Frontier& lhs, const frontier_msgs::msg::Frontier& rhs) const {
+        // return lhs.initial == rhs.initial &&
+        //         lhs.centroid == rhs.centroid &&
+        //         lhs.middle == rhs.middle &&
+        //         lhs.size == rhs.size &&
+        //         lhs.min_distance == rhs.min_distance &&
+        //         lhs.unique_id == rhs.unique_id;
+        return lhs.initial == rhs.initial;
+    }
+};
+
+inline double generateUID(frontier_msgs::msg::Frontier& output)
+{
+    return (output.initial.x * output.initial.y + output.centroid.x * output.centroid.y + output.middle.x - output.middle.y) - output.min_distance;
+}
 #endif // COLOR_H

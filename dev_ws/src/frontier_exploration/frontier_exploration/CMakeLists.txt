@@ -76,7 +76,7 @@ ament_target_dependencies(explore_client rclcpp geometry_msgs std_msgs nav2_msgs
 # Add executable 2
 add_executable(explore_server src/explore_server.cpp)
 ament_target_dependencies(explore_server rclcpp nav2_msgs nav2_costmap_2d visualization_msgs frontier_msgs rclcpp_action action_msgs frontier_multirobot_allocator)
-target_link_libraries(explore_server hungarian_lib)
+target_link_libraries(explore_server taskAllocator_lib)
 
 # Add executable 5
 add_executable(localization_pose_sub src/viz/localization_pose_sub.cpp)

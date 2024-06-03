@@ -52,6 +52,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/hungarian_lib.dir/DependInfo.cmake"
+  "CMakeFiles/taskAllocator_lib.dir/DependInfo.cmake"
   "CMakeFiles/hungExec.dir/DependInfo.cmake"
+  "CMakeFiles/minPosExec.dir/DependInfo.cmake"
   )

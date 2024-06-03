@@ -1,8 +1,12 @@
 geometry_msgs/PoseStamped start_pose
 bool override_frontier_list
 frontier_msgs/Frontier[] frontier_list_to_override
+frontier_msgs/Frontier[] prohibited_frontiers
 ---
 bool success false
-geometry_msgs/PoseStamped next_frontier
+frontier_msgs/Frontier next_frontier
 frontier_msgs/Frontier[] frontier_list
-float64[] frontier_costs
+float64[] frontier_costs # overall computed cost
+float64[] frontier_distances # the raw distance (plan / euclidean - depends on param)
+float64[] frontier_arrival_information # no of unknown cells it will cover
+float64[] frontier_path_information # amount of information it will gain

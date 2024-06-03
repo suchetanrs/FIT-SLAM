@@ -183,7 +183,6 @@ namespace frontier_exploration
         int max_frontier_cluster_size_;
         std::string exploration_mode_;           ///< String representing the exploration mode. {Ours, Greedy, Random}
         std::vector<double> polygon_xy_min_max_; ///< Polygon points for the boundary.
-        std::string frontier_travel_point_;      ///< Used to set the frontier travel point. {Closest, Centroid, Middle}
         bool explore_clear_space_;               ///< Used to set to explore the clear space or not. Sets the default_value_ variable in the costmap.
 
         std::shared_ptr<frontier_exploration::FrontierSelectionNode> frontierSelect_; ///< A pointer to the instance of the Selection Node.

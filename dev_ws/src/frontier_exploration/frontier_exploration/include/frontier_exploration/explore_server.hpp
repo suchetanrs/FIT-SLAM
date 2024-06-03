@@ -48,6 +48,7 @@ namespace frontier_exploration
         rclcpp::CallbackGroup::SharedPtr explore_server_callback_group_;
         rclcpp::CallbackGroup::SharedPtr nav2_client_callback_group_;
         rclcpp::CallbackGroup::SharedPtr multirobot_service_callback_group_;
+        rclcpp::CallbackGroup::SharedPtr assigned_frontiers_callback_group_;
 
         rclcpp_action::Server<frontier_msgs::action::ExploreTask>::SharedPtr action_server_;
         std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> frontier_goal;
@@ -71,14 +72,17 @@ namespace frontier_exploration
         rclcpp::Client<frontier_msgs::srv::UpdateBoundaryPolygon>::SharedPtr updateBoundaryPolygon;
         rclcpp::Client<frontier_msgs::srv::GetNextFrontier>::SharedPtr getNextFrontier;
         rclcpp::Client<frontier_msgs::srv::GetNextFrontier>::SharedPtr getNextFrontierMultiRobot;
-        rclcpp::Client<frontier_msgs::srv::GetFrontierCosts>::SharedPtr client_get_frontier_costs_;
         rclcpp::Service<frontier_msgs::srv::GetFrontierCosts>::SharedPtr service_get_costs_;
+        std::mutex update_assigned_frontier_lock_;
         std::vector<std::string> robot_namespaces_;
+        std::string frontier_travel_point_;      ///< Used to set the frontier travel point. {Closest, Centroid, Middle}
         bool layer_configured_;
         bool use_custom_sim_;
         bool wait_for_other_robot_costs_;
         bool process_other_robots_;
         bool use_pose_from_multirobot_allocator_;
+        // these are the frontiers traversed by this robot.
+        std::vector<frontier_msgs::msg::Frontier> blacklisted_frontiers_;
 
         rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID &uuid,
                                                 std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal);
@@ -93,6 +97,8 @@ namespace frontier_exploration
          */
 
         void processAllRobots(std::shared_ptr<TaskAllocator> taskAllocator, std::vector<frontier_msgs::msg::Frontier>& globalFrontierList, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> srv_res);
+
+        void updateAssignedFrontiersAllRobots(frontier_msgs::msg::Frontier frontier);
 
         void executeCb(const std::shared_ptr<GoalHandleExplore> goal_handle, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal);
         

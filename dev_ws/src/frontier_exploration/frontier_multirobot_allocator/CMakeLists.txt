@@ -13,10 +13,12 @@ set(dependencies
 )
 
 # Create library target
-add_library(hungarian_lib src/hungarian/Hungarian.cpp src/taskAllocator.cpp)
+add_library(taskAllocator_lib src/hungarian/Hungarian.cpp src/minPos/minPos.cpp src/taskAllocator.cpp)
+
 add_executable(hungExec src/hungarian/Hungarian.cpp src/hungarian/testMain.cpp)
+add_executable(minPosExec src/hungarian/Hungarian.cpp src/minPos/minPos.cpp src/minPos/minPos_test.cpp)
 # Set include directory
-target_include_directories(hungarian_lib
+target_include_directories(taskAllocator_lib
     PUBLIC 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
@@ -30,11 +32,21 @@ target_include_directories(hungExec
         ${EIGEN3_INCLUDE_DIR}
 )
 
+target_include_directories(minPosExec
+    PUBLIC 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+        ${EIGEN3_INCLUDE_DIR}
+)
+
 # Link libraries
-target_link_libraries(hungarian_lib
+target_link_libraries(taskAllocator_lib
     ${EIGEN3_LIBS}
 )
 target_link_libraries(hungExec
+   ${EIGEN3_LIBS}
+)
+target_link_libraries(minPosExec
    ${EIGEN3_LIBS}
 )
 
@@ -53,7 +65,7 @@ configure_package_config_file(
     INSTALL_DESTINATION lib/cmake/${PROJECT_NAME}
 )
 
-install(TARGETS hungarian_lib
+install(TARGETS taskAllocator_lib
     EXPORT export_${PROJECT_NAME}
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib

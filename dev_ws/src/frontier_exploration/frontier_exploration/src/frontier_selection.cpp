@@ -31,6 +31,9 @@ namespace frontier_exploration
         viz_pose_publisher_ = node->create_publisher<geometry_msgs::msg::PoseStamped>("u1_pose", 10);
         viz_pose_publisher_->on_activate();
 
+        path_pose_array_ = node->create_publisher<geometry_msgs::msg::PoseArray>("frontier_plan_poses", 10);
+        path_pose_array_->on_activate();
+
         // Setting default parameters and fetching them if available
         frontier_selection_node_->declare_parameter("exploration_mode", "random");
         frontier_selection_node_->get_parameter("exploration_mode", mode_);
@@ -258,7 +261,7 @@ namespace frontier_exploration
     {
         RCLCPP_INFO_STREAM(logger_, COLOR_STR("FrontierSelectionNode::selectFrontierOurs", logger_.get_name()));
         exploration_costmap_ = exploration_costmap;
-        std::unordered_map<frontier_exploration::FrontierWithMetaData, double, frontier_exploration::FrontierWithMetaData::Hash> frontier_costs;
+        std::unordered_map<FrontierWithMetaData, double, FrontierWithMetaData::Hash> frontier_costs;       
         frontier_msgs::msg::Frontier selected_frontier;
         geometry_msgs::msg::Quaternion selected_orientation;
         double theta_s_star = 0;         // optimal sensor arrival orientation
@@ -299,19 +302,13 @@ namespace frontier_exploration
         RCLCPP_WARN_STREAM(logger_, COLOR_STR("Frontier list size is (loop): " + std::to_string(frontier_list.size()), logger_.get_name()));
         auto frontier_list_duplicates = findDuplicates(frontier_list);
         RCLCPP_INFO_STREAM(logger_, COLOR_STR("Duplicates size is: " + std::to_string(frontier_list_duplicates.size()), logger_.get_name()));
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Blacklist size is: " + std::to_string(frontier_list_duplicates.size()), logger_.get_name()));
+        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Blacklist size is: " + std::to_string(frontier_blacklist_.size()), logger_.get_name()));
         for (auto& frontier : frontier_list)
         {
             // Continue to next frontier if frontier is in blacklist
-            bool frontier_exists_ = false;
-            for (auto blacklisted_frontier_ : frontier_blacklist_)
-            {
-                if (blacklisted_frontier_.initial == frontier.initial)
-                {
-                    frontier_exists_ = true;
-                    break;
-                }
-            }
+            bool frontier_exists_in_blacklist_ = false;
+            if(frontier_blacklist_.count(frontier) > 0)
+                frontier_exists_in_blacklist_ = true;
 
             // Preliminary checks and path planning for each frontier
             auto startTimePlan = std::chrono::high_resolution_clock::now();
@@ -319,12 +316,13 @@ namespace frontier_exploration
             if(use_planning_)
             {
                 auto plan_of_frontier = getPlanForFrontier(start_point_w, frontier, map_data, false);
-                length_to_frontier = static_cast<double>(plan_of_frontier.first.path.poses.size());
+                // assume each pose is resolution * ((1 + root2) / 2) distance apart 
+                length_to_frontier = static_cast<double>(plan_of_frontier.first.path.poses.size() * (costmap_->getResolution() * 1.207));
                 // Continue to next frontier if path length is zero
                 if (length_to_frontier == 0 || plan_of_frontier.second == false)
                 {
                     RCLCPP_WARN_STREAM(logger_, COLOR_STR("Path length is zero or false", logger_.get_name()));
-                    FrontierWithMetaData f_info_blacklisted(frontier, std::numeric_limits<int>::lowest(), std::numeric_limits<double>::max(), std::numeric_limits<int>::lowest());
+                    FrontierWithMetaData f_info_blacklisted(frontier, 0, std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
                     frontier_costs[f_info_blacklisted] = std::numeric_limits<double>::max();
                     continue;
                 }
@@ -332,7 +330,8 @@ namespace frontier_exploration
             }
             else
             {
-                length_to_frontier = frontier.min_distance;
+                length_to_frontier = sqrt(pow(start_point_w.x - frontier.initial.x, 2) + pow(start_point_w.y - frontier.initial.y, 2));
+                // length_to_frontier = frontier.min_distance;
             }
             auto endTimePlan = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> durationPlan = (endTimePlan - startTimePlan);
@@ -340,7 +339,7 @@ namespace frontier_exploration
 
 
             // Proceed to the function only if frontier is above the detection radius.
-            if (frontier.min_distance > frontierDetectRadius_ && frontier_exists_ == false)
+            if (length_to_frontier > frontierDetectRadius_ && frontier_exists_in_blacklist_ == false)
             {
                 auto startTime = std::chrono::high_resolution_clock::now();
                 double sx, sy; // sensor x, sensor y, sensor orientation
@@ -486,7 +485,8 @@ namespace frontier_exploration
             }
             else
             {
-                FrontierWithMetaData f_info_blacklisted(frontier, std::numeric_limits<int>::lowest(), std::numeric_limits<double>::max(), std::numeric_limits<int>::lowest());
+                RCLCPP_ERROR_STREAM(logger_, COLOR_STR("Adding max cost: " + std::to_string(frontier.unique_id) + " ," + std::to_string(frontier.min_distance > frontierDetectRadius_) + " " + std::to_string(frontier_exists_in_blacklist_ == false), logger_.get_name()));
+                FrontierWithMetaData f_info_blacklisted(frontier, 0, std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
                 frontier_costs[f_info_blacklisted] = std::numeric_limits<double>::max();
             }
             
@@ -612,7 +612,6 @@ namespace frontier_exploration
         if (frontier_selected_post_u2)
         {
             selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(theta_s_star_post_u2);
-            frontier_blacklist_.push_back(*frontier_selected_post_u2);
             SelectionResult selection_result;
             selection_result.frontier = *frontier_selected_post_u2;
             selection_result.orientation = selected_orientation;
@@ -625,7 +624,6 @@ namespace frontier_exploration
             RCLCPP_WARN_STREAM(logger_, COLOR_STR("The selected frontier was not updated after U2 computation.", logger_.get_name()));
             RCLCPP_WARN_STREAM(logger_, COLOR_STR("Returning for input list size: " + std::to_string(frontier_list.size()), logger_.get_name()));
             RCLCPP_WARN_STREAM(logger_, COLOR_STR("Returning frontier costs size: " + std::to_string(frontier_costs.size()), logger_.get_name()));
-            frontier_blacklist_.push_back(selected_frontier);
             SelectionResult selection_result;
             selection_result.frontier = selected_frontier;
             selection_result.orientation = selected_orientation;
@@ -635,11 +633,11 @@ namespace frontier_exploration
         }
     }
 
-    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierClosest(const std::vector<frontier_msgs::msg::Frontier> &frontier_list)
+    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierClosest(std::vector<frontier_msgs::msg::Frontier> &frontier_list)
     {
         // create placeholder for selected frontier
         frontier_msgs::msg::Frontier selected;
-        selected.min_distance = std::numeric_limits<double>::infinity();
+        selected.min_distance = std::numeric_limits<double>::max();
 
         // initialize with false, becomes true if frontier is selected.
         bool frontierSelectionFlag = false;
@@ -651,22 +649,16 @@ namespace frontier_exploration
         }
 
         // Iterate through each frontier in the list
-        for (const auto &frontier : frontier_list)
+        for (auto &frontier : frontier_list)
         {
             // check if this frontier is the nearest to robot and ignore if very close (frontier_detect_radius)
             if (frontier.min_distance > frontierDetectRadius_)
             {
-                bool frontier_exists_ = false;
+                bool frontier_exists_in_blacklist_ = false;
                 // check if its blacklisted
-                for (auto blacklisted_frontier_ : frontier_blacklist_)
-                {
-                    if (blacklisted_frontier_.initial == frontier.initial)
-                    {
-                        frontier_exists_ = true;
-                        break;
-                    }
-                }
-                if (frontier.min_distance < selected.min_distance && frontier_exists_ == false)
+                if(frontier_blacklist_.count(frontier) > 0)
+                    frontier_exists_in_blacklist_ = true;
+                if (frontier.min_distance < selected.min_distance && frontier_exists_in_blacklist_ == false)
                 {
                     selected = frontier;
                     frontierSelectionFlag = true;
@@ -681,15 +673,14 @@ namespace frontier_exploration
             return std::make_pair(selected, frontierSelectionFlag);
         }
         // Add the selected frontier to the blacklist to prevent re-selection
-        frontier_blacklist_.push_back(selected);
         return std::make_pair(selected, frontierSelectionFlag);
     }
 
-    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierRandom(const std::vector<frontier_msgs::msg::Frontier> &frontier_list)
+    std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierRandom(std::vector<frontier_msgs::msg::Frontier> &frontier_list)
     {
         // create placeholder for selected frontier
         frontier_msgs::msg::Frontier selected;
-        selected.min_distance = std::numeric_limits<double>::infinity();
+        selected.min_distance = std::numeric_limits<double>::max();
 
         bool frontierSelectionFlag = false;
         if (frontier_list.size() == 0)
@@ -702,21 +693,15 @@ namespace frontier_exploration
         // Create a vector to store eligible frontiers
         std::vector<frontier_msgs::msg::Frontier> frontier_list_imp;
         // Iterate through each frontier in the list
-        for (const auto &frontier : frontier_list)
+        for (auto &frontier : frontier_list)
         {
             // check if this frontier is the nearest to robot and ignore if very close (frontier_detect_radius)
             if (frontier.min_distance > frontierDetectRadius_)
             {
-                bool frontier_exists_ = false;
-                for (auto blacklisted_frontier_ : frontier_blacklist_)
-                {
-                    if (blacklisted_frontier_.initial == frontier.initial)
-                    {
-                        frontier_exists_ = true;
-                        break;
-                    }
-                }
-                if (frontier_exists_ == false)
+                bool frontier_exists_in_blacklist_ = false;
+                if(frontier_blacklist_.count(frontier) > 0)
+                    frontier_exists_in_blacklist_ = true;
+                if (frontier_exists_in_blacklist_ == false)
                 {
                     frontier_list_imp.push_back(frontier);
                 }
@@ -747,7 +732,6 @@ namespace frontier_exploration
         }
 
         // Add the selected frontier to the blacklist
-        frontier_blacklist_.push_back(selected);
         return std::make_pair(selected, frontierSelectionFlag);
     }
 
@@ -902,6 +886,15 @@ namespace frontier_exploration
             struct_obj.information_total = information_for_path / number_of_wayp;
         }
         return std::make_pair(struct_obj, true);
+    }
+
+    void FrontierSelectionNode::setFrontierBlacklist(std::vector<frontier_msgs::msg::Frontier>& blacklist)
+    {
+        std::lock_guard<std::mutex> lock(blacklist_mutex_);
+        for (auto frontier : blacklist)
+        {
+            frontier_blacklist_[frontier] = true;
+        }
     }
 
     void FrontierSelectionNode::bresenham2D(

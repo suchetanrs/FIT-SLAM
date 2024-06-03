@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/minPosExec.dir/src/hungarian/Hungarian.cpp.o CMakeFiles/minPosExec.dir/src/minPos/minPos.cpp.o CMakeFiles/minPosExec.dir/src/minPos/minPos_test.cpp.o -o minPosExec 
