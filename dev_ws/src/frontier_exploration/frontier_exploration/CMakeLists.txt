@@ -68,13 +68,8 @@ add_library(frontier_exploration_core SHARED plugins/bounded_explore_layer.cpp s
 ament_target_dependencies(frontier_exploration_core SYSTEM ${dependencies})
 target_link_libraries(frontier_exploration_core ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
 
-
-# Add executable 1
-add_executable(explore_client src/explore_client.cpp)
-ament_target_dependencies(explore_client rclcpp geometry_msgs std_msgs nav2_msgs nav2_costmap_2d visualization_msgs frontier_msgs rclcpp_action frontier_multirobot_allocator)
-
 # Add executable 2
-add_executable(explore_server src/explore_server.cpp)
+add_executable(explore_server src/explore_server.cpp src/main.cpp)
 ament_target_dependencies(explore_server rclcpp nav2_msgs nav2_costmap_2d visualization_msgs frontier_msgs rclcpp_action action_msgs frontier_multirobot_allocator)
 target_link_libraries(explore_server taskAllocator_lib)
 
@@ -87,7 +82,7 @@ ament_target_dependencies(localization_pose_sub SYSTEM ${dependencies})
 # ament_target_dependencies(srv_cl SYSTEM ${dependencies})
 # srv_cl
 
-install(TARGETS explore_server explore_client frontier_exploration_core
+install(TARGETS explore_server frontier_exploration_core
 DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -1,30 +1,3 @@
-./shell_scripts/scout_1_exploration.sh 
-ls
-./shell_scripts/scout_1_exploration.sh 
-./shell_scripts/only_exploration.sh 
-./shell_scripts/scout_1_exploration.sh 
-./shell_scripts/only_exploration.sh 
-./shell_scripts/scout_1_exploration.sh 
-./shell_scripts/only_exploration.sh 
-bash
-./shell_scripts/scout_2_exploration.sh 
-bash
-ls
-cd dev_ws/src/frontier_exploration/frontier_multirobot_allocator/
-ls
-cd build/
-cmake ..
-make
-make install
-bash
-ls
-tmux
-cd /
-ls
-cd
-cd dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
-cmake ..
-make
 make install
 pidof explore_server
 kill -9 4068
@@ -499,3 +472,29 @@ bash
 rviz2
 bash
 tmux
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make
+make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+bash
+bash
+bash
+vsc
+bash
+bash
+bash
+nano ~/.tmux.conf
+bash
+bash
+ls
+cd dev_ws/
+vsc
+bash
+nano compute.py
+python3 compute.py 
+python3 compute.py 
+nano compute.py
+python3 compute.py 

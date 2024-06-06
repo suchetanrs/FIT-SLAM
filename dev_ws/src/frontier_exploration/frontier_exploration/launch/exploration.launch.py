@@ -53,13 +53,6 @@ def generate_launch_description():
             param_rewrites=param_substitutions,
             convert_types=True)
         
-        explore_client = Node(
-            package='frontier_exploration',
-            executable='explore_client',
-            output='screen',
-            namespace=context.launch_configurations['robot_namespace'],
-            parameters=[configured_params])
-        
         explore_server = Node(
             package='frontier_exploration',
             executable='explore_server',
@@ -68,7 +61,7 @@ def generate_launch_description():
             parameters=[configured_params])
         
 
-        return [declare_params_file_cmd, explore_server, explore_client]
+        return [declare_params_file_cmd, explore_server]
 
     opaque_function = OpaqueFunction(function=all_nodes_launch)
 #---------------------------------------------

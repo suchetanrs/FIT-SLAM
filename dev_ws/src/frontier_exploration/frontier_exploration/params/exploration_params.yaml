@@ -1,21 +1,16 @@
-explore_client:
-  ros__parameters:
-    costmap_resolution: 0.05 # same as bounded_explore_layer
-    use_config: True
-    config: ["48.0", "60.0", "48.0", "0.25", "0.25", "0.25", "0.25", "60.0"]
-  
 explore_server:
   ros__parameters:
     frequency: 15.0
     goal_aliasing: 0.0
     retry_count: 20
+    config: ["48.0", "60.0", "48.0", "0.25", "0.25", "0.25", "0.25", "60.0"]
     nav2_goal_timeout_sec: 1000 #secs
     use_traversability: false
     use_custom_sim: false
     frontier_travel_point: closest
     # robot_namespaces: ['/scout_1', '/scout_2']
-    # robot_namespaces: ['/scout_2']
-    robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']
+    robot_namespaces: ['/scout_2']
+    # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4', '/scout_5']
     wait_for_other_robot_costs: true # if false, will not give result to other robots if server is busy

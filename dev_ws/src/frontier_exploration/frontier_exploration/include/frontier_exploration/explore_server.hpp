@@ -14,7 +14,6 @@
 
 #include <action_msgs/msg/goal_status_array.hpp>
 
-#include <frontier_msgs/action/explore_task.hpp>
 #include <frontier_msgs/srv/get_next_frontier.hpp>
 #include <frontier_msgs/srv/update_boundary_polygon.hpp>
 #include <frontier_msgs/srv/get_frontier_costs.hpp>
@@ -30,7 +29,6 @@ namespace frontier_exploration
     class FrontierExplorationServer : public rclcpp::Node
     {
     public:
-        using GoalHandleExplore = rclcpp_action::ServerGoalHandle<frontier_msgs::action::ExploreTask>;
         using NavigateToPose = nav2_msgs::action::NavigateToPose;
         using GoalHandleNav2 = rclcpp_action::ClientGoalHandle<NavigateToPose>;
 
@@ -42,6 +40,36 @@ namespace frontier_exploration
 
         ~FrontierExplorationServer();
 
+        /**
+         * @brief Execute callback for actionserver, run after accepting a new goal
+         * @param goal ActionGoal containing boundary of area to explore, and a valid centerpoint for the area.
+         */
+
+        void buildBoundaryAndCenter();
+
+        void processAllRobots(std::shared_ptr<TaskAllocator> taskAllocator, std::vector<frontier_msgs::msg::Frontier>& globalFrontierList, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> srv_res);
+
+        void updateAssignedFrontiersAllRobots(frontier_msgs::msg::Frontier frontier);
+
+        void run();
+        
+        void performBackupRotation();
+
+        void performBackupReverse();
+
+        void handle_multirobot_frontier_cost_request(
+            std::shared_ptr<rmw_request_id_t> request_header,
+            std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Request> request,
+            std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Response> response);
+
+        void nav2GoalFeedbackCallback(GoalHandleNav2::SharedPtr, const std::shared_ptr<const NavigateToPose::Feedback> feedback);
+
+        void nav2GoalResultCallback(const GoalHandleNav2::WrappedResult &result);
+
+        void nav2GoalResponseCallback(const GoalHandleNav2::SharedPtr &goal_handle);
+
+        bool equateFrontierList(const std::vector<frontier_msgs::msg::Frontier>& list1, const std::vector<frontier_msgs::msg::Frontier>& list2);
+
     private:
         // ROS Internal
         std::shared_ptr<tf2_ros::Buffer> tf_listener_;
@@ -50,10 +78,10 @@ namespace frontier_exploration
         rclcpp::CallbackGroup::SharedPtr multirobot_service_callback_group_;
         rclcpp::CallbackGroup::SharedPtr assigned_frontiers_callback_group_;
 
-        rclcpp_action::Server<frontier_msgs::action::ExploreTask>::SharedPtr action_server_;
-        std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> frontier_goal;
         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
         std::unique_ptr<nav2_util::NodeThread> explore_costmap_thread_;
+        geometry_msgs::msg::PolygonStamped explore_boundary_;
+        geometry_msgs::msg::PointStamped explore_center_;
 
         double frequency_, goal_aliasing_;
         bool success_, moving_;
@@ -83,40 +111,7 @@ namespace frontier_exploration
         bool use_pose_from_multirobot_allocator_;
         // these are the frontiers traversed by this robot.
         std::vector<frontier_msgs::msg::Frontier> blacklisted_frontiers_;
+        std::vector<std::string> config_;
 
-        rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID &uuid,
-                                                std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal);
-
-        rclcpp_action::CancelResponse handle_cancel(const std::shared_ptr<GoalHandleExplore> goal_handle);
-
-        void handle_accepted(const std::shared_ptr<GoalHandleExplore> goal_handle);
-
-        /**
-         * @brief Execute callback for actionserver, run after accepting a new goal
-         * @param goal ActionGoal containing boundary of area to explore, and a valid centerpoint for the area.
-         */
-
-        void processAllRobots(std::shared_ptr<TaskAllocator> taskAllocator, std::vector<frontier_msgs::msg::Frontier>& globalFrontierList, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> srv_res);
-
-        void updateAssignedFrontiersAllRobots(frontier_msgs::msg::Frontier frontier);
-
-        void executeCb(const std::shared_ptr<GoalHandleExplore> goal_handle, std::shared_ptr<const frontier_msgs::action::ExploreTask::Goal> goal);
-        
-        void performBackupRotation();
-
-        void performBackupReverse();
-
-        void handle_multirobot_frontier_cost_request(
-            std::shared_ptr<rmw_request_id_t> request_header,
-            std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Request> request,
-            std::shared_ptr<frontier_msgs::srv::GetFrontierCosts::Response> response);
-
-        void nav2GoalFeedbackCallback(GoalHandleNav2::SharedPtr, const std::shared_ptr<const NavigateToPose::Feedback> feedback);
-
-        void nav2GoalResultCallback(const GoalHandleNav2::WrappedResult &result);
-
-        void nav2GoalResponseCallback(const GoalHandleNav2::SharedPtr &goal_handle);
-
-        bool equateFrontierList(const std::vector<frontier_msgs::msg::Frontier>& list1, const std::vector<frontier_msgs::msg::Frontier>& list2);
     };
 }
