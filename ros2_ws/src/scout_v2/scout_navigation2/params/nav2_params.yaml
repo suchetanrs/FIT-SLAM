@@ -91,11 +91,19 @@ controller_server:
     #  xy_goal_tolerance: 0.25
     #  yaw_goal_tolerance: 0.25
     #  stateful: True
+    # stopped_goal_checker:
+    #   stateful: True
+    #   plugin: "nav2_controller::StoppedGoalChecker"
+    #   xy_goal_tolerance: 0.10
+    #   yaw_goal_tolerance: 0.1
+    #   trans_stopped_velocity: 0.25
+    #   rot_stopped_velocity: 0.25
+
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.80
-      yaw_goal_tolerance: 1.30
+      xy_goal_tolerance: 0.30 #0.30
+      yaw_goal_tolerance: 0.4 #0.4
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
@@ -151,23 +159,23 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
-      robot_radius: 0.40
+      robot_radius: 0.10 # 0.40
       plugins: ["static_layer", "inflation_layer"]
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_topic: /simulation_costmap # for scout use /traversability_thresholded
+        map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 0.6
         inflation_radius: 0.60
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: /traversability_thresholded
-        map_subscribe_transient_local: True
       always_send_full_costmap: True
 
 global_costmap:
   global_costmap:
     ros__parameters:
       # footprint: "[ [0.48, 0.38], [0.48, -0.38], [-0.48, -0.38], [ -0.48, 0.38 ] ]"
-      robot_radius: 0.30
+      robot_radius: 0.20 # 0.30
       update_frequency: 1.0
       publish_frequency: 1.0
       global_frame: map
@@ -180,7 +188,7 @@ global_costmap:
       # filters: ["keepout_filter"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: /traversability_thresholded
+        map_topic: /simulation_costmap # for scout use /traversability_thresholded
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"

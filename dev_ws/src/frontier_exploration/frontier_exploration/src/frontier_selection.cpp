@@ -203,7 +203,18 @@ namespace frontier_exploration
 
     void FrontierSelectionNode::exportMapCoverage(std::vector<double> polygon_xy_min_max, std::chrono::_V2::system_clock::time_point startTime)
     {
-        int unknown = std::pow((polygon_xy_min_max[2] - polygon_xy_min_max[0]) / costmap_->getResolution(), 2);
+        RCLCPP_INFO_STREAM(logger_, "Point2: " << polygon_xy_min_max[2]);
+        RCLCPP_INFO_STREAM(logger_, "Point0: " << polygon_xy_min_max[0]);
+
+        RCLCPP_INFO_STREAM(logger_, "Point1: " << polygon_xy_min_max[1]);
+        RCLCPP_INFO_STREAM(logger_, "Point3: " << polygon_xy_min_max[3]);
+
+        RCLCPP_INFO_STREAM(logger_, "Point0: " << polygon_xy_min_max[0]);
+        RCLCPP_INFO_STREAM(logger_, "Point2: " << polygon_xy_min_max[2]);
+        int x_unknown = abs(polygon_xy_min_max[2] - polygon_xy_min_max[0]) / costmap_->getResolution();
+        int y_unknown = abs(polygon_xy_min_max[3] - polygon_xy_min_max[1]) / costmap_->getResolution();
+        int unknown = x_unknown * y_unknown;
+        // int unknown = std::pow((polygon_xy_min_max[2] - polygon_xy_min_max[0]) / costmap_->getResolution(), 2);
         for (double y = polygon_xy_min_max[1]; y < polygon_xy_min_max[3]; y += costmap_->getResolution())
         {
             for (double x = polygon_xy_min_max[0]; x < polygon_xy_min_max[2]; x += costmap_->getResolution())

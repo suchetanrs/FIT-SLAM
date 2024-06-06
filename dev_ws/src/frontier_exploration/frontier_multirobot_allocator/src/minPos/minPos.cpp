@@ -10,7 +10,7 @@ MinPosAlgo::MinPosAlgo(std::vector<std::vector<double>>& distanceMat, std::vecto
         numFrontiers(distanceMat[0].size()) {
     // Initialize the count matrix P with zeros
     P = std::vector<std::vector<int>>(numRobots, std::vector<int>(numFrontiers, 0));
-    modifiedCostMatrix = std::vector<std::vector<double>>(numRobots, std::vector<double>(numFrontiers, std::numeric_limits<double>::infinity()));
+    modifiedCostMatrix = std::vector<std::vector<double>>(numRobots, std::vector<double>(numFrontiers, std::numeric_limits<double>::max()));
     if(costMat.size() != distanceMat.size() || costMat[0].size() != distanceMat[0].size())
     {
         throw std::runtime_error("Please check your costMat and distanceMat sizes");

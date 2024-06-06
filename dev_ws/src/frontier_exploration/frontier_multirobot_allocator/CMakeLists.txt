@@ -17,6 +17,8 @@ add_library(taskAllocator_lib src/hungarian/Hungarian.cpp src/minPos/minPos.cpp 
 
 add_executable(hungExec src/hungarian/Hungarian.cpp src/hungarian/testMain.cpp)
 add_executable(minPosExec src/hungarian/Hungarian.cpp src/minPos/minPos.cpp src/minPos/minPos_test.cpp)
+# add_executable(voronoiExec src/voronoi/voronoi.cpp)
+# add_executable(voronoiViz src/voronoi/voronoi_visualizer.cpp)
 # Set include directory
 target_include_directories(taskAllocator_lib
     PUBLIC 
@@ -38,6 +40,22 @@ target_include_directories(minPosExec
         $<INSTALL_INTERFACE:include>
         ${EIGEN3_INCLUDE_DIR}
 )
+
+# target_include_directories(voronoiExec
+#     PUBLIC
+#         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#         $<INSTALL_INTERFACE:include>
+#         ${EIGEN3_INCLUDE_DIR}
+#         ${Boost_INCLUDE_DIRS} # Add Boost include directories
+# )
+
+# target_include_directories(voronoiViz
+#     PUBLIC
+#         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#         $<INSTALL_INTERFACE:include>
+#         ${EIGEN3_INCLUDE_DIR}
+#         ${Boost_INCLUDE_DIRS} # Add Boost include directories
+# )
 
 # Link libraries
 target_link_libraries(taskAllocator_lib

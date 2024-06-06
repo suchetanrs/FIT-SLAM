@@ -55,6 +55,12 @@ inline std::string COLOR_STR(const std::string &str, const char *robotName)
         return "\e[0;44m" + str + "\e[m";
     else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_3") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
         return "\e[0;41m" + str + "\e[m";
+    else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_4") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
+        return "\e[0;40m" + str + "\e[m";
+    else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_5") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
+        return "\e[0;40m" + str + "\e[m";
+    else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_6") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
+        return "\e[0;40m" + str + "\e[m";
     return static_cast<std::string>(robotName);
 }
 

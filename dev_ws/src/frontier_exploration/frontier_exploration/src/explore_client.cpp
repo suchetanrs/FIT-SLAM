@@ -46,9 +46,9 @@ namespace frontier_exploration
         {
             // if use_config is true, directly send the parameter values to the action server.
             sendActionFromConfig();
-            point_.reset();
-            point_viz_timer_.reset();
-            point_viz_pub_.reset();
+            // point_.reset();
+            // point_viz_timer_.reset();
+            // point_viz_pub_.reset();
         }
     }
 

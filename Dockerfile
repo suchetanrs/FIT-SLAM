@@ -15,3 +15,4 @@ COPY ./root_dir/shell_scripts/all-installed-packages.sh /root
 RUN cd /root/ && sudo chmod +x * && ./all-installed-packages.sh && rm -rf all-installed-packages.sh
 COPY ./root_dir/shell_scripts/new_apps.sh /root
 RUN cd /root/ && sudo chmod +x * && ./new_apps.sh && rm -rf new_apps.sh
+RUN apt-get install -y libboost-all-dev

@@ -222,7 +222,7 @@ namespace frontier_exploration
             if (srv_future_id.wait_for(std::chrono::seconds(15)) == std::future_status::ready)
             {
                 srv_res = srv_future_id.get();
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Region boundary set", this->get_namespace()));
+                RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Region boundary set", this->get_namespace()));
                 layer_configured_ = true;
             }
             else
@@ -233,7 +233,7 @@ namespace frontier_exploration
             }
         }
 
-        rclcpp::sleep_for(std::chrono::seconds(5));
+        rclcpp::sleep_for(std::chrono::seconds(45));
 
         // The exploration is active until this while loop runs.
         while (rclcpp::ok() && goal_handle->is_active())
@@ -359,8 +359,8 @@ namespace frontier_exploration
                     }
                 }
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Solving hungarian", this->get_namespace()));
-                // taskAllocator->solveAllocationHungarian();
-                taskAllocator->solveAllocationMinPos();
+                taskAllocator->solveAllocationHungarian();
+                // taskAllocator->solveAllocationMinPos();
                 auto allocatedIndex = taskAllocator->getAllocatedTasks()[this->get_namespace()];
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated index" + std::to_string(allocatedIndex), this->get_namespace()));
                 auto allocatedFrontier = globalFrontierList[allocatedIndex];
@@ -502,7 +502,11 @@ namespace frontier_exploration
                     RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Wait count goal is: " + std::to_string(waitCount_), this->get_namespace()));
                     if (waitCount_ > nav2WaitTime_)
                     {
+                        nav2Client_->async_cancel_all_goals();
                         minuteWait = true;
+                        FrontierExplorationServer::performBackupRotation();
+                        FrontierExplorationServer::performBackupReverse();
+                        break;
                     }
                 }
                 // Moving is made false here to treat this as equal to nav2 feedback saying goal is reached (nav2 timed out here.).
@@ -520,39 +524,21 @@ namespace frontier_exploration
     void FrontierExplorationServer::performBackupRotation()
     {
         RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("FrontierExplorationServer::performBackupRotation", this->get_namespace()));
-        geometry_msgs::msg::PoseStamped robot_pose;
-        explore_costmap_ros_->getRobotPose(robot_pose);
-        tf2::Quaternion quaternion;
-        tf2::fromMsg(robot_pose.pose.orientation, quaternion);
-        double current_yaw = tf2::getYaw(quaternion);
-        double desired_rad = M_PI / 2;
-        double new_yaw = current_yaw + desired_rad;
-        quaternion.setRPY(0, 0, new_yaw);
-        geometry_msgs::msg::PoseStamped new_pose;
-        new_pose.header.frame_id = robot_pose.header.frame_id;
-        new_pose.pose.position = robot_pose.pose.position;
-        new_pose.pose.orientation = tf2::toMsg(quaternion);
-        RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Rotating in place to get new frontiers", this->get_namespace()));
-        nav2_goal_.pose = new_pose;
-        if (use_custom_sim_)
-            nav2_goal_.behavior_tree = get_namespace();
-        nav2Client_->async_send_goal(nav2_goal_, nav2_goal_options_);
         moving_ = true;
-        int waitCount_ = 0;
-        bool minuteWait = false;
-        while (moving_ && minuteWait == false && rclcpp::ok())
+        // Create a publisher to publish messages on cmd_vel_nav topic
+        auto publisher = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_nav", 10);
+        geometry_msgs::msg::Twist twist_msg;
+        twist_msg.angular.z = -0.5; // -0.5 m/s for reverse motion
+        for (int i = 0; i <= 10; i++)
         {
-            rclcpp::WallRate(1.0).sleep();
-            RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Waiting to finish moving while rotating", this->get_namespace()));
-            waitCount_++;
-            RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Wait count rotation is: " + waitCount_, this->get_namespace()));
-            // TODO: Assign different wait times for goal and rotate.
-            if (waitCount_ > nav2WaitTime_)
-            {
-                minuteWait = true;
-            }
+            rclcpp::sleep_for(std::chrono::milliseconds(50));
+            publisher->publish(twist_msg);
         }
-        // Moving is made false here to treat this as equal to nav2 feedback saying goal is reached.
+        twist_msg.angular.z = 0.0;
+        for (int j = 0; j <= 3; j++)
+            publisher->publish(twist_msg);
+        // Log the action
+        RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("FrontierExplorationServer::performBackupReverse", this->get_namespace()));
         moving_ = false;
     }
 
@@ -563,10 +549,14 @@ namespace frontier_exploration
         auto publisher = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_nav", 10);
         geometry_msgs::msg::Twist twist_msg;
         twist_msg.linear.x = -0.5; // -0.5 m/s for reverse motion
-        publisher->publish(twist_msg);
-        rclcpp::sleep_for(std::chrono::milliseconds(2000));
+        for (int i = 0; i <= 40; i++)
+        {
+            rclcpp::sleep_for(std::chrono::milliseconds(50));
+            publisher->publish(twist_msg);
+        }
         twist_msg.linear.x = 0.0;
-        publisher->publish(twist_msg);
+        for (int j = 0; j <= 3; j++)
+            publisher->publish(twist_msg);
         // Log the action
         RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("FrontierExplorationServer::performBackupReverse", this->get_namespace()));
         moving_ = false;
@@ -671,6 +661,7 @@ namespace frontier_exploration
             break;
         case rclcpp_action::ResultCode::ABORTED:
             RCLCPP_ERROR(this->get_logger(), "Nav2 internal fault! Nav2 aborted the goal!");
+            FrontierExplorationServer::performBackupRotation();
             FrontierExplorationServer::performBackupReverse();
             moving_ = false;
             break;

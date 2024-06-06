@@ -30,7 +30,7 @@ void TaskAllocator::solveAllocationHungarian() {
     std::cout << "Total cost: " << cost << std::endl;
     if (cost == std::numeric_limits<double>::max())
     {
-        throw std::runtime_error("Infinite cost");
+        // throw std::runtime_error("Infinite cost");
     }
 }
 
@@ -55,7 +55,7 @@ void TaskAllocator::solveAllocationMinPos() {
     std::cout << "Total cost: " << cost << std::endl;
     if (cost == std::numeric_limits<double>::max())
     {
-        throw std::runtime_error("Infinite cost");
+        // throw std::runtime_error("Infinite cost");
     }
 }
 

@@ -14,3 +14,4 @@ ros2_ws/src/scout_v2/scout_gazebo/models
 ros2_ws/src/scout_v2/scout_gazebo/worlds
 dev_ws/src/exploration_sim/
 **__pycache__**
+**map_data_coverage**
