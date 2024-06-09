@@ -15,8 +15,6 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include <frontier_msgs/msg/frontier.hpp>
-#include <frontier_msgs/srv/update_boundary_polygon.hpp>
-#include <frontier_msgs/srv/get_next_frontier.hpp>
 
 #include <frontier_exploration/planner.hpp>
 
@@ -31,11 +29,6 @@
 
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <nav_msgs/msg/path.hpp>
-
-#include <octomap_msgs/msg/octomap.hpp>
-#include <octomap_msgs/conversions.h>
-#include <octomap/octomap.h>
-#include <octomap/OcTreeStamped.h>
 
 #include <visualization_msgs/msg/marker.hpp>
 
@@ -89,15 +82,10 @@ namespace frontier_exploration
             {
                 // Calculate hash based on some combination of member variables
                 size_t hash = 0;
-                hash =  std::hash<double>()(key.frontier_.initial.x) ^
-                        std::hash<double>()(key.frontier_.initial.y) ^
-                        std::hash<double>()(key.frontier_.centroid.x) ^
-                        std::hash<double>()(key.frontier_.centroid.y) ^
-                        std::hash<double>()(key.frontier_.middle.x) ^
-                        std::hash<double>()(key.frontier_.middle.y) ^
+                hash =  std::hash<double>()(key.frontier_.goal_point.x) ^
+                        std::hash<double>()(key.frontier_.goal_point.y) ^
                         std::hash<uint32_t>()(key.frontier_.size) ^
-                        std::hash<double>()(key.frontier_.min_distance) ^
-                        std::hash<double>()(key.frontier_.unique_id);
+                        std::hash<double>()(key.frontier_.min_distance);
                 return hash;
             }
         };
@@ -248,10 +236,10 @@ namespace frontier_exploration
         /**
          * @brief Constructor for FrontierSelectionNode.
          *
-         * @param node Pointer to the lifecycle node.
+         * @param node Pointer to the node.
          * @param costmap Pointer to the costmap.
          */
-        FrontierSelectionNode(rclcpp_lifecycle::LifecycleNode::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap);
+        FrontierSelectionNode(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap);
 
         /**
          * @brief Function to get the sign of an integer.
@@ -362,14 +350,14 @@ namespace frontier_exploration
 
     private:
         // ROS Publishers.
-        rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::PointCloud2>::SharedPtr frontier_cloud_pub_;     ///< Publisher for frontier cloud.
-        rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::PointCloud2>::SharedPtr all_frontier_cloud_pub_; ///< Publisher for every frontier cloud.
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr frontier_cloud_pub_;     ///< Publisher for frontier cloud.
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr all_frontier_cloud_pub_; ///< Publisher for every frontier cloud.
         // Visualization related.
-        rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>::SharedPtr frontier_plan_pub_;                ///< Publisher for planned path to the frontiers.
-        rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)
-        rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::Marker>::SharedPtr landmark_publisher_;   ///< Publisher for landmarks in the path FOVs
-        rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseStamped>::SharedPtr viz_pose_publisher_;   ///< Publisher for the best pose after u1 computation.
-        rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseArray>::SharedPtr path_pose_array_;
+        rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_plan_pub_;                ///< Publisher for planned path to the frontiers.
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr landmark_publisher_;   ///< Publisher for landmarks in the path FOVs
+        rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr viz_pose_publisher_;   ///< Publisher for the best pose after u1 computation.
+        rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr path_pose_array_;
 
         nav2_costmap_2d::Costmap2D *costmap_;
         nav2_costmap_2d::Costmap2D *exploration_costmap_;

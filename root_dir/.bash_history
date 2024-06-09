@@ -498,3 +498,36 @@ python3 compute.py
 python3 compute.py 
 nano compute.py
 python3 compute.py 
+cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/viz/
+s
+ls
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 
+g++ hash_double.cpp -o hash_double
+./hash_double 

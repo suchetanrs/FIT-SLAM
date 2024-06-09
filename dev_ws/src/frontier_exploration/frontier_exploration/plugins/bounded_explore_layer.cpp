@@ -1,4 +1,3 @@
-#include <frontier_exploration/geometry_tools.hpp>
 #include <frontier_exploration/bounded_explore_layer.hpp>
 #include <frontier_exploration/frontier_search.hpp>
 
@@ -9,97 +8,51 @@ namespace frontier_exploration
     using nav2_costmap_2d::NO_INFORMATION;
     using rcl_interfaces::msg::ParameterType;
 
-    BoundedExploreLayer::BoundedExploreLayer() {}
-
-    BoundedExploreLayer::~BoundedExploreLayer()
+    BoundedExploreLayer::BoundedExploreLayer(nav2_costmap_2d::LayeredCostmap* costmap) 
     {
-        polygonService_.reset();
-        frontierService_.reset();
-        dyn_params_handler_.reset();
-        tf_buffer_.reset();
-        rclcpp::shutdown();
-    }
-
-    void BoundedExploreLayer::onInitialize()
-    {
-        configured_ = false;
-        marked_ = false;
-        current_ = true;
-
-        declareParameter("explore_clear_space", rclcpp::ParameterValue(true));
-        declareParameter("resize_to_boundary", rclcpp::ParameterValue(true));
-        declareParameter("enabled", rclcpp::ParameterValue(true));
-        declareParameter("min_frontier_cluster_size", rclcpp::ParameterValue(1));
-        declareParameter("max_frontier_cluster_size", rclcpp::ParameterValue(20));
-        declareParameter("exploration_mode", rclcpp::ParameterValue(std::string("ours")));
-
-        node = node_.lock();
-        if (!node)
-        {
-            throw std::runtime_error{"Failed to lock node bounded_explore_layer"};
-        }
-
-        frontierSelect_ = std::make_shared<frontier_exploration::FrontierSelectionNode>(node, layered_costmap_->getCostmap());
-        node->get_parameter(name_ + "." + "explore_clear_space", explore_clear_space_);
-        node->get_parameter(name_ + "." + "resize_to_boundary", resize_to_boundary_);
-        node->get_parameter(name_ + "." + "enabled", enabledLayer_);
-        node->get_parameter(name_ + "." + "min_frontier_cluster_size", min_frontier_cluster_size_);
-        node->get_parameter(name_ + "." + "max_frontier_cluster_size", max_frontier_cluster_size_);
-        node->get_parameter(name_ + "." + "exploration_mode", exploration_mode_);
-        if (explore_clear_space_)
-        {
-            default_value_ = NO_INFORMATION;
-        }
-        else
-        {
-            default_value_ = FREE_SPACE;
-        }
-
-        auto custom_qos = rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
-
-        polygonService_ = node->create_service<frontier_msgs::srv::UpdateBoundaryPolygon>(
-            "update_boundary_polygon",
-            std::bind(&BoundedExploreLayer::updateBoundaryPolygonService, this,
-                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-        frontierService_ = node->create_service<frontier_msgs::srv::GetNextFrontier>(
-            "get_next_frontier",
-            std::bind(&BoundedExploreLayer::getNextFrontierService, this,
-                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
-        dyn_params_handler_ = node->add_on_set_parameters_callback(
-            std::bind(
-                &BoundedExploreLayer::dynamicParametersCallback,
-                this, std::placeholders::_1));
-
-        tf_buffer_ = std::make_shared<tf2_ros::Buffer>(node->get_clock());
-        tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
-
-        matchSize();
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::onInitialize", logger_.get_name()));
-
-        internal_node_ = rclcpp::Node::make_shared("layer_node_bel");
+        layered_costmap_ = costmap;
+        internal_node_ = rclcpp::Node::make_shared("bounded_explore_layer");
         internal_executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
         internal_executor_->add_node(internal_node_);
-        client_get_map_data2_ = internal_node_->create_client<slam_msgs::srv::GetMap>("orb_slam3_get_map_data");
 
         std::thread t1([this]() {
             internal_executor_->spin();
         });
         t1.detach();
+
+        internal_node_->declare_parameter("exploration_mode", rclcpp::ParameterValue(std::string("ours")));
+        internal_node_->get_parameter("exploration_mode", exploration_mode_);
+
+        frontierSelect_ = std::make_shared<frontier_exploration::FrontierSelectionNode>(internal_node_, layered_costmap_->getCostmap());
+
+        auto custom_qos = rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
+
+        dyn_params_handler_ = internal_node_->add_on_set_parameters_callback(
+            std::bind(
+                &BoundedExploreLayer::dynamicParametersCallback,
+                this, std::placeholders::_1));
+
+        tf_buffer_ = std::make_shared<tf2_ros::Buffer>(internal_node_->get_clock());
+        tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
+        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::onInitialize", internal_node_->get_logger().get_name()));
+
+        client_get_map_data2_ = internal_node_->create_client<slam_msgs::srv::GetMap>("orb_slam3_get_map_data");
     }
 
-    void BoundedExploreLayer::matchSize()
+    BoundedExploreLayer::~BoundedExploreLayer()
     {
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::matchSize", logger_.get_name()));
-        Costmap2D *master = layered_costmap_->getCostmap();
-        resizeMap(master->getSizeInCellsX(), master->getSizeInCellsY(), master->getResolution(),
-                  master->getOriginX(), master->getOriginY());
+        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::~BoundedExploreLayer()", internal_node_->get_logger().get_name()));
+        delete layered_costmap_;
+        dyn_params_handler_.reset();
+        tf_buffer_.reset();
+        rclcpp::shutdown();
     }
 
     rcl_interfaces::msg::SetParametersResult BoundedExploreLayer::dynamicParametersCallback(
         std::vector<rclcpp::Parameter> parameters)
     {
-        std::lock_guard<Costmap2D::mutex_t> guard(*getMutex());
+        // std::lock_guard<Costmap2D::mutex_t> guard(*getMutex());
         rcl_interfaces::msg::SetParametersResult result;
 
         for (auto parameter : parameters)
@@ -113,20 +66,9 @@ namespace frontier_exploration
                 {
                     explore_clear_space_ = parameter.as_bool();
                 }
-                else if (param_name == "resize_to_boundary")
-                {
-                    resize_to_boundary_ = parameter.as_bool();
-                }
                 else if (param_name == "enabled")
                 {
                     enabledLayer_ = parameter.as_bool();
-                }
-            }
-            else if (param_type == ParameterType::PARAMETER_INTEGER)
-            {
-                if (param_name == "min_frontier_cluster_size")
-                {
-                    min_frontier_cluster_size_ = parameter.as_int();
                 }
             }
         }
@@ -137,7 +79,7 @@ namespace frontier_exploration
 
     SelectionResult BoundedExploreLayer::processOurApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list, geometry_msgs::msg::Point& start_point_w)
     {
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::processOurApproach", logger_.get_name()));
+        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::processOurApproach", internal_node_->get_logger().get_name()));
         auto startTime = std::chrono::high_resolution_clock::now();
 
         // Getting map data
@@ -155,162 +97,121 @@ namespace frontier_exploration
         request_map_data->kf_id_for_landmarks = kf_id_for_landmarks;
         while (!client_get_map_data2_->wait_for_service(std::chrono::seconds(1))) {
             if(!rclcpp::ok()) {
-                RCLCPP_INFO_STREAM(logger_, COLOR_STR("ROS shutdown request in between waiting for service.", logger_.get_name()));
+                RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("ROS shutdown request in between waiting for service.", internal_node_->get_logger().get_name()));
             }
-            RCLCPP_INFO_STREAM(logger_, COLOR_STR("Waiting for get map data service", logger_.get_name()));
+            RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Waiting for get map data service", internal_node_->get_logger().get_name()));
         }
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Got get map data service.", logger_.get_name()));
+        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Got get map data service.", internal_node_->get_logger().get_name()));
         auto result_map_data = client_get_map_data2_->async_send_request(request_map_data);
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer -- Start map data.", logger_.get_name()));
+        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer -- Start map data.", internal_node_->get_logger().get_name()));
         if (result_map_data.wait_for(std::chrono::seconds(20)) == std::future_status::ready)
         {
             response_map_data = result_map_data.get();
             if (response_map_data->data.nodes.empty())
             {
-                RCLCPP_WARN(logger_, "No map data recieved");
+                RCLCPP_WARN(internal_node_->get_logger(), "No map data recieved");
             }
             else
             {
                 // Process the received poses as needed
-                RCLCPP_WARN_STREAM(logger_, COLOR_STR("Map data has " << response_map_data->data.graph.poses.size() << " poses"));
-                RCLCPP_WARN_STREAM(logger_, COLOR_STR("Map data has " << response_map_data->data.graph.poses_id.size() << " pose ids"));
-                RCLCPP_WARN_STREAM(logger_, COLOR_STR("Map data has " << response_map_data->data.nodes.size() << " keyframes"));
+                RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Map data has " << response_map_data->data.graph.poses.size() << " poses"));
+                RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Map data has " << response_map_data->data.graph.poses_id.size() << " pose ids"));
+                RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Map data has " << response_map_data->data.nodes.size() << " keyframes"));
             }
         }
         else
         {
-            RCLCPP_ERROR(logger_, "Failed to call the service map_data.");
+            RCLCPP_ERROR(internal_node_->get_logger(), "Failed to call the service map_data.");
         }
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer -- End map data.", logger_.get_name()));
+        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer -- End map data.", internal_node_->get_logger().get_name()));
         */
         // Select the frontier
         SelectionResult selection_result;
         selection_result = frontierSelect_->selectFrontierOurs(frontier_list, polygon_xy_min_max_, start_point_w, response_map_data, layered_costmap_->getCostmap());
         if (selection_result.success == false)
         {
-            RCLCPP_ERROR(logger_, "The selection result for our method is false!");
+            RCLCPP_ERROR(internal_node_->get_logger(), "The selection result for our method is false!");
             return selection_result;
         }
 
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = (endTime - startTime).count() / 1.0;
-        // RCLCPP_INFO_STREAM(logger_, COLOR_STR("Time taken to plan to all frontiers is: " + duration, logger_.get_name()));
+        // RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Time taken to plan to all frontiers is: " + duration, internal_node_->get_logger().get_name()));
         return selection_result;
     }
 
     std::pair<frontier_msgs::msg::Frontier, bool> BoundedExploreLayer::processGreedyApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list)
     {
         auto selection_result = frontierSelect_->selectFrontierClosest(frontier_list);
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::processGreedyApproach", logger_.get_name()));
+        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::processGreedyApproach", internal_node_->get_logger().get_name()));
         return selection_result;
     }
 
     std::pair<frontier_msgs::msg::Frontier, bool> BoundedExploreLayer::processRandomApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list)
     {
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::processRandomApproach", logger_.get_name()));
+        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::processRandomApproach", internal_node_->get_logger().get_name()));
         auto selection_result = frontierSelect_->selectFrontierRandom(frontier_list);
         return selection_result;
     }
 
-    void BoundedExploreLayer::getNextFrontierService(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req, std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res)
+    void BoundedExploreLayer::visualizeFrontier(std::shared_ptr<GetNextFrontierRequest> requestData)
     {
-        // wait for costmap to get marked with boundary
-        rclcpp::Rate r(10);
-        while (!marked_)
-        {
-            r.sleep();
-        }
+        // Visualize the frontiers only if frontier list is not overriden.
+        frontierSelect_->visualizeFrontier(requestData->frontier_list, requestData->every_frontier, layered_costmap_->getGlobalFrameID());
+        frontierSelect_->exportMapCoverage(polygon_xy_min_max_, startTime_);
+    }
 
-        if (req->start_pose.header.frame_id != layered_costmap_->getGlobalFrameID())
-        {
-            // error out if no transform available
-            std::string tf_error;
-            if (!tf_buffer_->canTransform(layered_costmap_->getGlobalFrameID(), req->start_pose.header.frame_id, tf2::TimePointZero, &tf_error))
-            {
-                RCLCPP_ERROR_STREAM(logger_, "Couldn't transform from map "
-                                                 << " to " << req->start_pose.header.frame_id.c_str());
-                res->success = false;
-            }
-            geometry_msgs::msg::PoseStamped temp_pose = req->start_pose;
-            tf_buffer_->transform(temp_pose, req->start_pose, layered_costmap_->getGlobalFrameID());
-        }
-
-        std::vector<frontier_msgs::msg::Frontier> frontier_list;
-        std::vector<std::vector<double>> every_frontier;
-        frontierSelect_->setFrontierBlacklist(req->prohibited_frontiers);
-        if (req->override_frontier_list == false)
-        {
-            RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::getNextFrontierService", logger_.get_name()));
-            RCLCPP_INFO_STREAM(logger_, COLOR_STR("Get next frontier called from within.", logger_.get_name()));
-            // initialize frontier search implementation
-            frontier_exploration::FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_);
-            // get list of frontiers from search implementation
-            //  Initialize zero point to start search.
-            geometry_msgs::msg::Point search_start_pose;
-            search_start_pose = req->start_pose.pose.position;
-            frontier_list = frontierSearch.searchFrom(search_start_pose);
-            every_frontier = frontierSearch.getAllFrontiers();
-            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Clusterred frontier size: " + std::to_string(frontier_list.size()), logger_.get_name()));
-
-            // Visualize the frontiers only if frontier list is not overriden.
-            frontierSelect_->visualizeFrontier(frontier_list, every_frontier, layered_costmap_->getGlobalFrameID());
-            frontierSelect_->exportMapCoverage(polygon_xy_min_max_, startTime_);
-        }
-        if (req->override_frontier_list == true)
-        {
-            frontier_list = req->frontier_list_to_override;
-            RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::getNextFrontierService another robot", logger_.get_name()));
-            RCLCPP_ERROR_STREAM(logger_, "OVERRIDE LIST SIZE: " << req->frontier_list_to_override.size());
-        }
-
+    bool BoundedExploreLayer::getNextFrontier(std::shared_ptr<GetNextFrontierRequest> requestData, std::shared_ptr<GetNextFrontierResponse> resultData)
+    {
+        frontierSelect_->setFrontierBlacklist(requestData->prohibited_frontiers);
         // Select the frontier (Modify this for different algorithms)
         frontier_msgs::msg::Frontier selected;
         if (exploration_mode_ == "greedy")
         {
-            auto selection_result = BoundedExploreLayer::processGreedyApproach(frontier_list);
+            auto selection_result = BoundedExploreLayer::processGreedyApproach(requestData->frontier_list);
             if (selection_result.second == false)
             {
-                res->success = false;
-                return;
+                resultData->success = false;
+                return resultData->success;
             }
-            res->success = true;
-            res->next_frontier = selection_result.first;
+            resultData->success = true;
+            resultData->next_frontier = selection_result.first;
         }
 
         else if (exploration_mode_ == "random")
         {
-            auto selection_result = BoundedExploreLayer::processRandomApproach(frontier_list);
+            auto selection_result = BoundedExploreLayer::processRandomApproach(requestData->frontier_list);
             if (selection_result.second == false)
             {
-                res->success = false;
-                return;
+                resultData->success = false;
+                return resultData->success;
             }
-            res->success = true;
-            res->next_frontier = selection_result.first;
+            resultData->success = true;
+            resultData->next_frontier = selection_result.first;
         }
 
         else if (exploration_mode_ == "ours")
         {
             geometry_msgs::msg::Point start_point_w;
-            start_point_w.x = req->start_pose.pose.position.x;
-            start_point_w.y = req->start_pose.pose.position.y;
-            auto selection_result = BoundedExploreLayer::processOurApproach(frontier_list, start_point_w);
+            start_point_w.x = requestData->start_pose.pose.position.x;
+            start_point_w.y = requestData->start_pose.pose.position.y;
+            auto selection_result = BoundedExploreLayer::processOurApproach(requestData->frontier_list, start_point_w);
             if (selection_result.success == false)
             {
-                res->success = false;
-                return;
+                resultData->success = false;
+                return resultData->success;
             }
-            res->success = true;
+            resultData->success = true;
             selected = selection_result.frontier;
             // Uncomment the next line if you are using information acquired after reaching. The pose is important in that case.
-            res->next_frontier = selected;
-            res->next_frontier.best_orientation = selection_result.orientation;
+            resultData->next_frontier = selected;
+            resultData->next_frontier.best_orientation = selection_result.orientation;
             std::vector<frontier_msgs::msg::Frontier> frontiers_list;
             std::vector<double> frontier_costs;
             std::vector<double> frontier_distances;
             std::vector<double> frontier_arrival_information;
             std::vector<double> frontier_path_information;
-            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Selection result's frontier costs size: " + std::to_string(selection_result.frontier_costs.size()), logger_.get_name()));
+            RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Selection result's frontier costs size: " + std::to_string(selection_result.frontier_costs.size()), internal_node_->get_logger().get_name()));
             std::vector<std::pair<frontier_exploration::FrontierWithMetaData, double>> frontier_costs_vector;
             for (auto pair : selection_result.frontier_costs)
             {
@@ -318,13 +219,13 @@ namespace frontier_exploration
             }
             frontier_exploration::FrontierU1ComparatorUnique frontier_u1_comp;
             std::sort(frontier_costs_vector.begin(), frontier_costs_vector.end(), frontier_u1_comp);
-            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Making list", logger_.get_name()));
+            RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Making list", internal_node_->get_logger().get_name()));
             for (auto pair : frontier_costs_vector)
             {
                 // Extract key and value
                 auto key = pair.first.frontier_; // frontier with meta data
                 auto value = pair.second;        // cost.
-                // RCLCPP_WARN_STREAM(logger_, COLOR_STR("UID: " + std::to_string(key.unique_id) + " Cost: " + std::to_string(value), logger_.get_name()));
+                // RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("UID: " + std::to_string(key.unique_id) + " Cost: " + std::to_string(value), internal_node_->get_logger().get_name()));
                 key.best_orientation = nav2_util::geometry_utils::orientationAroundZAxis(pair.first.theta_s_star_);
                 // Push them into respective vectors
                 frontiers_list.push_back(key);
@@ -332,178 +233,68 @@ namespace frontier_exploration
                 frontier_distances.push_back(pair.first.path_length_);
                 frontier_arrival_information.push_back(pair.first.information_);
             }
-            res->frontier_list = frontiers_list;
-            res->frontier_costs = frontier_costs;
-            res->frontier_distances = frontier_distances;
-            res->frontier_arrival_information = frontier_arrival_information;
+            resultData->frontier_list = frontiers_list;
+            resultData->frontier_costs = frontier_costs;
+            resultData->frontier_distances = frontier_distances;
+            resultData->frontier_arrival_information = frontier_arrival_information;
         }
 
         else
         {
-            RCLCPP_ERROR(logger_, "Invalid mode of exploration");
+            RCLCPP_ERROR(internal_node_->get_logger(), "Invalid mode of exploration");
             rclcpp::shutdown();
         }
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Res frontier costs size: " + std::to_string(res->frontier_costs.size()), logger_.get_name()));
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Res frontier list size: " + std::to_string(res->frontier_list.size()), logger_.get_name()));
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + std::to_string(req->override_frontier_list), logger_.get_name()));
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + std::to_string(req->override_frontier_list), logger_.get_name()));
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + std::to_string(req->override_frontier_list), logger_.get_name()));
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Is the list overriden? : " + std::to_string(req->override_frontier_list), logger_.get_name()));
-
-        // set goal pose to next frontier
-        // res->next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
-        // res->next_frontier.header.stamp = rclcpp::Clock().now();
+        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Res frontier costs size: " + std::to_string(resultData->frontier_costs.size()), internal_node_->get_logger().get_name()));
+        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Res frontier list size: " + std::to_string(resultData->frontier_list.size()), internal_node_->get_logger().get_name()));
+        return resultData->success;
     }
 
-    void BoundedExploreLayer::updateBoundaryPolygonService(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Request> req, std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Response> res)
+    bool BoundedExploreLayer::updateBoundaryPolygon(geometry_msgs::msg::PolygonStamped& explore_boundary)
     {
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("BoundedExploreLayer::updateBoundaryPolygonService", logger_.get_name()));
-        // clear existing boundary, if any
-        polygon_.points.clear();
-        std::string tf_error;
-        // error if no transform available between polygon and costmap
-        if (!tf_buffer_->canTransform(layered_costmap_->getGlobalFrameID(), req->explore_boundary.header.frame_id, tf2::TimePointZero, &tf_error))
-        {
-            RCLCPP_ERROR_STREAM(logger_, "Couldn't transform from " << layered_costmap_->getGlobalFrameID().c_str() << " to " << req->explore_boundary.header.frame_id.c_str());
-            res->success = false;
-        }
+        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::updateBoundaryPolygonService", internal_node_->get_logger().get_name()));
 
         // Transform all points of boundary polygon into costmap frame
         geometry_msgs::msg::PointStamped in;
-        geometry_msgs::msg::PointStamped out;
-        in.header = req->explore_boundary.header;
-        for (const auto &point32 : req->explore_boundary.polygon.points)
+        in.header = explore_boundary.header;
+        for (const auto &point32 : explore_boundary.polygon.points)
         {
             in.point = nav2_costmap_2d::toPoint(point32);
-            tf_buffer_->transform(in, out, layered_costmap_->getGlobalFrameID());
-            polygon_.points.push_back(nav2_costmap_2d::toPoint32(out.point));
+            polygon_.points.push_back(nav2_costmap_2d::toPoint32(in.point));
         }
 
         // if empty boundary provided, set to whole map
         if (polygon_.points.empty())
         {
             geometry_msgs::msg::Point32 temp;
-            temp.x = getOriginX();
-            temp.y = getOriginY();
+            temp.x = layered_costmap_->getCostmap()->getOriginX();
+            temp.y = layered_costmap_->getCostmap()->getOriginY();
             polygon_.points.push_back(temp);
-            temp.y = getSizeInMetersY();
+            temp.y = layered_costmap_->getCostmap()->getSizeInMetersY();
             polygon_.points.push_back(temp);
-            temp.x = getSizeInMetersX();
+            temp.x = layered_costmap_->getCostmap()->getSizeInMetersX();
             polygon_.points.push_back(temp);
-            temp.y = getOriginY();
+            temp.y = layered_costmap_->getCostmap()->getOriginY();
             polygon_.points.push_back(temp);
         }
 
-        if (resize_to_boundary_)
+        // Find map size and origin by finding min/max points of polygon
+        double min_x_polygon = std::numeric_limits<double>::infinity();
+        double min_y_polygon = std::numeric_limits<double>::infinity();
+        double max_x_polygon = -std::numeric_limits<double>::infinity(); // observe the minus here
+        double max_y_polygon = -std::numeric_limits<double>::infinity(); // observe the minus here
+
+        for (const auto &point : polygon_.points)
         {
-            updateOrigin(0, 0);
-
-            // Find map size and origin by finding min/max points of polygon
-            double min_x_polygon = std::numeric_limits<double>::infinity();
-            double min_y_polygon = std::numeric_limits<double>::infinity();
-            double max_x_polygon = -std::numeric_limits<double>::infinity();
-            double max_y_polygon = -std::numeric_limits<double>::infinity();
-
-            for (const auto &point : polygon_.points)
-            {
-                min_x_polygon = std::min(min_x_polygon, (double)point.x);
-                min_y_polygon = std::min(min_y_polygon, (double)point.y);
-                max_x_polygon = std::max(max_x_polygon, (double)point.x);
-                max_y_polygon = std::max(max_y_polygon, (double)point.y);
-            }
-
-            // resize the costmap to polygon boundaries, don't change resolution
-            int size_x, size_y;
-            worldToMapNoBounds(max_x_polygon - min_x_polygon, max_y_polygon - min_y_polygon, size_x, size_y);
-            matchSize();
-
-            polygon_xy_min_max_.push_back(min_x_polygon);
-            polygon_xy_min_max_.push_back(min_y_polygon);
-            polygon_xy_min_max_.push_back(max_x_polygon);
-            polygon_xy_min_max_.push_back(max_y_polygon);
+            min_x_polygon = std::min(min_x_polygon, (double)point.x);
+            min_y_polygon = std::min(min_y_polygon, (double)point.y);
+            max_x_polygon = std::max(max_x_polygon, (double)point.x);
+            max_y_polygon = std::max(max_y_polygon, (double)point.y);
         }
 
-        configured_ = true;
-        marked_ = false;
-        res->success = true;
-    }
-
-    void BoundedExploreLayer::reset()
-    {
-        // reset costmap_ char array to default values
-        marked_ = false;
-        configured_ = false;
-        memset(costmap_, default_value_, size_x_ * size_y_ * sizeof(unsigned char));
-    }
-
-    void BoundedExploreLayer::updateBounds(double robot_x, double robot_y, double robot_yaw, double *min_x,
-                                           double *min_y, double *max_x, double *max_y)
-    {
-
-        // check if layer is enabled and configured with a boundary
-        if (!enabledLayer_ || !configured_)
-        {
-            return;
-        }
-
-        *min_x = -std::numeric_limits<float>::max();
-        *max_x = std::numeric_limits<float>::max();
-        *min_y = -std::numeric_limits<float>::max();
-        *max_y = std::numeric_limits<float>::max();
-    }
-
-    void BoundedExploreLayer::updateCosts(nav2_costmap_2d::Costmap2D &master_grid, int min_i, int min_j, int max_i, int max_j)
-    {
-        // check if layer is enabled and configured with a boundary
-        if (!enabledLayer_ || !configured_)
-        {
-            return;
-        }
-
-        current_ = true;
-
-        // draw lines between each point in polygon
-        MarkCell marker(costmap_, LETHAL_OBSTACLE);
-
-        // TODO (suchetan): Check if cells are actually marked on the costmap.
-        // circular iterator
-        for (int i = 0, j = polygon_.points.size() - 1; i < polygon_.points.size(); j = i++)
-        {
-            int x_1, y_1, x_2, y_2;
-            worldToMapEnforceBounds(polygon_.points[i].x, polygon_.points[i].y, x_1, y_1);
-            worldToMapEnforceBounds(polygon_.points[j].x, polygon_.points[j].y, x_2, y_2);
-
-            raytraceLine(marker, x_1, y_1, x_2, y_2);
-        }
-        // update the master grid from the internal costmap
-        mapUpdateKeepObstacles(master_grid, min_i, min_j, max_i, max_j);
-    }
-
-    void BoundedExploreLayer::mapUpdateKeepObstacles(nav2_costmap_2d::Costmap2D &master_grid, int min_i, int min_j, int max_i, int max_j)
-    {
-        if (!enabledLayer_)
-            return;
-        if (marked_ == false)
-        {
-            unsigned char *master = master_grid.getCharMap();
-            unsigned int span = master_grid.getSizeInCellsX();
-            for (int j = min_j; j < max_j; j++)
-            {
-                unsigned int it = span * j + min_i;
-                for (int i = min_i; i < max_i; i++)
-                {
-                    // only update master grid if local costmap cell is lethal/higher value, and is not overwriting a lethal obstacle in the master grid
-                    if (master[it] != LETHAL_OBSTACLE && (costmap_[it] == LETHAL_OBSTACLE || costmap_[it] > master[it]))
-                    {
-                        master[it] = costmap_[it];
-                    }
-                    it++;
-                }
-            }
-            marked_ = true;
-        }
+        polygon_xy_min_max_.push_back(min_x_polygon);
+        polygon_xy_min_max_.push_back(min_y_polygon);
+        polygon_xy_min_max_.push_back(max_x_polygon);
+        polygon_xy_min_max_.push_back(max_y_polygon);
+        return true;
     }
 }
-
-#include <pluginlib/class_list_macros.hpp>
-PLUGINLIB_EXPORT_CLASS(frontier_exploration::BoundedExploreLayer, nav2_costmap_2d::Layer)

@@ -4,7 +4,6 @@
 #include <utility>
 
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp_lifecycle/lifecycle_node.hpp>
 #include <rclcpp/parameter_events_filter.hpp>
 
 #include <nav2_costmap_2d/layer.hpp>
@@ -27,8 +26,6 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include <frontier_msgs/msg/frontier.hpp>
-#include <frontier_msgs/srv/update_boundary_polygon.hpp>
-#include <frontier_msgs/srv/get_next_frontier.hpp>
 #include <frontier_msgs/srv/get_frontier_costs.hpp>
 
 #include <frontier_exploration/frontier_selection.hpp>
@@ -41,53 +38,37 @@
 
 namespace frontier_exploration
 {
+
+    struct GetNextFrontierRequest
+    {
+        geometry_msgs::msg::PoseStamped start_pose;
+        std::vector<frontier_msgs::msg::Frontier> frontier_list;
+        std::vector<std::vector<double>> every_frontier;
+        std::vector<frontier_msgs::msg::Frontier> prohibited_frontiers;       
+    };
+
+    struct GetNextFrontierResponse
+    {
+        bool success;                                           
+        frontier_msgs::msg::Frontier next_frontier;             
+        std::vector<frontier_msgs::msg::Frontier> frontier_list;
+        std::vector<double> frontier_costs;                     
+        std::vector<double> frontier_distances;                 
+        std::vector<double> frontier_arrival_information;       
+        std::vector<double> frontier_path_information;          
+    };
+
     /**
      * @brief costmap_2d layer plugin that holds the state for a bounded frontier exploration task.
      * Manages the boundary polygon, superimposes the polygon on the overall exploration costmap,
      * and processes costmap to find next frontier to explore.
      */
-    class BoundedExploreLayer : public nav2_costmap_2d::Layer, public nav2_costmap_2d::Costmap2D
+    class BoundedExploreLayer
     {
     public:
-        BoundedExploreLayer();
+        BoundedExploreLayer(nav2_costmap_2d::LayeredCostmap* costmap);
         ~BoundedExploreLayer();
 
-        /**
-         * @brief Loads default values and initialize exploration costmap.
-         */
-        virtual void onInitialize();
-
-        /**
-         * @brief Calculate bounds of costmap window to update
-         */
-        virtual void updateBounds(double origin_x, double origin_y, double origin_yaw, double *polygon_min_x, double *polygon_min_y, double *polygon_max_x,
-                                  double *polygon_max_y);
-
-        /**
-         * @brief Update requested costmap window
-         */
-        virtual void updateCosts(nav2_costmap_2d::Costmap2D &master_grid, int min_i, int min_j, int max_i, int max_j);
-
-        /**
-         * @brief Match dimensions and origin of parent costmap
-         */
-        void matchSize() override;
-
-        /**
-         * @brief If clearing operations should be processed on this layer or not
-         */
-        virtual bool isClearable() { return false; }
-
-        /**
-         * @brief Reset exploration progress
-         */
-        virtual void reset();
-
-        // ROS SERVICES
-        rclcpp::Service<frontier_msgs::srv::UpdateBoundaryPolygon>::SharedPtr polygonService_;
-        rclcpp::Service<frontier_msgs::srv::GetNextFrontier>::SharedPtr frontierService_;
-
-    protected:
         /**
          * @brief ROS Service wrapper for updateBoundaryPolygon
          * @param req Service request
@@ -98,10 +79,7 @@ namespace frontier_exploration
          *   using a list of vertices specifying its boundary. The explore_boundary field is of type geometry_msgs::PolygonStamped,
          *   which is a standard ROS message type for representing a polygon in 2D space.
          */
-        void updateBoundaryPolygonService(
-            const std::shared_ptr<rmw_request_id_t> request_header,
-            const std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Request> req,
-            std::shared_ptr<frontier_msgs::srv::UpdateBoundaryPolygon::Response> res);
+        bool updateBoundaryPolygon(geometry_msgs::msg::PolygonStamped& explore_boundary);
 
         /**
          * @brief ROS Service wrapper for getNextFrontier
@@ -119,10 +97,11 @@ namespace frontier_exploration
          * - frontier_list: An array of Frontier messages representing the updated frontier list after exploration.
          * - frontier_costs: An array of floating-point values representing the costs associated with each frontier.
          */
-        void getNextFrontierService(
-            const std::shared_ptr<rmw_request_id_t> request_header,
-            const std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Request> req,
-            std::shared_ptr<frontier_msgs::srv::GetNextFrontier::Response> res);
+        bool getNextFrontier(std::shared_ptr<GetNextFrontierRequest> requestData, std::shared_ptr<GetNextFrontierResponse> resultData);
+    
+        void visualizeFrontier(std::shared_ptr<GetNextFrontierRequest> requestData);
+
+    protected:
 
         /**
          * @brief A function the processes the frontier list and selects the best frontier using the FIT-SLAM approach.
@@ -166,12 +145,6 @@ namespace frontier_exploration
             std::vector<frontier_msgs::msg::Frontier> &frontier_list);
 
         /**
-         * @brief Update the map with exploration boundary data
-         * @param master_grid Reference to master costmap
-         */
-        void mapUpdateKeepObstacles(nav2_costmap_2d::Costmap2D &master_grid, int min_i, int min_j, int max_i, int max_j);
-
-        /**
          * @brief Callback executed when a parameter change is detected
          * @param parameters The parameters that are sent for dynamic monitoring.
          */
@@ -179,8 +152,6 @@ namespace frontier_exploration
 
     private:
         geometry_msgs::msg::Polygon polygon_;    ///< A Polygon representing the boundary polygon for exploration. This is used to set the vector of polygon points.
-        int min_frontier_cluster_size_;          ///< Minimum size of a frontier cluster.
-        int max_frontier_cluster_size_;
         std::string exploration_mode_;           ///< String representing the exploration mode. {Ours, Greedy, Random}
         std::vector<double> polygon_xy_min_max_; ///< Polygon points for the boundary.
         bool explore_clear_space_;               ///< Used to set to explore the clear space or not. Sets the default_value_ variable in the costmap.
@@ -189,8 +160,6 @@ namespace frontier_exploration
 
         // COSTMAP INTERNAL
         bool enabledLayer_;
-        bool configured_, marked_;
-        bool resize_to_boundary_;
         std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
         std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
@@ -216,6 +185,7 @@ namespace frontier_exploration
          */
         rclcpp::Node::SharedPtr internal_node_;
         std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> internal_executor_;
+        nav2_costmap_2d::LayeredCostmap* layered_costmap_;
     };
 
 }

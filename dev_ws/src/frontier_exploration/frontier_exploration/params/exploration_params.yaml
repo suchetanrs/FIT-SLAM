@@ -3,11 +3,10 @@ explore_server:
     frequency: 15.0
     goal_aliasing: 0.0
     retry_count: 20
-    config: ["48.0", "60.0", "48.0", "0.25", "0.25", "0.25", "0.25", "60.0"]
-    nav2_goal_timeout_sec: 1000 #secs
+    config: ["48.0", "60.0", "48.0", "1.25", "1.25", "1.25", "1.25", "60.0"]
+    nav2_goal_timeout_sec: 100 #secs
     use_traversability: false
     use_custom_sim: false
-    frontier_travel_point: closest
     # robot_namespaces: ['/scout_1', '/scout_2']
     robot_namespaces: ['/scout_2']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']
@@ -15,8 +14,12 @@ explore_server:
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4', '/scout_5']
     wait_for_other_robot_costs: true # if false, will not give result to other robots if server is busy
     process_other_robots: true #true if you want to do multirobot
-    use_pose_from_multirobot_allocator: true #if true, uses the pose from multirobot allocator, else uses the pose given by u1 u2 computation
-
+    use_pose_from_multirobot_allocator: false #if true, uses the pose from multirobot allocator, else uses the pose given by u1 u2 computation
+    min_frontier_cluster_size: 5
+    max_frontier_cluster_size: 21
+    frontier_match_xy_threshold: 1.0
+    frontier_match_yaw_threshold: 0.40
+    
 polygon_point_publisher:
   ros__parameters:
     square_half_side_length: 15.0
@@ -37,32 +40,38 @@ localization_pose_sub_node:
     exploration_mode: ours
     counter: 031150
 
+bounded_explore_layer:
+  ros__parameters:
+    resize_to_boundary: true
+    exploration_mode: ours
+    explore_clear_space: false
+    use_traversability: false
+
 explore_costmap:
   explore_costmap:
     ros__parameters:
-      update_frequency: 1.0
-      publish_frequency: 1.0
+      update_frequency: 5.0
+      publish_frequency: 5.0
       global_frame: map
       robot_base_frame: base_link
-      use_sim_time: True
+      use_sim_time: False
       resolution: 0.05
       track_unknown_space: true
-      plugins: ["static_layer", "bounded_explore_layer"]
+      plugins: ["static_layer", "inflation_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         # map_topic: /traversability_thresholded
         map_topic: /simulation_costmap
         map_subscribe_transient_local: True
-      bounded_explore_layer:
-        plugin: "frontier_exploration/BoundedExploreLayer"
-        enabled: true
-        resize_to_boundary: true
-        exploration_mode: ours
-        explore_clear_space: false
-        min_frontier_cluster_size: 5
-        max_frontier_cluster_size: 21
-        use_traversability: false
-      always_send_full_costmap: false
+        enabled: True
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: True
+        inflation_radius: 0.50
+        cost_scaling_factor: 6.0
+        inflate_unknown: false
+        inflate_around_unknown: false
+      always_send_full_costmap: True
 
 # goal_allocation_server:
 #   ros__parameters:

@@ -1,0 +1,4 @@
+string requesting_robot_name
+---
+bool goal_active
+geometry_msgs/PoseStamped current_goal

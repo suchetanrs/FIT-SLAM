@@ -97,27 +97,17 @@ inline std::string COLOR_STR(const std::string &str, const char *robotName)
 
 inline bool equateFrontiers(frontier_msgs::msg::Frontier& f1, frontier_msgs::msg::Frontier& f2, bool printValues)
 {
-    if (f1.initial != f2.initial || 
-        f1.centroid != f2.centroid || 
-        f1.middle != f2.middle || 
+    if (f1.goal_point != f2.goal_point ||
         f1.size != f2.size) {
         if(printValues)
         {
-            std::cout << "list1.initial: " << f1.initial.x << std::endl;
-            std::cout << "list1.initial: " << f1.initial.y << std::endl;
-            std::cout << "list1.centroid: " << f1.centroid.x << std::endl;
-            std::cout << "list1.centroid: " << f1.centroid.y << std::endl;
-            std::cout << "list1.middle: " << f1.middle.x << std::endl;
-            std::cout << "list1.middle: " << f1.middle.y << std::endl;
-            std::cout << "list1.middle: " << f1.min_distance << std::endl;
+            std::cout << "list1.goal_point: " << f1.goal_point.x << std::endl;
+            std::cout << "list1.goal_point: " << f1.goal_point.y << std::endl;
+            std::cout << "list1.min_distance: " << f1.min_distance << std::endl;
             std::cout << "********************" << std::endl;
-            std::cout << "list2.initial: " << f2.initial.x << std::endl;
-            std::cout << "list2.initial: " << f2.initial.y << std::endl;
-            std::cout << "list2.centroid: " << f2.centroid.x << std::endl;
-            std::cout << "list2.centroid: " << f2.centroid.y << std::endl;
-            std::cout << "list2.middle: " << f2.middle.x << std::endl;
-            std::cout << "list2.middle: " << f2.middle.y << std::endl;
-            std::cout << "list2.middle: " << f2.min_distance << std::endl;
+            std::cout << "list2.goal_point: " << f2.goal_point.x << std::endl;
+            std::cout << "list2.goal_point: " << f2.goal_point.y << std::endl;
+            std::cout << "list2.min_distance: " << f2.min_distance << std::endl;
             std::cout << "list1.size: " << f1.size << std::endl;
             std::cout << "list2.size: " << f2.size << std::endl;
             std::cout << "********************" << std::endl;
@@ -138,22 +128,12 @@ struct FrontierHash
     {
         // Calculate hash based on some combination of member variables
         size_t hash = 0;
-        // hash = std::hash<double>()(key.initial.x) ^
-        //         std::hash<double>()(key.initial.y) ^
-        //         std::hash<double>()(key.centroid.x) ^
-        //         std::hash<double>()(key.centroid.y) ^
-        //         std::hash<double>()(key.middle.x) ^
-        //         std::hash<double>()(key.middle.y) ^
-        //         std::hash<uint32_t>()(key.size) ^
+        // hash =     std::hash<uint32_t>()(key.size) ^
         //         std::hash<double>()(key.min_distance) ^
         //         std::hash<double>()(key.unique_id);
 
-        hash = std::hash<double>()(key.initial.x) ^
-                std::hash<double>()(key.initial.y);
-                // std::hash<double>()(key.centroid.x) ^
-                // std::hash<double>()(key.centroid.y) ^
-                // std::hash<double>()(key.middle.x) ^
-                // std::hash<double>()(key.middle.y) ^
+        hash = std::hash<double>()(key.goal_point.x) ^
+                std::hash<double>()(key.goal_point.y);
                 // std::hash<uint32_t>()(key.size) ^
                 // std::hash<double>()(key.min_distance) ^
                 // std::hash<double>()(key.unique_id);
@@ -164,18 +144,35 @@ struct FrontierHash
 // Custom equality function
 struct FrontierEquality {
     bool operator()(const frontier_msgs::msg::Frontier& lhs, const frontier_msgs::msg::Frontier& rhs) const {
-        // return lhs.initial == rhs.initial &&
-        //         lhs.centroid == rhs.centroid &&
-        //         lhs.middle == rhs.middle &&
-        //         lhs.size == rhs.size &&
+        // return  lhs.size == rhs.size &&
         //         lhs.min_distance == rhs.min_distance &&
         //         lhs.unique_id == rhs.unique_id;
-        return lhs.initial == rhs.initial;
+        return lhs.goal_point == rhs.goal_point;
     }
 };
 
-inline double generateUID(frontier_msgs::msg::Frontier& output)
+inline size_t generateUID(frontier_msgs::msg::Frontier& output)
 {
-    return (output.initial.x * output.initial.y + output.centroid.x * output.centroid.y + output.middle.x - output.middle.y) - output.min_distance;
+    std::hash<double> hash_fn;
+    
+    // Hash each double value
+    std::size_t hash1 = hash_fn(output.goal_point.x);
+    std::size_t hash2 = hash_fn(output.goal_point.y);
+
+    // return hash1 ^ (hash2 << 1);
+    return hash1 ^ (hash2 << 1);
+}
+
+inline size_t generateUID(std::vector<double>& output)
+{
+    std::hash<double> hash_fn;
+    
+    // Hash each double value
+    std::size_t hash1 = hash_fn(output[0]);
+    std::size_t hash2 = hash_fn(output[1]);
+
+    return hash1 ^ (hash2 << 1);
+    // return output[0] * output[1] + (output[1]) - output[0]
+    // return output[0] + output[1];
 }
 #endif // COLOR_H

@@ -79,9 +79,7 @@ namespace frontier_exploration
                             // std::cout << "PUSHING NEW FRONTIER TO LIST: UID: " << curr_frontier.unique_id << std::endl;
                             // std::cout << "Size: " << curr_frontier.size << std::endl;
                             // std::cout << "Minimum Distance: " << curr_frontier.min_distance << std::endl;
-                            // std::cout << "Initial Point: (" << curr_frontier.initial.x << ", " << curr_frontier.initial.y << ", " << curr_frontier.initial.z << ")" << std::endl;
-                            // std::cout << "Centroid Point: (" << curr_frontier.centroid.x << ", " << curr_frontier.centroid.y << ", " << curr_frontier.centroid.z << ")" << std::endl;
-                            // std::cout << "Middle Point: (" << curr_frontier.middle.x << ", " << curr_frontier.middle.y << ", " << curr_frontier.middle.z << ")" << std::endl;
+                            // std::cout << "Goal Point: (" << curr_frontier.goal_point.x << ", " << curr_frontier.goal_point.y << ")" << std::endl;
                             frontier_list.push_back(curr_frontier);
                         }
                     }
@@ -96,17 +94,17 @@ namespace frontier_exploration
     {
         frontier_msgs::msg::Frontier output;
         // initialize frontier structure
-        output.centroid.x = 0.0;
-        output.centroid.y = 0.0;
-        output.middle.x = 0.0;
-        output.middle.y = 0.0;
+        output.goal_point.x = 0.0;
+        output.goal_point.y = 0.0;
         output.size = 1;
         output.min_distance = std::numeric_limits<double>::infinity();
         std::vector<frontier_msgs::msg::Frontier> calculated_frontiers;
         // record initial contact point for frontier
         unsigned int ix, iy;
         costmap_.indexToCells(initial_cell, ix, iy);
-        costmap_.mapToWorld(ix, iy, output.initial.x, output.initial.y);
+        #ifdef FRONTIER_POINT_INITIAL
+            costmap_.mapToWorld(ix, iy, output.goal_point.x, output.goal_point.y);
+        #endif
 
         // push initial gridcell onto queue
         std::queue<unsigned int> bfs;
@@ -147,17 +145,21 @@ namespace frontier_exploration
                     // update frontier size
                     output.size++;
 
+                    #ifdef FRONTIER_POINT_CENTROID
                     // update centroid of frontier
-                    output.centroid.x += wx;
-                    output.centroid.y += wy;
+                    output.goal_point.x += wx;
+                    output.goal_point.y += wy;
+                    #endif
 
                     // determine frontier's distance from robot, going by closest gridcell to robot
                     double distance = sqrt(pow((double(reference_x) - double(wx)), 2.0) + pow((double(reference_y) - double(wy)), 2.0));
                     if (distance < output.min_distance)
                     {
                         output.min_distance = distance;
-                        output.middle.x = wx;
-                        output.middle.y = wy;
+                        #ifdef FRONTIER_POINT_MIDDLE
+                        output.goal_point.x = wx;
+                        output.goal_point.y = wy;
+                        #endif
                     }
 
                     // add to queue for breadth first search
@@ -166,25 +168,31 @@ namespace frontier_exploration
                     if (output.size > max_frontier_cluster_size_)
                     {
                         // push to output vector
-                        output.centroid.x /= output.size;
-                        output.centroid.y /= output.size;
+                        #ifdef FRONTIER_POINT_CENTROID
+                        output.goal_point.x /= output.size;
+                        output.goal_point.y /= output.size;
+                        #endif
                         output.unique_id = generateUID(output);
                         // std::cout << "1PUSHING NEW FRONTIER TO LIST: UID: " << output.unique_id << std::endl;
                         // std::cout << "1Size: " << output.size << std::endl;
                         // std::cout << "1Minimum Distance: " << output.min_distance << std::endl;
-                        // std::cout << "1Initial Point: (" << output.initial.x << ", " << output.initial.y << ", " << output.initial.z << ")" << std::endl;
-                        // std::cout << "1Centroid Point: (" << output.centroid.x << ", " << output.centroid.y << ", " << output.centroid.z << ")" << std::endl;
-                        // std::cout << "1Middle Point: (" << output.middle.x << ", " << output.middle.y << ", " << output.middle.z << ")" << std::endl;
+                        // std::cout << "1Initial Point: (" << output.goal_point.x << ", " << output.goal_point.y << ", " << output.goal_point.z << ")" << std::endl;
                         // std::cout << "**************" << std::endl;
                         calculated_frontiers.push_back(output);
 
                         // reset frontier structure
-                        output.centroid.x = 0.0;
-                        output.centroid.y = 0.0;
-                        output.middle.x = 0.0;
-                        output.middle.y = 0.0;
-                        output.initial.x = wx;
-                        output.initial.y = wy;
+                        #ifdef FRONTIER_POINT_CENTROID
+                        output.goal_point.x = 0.0;
+                        output.goal_point.y = 0.0;
+                        #endif
+                        #ifdef FRONTIER_POINT_MIDDLE
+                        output.goal_point.x = 0.0;
+                        output.goal_point.y = 0.0;
+                        #endif
+                        #ifdef FRONTIER_POINT_INITIAL
+                        output.goal_point.x = wx;
+                        output.goal_point.y = wy;
+                        #endif
                         output.size = 1;
                         output.min_distance = std::numeric_limits<double>::infinity();
                     }
@@ -193,15 +201,15 @@ namespace frontier_exploration
         }
 
         // average out frontier centroid
-        output.centroid.x /= output.size;
-        output.centroid.y /= output.size;
+        #ifdef FRONTIER_POINT_CENTROID
+        output.goal_point.x /= output.size;
+        output.goal_point.y /= output.size;
+        #endif
         output.unique_id = generateUID(output);
         // std::cout << "1PUSHING NEW FRONTIER TO LIST: UID: " << output.unique_id << std::endl;
         // std::cout << "1Size: " << output.size << std::endl;
         // std::cout << "1Minimum Distance: " << output.min_distance << std::endl;
-        // std::cout << "1Initial Point: (" << output.initial.x << ", " << output.initial.y << ", " << output.initial.z << ")" << std::endl;
-        // std::cout << "1Centroid Point: (" << output.centroid.x << ", " << output.centroid.y << ", " << output.centroid.z << ")" << std::endl;
-        // std::cout << "1Middle Point: (" << output.middle.x << ", " << output.middle.y << ", " << output.middle.z << ")" << std::endl;
+        // std::cout << "1Initial Point: (" << output.goal_point.x << ", " << output.goal_point.y << ", " << output.goal_point.z << ")" << std::endl;
         // std::cout << "**************====================" << std::endl;
         calculated_frontiers.push_back(output);
         return calculated_frontiers;
@@ -233,81 +241,4 @@ namespace frontier_exploration
         return every_frontier_list;
     }
 
-}
-
-#include "nav_msgs/msg/occupancy_grid.hpp"
-#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
-#include "visualization_msgs/msg/marker_array.hpp"
-
-nav2_costmap_2d::Costmap2D costmap;
-int frontier_count = 0;
-
-rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_initial;
-rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_centroid;
-
-void processFrontierListInitial(const std::vector<frontier_msgs::msg::Frontier> &frontier_list)
-{
-    visualization_msgs::msg::MarkerArray marker_array;
-
-    int marker_id = 0;
-    for (const auto &frontier : frontier_list)
-    {
-        visualization_msgs::msg::Marker marker;
-        marker.header.frame_id = "map";
-        marker.header.stamp = rclcpp::Clock().now();
-        marker.ns = "frontier_initial_points";
-        marker.id = marker_id++;
-        marker.type = visualization_msgs::msg::Marker::SPHERE;
-        marker.action = visualization_msgs::msg::Marker::ADD;
-        marker.pose.position = frontier.initial;
-        marker.pose.orientation.w = 1.0;
-        marker.scale.x = 0.2;
-        marker.scale.y = 0.2;
-        marker.scale.z = 0.2;
-        marker.color.r = 1.0;
-        marker.color.g = 0.0;
-        marker.color.b = 0.0;
-        marker.color.a = 1.0;
-
-        marker_array.markers.push_back(marker);
-    }
-    marker_pub_initial->publish(marker_array);
-}
-
-void processFrontierListCentroid(const std::vector<frontier_msgs::msg::Frontier> &frontier_list)
-{
-    visualization_msgs::msg::MarkerArray marker_array;
-
-    int marker_id = 0;
-    for (const auto &frontier : frontier_list)
-    {
-        visualization_msgs::msg::Marker marker;
-        marker.header.frame_id = "map";
-        marker.header.stamp = rclcpp::Clock().now();
-        marker.ns = "frontier_centroid_points";
-        marker.id = marker_id++;
-        marker.type = visualization_msgs::msg::Marker::SPHERE;
-        marker.action = visualization_msgs::msg::Marker::ADD;
-        marker.pose.position = frontier.centroid;
-        marker.pose.orientation.w = 1.0;
-        marker.scale.x = 0.2;
-        marker.scale.y = 0.2;
-        marker.scale.z = 0.2;
-        marker.color.r = 0.0;
-        marker.color.g = 0.0;
-        marker.color.b = 1.0; // Set blue color
-        marker.color.a = 1.0;
-
-        if (frontier.size > 50)
-        {
-            marker_array.markers.push_back(marker);
-        }
-    }
-    marker_pub_centroid->publish(marker_array);
-}
-
-void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr map)
-{
-    // Update the costmap with the new map
-    costmap = nav2_costmap_2d::Costmap2D(*map);
 }

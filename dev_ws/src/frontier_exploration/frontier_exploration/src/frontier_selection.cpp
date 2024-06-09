@@ -4,7 +4,7 @@
 namespace frontier_exploration
 {
 
-    FrontierSelectionNode::FrontierSelectionNode(rclcpp_lifecycle::LifecycleNode::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap)
+    FrontierSelectionNode::FrontierSelectionNode(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap)
     {
         // Creating a client node for internal use
         frontier_selection_node_ = rclcpp::Node::make_shared("frontier_selection_node");
@@ -14,25 +14,18 @@ namespace frontier_exploration
         // Creating publishers with custom QoS settings
         auto custom_qos = rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
         frontier_cloud_pub_ = node->create_publisher<sensor_msgs::msg::PointCloud2>("frontiers", custom_qos);
-        frontier_cloud_pub_->on_activate();
 
         all_frontier_cloud_pub_ = node->create_publisher<sensor_msgs::msg::PointCloud2>("all_frontiers", custom_qos);
-        all_frontier_cloud_pub_->on_activate();
 
         frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
-        frontier_plan_pub_->on_activate();
 
         fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
-        fov_marker_publisher_->on_activate();
 
         landmark_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("landmark_marker", 10);
-        landmark_publisher_->on_activate();
 
         viz_pose_publisher_ = node->create_publisher<geometry_msgs::msg::PoseStamped>("u1_pose", 10);
-        viz_pose_publisher_->on_activate();
 
         path_pose_array_ = node->create_publisher<geometry_msgs::msg::PoseArray>("frontier_plan_poses", 10);
-        path_pose_array_->on_activate();
 
         // Setting default parameters and fetching them if available
         frontier_selection_node_->declare_parameter("exploration_mode", "random");
@@ -173,8 +166,8 @@ namespace frontier_exploration
         for (const auto &frontier : frontier_list)
         {
             // load frontier into visualization poitncloud
-            frontier_point_viz.x = frontier.initial.x;
-            frontier_point_viz.y = frontier.initial.y;
+            frontier_point_viz.x = frontier.goal_point.x;
+            frontier_point_viz.y = frontier.goal_point.y;
             frontier_cloud_viz.push_back(frontier_point_viz);
         }
 
@@ -211,6 +204,7 @@ namespace frontier_exploration
 
         RCLCPP_INFO_STREAM(logger_, "Point0: " << polygon_xy_min_max[0]);
         RCLCPP_INFO_STREAM(logger_, "Point2: " << polygon_xy_min_max[2]);
+        RCLCPP_INFO_STREAM(logger_, "Costmap is " << costmap_);
         int x_unknown = abs(polygon_xy_min_max[2] - polygon_xy_min_max[0]) / costmap_->getResolution();
         int y_unknown = abs(polygon_xy_min_max[3] - polygon_xy_min_max[1]) / costmap_->getResolution();
         int unknown = x_unknown * y_unknown;
@@ -272,6 +266,9 @@ namespace frontier_exploration
     {
         RCLCPP_INFO_STREAM(logger_, COLOR_STR("FrontierSelectionNode::selectFrontierOurs", logger_.get_name()));
         exploration_costmap_ = exploration_costmap;
+        // Vector to store frontiers with meta data and the u1 utility values
+        std::vector<FrontierWithMetaData> frontier_meta_data_vector;
+        std::vector<std::pair<FrontierWithMetaData, double>> frontier_with_u1_utility;
         std::unordered_map<FrontierWithMetaData, double, FrontierWithMetaData::Hash> frontier_costs;       
         frontier_msgs::msg::Frontier selected_frontier;
         geometry_msgs::msg::Quaternion selected_orientation;
@@ -301,10 +298,6 @@ namespace frontier_exploration
             selection_result.frontier_costs = frontier_costs;
             return selection_result;
         }
-
-        // Vector to store frontiers with meta data and the u1 utility values
-        std::vector<FrontierWithMetaData> frontier_meta_data_vector;
-        std::vector<std::pair<FrontierWithMetaData, double>> frontier_with_u1_utility;
 
         // Variables to track minimum traversable distance and maximum arrival information per frontier
         double min_traversable_distance = std::numeric_limits<double>::max();
@@ -341,7 +334,7 @@ namespace frontier_exploration
             }
             else
             {
-                length_to_frontier = sqrt(pow(start_point_w.x - frontier.initial.x, 2) + pow(start_point_w.y - frontier.initial.y, 2));
+                length_to_frontier = sqrt(pow(start_point_w.x - frontier.goal_point.x, 2) + pow(start_point_w.y - frontier.goal_point.y, 2));
                 // length_to_frontier = frontier.min_distance;
             }
             auto endTimePlan = std::chrono::high_resolution_clock::now();
@@ -358,8 +351,8 @@ namespace frontier_exploration
                 unsigned int min_length = 0.0;
                 int resolution_cut_factor = 1;
                 unsigned int max_length = radius / (costmap_->getResolution());
-                sx = frontier.initial.x;
-                sy = frontier.initial.y;
+                sx = frontier.goal_point.x;
+                sy = frontier.goal_point.y;
                 std::vector<int> information_along_ray; // stores the information along each ray in 2PI.
                 std::vector<geometry_msgs::msg::Pose> vizpoints;
                 // Iterate through each angle in 2PI with delta_theta resolution
@@ -545,8 +538,8 @@ namespace frontier_exploration
         RCLCPP_DEBUG_STREAM(logger_, "Beta_: " << beta_);
         geometry_msgs::msg::PoseStamped vizpose;
         vizpose.header.frame_id = "map";
-        vizpose.pose.position.x = selected_frontier.initial.x;
-        vizpose.pose.position.y = selected_frontier.initial.y;
+        vizpose.pose.position.x = selected_frontier.goal_point.x;
+        vizpose.pose.position.y = selected_frontier.goal_point.y;
         vizpose.pose.orientation = selected_orientation;
         viz_pose_publisher_->publish(vizpose);
         // FrontierU1ComparatorCost frontier_u1_comp;
@@ -783,7 +776,7 @@ namespace frontier_exploration
         map_start[1] = my;
 
         // goal point
-        if (!exploration_costmap_->worldToMap(goal_point_w.initial.x, goal_point_w.initial.y, mx, my))
+        if (!exploration_costmap_->worldToMap(goal_point_w.goal_point.x, goal_point_w.goal_point.y, mx, my))
         {
             RCLCPP_WARN_STREAM(logger_, COLOR_STR("The goal sent to the planner is off the global costmap Planning will always fail to this goal.", logger_.get_name()));
             struct_obj.path = plan;
@@ -905,6 +898,10 @@ namespace frontier_exploration
         for (auto frontier : blacklist)
         {
             frontier_blacklist_[frontier] = true;
+        }
+        for (auto frontier : frontier_blacklist_)
+        {
+            RCLCPP_ERROR_STREAM(logger_, COLOR_STR("Blacklist: " + std::to_string(frontier.first.goal_point.x), logger_.get_name()));
         }
     }
 
