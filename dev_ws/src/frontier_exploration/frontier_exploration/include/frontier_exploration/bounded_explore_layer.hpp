@@ -49,8 +49,7 @@ namespace frontier_exploration
 
     struct GetNextFrontierResponse
     {
-        bool success;                                           
-        frontier_msgs::msg::Frontier next_frontier;             
+        bool success;
         std::vector<frontier_msgs::msg::Frontier> frontier_list;
         std::vector<double> frontier_costs;                     
         std::vector<double> frontier_distances;                 

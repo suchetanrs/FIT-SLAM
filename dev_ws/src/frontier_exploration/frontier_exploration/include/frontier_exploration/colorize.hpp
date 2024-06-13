@@ -151,7 +151,7 @@ struct FrontierEquality {
     }
 };
 
-inline size_t generateUID(frontier_msgs::msg::Frontier& output)
+inline size_t generateUID(const frontier_msgs::msg::Frontier& output)
 {
     std::hash<double> hash_fn;
     
@@ -161,7 +161,7 @@ inline size_t generateUID(frontier_msgs::msg::Frontier& output)
 
     // return hash1 ^ (hash2 << 1);
     return hash1 ^ (hash2 << 1);
-}
+};
 
 inline size_t generateUID(std::vector<double>& output)
 {
@@ -174,5 +174,13 @@ inline size_t generateUID(std::vector<double>& output)
     return hash1 ^ (hash2 << 1);
     // return output[0] * output[1] + (output[1]) - output[0]
     // return output[0] + output[1];
-}
+};
+
+
+struct FrontierLessThan
+{
+    bool operator()(const frontier_msgs::msg::Frontier& lhs, const frontier_msgs::msg::Frontier& rhs) const {
+        return generateUID(lhs) < generateUID(rhs);
+    }
+};
 #endif // COLOR_H

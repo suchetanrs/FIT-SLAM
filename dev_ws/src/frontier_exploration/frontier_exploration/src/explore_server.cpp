@@ -34,7 +34,6 @@ namespace frontier_exploration
         this->declare_parameter("robot_namespaces", rclcpp::ParameterValue(robot_namespaces_));
         this->declare_parameter("wait_for_other_robot_costs", false);
         this->declare_parameter("process_other_robots", false);
-        this->declare_parameter("use_pose_from_multirobot_allocator", true);
         this->declare_parameter("frontier_travel_point", rclcpp::ParameterValue(std::string("closest")));
         config_ = {"10.0", "10.0", "10.0", "-10.0", "-10.0", "-10.0", "-10.0", "10.0"};
         this->declare_parameter("config", rclcpp::ParameterValue(config_));
@@ -47,7 +46,6 @@ namespace frontier_exploration
         this->get_parameter("robot_namespaces", robot_namespaces_);
         this->get_parameter("wait_for_other_robot_costs", wait_for_other_robot_costs_);
         this->get_parameter("process_other_robots", process_other_robots_);
-        this->get_parameter("use_pose_from_multirobot_allocator", use_pose_from_multirobot_allocator_);
         this->get_parameter("config", config_);
         this->get_parameter("min_frontier_cluster_size", min_frontier_cluster_size_);
         this->get_parameter("max_frontier_cluster_size", max_frontier_cluster_size_);
@@ -86,8 +84,8 @@ namespace frontier_exploration
         //     "multirobot_get_frontier_costs", std::bind(&FrontierExplorationServer::handle_multirobot_frontier_cost_request, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
         //     rmw_qos_profile_default, multirobot_service_callback_group_);
 
-        service_get_current_goal_ = this->create_service<frontier_msgs::srv::GetCurrentGoal>(
-            "multirobot_get_current_goal", std::bind(&FrontierExplorationServer::handle_multirobot_current_goal_request, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+        service_send_current_goal_ = this->create_service<frontier_msgs::srv::SendCurrentGoal>(
+            "multirobot_send_current_goal", std::bind(&FrontierExplorationServer::handle_multirobot_current_goal_request, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
             rmw_qos_profile_default, multirobot_service_callback_group_);
 
         //---------------------------------------------ROS RELATED------------------------------------------
@@ -388,13 +386,6 @@ namespace frontier_exploration
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier ox:" + std::to_string(allocatedFrontier.best_orientation.x), this->get_namespace()));
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier oy:" + std::to_string(allocatedFrontier.best_orientation.y), this->get_namespace()));
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier uid:" + std::to_string(allocatedFrontier.unique_id), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier x:" + std::to_string(nextFrontierResultPtr->next_frontier.goal_point.x), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier y:" + std::to_string(nextFrontierResultPtr->next_frontier.goal_point.y), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier z:" + std::to_string(nextFrontierResultPtr->next_frontier.goal_point.z), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier oz:" + std::to_string(nextFrontierResultPtr->next_frontier.best_orientation.z), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier ow:" + std::to_string(nextFrontierResultPtr->next_frontier.best_orientation.w), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier ox:" + std::to_string(nextFrontierResultPtr->next_frontier.best_orientation.x), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Selected frontier oy:" + std::to_string(nextFrontierResultPtr->next_frontier.best_orientation.y), this->get_namespace()));
                 // if(allocatedFrontier.best_orientation != srv_res->next_frontier.pose.orientation)
                 // {
                 // throw std::runtime_error("The orientations are not same. What are you doing?");
@@ -406,30 +397,16 @@ namespace frontier_exploration
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Next frontier Result success. Sending goal to Nav2", this->get_namespace()));
                 if(allocatedFrontier.goal_point.x == 0 && allocatedFrontier.goal_point.y == 0 && allocatedFrontier.size == 0)
                     throw std::runtime_error("Sanity check detected. Frontier allocated without positive size");
-                if (use_pose_from_multirobot_allocator_)
+
+                RCLCPP_ERROR(this->get_logger(), "USING MULTIROBOT FRONTIER");
+                goal_pose.pose.position = allocatedFrontier.goal_point;
+                goal_pose.pose.orientation = allocatedFrontier.best_orientation;
+                goal_pose.header.frame_id = "map";
+                goal_pose.header.stamp = rclcpp::Clock().now();
+                RCLCPP_ERROR_STREAM(this->get_logger(), "UID: " << allocatedFrontier.unique_id);
+                if (std::find(blacklisted_frontiers_.begin(), blacklisted_frontiers_.end(), allocatedFrontier) == blacklisted_frontiers_.end())
                 {
-                    RCLCPP_ERROR(this->get_logger(), "USING MULTIROBOT FRONTIER");
-                    goal_pose.pose.position = allocatedFrontier.goal_point;
-                    goal_pose.pose.orientation = allocatedFrontier.best_orientation;
-                    goal_pose.header.frame_id = "map";
-                    goal_pose.header.stamp = rclcpp::Clock().now();
-                    RCLCPP_ERROR_STREAM(this->get_logger(), "UID: " << allocatedFrontier.unique_id);
-                    if (std::find(blacklisted_frontiers_.begin(), blacklisted_frontiers_.end(), allocatedFrontier) == blacklisted_frontiers_.end())
-                    {
-                        blacklisted_frontiers_.push_back(allocatedFrontier);
-                    }
-                }
-                else
-                {
-                    goal_pose.pose.position = allocatedFrontier.goal_point;
-                    goal_pose.pose.orientation = nextFrontierResultPtr->next_frontier.best_orientation;
-                    goal_pose.header.frame_id = "map";
-                    goal_pose.header.stamp = rclcpp::Clock().now();
-                    RCLCPP_ERROR_STREAM(this->get_logger(), "UID: " << allocatedFrontier.unique_id);
-                    if (std::find(blacklisted_frontiers_.begin(), blacklisted_frontiers_.end(), allocatedFrontier) == blacklisted_frontiers_.end())
-                    {
-                        blacklisted_frontiers_.push_back(nextFrontierResultPtr->next_frontier);
-                    }
+                    blacklisted_frontiers_.push_back(allocatedFrontier);
                 }
             }
             else if (nextFrontierResultPtr->success == false)
@@ -543,20 +520,18 @@ namespace frontier_exploration
 
     void FrontierExplorationServer::handle_multirobot_current_goal_request(
         std::shared_ptr<rmw_request_id_t> request_header,
-        std::shared_ptr<frontier_msgs::srv::GetCurrentGoal::Request> request,
-        std::shared_ptr<frontier_msgs::srv::GetCurrentGoal::Response> response)
+        std::shared_ptr<frontier_msgs::srv::SendCurrentGoal::Request> request,
+        std::shared_ptr<frontier_msgs::srv::SendCurrentGoal::Response> response)
     {
-        if(nav2_goal_ == nullptr)
-        {
-            response->goal_active = false;
-        }
-        else
-        {
-            nav2_goal_lock_.lock();
-            response->current_goal = nav2_goal_->pose;
-            nav2_goal_lock_.unlock();
-            response->goal_active = true;
-        }
+        std::lock_guard<std::mutex> lock(robot_active_goals_mutex_);
+        RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Goal updated for: " + request->sending_robot_name, this->get_namespace()));
+        if(request->goal_state == 0)
+            robot_active_goals_[request->sending_robot_name] = std::make_shared<geometry_msgs::msg::PoseStamped>(request->current_goal);
+        else if(request->goal_state == 1)
+            robot_active_goals_[request->sending_robot_name] = nullptr;
+        
+        response->success = true;
+        return;
     }
 
     // void FrontierExplorationServer::handle_multirobot_frontier_cost_request(

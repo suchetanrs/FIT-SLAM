@@ -15,7 +15,7 @@ include_directories(
 rosidl_generate_interfaces(${PROJECT_NAME}
 "msg/Frontier.msg"
 "srv/GetFrontierCosts.srv"
-"srv/GetCurrentGoal.srv"
+"srv/SendCurrentGoal.srv"
 DEPENDENCIES builtin_interfaces geometry_msgs
 )
 

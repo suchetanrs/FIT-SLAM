@@ -1,0 +1,9 @@
+string sending_robot_name
+geometry_msgs/PoseStamped current_goal
+
+# goal state
+# GOAL_SENT = 0
+# GOAL_DONE = 1
+uint8 goal_state
+---
+bool success

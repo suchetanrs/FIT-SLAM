@@ -168,6 +168,7 @@ namespace frontier_exploration
         frontier_msgs::msg::Frontier selected;
         if (exploration_mode_ == "greedy")
         {
+            throw std::runtime_error("Not supported for multirobot");
             auto selection_result = BoundedExploreLayer::processGreedyApproach(requestData->frontier_list);
             if (selection_result.second == false)
             {
@@ -175,11 +176,12 @@ namespace frontier_exploration
                 return resultData->success;
             }
             resultData->success = true;
-            resultData->next_frontier = selection_result.first;
+            // resultData->next_frontier = selection_result.first;
         }
 
         else if (exploration_mode_ == "random")
         {
+            throw std::runtime_error("Not supported for multirobot");
             auto selection_result = BoundedExploreLayer::processRandomApproach(requestData->frontier_list);
             if (selection_result.second == false)
             {
@@ -187,7 +189,7 @@ namespace frontier_exploration
                 return resultData->success;
             }
             resultData->success = true;
-            resultData->next_frontier = selection_result.first;
+            // resultData->next_frontier = selection_result.first;
         }
 
         else if (exploration_mode_ == "ours")
@@ -202,41 +204,31 @@ namespace frontier_exploration
                 return resultData->success;
             }
             resultData->success = true;
-            selected = selection_result.frontier;
-            // Uncomment the next line if you are using information acquired after reaching. The pose is important in that case.
-            resultData->next_frontier = selected;
-            resultData->next_frontier.best_orientation = selection_result.orientation;
             std::vector<frontier_msgs::msg::Frontier> frontiers_list;
             std::vector<double> frontier_costs;
             std::vector<double> frontier_distances;
             std::vector<double> frontier_arrival_information;
             std::vector<double> frontier_path_information;
             RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Selection result's frontier costs size: " + std::to_string(selection_result.frontier_costs.size()), internal_node_->get_logger().get_name()));
-            std::vector<std::pair<frontier_exploration::FrontierWithMetaData, double>> frontier_costs_vector;
-            for (auto pair : selection_result.frontier_costs)
+            for (auto& frontier : requestData->frontier_list)
             {
-                frontier_costs_vector.push_back(pair);
+                if(selection_result.frontier_costs.count(frontier) != 1)
+                    throw std::runtime_error("Frontier not found");
+                frontier.best_orientation = nav2_util::geometry_utils::orientationAroundZAxis(selection_result.frontier_costs[frontier].theta_s_star_);
+                frontiers_list.push_back(frontier);
+                frontier_costs.push_back(selection_result.frontier_costs[frontier].cost_);
+                frontier_distances.push_back(selection_result.frontier_costs[frontier].path_length_);
+                frontier_arrival_information.push_back(selection_result.frontier_costs[frontier].information_);
             }
-            frontier_exploration::FrontierU1ComparatorUnique frontier_u1_comp;
-            std::sort(frontier_costs_vector.begin(), frontier_costs_vector.end(), frontier_u1_comp);
             RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Making list", internal_node_->get_logger().get_name()));
-            for (auto pair : frontier_costs_vector)
-            {
-                // Extract key and value
-                auto key = pair.first.frontier_; // frontier with meta data
-                auto value = pair.second;        // cost.
-                // RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("UID: " + std::to_string(key.unique_id) + " Cost: " + std::to_string(value), internal_node_->get_logger().get_name()));
-                key.best_orientation = nav2_util::geometry_utils::orientationAroundZAxis(pair.first.theta_s_star_);
-                // Push them into respective vectors
-                frontiers_list.push_back(key);
-                frontier_costs.push_back(value);
-                frontier_distances.push_back(pair.first.path_length_);
-                frontier_arrival_information.push_back(pair.first.information_);
-            }
             resultData->frontier_list = frontiers_list;
             resultData->frontier_costs = frontier_costs;
             resultData->frontier_distances = frontier_distances;
             resultData->frontier_arrival_information = frontier_arrival_information;
+            if(resultData->frontier_list != requestData->frontier_list)
+            {
+                throw std::runtime_error("Lists are not SAME!");
+            }
         }
 
         else

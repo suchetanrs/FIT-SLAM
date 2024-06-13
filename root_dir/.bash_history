@@ -531,3 +531,236 @@ g++ hash_double.cpp -o hash_double
 ./hash_double 
 g++ hash_double.cpp -o hash_double
 ./hash_double 
+cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/viz/
+g++ duplicate.cpp -o duplicate
+./duplicate 
+g++ duplicate.cpp -o duplicate
+./duplicate 
+g++ duplicate.cpp -o duplicate
+./duplicate 
+g++ kdtree.cpp -o kdtree
+./duplicate 
+g++ kdtree.cpp -o kdtree
+./kdtree 
+rviz2
+cd dev_ws/
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+kk
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+kill -9 %1
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+k
+kkk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+k
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+kkk
+kk
+k
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+k
+kk
+ros2 run exploration_sim explore_sim 
+kk
+ros2 run exploration_sim explore_sim 
+kk
+kkk
+kk
+ros2 run exploration_sim explore_sim 
+kk
+k
+kk
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make
+make install
+cd
+./shell_scripts/3_exploration.sh 
+kill -9 %1
+kill -9 %1kk
+kk
+k
+kk
+cd dev_ws/src/frontier_exploration/frontier_exploration/
+vsc
+cd
+cd dev_ws/
+cd
+./shell_scripts/3_exploration.sh 
+kill -9 %1
+./shell_scripts/3_exploration.sh 
+kk
+k
+kk
+top
+./shell_scripts/3_exploration.sh 
+ls
+cd dev_ws/src/frontier_exploration/
+vsc
+cd
+./shell_scripts/3_exploration.sh 
+
+./shell_scripts/3_exploration.sh 
+clear
+./shell_scripts/3_exploration.sh 
+c
+./shell_scripts/3_exploration.sh 
+cd dev_ws/
+colcon build --symlink-install
+ls
+cd src/frontier_exploration/
+vsc
+cd
+cd dev_ws/
+colcon build --symlink-install
+rm -rf build/ install/ log/
+colcon build --symlink-install
+ros2 topic hz /scout_2/explore_costmap/costmap
+ros2 topic lis
+ros2 topic hz /scout_2/explore_costmap/costmap_raw
+ros2 topic info -v /simulation_costmap
+ros2 topic hz /scout_2/explore_costmap/costmap_raw
+ros2 topic echo /simulation_costmap
+ros2 param set /explore_costmap inflation_layer.inflation_radius 0.35
+ros2 param set explore_costmap inflation_layer.inflation_radius 0.35
+ros2 param set /explore_costmap/explore_costmap inflation_layer.inflation_radius 0.35
+ros2 param lsit
+ros2 param list
+ros2 param set /scout_2/explore_costmap/explore_costmap inflation_layer.inflation_radius 0.35
+ros2 param set /scout_2/explore_costmap/explore_costmap inflation_layer.inflation_radius 0.50
+colcon build --symlink-install
+python3 src/frontier_exploration/frontier_exploration/src/py/republish_cmd_vel.py 
+colcon build --symlink-install
+rm -rf build/frontier_msgs/
+ls
+rm -rf install/frontier_msgs/
+colcon build --symlink-install
+rm -rf build/ install/ log/
+colcon build --symlink-install --packages-select frontier_msgs
+colcon build --symlink-install --packages-select frontier_msgs slam_msgs
+colcon build --symlink-install
+vsc
+rm -rf build/ install/ log/
+colcon build --symlink-install --packages-select frontier_msgs slam_msgs
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+vsc
+colcon build --symlink-install
+colcon build --symlink-install --packages-select frontier_msgs
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+pidof explore_server
+ros2 service lsit
+ros2 service list
+ros2 service list | grep frontier
+pidof explore_server
+ros2 service list | grep frontier
+pidof explore_server
+pidof explore_costmap
+pidof explore_server
+kill -9 48653
+pidof explore_server
+kill -9 $(pidof explore_server)
+pidof explore_server
+ros2 run teleop_twist_keyboard teleop_twist_keyboard 
+pidof explore_server
+pidof explore_costmap
+cd dev_ws/src/frontier_exploration/frontier_exploration/src/
+ls
+git clone https://github.com/cdalitz/kdtree-cpp
+ls
+cd kdtree-cpp/
+ls
+make
+s
+ls
+./demo_kdtree 
+cd dev_ws/
+ls
+vsc
+tmux
+tmux a
+ls
+clear
+cd dev_ws/
+ls
+vsc
+ls
+s
+ls
+ll
+ls
+rm -rf build/ install/ log/
+ls
+colcon build --symlink-install
+colcon build --symlink-install --packages-select frotier_msgs
+colcon build --symlink-install --packages-select frontier_msgs
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+cd dev_ws/
+cd dev_ws/src/frontier_exploration/frontier_exploration/src/
+ls
+cd dev_ws/src/frontier_exploration/frontier_exploration/src/
+ls
+cd
+cd dev_ws/src/frontier_exploration/frontier_exploration/src/
+ls
+cd ..
+ls
+cd ..
+ls
+cd frontier_multirobot_allocator/
+ls
+cd build/
+cmake ..
+make
+make install
+cd
+cd dev_ws/
+ls
+cd
+./shell_scripts/3_exploration.sh 
+rviz2
+ls
+tmux
+s
+ls
+cd dev_ws/
+vsc
+tmux
+ls
+cd dev_ws/
+vsc
+ls
+cd dev_ws/
+vsc
+firefox
+bb

@@ -47,6 +47,12 @@ namespace frontier_exploration
     class FrontierWithMetaData
     {
     public:
+        FrontierWithMetaData()
+        {
+            information_ = 0;
+            theta_s_star_ = 0;
+            path_length_ = 0;
+        }
         /**
          * @brief Constructor for FrontierWithMetaData.
          *
@@ -63,37 +69,16 @@ namespace frontier_exploration
             path_length_ = path_length;
         }
 
-        /**
-         * @brief Less-than operator for comparing instances of FrontierWithMetaData.
-         *
-         * @param other Another instance of FrontierWithMetaData to compare against.
-         * @return True if this instance's path length is less than the other's, false otherwise.
-         */
-        bool operator==(const FrontierWithMetaData &other) const
+        void setCost(double cost)
         {
-            // Compare based on some criteria, e.g., information
-            return (path_length_ == other.path_length_) && (theta_s_star_ == other.theta_s_star_) && (information_ == other.information_) && (frontier_ == other.frontier_);
+            cost_ = cost;
         }
-
-        // Define hash function specialization for FrontierWithMetaData
-        struct Hash
-        {
-            size_t operator()(const FrontierWithMetaData &key) const
-            {
-                // Calculate hash based on some combination of member variables
-                size_t hash = 0;
-                hash =  std::hash<double>()(key.frontier_.goal_point.x) ^
-                        std::hash<double>()(key.frontier_.goal_point.y) ^
-                        std::hash<uint32_t>()(key.frontier_.size) ^
-                        std::hash<double>()(key.frontier_.min_distance);
-                return hash;
-            }
-        };
 
         frontier_msgs::msg::Frontier frontier_; ///< frontier location
         size_t information_;                    ///< information on arrival
         double theta_s_star_;                   ///< optimal orientation for frontier
         double path_length_;                       ///< path length to frontier
+        double cost_;
     };
 
     /**
@@ -113,10 +98,8 @@ namespace frontier_exploration
      */
     struct SelectionResult
     {
-        frontier_msgs::msg::Frontier frontier;
-        geometry_msgs::msg::Quaternion orientation;
         bool success;
-        std::unordered_map<FrontierWithMetaData, double, FrontierWithMetaData::Hash> frontier_costs;
+        std::map<frontier_msgs::msg::Frontier, FrontierWithMetaData, FrontierLessThan> frontier_costs;
     };
 
     /**
@@ -204,25 +187,6 @@ namespace frontier_exploration
         bool operator()(const std::pair<FrontierWithMetaData, double> &a, const std::pair<FrontierWithMetaData, double> &b) const
         {
             return a.second < b.second;
-        }
-    };
-
-    class FrontierU1ComparatorUnique
-    {
-    public:
-        /**
-         * @brief Function call operator for comparing frontiers.
-         *
-         * This operator compares two pairs of frontier-metadata and cost based on their associated costs.
-         *
-         * @param a The first pair of frontier-metadata and cost.
-         * @param b The second pair of frontier-metadata and cost.
-         * @return bool True if the cost associated with the first pair is
-         * less than the cost associated with the second pair, false otherwise.
-         */
-        bool operator()(std::pair<FrontierWithMetaData, double> &a, std::pair<FrontierWithMetaData, double> &b) const
-        {
-            return generateUID(a.first.frontier_) < generateUID(b.first.frontier_);
         }
     };
 

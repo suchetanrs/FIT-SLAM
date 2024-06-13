@@ -269,9 +269,7 @@ namespace frontier_exploration
         // Vector to store frontiers with meta data and the u1 utility values
         std::vector<FrontierWithMetaData> frontier_meta_data_vector;
         std::vector<std::pair<FrontierWithMetaData, double>> frontier_with_u1_utility;
-        std::unordered_map<FrontierWithMetaData, double, FrontierWithMetaData::Hash> frontier_costs;       
-        frontier_msgs::msg::Frontier selected_frontier;
-        geometry_msgs::msg::Quaternion selected_orientation;
+        std::map<frontier_msgs::msg::Frontier, FrontierWithMetaData, FrontierLessThan> frontier_costs;       
         double theta_s_star = 0;         // optimal sensor arrival orientation
         const double radius = 2.0;       // max depth of camera fov
         const double delta_theta = 0.15; // spatial density
@@ -281,8 +279,6 @@ namespace frontier_exploration
         {
             RCLCPP_ERROR(logger_, "No frontiers found from frontier search.");
             SelectionResult selection_result;
-            selection_result.frontier = selected_frontier;
-            selection_result.orientation = selected_orientation;
             selection_result.success = false;
             selection_result.frontier_costs = frontier_costs;
             return selection_result;
@@ -292,8 +288,6 @@ namespace frontier_exploration
         {
             RCLCPP_ERROR(logger_, "Frontier cannot be selected, no polygon.");
             SelectionResult selection_result;
-            selection_result.frontier = selected_frontier;
-            selection_result.orientation = selected_orientation;
             selection_result.success = false;
             selection_result.frontier_costs = frontier_costs;
             return selection_result;
@@ -327,7 +321,8 @@ namespace frontier_exploration
                 {
                     RCLCPP_WARN_STREAM(logger_, COLOR_STR("Path length is zero or false", logger_.get_name()));
                     FrontierWithMetaData f_info_blacklisted(frontier, 0, std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
-                    frontier_costs[f_info_blacklisted] = std::numeric_limits<double>::max();
+                    f_info_blacklisted.setCost(std::numeric_limits<double>::max());
+                    frontier_costs[frontier] = f_info_blacklisted;
                     continue;
                 }
                 // frontier_plan_pub_->publish(plan_of_frontier.first.path);
@@ -386,8 +381,6 @@ namespace frontier_exploration
                     {
                         RCLCPP_WARN_STREAM(logger_, COLOR_STR("Distance to ray trace is lesser than minimum distance. Proceeding to next frontier.", logger_.get_name()));
                         SelectionResult selection_result;
-                        selection_result.frontier = selected_frontier;
-                        selection_result.orientation = selected_orientation;
                         selection_result.success = false;
                         selection_result.frontier_costs = frontier_costs;
                         return selection_result;
@@ -491,7 +484,8 @@ namespace frontier_exploration
             {
                 RCLCPP_ERROR_STREAM(logger_, COLOR_STR("Adding max cost: " + std::to_string(frontier.unique_id) + " ," + std::to_string(frontier.min_distance > frontierDetectRadius_) + " " + std::to_string(frontier_exists_in_blacklist_ == false), logger_.get_name()));
                 FrontierWithMetaData f_info_blacklisted(frontier, 0, std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
-                frontier_costs[f_info_blacklisted] = std::numeric_limits<double>::max();
+                f_info_blacklisted.setCost(std::numeric_limits<double>::max());
+                frontier_costs[frontier] = f_info_blacklisted;
             }
             
         } // frontier end
@@ -500,8 +494,7 @@ namespace frontier_exploration
         RCLCPP_WARN_STREAM(logger_, COLOR_STR("(before) Frontier costs size u1 is: " + std::to_string(frontier_costs.size()), logger_.get_name()));
 
         // U1 Utility
-        double max_u1_utility = 0;
-        for (auto frontier_with_properties : frontier_meta_data_vector)
+        for (auto& frontier_with_properties : frontier_meta_data_vector)
         {
             // the distance term is inverted because we need to choose the closest frontier with tradeoff.
             auto utility = (alpha_ * (static_cast<double>(frontier_with_properties.information_) / static_cast<double>(max_arrival_info_per_frontier))) +
@@ -513,35 +506,18 @@ namespace frontier_exploration
             RCLCPP_DEBUG_STREAM(logger_, "Utility U1 max distance:" << frontier_with_properties.path_length_);
             // It is added with Beta multiplied. If the frontier lies in the N best then this value will be replaced with information on path.
             // If it does not lie in the N best then the information on path is treated as 0 and hence it is appropriate to multiply with beta.
-            if(frontier_costs.count(frontier_with_properties) == 1)
+            if(frontier_costs.count(frontier_with_properties.frontier_) == 1)
                 throw std::runtime_error("Something is wrong. Duplicate frontiers?");
-            frontier_costs[frontier_with_properties] = (beta_ * utility) == 0 ? std::numeric_limits<double>::max() : 1 / (beta_ * utility);
+            frontier_with_properties.setCost((beta_ * utility) == 0 ? std::numeric_limits<double>::max() : 1 / (beta_ * utility));
+            frontier_costs[frontier_with_properties.frontier_] = frontier_with_properties;
             frontier_with_u1_utility.push_back(std::make_pair(frontier_with_properties, beta_ * utility));
             RCLCPP_DEBUG_STREAM(logger_, "Utility U1:" << 1 / (beta_ * utility));
-            if (beta_ * utility > max_u1_utility)
-            {
-                max_u1_utility = beta_ * utility;
-                theta_s_star = frontier_with_properties.theta_s_star_;
-                selected_frontier = frontier_with_properties.frontier_;
-                selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(theta_s_star);
-
-                RCLCPP_DEBUG_STREAM(logger_, "Max u1 utility: " << max_u1_utility);
-                RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("Min u1 cost: " + std::to_string(1 / max_u1_utility), logger_.get_name()));
-                RCLCPP_DEBUG_STREAM(logger_, "Max information: " << max_arrival_info_per_frontier);
-                RCLCPP_DEBUG_STREAM(logger_, "Min distance " << min_traversable_distance);
-            }
         }
         RCLCPP_WARN_STREAM(logger_, COLOR_STR("(after) Frontier u1 with utility size is: " + std::to_string(frontier_with_u1_utility.size()), logger_.get_name()));
         RCLCPP_WARN_STREAM(logger_, COLOR_STR("(after) Frontier costs size after u1 is: " + std::to_string(frontier_costs.size()), logger_.get_name()));
 
         RCLCPP_DEBUG_STREAM(logger_, "Alpha_: " << alpha_);
         RCLCPP_DEBUG_STREAM(logger_, "Beta_: " << beta_);
-        geometry_msgs::msg::PoseStamped vizpose;
-        vizpose.header.frame_id = "map";
-        vizpose.pose.position.x = selected_frontier.goal_point.x;
-        vizpose.pose.position.y = selected_frontier.goal_point.y;
-        vizpose.pose.orientation = selected_orientation;
-        viz_pose_publisher_->publish(vizpose);
         // FrontierU1ComparatorCost frontier_u1_comp;
         // // sort the frontier list based on the utility value
         // std::sort(frontier_with_u1_utility.begin(), frontier_with_u1_utility.end(), frontier_u1_comp);
@@ -612,29 +588,13 @@ namespace frontier_exploration
             throw std::runtime_error("The returned size is not the same as input size.");
         }
 
-        // To handle the case where all the max frontiers have zero information.
-        if (frontier_selected_post_u2)
-        {
-            selected_orientation = nav2_util::geometry_utils::orientationAroundZAxis(theta_s_star_post_u2);
-            SelectionResult selection_result;
-            selection_result.frontier = *frontier_selected_post_u2;
-            selection_result.orientation = selected_orientation;
-            selection_result.success = true;
-            selection_result.frontier_costs = frontier_costs;
-            return selection_result;
-        }
-        else
-        {
-            RCLCPP_WARN_STREAM(logger_, COLOR_STR("The selected frontier was not updated after U2 computation.", logger_.get_name()));
-            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Returning for input list size: " + std::to_string(frontier_list.size()), logger_.get_name()));
-            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Returning frontier costs size: " + std::to_string(frontier_costs.size()), logger_.get_name()));
-            SelectionResult selection_result;
-            selection_result.frontier = selected_frontier;
-            selection_result.orientation = selected_orientation;
-            selection_result.success = true;
-            selection_result.frontier_costs = frontier_costs;
-            return selection_result;
-        }
+        RCLCPP_WARN_STREAM(logger_, COLOR_STR("The selected frontier was not updated after U2 computation.", logger_.get_name()));
+        RCLCPP_WARN_STREAM(logger_, COLOR_STR("Returning for input list size: " + std::to_string(frontier_list.size()), logger_.get_name()));
+        RCLCPP_WARN_STREAM(logger_, COLOR_STR("Returning frontier costs size: " + std::to_string(frontier_costs.size()), logger_.get_name()));
+        SelectionResult selection_result;
+        selection_result.success = true;
+        selection_result.frontier_costs = frontier_costs;
+        return selection_result;
     }
 
     std::pair<frontier_msgs::msg::Frontier, bool> FrontierSelectionNode::selectFrontierClosest(std::vector<frontier_msgs::msg::Frontier> &frontier_list)

@@ -12,7 +12,7 @@
 #include <geometry_msgs/msg/twist.hpp>
 
 // #include <frontier_msgs/srv/get_frontier_costs.hpp>
-#include <frontier_msgs/srv/get_current_goal.hpp>
+#include <frontier_msgs/srv/send_current_goal.hpp>
 #include <frontier_multirobot_allocator/taskAllocator.hpp>
 #include <frontier_exploration/colorize.hpp>
 
@@ -62,8 +62,8 @@ namespace frontier_exploration
 
         void handle_multirobot_current_goal_request(
             std::shared_ptr<rmw_request_id_t> request_header,
-            std::shared_ptr<frontier_msgs::srv::GetCurrentGoal::Request> request,
-            std::shared_ptr<frontier_msgs::srv::GetCurrentGoal::Response> response);
+            std::shared_ptr<frontier_msgs::srv::SendCurrentGoal::Request> request,
+            std::shared_ptr<frontier_msgs::srv::SendCurrentGoal::Response> response);
 
         void nav2GoalFeedbackCallback(GoalHandleNav2::SharedPtr, const std::shared_ptr<const NavigateToPose::Feedback> feedback);
 
@@ -98,12 +98,13 @@ namespace frontier_exploration
         std::shared_ptr<NavigateToPose::Goal> nav2_goal_;
 
         // rclcpp::Service<frontier_msgs::srv::GetFrontierCosts>::SharedPtr service_get_costs_;
-        rclcpp::Service<frontier_msgs::srv::GetCurrentGoal>::SharedPtr service_get_current_goal_;
+        rclcpp::Service<frontier_msgs::srv::SendCurrentGoal>::SharedPtr service_send_current_goal_;
         std::vector<std::string> robot_namespaces_;
+        std::mutex robot_active_goals_mutex_;
+        std::map<std::string, std::shared_ptr<geometry_msgs::msg::PoseStamped>> robot_active_goals_;
         bool use_custom_sim_;
         bool wait_for_other_robot_costs_;
         bool process_other_robots_;
-        bool use_pose_from_multirobot_allocator_;
         // these are the frontiers traversed by this robot.
         std::vector<frontier_msgs::msg::Frontier> blacklisted_frontiers_;
         std::vector<std::string> config_;
