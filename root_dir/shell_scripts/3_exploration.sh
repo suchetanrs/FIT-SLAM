@@ -15,16 +15,16 @@ export SCOUT_X="1.0"
 export SCOUT_Y="1.0"
 mkdir /home/$SCOUT_NAMESPACE
 ros2 launch frontier_exploration exploration.launch.py &
-ros2 launch scout_navigation2 navigation.launch.py &
+#ros2 launch scout_navigation2 navigation.launch.py &
 
 # sleep 8
 
-# export SCOUT_NAMESPACE="scout_1"
-# export SCOUT_X="-8.5"
-# export SCOUT_Y="7.5"
-# mkdir /home/$SCOUT_NAMESPACE
-# ros2 launch frontier_exploration exploration.launch.py &
-# ros2 launch scout_navigation2 navigation.launch.py &
+export SCOUT_NAMESPACE="scout_1"
+export SCOUT_X="-8.5"
+export SCOUT_Y="7.5"
+mkdir /home/$SCOUT_NAMESPACE
+#ros2 launch frontier_exploration exploration.launch.py &
+#ros2 launch scout_navigation2 navigation.launch.py &
 
 # sleep 8
 

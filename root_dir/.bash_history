@@ -764,3 +764,35 @@ cd dev_ws/
 vsc
 firefox
 bb
+cd dev_ws/
+colcon build --symlink-install
+ls
+cd src/frontier_exploration/frontier_exploration/
+ls
+vsc
+cd
+cd dev_ws/
+rm -rf build/ install/ log/
+colcon build --symlink-install
+ls
+rm -rf build/ install/ log/
+ls
+colcon build --symlink-install
+vsc
+cd shell_scripts/
+./3_exploration.sh 
+ls
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+mkae
+make install
+rviz2
+cd dev_ws/
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+kk
+cd dev_ws/
+vsc
+tmux

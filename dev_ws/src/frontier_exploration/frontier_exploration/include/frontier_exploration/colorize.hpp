@@ -117,6 +117,29 @@ inline bool equateFrontiers(frontier_msgs::msg::Frontier& f1, frontier_msgs::msg
     return true;
 }
 
+
+inline bool equateFrontierList(const std::vector<frontier_msgs::msg::Frontier> &list1, const std::vector<frontier_msgs::msg::Frontier> &list2)
+{
+    bool listflag = true;
+    // Check if the lists have the same size
+    if (list1.size() != list2.size())
+    {
+        return false;
+    }
+
+    // Compare each corresponding element in both lists
+    for (size_t i = 0; i < list1.size(); ++i)
+    {
+        auto f1 = list1[i];
+        auto f2 = list2[i];
+        if (!equateFrontiers(f1, f2, true))
+        {
+            listflag = false;
+        }
+    }
+    return listflag;
+}
+
 /** This is currently being used only to compare blacklisted frontiers. 
   * Therefore, to verify if only the traversal point is the same, 
   * we use the hash and equality as intial points.

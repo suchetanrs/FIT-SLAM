@@ -16,16 +16,12 @@
 
 #include <frontier_msgs/msg/frontier.hpp>
 
-#include <frontier_exploration/planner.hpp>
+#include <frontier_exploration/planners/planner.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl_ros/impl/transforms.hpp>
-
-#include <nav2_costmap_2d/costmap_2d.hpp>
-#include <nav2_costmap_2d/footprint.hpp>
-#include <nav2_costmap_2d/layer.hpp>
 
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <nav_msgs/msg/path.hpp>
@@ -36,6 +32,8 @@
 
 #include <slam_msgs/srv/get_map.hpp>
 #include <frontier_exploration/colorize.hpp>
+#include <frontier_exploration/rosVisualizer.hpp>
+#include <frontier_exploration/cost_calculator.hpp>
 
 namespace frontier_exploration
 {
@@ -82,16 +80,6 @@ namespace frontier_exploration
     };
 
     /**
-     * @brief Struct representing a path with associated information.
-     * This struct encapsulates a path along with the total information associated with it.
-     */
-    struct PathWithInfo
-    {
-        nav_msgs::msg::Path path;
-        double information_total;
-    };
-
-    /**
      * @brief Struct representing the result of a selection process.
      * This struct contains the result of selecting a frontier, including the chosen frontier,
      * its orientation, success status, and costs associated with candidate frontiers.
@@ -100,71 +88,6 @@ namespace frontier_exploration
     {
         bool success;
         std::map<frontier_msgs::msg::Frontier, FrontierWithMetaData, FrontierLessThan> frontier_costs;
-    };
-
-    /**
-     * @brief Class for ray tracing operations on a costmap.
-     * This class provides functionality for ray tracing operations on a given costmap.
-     */
-    class RayTracedCells
-    {
-    public:
-        /**
-         * @brief Constructor for RayTracedCells.
-         *
-         * @param costmap The reference to the costmap.
-         * @param cells The vector of map locations to store ray-traced cells.
-         */
-        RayTracedCells(
-            const nav2_costmap_2d::Costmap2D &costmap,
-            std::vector<nav2_costmap_2d::MapLocation> &cells)
-            : costmap_(costmap), cells_(cells)
-        {
-            hit_obstacle = false;
-        }
-
-        /**
-         * @brief Function call operator to add unexplored cells to the list.
-         * This operator adds cells that are currently unexplored to the list of cells.
-         * i.e pushes the relevant cells back onto the list.
-         * @param offset The offset of the cell to consider.
-         */
-        inline void operator()(unsigned int offset)
-        {
-            nav2_costmap_2d::MapLocation loc;
-            costmap_.indexToCells(offset, loc.x, loc.y);
-            bool presentflag = false;
-            for (auto item : cells_)
-            {
-                if (item.x == loc.x && item.y == loc.y)
-                    presentflag = true;
-            }
-            if (presentflag == false)
-            {
-                if ((int)costmap_.getCost(offset) == 255 && hit_obstacle == false)
-                {
-                    cells_.push_back(loc);
-                }
-                if ((int)costmap_.getCost(offset) > 240 && (int)costmap_.getCost(offset) != 255)
-                {
-                    hit_obstacle = true;
-                }
-            }
-        }
-
-        /**
-         * @brief Getter function for the vector of cells.
-         * @return std::vector<nav2_costmap_2d::MapLocation> The vector of map locations.
-         */
-        std::vector<nav2_costmap_2d::MapLocation> getCells()
-        {
-            return cells_;
-        }
-
-    private:
-        const nav2_costmap_2d::Costmap2D &costmap_;
-        std::vector<nav2_costmap_2d::MapLocation> &cells_;
-        bool hit_obstacle;
     };
 
     /**
@@ -206,39 +129,6 @@ namespace frontier_exploration
         FrontierSelectionNode(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap);
 
         /**
-         * @brief Function to get the sign of an integer.
-         * @return integer value with the sign.
-         */
-        inline int sign(int x)
-        {
-            return x > 0 ? 1.0 : -1.0;
-        }
-
-        void landmarkViz(std::vector<geometry_msgs::msg::Pose> &points, visualization_msgs::msg::Marker &marker_msg_);
-
-        void landmarkViz(std::vector<Eigen::Vector3f> &points, visualization_msgs::msg::Marker &marker_msg_);
-
-
-        /**
-         * @brief Performs 2D Bresenham ray tracing.
-         *
-         * @param at RayTracedCells object.
-         * @param abs_da Absolute value of delta A.
-         * @param abs_db Absolute value of delta B.
-         * @param error_b Error in B.
-         * @param offset_a Offset in A.
-         * @param offset_b Offset in B.
-         * @param offset Offset of the cell.
-         * @param max_length Maximum length.
-         * @param resolution_cut_factor Resolution cut factor along the x major or y major.
-         */
-        void bresenham2D(RayTracedCells at, unsigned int abs_da, unsigned int abs_db, int error_b,
-                         int offset_a,
-                         int offset_b, unsigned int offset,
-                         unsigned int max_length,
-                         int resolution_cut_factor);
-
-        /**
          * @brief Selects a frontier based on the count of unknown cells around the frontier.
          *
          * @param frontier_list List of frontiers.
@@ -253,8 +143,7 @@ namespace frontier_exploration
             std::vector<frontier_msgs::msg::Frontier> &frontier_list,
             std::vector<double> polygon_xy_min_max,
             geometry_msgs::msg::Point start_point_w,
-            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
-            nav2_costmap_2d::Costmap2D *exploration_costmap);
+            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data);
 
         /**
          * @brief Selects the closest frontier.
@@ -280,55 +169,20 @@ namespace frontier_exploration
         std::pair<frontier_msgs::msg::Frontier, bool> selectFrontierRandom(
             std::vector<frontier_msgs::msg::Frontier> &frontier_list);
 
-        /**
-         * @brief Visualizes frontiers.
-         *
-         * @param frontier_list List of frontiers.
-         * @param every_frontier Every frontier.
-         * @param globalFrameID Global frame ID.
-         */
-        void visualizeFrontier(const std::vector<frontier_msgs::msg::Frontier> &frontier_list,
-                               const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
-
-        /**
-         * @brief Exports the latest map coverage in terms of cells to a csv file.
-         *
-         * @param polygon_xy_min_max Polygon's XY min-max. Order of polygon points is : minx, miny, maxx, maxy
-         * @param startTime Start time.
-         */
-        void exportMapCoverage(std::vector<double> polygon_xy_min_max, std::chrono::_V2::system_clock::time_point startTime);
-
-        /**
-         * @brief Gets a plan for a frontier along with the information.
-         *
-         * @param start_point_w Start point in world frame.
-         * @param goal_point_w Goal point in world frame.
-         * @param map_data Map data.
-         * @param compute_information Whether to compute information.
-         * @return std::pair<PathWithInfo, bool> The planned path along with success status.
-         */
-        std::pair<PathWithInfo, bool> getPlanForFrontier(geometry_msgs::msg::Point start_point_w, frontier_msgs::msg::Frontier goal_point_w,
-                                                         std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information);
-
         void setFrontierBlacklist(std::vector<frontier_msgs::msg::Frontier>& blacklist);
 
+        void frontierPlanViz(nav_msgs::msg::Path path);
+
     private:
-        // ROS Publishers.
-        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr frontier_cloud_pub_;     ///< Publisher for frontier cloud.
-        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr all_frontier_cloud_pub_; ///< Publisher for every frontier cloud.
         // Visualization related.
-        rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_plan_pub_;                ///< Publisher for planned path to the frontiers.
-        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)
-        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr landmark_publisher_;   ///< Publisher for landmarks in the path FOVs
-        rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr viz_pose_publisher_;   ///< Publisher for the best pose after u1 computation.
         rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr path_pose_array_;
 
+        rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_plan_pub_;
         nav2_costmap_2d::Costmap2D *costmap_;
-        nav2_costmap_2d::Costmap2D *exploration_costmap_;
         rclcpp::Node::SharedPtr frontier_selection_node_;
-        std::unordered_map<frontier_msgs::msg::Frontier, bool, FrontierHash, FrontierEquality> frontier_blacklist_; ///< Stores the blacklisted frontiers.
-        int counter_value_;                                            ///< Variable used to give a unique value for each run. This is used as a prefix for the csv files.
-        std::string mode_;
+        std::shared_ptr<RosVisualizer> rosVisualizer_;
+        std::shared_ptr<FrontierCostCalculator> costCalculator_;
+        std::unordered_map<frontier_msgs::msg::Frontier, bool, FrontierHash, FrontierEquality> frontier_blacklist_; ///< Stores the blacklisted frontiers.                                      ///< Variable used to give a unique value for each run. This is used as a prefix for the csv files.
         rclcpp::Logger logger_ = rclcpp::get_logger("frontier_selection");
         bool planner_allow_unknown_;
         bool use_planning_;

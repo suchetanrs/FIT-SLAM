@@ -41,7 +41,7 @@
 // Path calc has sanity check that it succeeded
 //
 
-#include "frontier_exploration/planner.hpp"
+#include "frontier_exploration/planners/planner.hpp"
 
 #include <algorithm>
 #include "rclcpp/rclcpp.hpp"

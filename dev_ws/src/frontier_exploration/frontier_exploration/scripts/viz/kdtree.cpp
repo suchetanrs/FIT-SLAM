@@ -101,3 +101,49 @@ int main() {
 
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            // ----------------construct KD-tree-------------------------
+            Kdtree::KdNodeVector nodes;
+            for (int i = 0; i < frontierCostsRequestPtr->frontier_list.size(); ++i) {
+                nodes.push_back(Kdtree::KdNode(frontierCostsRequestPtr->frontier_list[i]));
+            }
+            Kdtree::KdTree tree(&nodes);
+            // ----------------Print the nodes-------------------------
+            cout << "Points in kd-tree:\n  ";
+            print_nodes(tree.allnodes);
+
+            // ----------------Search nearest nodes-------------------------
+            Kdtree::KdNodeVector result;
+            std::vector<double> test_point(2);
+            test_point[0] = 8;
+            test_point[1] = 3;
+            tree.k_nearest_neighbors(test_point, 3, &result);
+            cout << "3NNs of (" << test_point[0] << "," << test_point[1] << "):\n  ";
+            print_nodes(result);
+            RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Clusterred frontier size: " + std::to_string(frontierCostsRequestPtr->frontier_list.size()), this->get_logger().get_name()));
+            RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Every frontier size: " + std::to_string(frontierCostsRequestPtr->every_frontier.size()), this->get_logger().get_name()));
+
+            test_point[0] = 8;
+            test_point[1] = 3;
+            tree.range_nearest_neighbors(test_point, 0.1, &result);
+            cout << "Neighbors of (" << test_point[0] << "," << test_point[1] << ") with distance <= 0.1:\n  ";
+            print_nodes(result);
+            cout << endl << result.size() << endl;

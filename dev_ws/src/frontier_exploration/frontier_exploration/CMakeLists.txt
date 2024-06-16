@@ -65,13 +65,14 @@ include_directories(
 )
 
 # Add executable 2
-add_executable(explore_server src/explore_server.cpp plugins/bounded_explore_layer.cpp src/frontier_search.cpp src/frontier_selection.cpp src/planner.cpp src/kdtree.cpp src/main.cpp)
+add_executable(explore_server src/explore_server.cpp plugins/bounded_explore_layer.cpp src/frontier_search.cpp src/frontier_selection.cpp 
+               src/planners/planner.cpp src/planners/rrt.cpp src/kdtree.cpp src/rosVisualizer.cpp src/cost_calculator.cpp src/main.cpp)
 ament_target_dependencies(explore_server ${dependencies})
 target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES})
 
 # Add executable 5
-add_executable(localization_pose_sub src/viz/localization_pose_sub.cpp)
-ament_target_dependencies(localization_pose_sub SYSTEM ${dependencies})
+# add_executable(localization_pose_sub src/viz/localization_pose_sub.cpp)
+# ament_target_dependencies(localization_pose_sub SYSTEM ${dependencies})
 
 # Add executable 5
 # add_executable(srv_cl src/srv_cl.cpp)
