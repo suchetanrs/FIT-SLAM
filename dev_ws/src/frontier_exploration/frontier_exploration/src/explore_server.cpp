@@ -37,6 +37,7 @@ namespace frontier_exploration
         this->declare_parameter("config", rclcpp::ParameterValue(config_));
         this->declare_parameter("min_frontier_cluster_size", rclcpp::ParameterValue(1));
         this->declare_parameter("max_frontier_cluster_size", rclcpp::ParameterValue(20));
+        this->declare_parameter("process_other_robots", rclcpp::ParameterValue(false));
 
         this->get_parameter("retry_count", retry_);
         this->get_parameter("nav2_goal_timeout_sec", nav2WaitTime_);
@@ -45,6 +46,7 @@ namespace frontier_exploration
         this->get_parameter("config", config_);
         this->get_parameter("min_frontier_cluster_size", min_frontier_cluster_size_);
         this->get_parameter("max_frontier_cluster_size", max_frontier_cluster_size_);
+        this->get_parameter("process_other_robots", process_other_robots_);
         //--------------------------------------------NAV2 CLIENT RELATED--------------------------------
         nav2_client_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
         nav2Client_ = rclcpp_action::create_client<NavigateToPose>(this, "navigate_to_pose", nav2_client_callback_group_); // was previously move_base, true
@@ -117,6 +119,8 @@ namespace frontier_exploration
 
     void FrontierExplorationServer::processActiveGoalsAllRobots(bool new_goal)
     {
+        if(!process_other_robots_)
+            return;
         std::lock_guard<std::mutex> lock(process_active_goals_lock_);
         RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("PROCESSING ALL ROBOTS!!!!!!!!!!!!!!!!!!!!!! New goal? " + std::to_string(new_goal) , this->get_namespace()));
         // process for all robots
@@ -284,15 +288,16 @@ namespace frontier_exploration
             std::shared_ptr<frontier_exploration::GetFrontierCostsResponse> costResultCurrentRobot; 
             for (auto robot_name : robot_namespaces_)
             {
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Picked: " + robot_name + " from " + this->get_namespace(), this->get_namespace()));
-                if (robot_name != this->get_namespace())
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Cost compute Picked: " + robot_name + " from " + this->get_namespace(), this->get_namespace()));
+                if (robot_name != this->get_namespace() && process_other_robots_)
                 {
+                    std::lock_guard<std::mutex> lock(robot_active_goals_mutex_);
                     if(robot_active_goals_[robot_name] != nullptr)
                     {
                         processCostsAllRobots(taskAllocator, frontier_list, every_frontier, *robot_active_goals_[robot_name], robot_name);
                     }
                 }
-                else
+                else if(robot_name == this->get_namespace())
                 {
                    costResultCurrentRobot = processCostsAllRobots(taskAllocator, frontier_list, every_frontier, robot_pose, robot_name);
                 }
@@ -464,7 +469,20 @@ namespace frontier_exploration
 
     void FrontierExplorationServer::performBackupReverse()
     {
-        setMoving(true);
+        if (use_custom_sim_)
+        {
+            geometry_msgs::msg::PoseStamped robot_pose;
+            explore_costmap_ros_->getRobotPose(robot_pose);
+            nav2_goal_lock_.lock();
+            nav2_goal_ = std::make_shared<NavigateToPose::Goal>();
+            nav2_goal_->pose.pose.position.x = robot_pose.pose.position.x - 0.5;
+            nav2_goal_->pose.pose.position.y = robot_pose.pose.position.y - 0.5;
+            nav2_goal_->behavior_tree = get_namespace();
+            nav2Client_->async_send_goal(*nav2_goal_, nav2_goal_options_);
+            processActiveGoalsAllRobots(true);
+            nav2_goal_lock_.unlock();
+            setMoving(true);
+        }
         // Create a publisher to publish messages on cmd_vel_nav topic
         auto publisher = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_nav", 10);
         geometry_msgs::msg::Twist twist_msg;

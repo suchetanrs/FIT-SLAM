@@ -172,11 +172,14 @@ void RosVisualizer::exportMapCoverage(std::vector<double> polygon_xy_min_max, in
     int x_unknown = abs(polygon_xy_min_max[2] - polygon_xy_min_max[0]) / costmap_->getResolution();
     int y_unknown = abs(polygon_xy_min_max[3] - polygon_xy_min_max[1]) / costmap_->getResolution();
     int unknown = x_unknown * y_unknown;
+    RCLCPP_INFO_STREAM(logger_, "Total unknown cells is: " << unknown);
+    int cell_count = 0;
     // int unknown = std::pow((polygon_xy_min_max[2] - polygon_xy_min_max[0]) / costmap_->getResolution(), 2);
     for (double y = polygon_xy_min_max[1]; y < polygon_xy_min_max[3]; y += costmap_->getResolution())
     {
         for (double x = polygon_xy_min_max[0]; x < polygon_xy_min_max[2]; x += costmap_->getResolution())
         {
+            cell_count++;
             // Convert world coordinates to costmap grid coordinates
             unsigned int mx, my;
             if (costmap_->worldToMap(x, y, mx, my))
@@ -190,6 +193,8 @@ void RosVisualizer::exportMapCoverage(std::vector<double> polygon_xy_min_max, in
             }
         }
     }
+    RCLCPP_INFO_STREAM(logger_, "Cell count is: " << cell_count);
+    RCLCPP_INFO_STREAM(logger_, "Total unknown post red cells is: " << unknown);
     std::ofstream file;
     file.open(static_cast<std::string>(logger_.get_name()).substr(0, 7) + "_" + std::to_string(counter_value_) + "_" + mode_ + "_frontier_map_data_coverage.csv", std::ios::app);
     if (!file.is_open())

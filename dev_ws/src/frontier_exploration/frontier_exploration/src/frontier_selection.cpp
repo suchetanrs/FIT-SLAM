@@ -110,7 +110,7 @@ namespace frontier_exploration
             if(use_planning_)
             {
                 auto plan_of_frontier = costCalculator_->getPlanForFrontier(start_point_w, frontier, map_data, false, planner_allow_unknown_);
-                costCalculator_->getPlanForFrontierRRT(start_point_w, frontier, map_data, false, planner_allow_unknown_);
+                // costCalculator_->getPlanForFrontierRRT(start_point_w, frontier, map_data, false, planner_allow_unknown_);
                 // assume each pose is resolution * ((1 + root2) / 2) distance apart 
                 length_to_frontier = static_cast<double>(plan_of_frontier.path.poses.size() * (costmap_->getResolution() * 1.207));
                 // Continue to next frontier if path length is zero
@@ -365,9 +365,9 @@ namespace frontier_exploration
         {
             frontier_blacklist_[frontier] = true;
         }
-        for (auto frontier : frontier_blacklist_)
-        {
-            RCLCPP_ERROR_STREAM(logger_, COLOR_STR("Blacklist: " + std::to_string(frontier.first.goal_point.x), logger_.get_name()));
-        }
+        // for (auto frontier : frontier_blacklist_)
+        // {
+        //     RCLCPP_ERROR_STREAM(logger_, COLOR_STR("Blacklist: " + std::to_string(frontier.first.goal_point.x), logger_.get_name()));
+        // }
     }
 }

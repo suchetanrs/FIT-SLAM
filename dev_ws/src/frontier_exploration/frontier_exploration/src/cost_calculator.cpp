@@ -141,7 +141,7 @@ namespace frontier_exploration
                 maxIndex = i;
             }
         }
-        RCLCPP_INFO_STREAM(logger_, COLOR_STR("Total unknown cells is: " + std::to_string(std::accumulate(information_along_ray.begin(), information_along_ray.end(), 0)), logger_.get_name()));
+        // RCLCPP_INFO_STREAM(logger_, COLOR_STR("Total unknown cells is: " + std::to_string(std::accumulate(information_along_ray.begin(), information_along_ray.end(), 0)), logger_.get_name()));
         
         // visualize raytraced points
         rosVisualizer_->observableCellsViz(vizpoints);

@@ -107,6 +107,7 @@ namespace frontier_exploration
         int min_frontier_cluster_size_;          ///< Minimum size of a frontier cluster.
         int max_frontier_cluster_size_;
         std::shared_ptr<BoundedExploreLayer> bel_ptr_;
+        bool process_other_robots_;
     };
 }
 

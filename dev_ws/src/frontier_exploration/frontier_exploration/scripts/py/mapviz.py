@@ -16,7 +16,7 @@ flag1 = False
 flag2 = False
 flag3 = False
 # Define the CSV file name where data was saved
-input_csv_file = '/root/hungarian/scout_1_12904_ours_frontier_map_data_coverage.csv'
+input_csv_file = '/root/refactored_old/scout_1_12904_ours_frontier_map_data_coverage.csv'
 input_csv_file2 = '/root/scout_1_12904_ours_frontier_map_data_coverage.csv'
 input_csv_file3 = '/root/minPos2/scout_1_12904_ours_frontier_map_data_coverage.csv'
 
@@ -77,10 +77,10 @@ def update_plot():
     # plt.xlim(0,1728)
     plt.legend()
 
-    # plt.plot(elapsed_time, unknown_counts, label='Number of unknown cells - scout-3', color='green', linestyle='-')
-    plt.plot(elapsed_time3, unknown_counts3, label='Number of unknown cells minPos - scout-2', color='red', linestyle='-')
+    plt.plot(elapsed_time, unknown_counts, label='Number of unknown cells', color='green', linestyle='-')
+    plt.plot(elapsed_time2, unknown_counts2, label='Number of unknown cells hungarian', color='blue', linestyle='-')
+    # plt.plot(elapsed_time3, unknown_counts3, label='Number of unknown cells minPos - scout-2', color='red', linestyle='-')
     # plt.plot(elapsed_time, unknown_counts, label='Number of unknown cells hungarian - scout-1', color='green', linestyle='-')
-    plt.plot(elapsed_time2, unknown_counts2, label='Number of unknown cells hungarian - scout-1', color='blue', linestyle='-')
     plt.legend()
 
     # Pause to update the plot (you can adjust the pause duration)
@@ -102,29 +102,29 @@ def update_plot_fit():
     plt.legend()
 
     # Fit a linear model to the data
-    # coefficients = np.polyfit(elapsed_time, unknown_counts, 1)
+    coefficients = np.polyfit(elapsed_time, unknown_counts, 10)
     coefficients2 = np.polyfit(elapsed_time2, unknown_counts2, 10)
     coefficients3 = np.polyfit(elapsed_time3, unknown_counts3, 10)
 
     # Create a polynomial object with the coefficients
-    # polynomial = np.poly1d(coefficients)
+    polynomial = np.poly1d(coefficients)
     polynomial2 = np.poly1d(coefficients2)
     polynomial3 = np.poly1d(coefficients3)
 
     # Generate values for plotting the fit line
-    # fit_line = polynomial(elapsed_time)
+    fit_line = polynomial(elapsed_time)
     fit_line2 = polynomial2(elapsed_time2)
     fit_line3 = polynomial3(elapsed_time3)
 
     # Plot the data
-    # plt.plot(elapsed_time, unknown_counts, 'o', label='Number of unknown cells - scout-3', color='green')
+    # plt.plot(elapsed_time, unknown_counts, 'o', label='Number of unknown cells', color='green')
     # plt.plot(elapsed_time2, unknown_counts2, 'o', label='Number of unknown cells hungarian - scout-1', color='blue')
     # plt.plot(elapsed_time3, unknown_counts3, 'o', label='Number of unknown cells minPos - scout-2', color='red')
 
     # Plot the fitted lines
-    # plt.plot(elapsed_time, fit_line, label='Fitted line - scout-3', color='green', linestyle='-')
-    plt.plot(elapsed_time2, fit_line2, label='Fitted line hungarian - scout-1', color='blue', linestyle='-')
-    plt.plot(elapsed_time3, fit_line3, label='Fitted line minPos - scout-2', color='red', linestyle='-')
+    plt.plot(elapsed_time, fit_line, label='Exploration rate - old multirobot', color='green', linestyle='-')
+    plt.plot(elapsed_time2, fit_line2, label='Exploration rate - new multirobot', color='blue', linestyle='-')
+    # plt.plot(elapsed_time3, fit_line3, label='Fitted line minPos - scout-2', color='red', linestyle='-')
 
     plt.legend()
 
@@ -155,6 +155,7 @@ def main():
     #     read_csv_data()
     #     update_plot()
     update_plot_fit()
+    # update_plot()
 
     # Keep the plot window open
     plt.show()
