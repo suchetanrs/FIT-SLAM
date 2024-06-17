@@ -87,6 +87,7 @@ namespace frontier_exploration
         rclcpp_action::Client<NavigateToPose>::SendGoalOptions nav2_goal_options_;
         std::mutex nav2_goal_lock_;
         std::shared_ptr<NavigateToPose::Goal> nav2_goal_;
+        std::mutex process_active_goals_lock_;
 
         // Exploration related
         geometry_msgs::msg::PolygonStamped explore_boundary_;

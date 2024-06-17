@@ -183,7 +183,7 @@ namespace frontier_exploration
                 frontier_costs.push_back(costsResult.frontier_costs[frontier].cost_);
                 frontier_distances.push_back(costsResult.frontier_costs[frontier].path_length_);
                 frontier_arrival_information.push_back(costsResult.frontier_costs[frontier].information_);
-                RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Cost is: " + std::to_string(costsResult.frontier_costs[frontier].cost_), internal_node_->get_logger().get_name()));
+                RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Cost is: " + std::to_string(resultData->frontier_costs.size()), internal_node_->get_logger().get_name()));
             }
             RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Making list", internal_node_->get_logger().get_name()));
             resultData->frontier_list = frontiers_list;

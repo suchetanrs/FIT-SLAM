@@ -191,7 +191,7 @@ void RosVisualizer::exportMapCoverage(std::vector<double> polygon_xy_min_max, in
         }
     }
     std::ofstream file;
-    file.open(static_cast<std::string>(logger_.get_name()).substr(1, 7) + "_" + std::to_string(counter_value_) + "_" + mode_ + "_frontier_map_data_coverage.csv", std::ios::app);
+    file.open(static_cast<std::string>(logger_.get_name()).substr(0, 7) + "_" + std::to_string(counter_value_) + "_" + mode_ + "_frontier_map_data_coverage.csv", std::ios::app);
     if (!file.is_open())
     {
         RCLCPP_ERROR(logger_, "Failed to open the CSV file for writing.");

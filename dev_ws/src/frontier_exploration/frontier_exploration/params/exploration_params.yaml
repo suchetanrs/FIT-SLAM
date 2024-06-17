@@ -3,9 +3,9 @@ explore_server:
     retry_count: 20
     nav2_goal_timeout_sec: 100 #secs
     config: ["48.0", "60.0", "48.0", "1.25", "1.25", "1.25", "1.25", "60.0"]
-    use_custom_sim: true
-    # robot_namespaces: ['/scout_1', '/scout_2']
-    robot_namespaces: ['/scout_2']
+    use_custom_sim: false
+    robot_namespaces: ['/scout_1', '/scout_2']
+    # robot_namespaces: ['/scout_2']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4', '/scout_5']
@@ -26,7 +26,7 @@ frontier_selection_node:
     N_best_for_u2: 100000 #set to -1 for considering all the frontier for path computation (this will make the algorithm very time instensive!)
     planner_allow_unknown: true
     frontier_detect_radius: 0.0
-    use_planning: true #if false, uses euclidean distance to frontier(cannot use FIMs to compute path information). If true, plans to the frontier.
+    use_planning: false #if false, uses euclidean distance to frontier(cannot use FIMs to compute path information). If true, plans to the frontier.
 
 localization_pose_sub_node:
   ros__parameters:

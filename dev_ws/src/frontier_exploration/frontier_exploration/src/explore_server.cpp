@@ -117,6 +117,7 @@ namespace frontier_exploration
 
     void FrontierExplorationServer::processActiveGoalsAllRobots(bool new_goal)
     {
+        std::lock_guard<std::mutex> lock(process_active_goals_lock_);
         RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("PROCESSING ALL ROBOTS!!!!!!!!!!!!!!!!!!!!!! New goal? " + std::to_string(new_goal) , this->get_namespace()));
         // process for all robots
         for (auto robot_name : robot_namespaces_)
@@ -131,14 +132,12 @@ namespace frontier_exploration
                 request_current_goal->sending_robot_name = this->get_namespace();
                 if(new_goal)
                 {
-                    request_current_goal->goal_state = 0;
-                    nav2_goal_lock_.lock();
+                    request_current_goal->goal_state = 1;
                     request_current_goal->current_goal = nav2_goal_->pose;
-                    nav2_goal_lock_.unlock();
                 }
                 else
                 {
-                    request_current_goal->goal_state = 1;
+                    request_current_goal->goal_state = 0;
                 }
                 while (!client_send_current_goal_->wait_for_service(std::chrono::seconds(1)))
                 {
@@ -186,7 +185,8 @@ namespace frontier_exploration
         frontierCostsRequestPtr->prohibited_frontiers = blacklisted_frontiers_;
         frontierCostsRequestPtr->start_pose = robot_pose;
 
-        bel_ptr_->logMapData(frontierCostsRequestPtr);
+        if(robot_name == this->get_namespace())
+            bel_ptr_->logMapData(frontierCostsRequestPtr);
         /** 
          * =============== get the next frontier and costs ====================
          */
@@ -412,8 +412,8 @@ namespace frontier_exploration
                 if (use_custom_sim_)
                     nav2_goal_->behavior_tree = get_namespace();
                 nav2Client_->async_send_goal(*nav2_goal_, nav2_goal_options_);
-                nav2_goal_lock_.unlock();
                 processActiveGoalsAllRobots(true);
+                nav2_goal_lock_.unlock();
                 setMoving(true);
                 int waitCount_ = 0;
                 while (isMoving() && rclcpp::ok())
@@ -427,7 +427,9 @@ namespace frontier_exploration
                         nav2Client_->async_cancel_all_goals();
                         FrontierExplorationServer::performBackupRotation();
                         FrontierExplorationServer::performBackupReverse();
+                        nav2_goal_lock_.lock();
                         processActiveGoalsAllRobots(false);
+                        nav2_goal_lock_.unlock();
                         break;
                     }
                 }
@@ -489,9 +491,9 @@ namespace frontier_exploration
     {
         std::lock_guard<std::mutex> lock(robot_active_goals_mutex_);
         RCLCPP_ERROR_STREAM(this->get_logger(), COLOR_STR("Goal updated for: " + request->sending_robot_name + " New goal? " + std::to_string(request->goal_state), this->get_namespace()));
-        if(request->goal_state == 0)
+        if(request->goal_state == 1)
             robot_active_goals_[request->sending_robot_name] = std::make_shared<geometry_msgs::msg::PoseStamped>(request->current_goal);
-        else if(request->goal_state == 1)
+        else if(request->goal_state == 0)
             robot_active_goals_[request->sending_robot_name] = nullptr;
         
         response->success = true;
@@ -595,9 +597,9 @@ namespace frontier_exploration
             RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("Goal succeeded", this->get_namespace()));
             nav2_goal_lock_.lock();
             nav2_goal_ = nullptr;
-            nav2_goal_lock_.unlock();
             setMoving(false);
             processActiveGoalsAllRobots(false);
+            nav2_goal_lock_.unlock();
             break;
         case rclcpp_action::ResultCode::ABORTED:
             RCLCPP_ERROR(this->get_logger(), "Nav2 internal fault! Nav2 aborted the goal!");
@@ -605,17 +607,17 @@ namespace frontier_exploration
             FrontierExplorationServer::performBackupReverse();
             nav2_goal_lock_.lock();
             nav2_goal_ = nullptr;
-            nav2_goal_lock_.unlock();
             setMoving(false);
             processActiveGoalsAllRobots(false);
+            nav2_goal_lock_.unlock();
             break;
         case rclcpp_action::ResultCode::CANCELED:
             RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Nav2 goal canceled successfully", this->get_namespace()));
             nav2_goal_lock_.lock();
             nav2_goal_ = nullptr;
-            nav2_goal_lock_.unlock();
             setMoving(false);
             processActiveGoalsAllRobots(false);
+            nav2_goal_lock_.unlock();
             break;
         default:
             RCLCPP_ERROR(this->get_logger(), "Unknown nav2 goal result code");
