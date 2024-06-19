@@ -53,7 +53,6 @@ frontier_multirobot_allocator
 # Add compile definitions for visualization flags
 add_compile_definitions(
   # FRONTIER_POINT_CENTROID
-  # FRONTIER_POINT_MIDDLE
   FRONTIER_POINT_INITIAL
 )
 
@@ -65,8 +64,9 @@ include_directories(
 )
 
 # Add executable 2
-add_executable(explore_server src/explore_server.cpp plugins/bounded_explore_layer.cpp src/frontier_search.cpp src/frontier_selection.cpp 
-               src/planners/planner.cpp src/planners/rrt.cpp src/kdtree.cpp src/rosVisualizer.cpp src/cost_calculator.cpp src/main.cpp)
+add_executable(explore_server src/explore_server.cpp plugins/bounded_explore_layer.cpp src/FrontierSearch.cpp src/FrontierCostsManager.cpp 
+               src/planners/planner.cpp src/planners/rrt.cpp src/kdtree.cpp src/rosVisualizer.cpp src/CostCalculator.cpp src/main.cpp
+               src/Frontier.cpp)
 ament_target_dependencies(explore_server ${dependencies})
 target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES})
 

@@ -14,7 +14,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
-#include <frontier_msgs/msg/frontier.hpp>
+#include <frontier_exploration/Frontier.hpp>
 
 #include <frontier_exploration/planners/planner.hpp>
 #include <frontier_exploration/planners/rrt.hpp>
@@ -37,20 +37,6 @@
 
 namespace frontier_exploration
 {
-    struct GetPlanResult
-    {
-        bool success;
-        nav_msgs::msg::Path path;
-        double information_total;
-    };
-
-    struct GetArrivalInformationResult
-    {
-        bool success;
-        int information;
-        double theta_s_star_;
-    };
-
     inline int sign(int x)
     {
         return x > 0 ? 1.0 : -1.0;
@@ -121,19 +107,67 @@ namespace frontier_exploration
     public:
         FrontierCostCalculator(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap);
 
-        GetArrivalInformationResult getArrivalInformationForFrontier(frontier_msgs::msg::Frontier& goal_point_w, std::vector<double>& polygon_xy_min_max);
-
-        GetPlanResult getPlanForFrontier(geometry_msgs::msg::Point start_point_w, frontier_msgs::msg::Frontier goal_point_w,
-                                                            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
-
-        GetPlanResult getPlanForFrontierRRT(geometry_msgs::msg::Point start_point_w, frontier_msgs::msg::Frontier goal_point_w,
-                                                            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
+        // -----------------General helpers--------------------
+        bool getTracedCells(double start_wx, double start_wy, double end_wx, double end_wy, RayTracedCells& cell_gatherer, double max_length);
 
         void bresenham2D(RayTracedCells at, unsigned int abs_da, unsigned int abs_db, int error_b,
                             int offset_a,
                             int offset_b, unsigned int offset,
                             unsigned int max_length,
                             int resolution_cut_factor);
+
+        // ----------------Arrival information related--------------------
+        /**
+         * Sets arrival information to 0 if there is an error occurred.
+         * Sets goal orientation to 0 rad if there is an error occurred.
+         * If successful, sets the values accordingly.
+        */
+        void setArrivalInformationForFrontier(Frontier& goal_point_w, std::vector<double>& polygon_xy_min_max);
+
+        // ----------------Planning related--------------------
+        /**
+         * Sets path length to inf if there is an error occurred or no path is found.
+         * Sets Fisher information to 0 if there is an error occurred or no path is found.
+         * If successful, sets the two values accordingly.
+        */
+        void setPlanForFrontier(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
+                                                            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
+
+        void getPlanForFrontierRRT(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
+                                                            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
+
+        void setPlanForFrontierEuclidean(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
+                                                            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
+        
+        // -----------------Random costs--------------
+        double getRandomVal();
+
+        void setRandomMetaData(Frontier& goal_point_w);
+
+        // -----------------For closest frontier implementation-----------------
+
+        void setClosestFrontierMetaData(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
+                                                        std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
+
+        // --------------Other----------------
+        void recomputeNormalizationFactors(Frontier& frontier);
+
+        double getMinPlanDistance()
+        {
+            return min_traversable_distance;
+        };
+
+        double getMaxArrivalInformation()
+        {
+            return max_arrival_info_per_frontier;
+        };
+
+        void reset()
+        {
+            min_traversable_distance = std::numeric_limits<double>::max();
+            max_arrival_info_per_frontier = 0.0;
+        };
+
     private:
         // Add private methods or member variables if needed
         rclcpp::Node::SharedPtr node_;
@@ -143,6 +177,9 @@ namespace frontier_exploration
         std::shared_ptr<RosVisualizer> rosVisualizer_;
         rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_plan_pub_;                ///< Publisher for planned path to the frontiers.
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)
+        std::shared_ptr<RosVisualizer> rosViz_;
+        double min_traversable_distance = std::numeric_limits<double>::max();
+        double max_arrival_info_per_frontier = 0.0;
     };
 };
 

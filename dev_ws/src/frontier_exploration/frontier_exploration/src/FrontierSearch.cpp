@@ -1,5 +1,5 @@
 #include <frontier_exploration/costmap_tools.hpp>
-#include <frontier_exploration/frontier_search.hpp>
+#include <frontier_exploration/FrontierSearch.hpp>
 namespace frontier_exploration
 {
 
@@ -12,10 +12,10 @@ namespace frontier_exploration
         RCLCPP_DEBUG(rclcpp::get_logger("frontier_search"), "FrontierSearch::FrontierSearch");
     }
 
-    std::vector<frontier_msgs::msg::Frontier> FrontierSearch::searchFrom(geometry_msgs::msg::Point position)
+    std::vector<Frontier> FrontierSearch::searchFrom(geometry_msgs::msg::Point position)
     {
         //  frontier_list to store the detected frontiers.
-        std::vector<frontier_msgs::msg::Frontier> frontier_list;
+        std::vector<Frontier> frontier_list;
 
         // Sanity check that robot is inside costmap bounds before searching
         unsigned int mx, my;
@@ -71,10 +71,10 @@ namespace frontier_exploration
                 else if (isNewFrontierCell(nbr, frontier_flag))
                 {
                     frontier_flag[nbr] = true;
-                    std::vector<frontier_msgs::msg::Frontier> new_frontier = buildNewFrontier(nbr, pos, frontier_flag);
+                    std::vector<Frontier> new_frontier = buildNewFrontier(nbr, pos, frontier_flag);
                     for (auto curr_frontier : new_frontier)
                     {
-                        if (curr_frontier.size > min_frontier_cluster_size_)
+                        if (curr_frontier.getSize() > min_frontier_cluster_size_)
                         {
                             // std::cout << "PUSHING NEW FRONTIER TO LIST: UID: " << curr_frontier.unique_id << std::endl;
                             // std::cout << "Size: " << curr_frontier.size << std::endl;
@@ -90,20 +90,22 @@ namespace frontier_exploration
         return frontier_list;
     }
 
-    std::vector<frontier_msgs::msg::Frontier> FrontierSearch::buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool> &frontier_flag)
+    std::vector<Frontier> FrontierSearch::buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool> &frontier_flag)
     {
-        frontier_msgs::msg::Frontier output;
+        Frontier output;
         // initialize frontier structure
-        output.goal_point.x = 0.0;
-        output.goal_point.y = 0.0;
-        output.size = 1;
-        output.min_distance = std::numeric_limits<double>::infinity();
-        std::vector<frontier_msgs::msg::Frontier> calculated_frontiers;
+        #ifdef FRONTIER_POINT_CENTROID
+        output.setGoalPoint(0.0, 0.0);
+        #endif
+        output.setSize(1);
+        std::vector<Frontier> calculated_frontiers;
         // record initial contact point for frontier
         unsigned int ix, iy;
         costmap_.indexToCells(initial_cell, ix, iy);
         #ifdef FRONTIER_POINT_INITIAL
-            costmap_.mapToWorld(ix, iy, output.goal_point.x, output.goal_point.y);
+            double wx, wy;
+            costmap_.mapToWorld(ix, iy, wx, wy);
+            output.setGoalPoint(wx, wy);
         #endif
 
         // push initial gridcell onto queue
@@ -143,36 +145,31 @@ namespace frontier_exploration
                     every_frontier_list.push_back(coord_val);
 
                     // update frontier size
-                    output.size++;
+                    output.setSize(output.getSize() + 1);
 
                     #ifdef FRONTIER_POINT_CENTROID
                     // update centroid of frontier
-                    output.goal_point.x += wx;
-                    output.goal_point.y += wy;
-                    #endif
-
-                    // determine frontier's distance from robot, going by closest gridcell to robot
-                    double distance = sqrt(pow((double(reference_x) - double(wx)), 2.0) + pow((double(reference_y) - double(wy)), 2.0));
-                    if (distance < output.min_distance)
                     {
-                        output.min_distance = distance;
-                        #ifdef FRONTIER_POINT_MIDDLE
-                        output.goal_point.x = wx;
-                        output.goal_point.y = wy;
-                        #endif
+                    auto new_x = output.getGoalPoint().x + wx;
+                    auto new_y = output.getGoalPoint().y + wy;
+                    output.setGoalPoint(new_x, new_y);
                     }
+                    #endif
 
                     // add to queue for breadth first search
                     bfs.push(nbr);
 
-                    if (output.size > max_frontier_cluster_size_)
+                    if (output.getSize() > max_frontier_cluster_size_)
                     {
                         // push to output vector
                         #ifdef FRONTIER_POINT_CENTROID
-                        output.goal_point.x /= output.size;
-                        output.goal_point.y /= output.size;
+                        {
+                        auto new_x = output.getGoalPoint().x / output.getSize();
+                        auto new_y = output.getGoalPoint().y / output.getSize();
+                        output.setGoalPoint(new_x, new_y);
+                        }
                         #endif
-                        output.unique_id = generateUID(output);
+                        output.setUID(generateUID(output));
                         // std::cout << "1PUSHING NEW FRONTIER TO LIST: UID: " << output.unique_id << std::endl;
                         // std::cout << "1Size: " << output.size << std::endl;
                         // std::cout << "1Minimum Distance: " << output.min_distance << std::endl;
@@ -182,19 +179,12 @@ namespace frontier_exploration
 
                         // reset frontier structure
                         #ifdef FRONTIER_POINT_CENTROID
-                        output.goal_point.x = 0.0;
-                        output.goal_point.y = 0.0;
-                        #endif
-                        #ifdef FRONTIER_POINT_MIDDLE
-                        output.goal_point.x = 0.0;
-                        output.goal_point.y = 0.0;
+                        output.setGoalPoint(0.0, 0.0);
                         #endif
                         #ifdef FRONTIER_POINT_INITIAL
-                        output.goal_point.x = wx;
-                        output.goal_point.y = wy;
+                        output.setGoalPoint(wx, wy);
                         #endif
-                        output.size = 1;
-                        output.min_distance = std::numeric_limits<double>::infinity();
+                        output.setSize(1);
                     }
                 }
             }
@@ -202,10 +192,13 @@ namespace frontier_exploration
 
         // average out frontier centroid
         #ifdef FRONTIER_POINT_CENTROID
-        output.goal_point.x /= output.size;
-        output.goal_point.y /= output.size;
+        {
+        auto new_x = output.getGoalPoint().x / output.getSize();
+        auto new_y = output.getGoalPoint().y / output.getSize();
+        output.setGoalPoint(new_x, new_y);
+        }
         #endif
-        output.unique_id = generateUID(output);
+        output.setUID(generateUID(output));
         // std::cout << "1PUSHING NEW FRONTIER TO LIST: UID: " << output.unique_id << std::endl;
         // std::cout << "1Size: " << output.size << std::endl;
         // std::cout << "1Minimum Distance: " << output.min_distance << std::endl;

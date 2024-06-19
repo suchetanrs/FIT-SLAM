@@ -20,7 +20,7 @@ bounded_explore_layer:
     counter: 031150
     exploration_mode: ours
     
-frontier_selection_node:
+frontier_costs_manager_node:
   ros__parameters:
     alpha: 0.50 #set to 1.0 for maximum weight to arrival information and 0.0 for maximum weight to frontier path distance.
     beta: 0.50 #set to 1.0 for maximum weight to u1 and 0.0 for maximum weight to information on path.

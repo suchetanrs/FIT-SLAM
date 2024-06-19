@@ -28,9 +28,8 @@
 #include <tf2_ros/buffer.h>
 #include <tf2/LinearMath/Quaternion.h>
 
-#include "frontier_msgs/msg/frontier.hpp"
-#include "frontier_msgs/srv/get_frontier_costs.hpp"
-#include "frontier_exploration/frontier_selection.hpp"
+#include "frontier_exploration/Frontier.hpp"
+#include "frontier_exploration/FrontierCostsManager.hpp"
 #include "frontier_exploration/colorize.hpp"
 #include "frontier_exploration/rosVisualizer.hpp"
 #include "slam_msgs/srv/get_map.hpp"
@@ -41,15 +40,15 @@ namespace frontier_exploration
     struct GetFrontierCostsRequest
     {
         geometry_msgs::msg::PoseStamped start_pose;
-        std::vector<frontier_msgs::msg::Frontier> frontier_list;
+        std::vector<Frontier> frontier_list;
         std::vector<std::vector<double>> every_frontier;
-        std::vector<frontier_msgs::msg::Frontier> prohibited_frontiers;       
+        std::vector<Frontier> prohibited_frontiers;       
     };
 
     struct GetFrontierCostsResponse
     {
         bool success;
-        std::vector<frontier_msgs::msg::Frontier> frontier_list;
+        std::vector<Frontier> frontier_list;
         std::vector<double> frontier_costs;                     
         std::vector<double> frontier_distances;                 
         std::vector<double> frontier_arrival_information;       
@@ -71,27 +70,16 @@ namespace frontier_exploration
 
     protected:
 
-        SelectionResult processOurApproach(
-            std::vector<frontier_msgs::msg::Frontier> &frontier_list,
+        bool processOurApproach(
+            std::vector<Frontier> &frontier_list,
             geometry_msgs::msg::Point& start_point_w);
-
-        std::pair<frontier_msgs::msg::Frontier, bool> processRandomApproach(
-            std::vector<frontier_msgs::msg::Frontier> &frontier_list);
-
-        std::pair<frontier_msgs::msg::Frontier, bool> processGreedyApproach(
-            std::vector<frontier_msgs::msg::Frontier> &frontier_list);
 
     private:
         geometry_msgs::msg::Polygon polygon_;
         std::vector<double> polygon_xy_min_max_;
         std::string exploration_mode_;
 
-        std::shared_ptr<frontier_exploration::FrontierSelectionNode> frontierSelect_;
-
-        // COSTMAP INTERNAL
-        bool enabledLayer_;
-        std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
-        std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+        std::shared_ptr<frontier_exploration::FrontierCostsManager> frontierSelect_;
 
         std::string current_robot_namespace_;
         rclcpp_lifecycle::LifecycleNode::SharedPtr node;

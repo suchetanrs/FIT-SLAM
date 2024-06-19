@@ -796,3 +796,7 @@ kk
 cd dev_ws/
 vsc
 tmux
+cd /root/dev_ws/src/frontier_exploration/frontier_exploration/scripts/viz/nan_check.cpp
+cd /root/dev_ws/src/frontier_exploration/frontier_exploration/scripts/viz/
+g++ -o nan_check nan_check.cpp 
+./nan_check 

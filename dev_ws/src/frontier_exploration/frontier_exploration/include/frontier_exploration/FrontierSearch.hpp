@@ -13,7 +13,7 @@
 
 #include <geometry_msgs/msg/point.hpp>
 
-#include <frontier_msgs/msg/frontier.hpp>
+#include <frontier_exploration/Frontier.hpp>
 #include <frontier_exploration/colorize.hpp>
 
 namespace frontier_exploration
@@ -36,7 +36,7 @@ namespace frontier_exploration
          * @param position Initial position to search from
          * @return List of frontiers, if any
          */
-        std::vector<frontier_msgs::msg::Frontier> searchFrom(geometry_msgs::msg::Point position);
+        std::vector<Frontier> searchFrom(geometry_msgs::msg::Point position);
 
         /**
          * @brief Getter function for all frontiers unclustered.
@@ -52,7 +52,7 @@ namespace frontier_exploration
          * @param frontier_flag Flag vector indicating which cells are already marked as frontiers
          * @return
          */
-        std::vector<frontier_msgs::msg::Frontier> buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool> &frontier_flag);
+        std::vector<Frontier> buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool> &frontier_flag);
 
         /**
          * @brief isNewFrontierCell Evaluate if candidate cell is a valid candidate for a new frontier.

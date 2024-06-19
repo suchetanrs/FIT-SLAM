@@ -14,13 +14,13 @@
 #include <cstdlib>
 #include <queue>
 #include <vector>
-#include <frontier_msgs/msg/frontier.hpp>
+#include <frontier_exploration/Frontier.hpp>
 
 namespace Kdtree {
 
 typedef std::vector<double> CoordPoint;
 typedef std::vector<double> DoubleVector;
-typedef std::vector<frontier_msgs::msg::Frontier> FrontierPoint;
+typedef std::vector<Frontier> FrontierPoint;
 
 // for passing points to the constructor of kdtree
 struct KdNode {
@@ -32,8 +32,8 @@ struct KdNode {
     data = d;
     index = i;
   }
-  KdNode(const frontier_msgs::msg::Frontier& p, void* d = NULL, int i = -1) {
-    std::vector<double> frontier_point = {p.goal_point.x, p.goal_point.y};
+  KdNode(const Frontier& p, void* d = NULL, int i = -1) {
+    std::vector<double> frontier_point = {p.getGoalPoint().x, p.getGoalPoint().y};
     point = frontier_point;
     data = d;
     index = i;

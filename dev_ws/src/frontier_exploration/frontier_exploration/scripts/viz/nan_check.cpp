@@ -9,6 +9,7 @@ int main() {
     // Check if the assigned value is NaN
     if (std::isnan(value)) {
         std::cout << "The value is NaN." << std::endl;
+        std::cout << "Val" << value * 5.0 << std::endl;
     } else {
         std::cout << "The value is not NaN." << std::endl;
     }

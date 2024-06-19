@@ -13,6 +13,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node)
     landmark_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("landmark_marker", 10);
 
     observable_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("observable_cells", 10);
+    frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
     costmap_ = nullptr;
 }
 
@@ -26,7 +27,10 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Cost
 
     all_frontier_cloud_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("all_frontiers", custom_qos);
 
+    landmark_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("landmark_marker", 10);
+
     observable_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("observable_cells", 10);
+    frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
     costmap_ = costmap;
 }
 
@@ -113,7 +117,7 @@ void RosVisualizer::landmarkViz(std::vector<Eigen::Vector3f> &points)
     landmark_publisher_->publish(marker_msg_);
 }
 
-void RosVisualizer::visualizeFrontier(const std::vector<frontier_msgs::msg::Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID)
+void RosVisualizer::visualizeFrontier(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID)
 {
     // pointcloud for visualization purposes
     pcl::PointCloud<pcl::PointXYZI> frontier_cloud_viz;
@@ -126,8 +130,8 @@ void RosVisualizer::visualizeFrontier(const std::vector<frontier_msgs::msg::Fron
     for (const auto &frontier : frontier_list)
     {
         // load frontier into visualization poitncloud
-        frontier_point_viz.x = frontier.goal_point.x;
-        frontier_point_viz.y = frontier.goal_point.y;
+        frontier_point_viz.x = frontier.getGoalPoint().x;
+        frontier_point_viz.y = frontier.getGoalPoint().y;
         frontier_cloud_viz.push_back(frontier_point_viz);
     }
 
@@ -206,4 +210,9 @@ void RosVisualizer::exportMapCoverage(std::vector<double> polygon_xy_min_max, in
     file << std::setprecision(2);
     file << node_->get_clock()->now().seconds() << "," << unknown << std::endl;
     file.close();
+}
+
+void RosVisualizer::frontierPlanViz(nav_msgs::msg::Path& path)
+{
+    frontier_plan_pub_->publish(path);
 }

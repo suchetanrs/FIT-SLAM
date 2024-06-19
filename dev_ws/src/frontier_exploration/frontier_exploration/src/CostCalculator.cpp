@@ -1,4 +1,4 @@
-#include "frontier_exploration/cost_calculator.hpp"
+#include "frontier_exploration/CostCalculator.hpp"
 #include <frontier_exploration/util.hpp>
 
 namespace frontier_exploration
@@ -10,11 +10,78 @@ namespace frontier_exploration
         exploration_costmap_ = costmap;
         rosVisualizer_ = std::make_shared<RosVisualizer>(node, exploration_costmap_);
         fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
+        rosVisualizer_ = std::make_shared<RosVisualizer>(node, exploration_costmap_);
+        min_traversable_distance = std::numeric_limits<double>::max();
+        max_arrival_info_per_frontier = 0.0;
     }
 
-    GetArrivalInformationResult FrontierCostCalculator::getArrivalInformationForFrontier(frontier_msgs::msg::Frontier& frontier, std::vector<double>& polygon_xy_min_max)
+    bool FrontierCostCalculator::getTracedCells(double sx, double sy, double wx, double wy, RayTracedCells &cell_gatherer, double max_length)
     {
-        GetArrivalInformationResult result_struct;
+        unsigned int min_length = 0.0;
+        int resolution_cut_factor = 1;
+        // Calculate map coordinates
+        unsigned int x1, y1;
+        unsigned int x0, y0;
+        if (!exploration_costmap_->worldToMap(wx, wy, x1, y1) || !exploration_costmap_->worldToMap(sx, sy, x0, y0))
+        {
+            RCLCPP_ERROR(logger_, "Not world to map");
+            return false;
+        }
+
+        // Calculate distance and adjust starting point to min_length distance
+        int dx_full = x1 - x0;
+        int dy_full = y1 - y0;
+        double dist = std::hypot(dx_full, dy_full);
+        if (dist < min_length)
+        {
+            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Distance to ray trace is lesser than minimum distance. Proceeding to next frontier.", logger_.get_name()));
+            return false;
+        }
+        unsigned int min_x0, min_y0;
+        if (dist > 0.0)
+        {
+            // Adjust starting point and offset to start from min_length distance
+            min_x0 = (unsigned int)(x0 + dx_full / dist * min_length);
+            min_y0 = (unsigned int)(y0 + dy_full / dist * min_length);
+        }
+        else
+        {
+            min_x0 = x0;
+            min_y0 = y0;
+        }
+        unsigned int offset = min_y0 * exploration_costmap_->getSizeInCellsX() + min_x0;
+
+        int dx = x1 - min_x0;
+        int dy = y1 - min_y0;
+
+        unsigned int abs_dx = abs(dx);
+        unsigned int abs_dy = abs(dy);
+
+        int offset_dx = sign(dx);
+        int offset_dy = sign(dy) * exploration_costmap_->getSizeInCellsX();
+
+        double scale = (dist == 0.0) ? 1.0 : std::min(1.0, max_length / dist);
+        // Calculate the maximum number of steps based on resolution_cut_factor
+        // if x is dominant
+        if (abs_dx >= abs_dy)
+        {
+            int error_y = abs_dx / 2;
+
+            FrontierCostCalculator::bresenham2D(
+                cell_gatherer, abs_dx, abs_dy, error_y, offset_dx, offset_dy, offset, (unsigned int)(scale * abs_dx), resolution_cut_factor);
+        }
+        else
+        {
+            // otherwise y is dominant
+            int error_x = abs_dy / 2;
+            FrontierCostCalculator::bresenham2D(
+                cell_gatherer, abs_dy, abs_dx, error_x, offset_dy, offset_dx, offset, (unsigned int)(scale * abs_dy), resolution_cut_factor);
+        }
+        return true;
+    }
+
+    void FrontierCostCalculator::setArrivalInformationForFrontier(Frontier &frontier, std::vector<double> &polygon_xy_min_max)
+    {
         auto startTime = std::chrono::high_resolution_clock::now();
         const double radius = 2.0;       // max depth of camera fov
         const double delta_theta = 0.15; // spatial density
@@ -22,11 +89,9 @@ namespace frontier_exploration
 
         double sx, sy; // sensor x, sensor y, sensor orientation
         double wx, wy;
-        unsigned int min_length = 0.0;
-        int resolution_cut_factor = 1;
         unsigned int max_length = radius / (exploration_costmap_->getResolution());
-        sx = frontier.goal_point.x;
-        sy = frontier.goal_point.y;
+        sx = frontier.getGoalPoint().x;
+        sy = frontier.getGoalPoint().y;
         std::vector<int> information_along_ray; // stores the information along each ray in 2PI.
         std::vector<geometry_msgs::msg::Pose> vizpoints;
         // Iterate through each angle in 2PI with delta_theta resolution
@@ -43,65 +108,11 @@ namespace frontier_exploration
             wx = std::max(polygon_xy_min_max[0], std::max(exploration_costmap_->getOriginX(), std::min(polygon_xy_min_max[2], std::min(exploration_costmap_->getOriginX() + exploration_costmap_->getSizeInMetersX(), wx))));
             wy = std::max(polygon_xy_min_max[1], std::max(exploration_costmap_->getOriginY(), std::min(polygon_xy_min_max[3], std::min(exploration_costmap_->getOriginY() + exploration_costmap_->getSizeInMetersY(), wy))));
 
-            // Calculate map coordinates
-            unsigned int x1, y1;
-            unsigned int x0, y0;
-            if (!exploration_costmap_->worldToMap(wx, wy, x1, y1) || !exploration_costmap_->worldToMap(sx, sy, x0, y0))
+            if (!getTracedCells(sx, sy, wx, wy, cell_gatherer, max_length))
             {
-                RCLCPP_ERROR(logger_, "Not world to map");
-                break;
-            }
-
-            // Calculate distance and adjust starting point to min_length distance
-            int dx_full = x1 - x0;
-            int dy_full = y1 - y0;
-            double dist = std::hypot(dx_full, dy_full);
-            if (dist < min_length)
-            {
-                RCLCPP_WARN_STREAM(logger_, COLOR_STR("Distance to ray trace is lesser than minimum distance. Proceeding to next frontier.", logger_.get_name()));
-                result_struct.information = 0;
-                result_struct.success = false;
-                return result_struct;
-            }
-            unsigned int min_x0, min_y0;
-            if (dist > 0.0)
-            {
-                // Adjust starting point and offset to start from min_length distance
-                min_x0 = (unsigned int)(x0 + dx_full / dist * min_length);
-                min_y0 = (unsigned int)(y0 + dy_full / dist * min_length);
-            }
-            else
-            {
-                min_x0 = x0;
-                min_y0 = y0;
-            }
-            unsigned int offset = min_y0 * exploration_costmap_->getSizeInCellsX() + min_x0;
-
-            int dx = x1 - min_x0;
-            int dy = y1 - min_y0;
-
-            unsigned int abs_dx = abs(dx);
-            unsigned int abs_dy = abs(dy);
-
-            int offset_dx = sign(dx);
-            int offset_dy = sign(dy) * exploration_costmap_->getSizeInCellsX();
-
-            double scale = (dist == 0.0) ? 1.0 : std::min(1.0, max_length / dist);
-            // Calculate the maximum number of steps based on resolution_cut_factor
-            // if x is dominant
-            if (abs_dx >= abs_dy)
-            {
-                int error_y = abs_dx / 2;
-
-                FrontierCostCalculator::bresenham2D(
-                    cell_gatherer, abs_dx, abs_dy, error_y, offset_dx, offset_dy, offset, (unsigned int)(scale * abs_dx), resolution_cut_factor);
-            }
-            else
-            {
-                // otherwise y is dominant
-                int error_x = abs_dy / 2;
-                FrontierCostCalculator::bresenham2D(
-                    cell_gatherer, abs_dy, abs_dx, error_x, offset_dy, offset_dx, offset, (unsigned int)(scale * abs_dy), resolution_cut_factor);
+                frontier.setArrivalInformation(0.0);
+                frontier.setGoalOrientation(0.0);
+                return;
             }
 
             auto info_addition = cell_gatherer.getCells();
@@ -142,20 +153,18 @@ namespace frontier_exploration
             }
         }
         // RCLCPP_INFO_STREAM(logger_, COLOR_STR("Total unknown cells is: " + std::to_string(std::accumulate(information_along_ray.begin(), information_along_ray.end(), 0)), logger_.get_name()));
-        
+
         // visualize raytraced points
         rosVisualizer_->observableCellsViz(vizpoints);
-        result_struct.success = true;
-        result_struct.information = maxValue;
-        result_struct.theta_s_star_ = (maxIndex * delta_theta) + (camera_fov / 2);
-        return result_struct;
+        frontier.setArrivalInformation(maxValue);
+        frontier.setGoalOrientation((maxIndex * delta_theta) + (camera_fov / 2));
+        return;
     }
 
-    GetPlanResult FrontierCostCalculator::getPlanForFrontier(geometry_msgs::msg::Point start_point_w, frontier_msgs::msg::Frontier goal_point_w,
-                                                             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_)
+    void FrontierCostCalculator::setPlanForFrontier(geometry_msgs::msg::Point start_point_w, Frontier &goal_point_w,
+                                                    std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_)
     {
         double information_for_path = 0;
-        GetPlanResult result_struct;
         visualization_msgs::msg::Marker marker_msg_;
         // Initialize the Marker message
         marker_msg_.header.frame_id = "map"; // Set the frame ID
@@ -179,23 +188,21 @@ namespace frontier_exploration
         if (!exploration_costmap_->worldToMap(start_point_w.x, start_point_w.y, mx, my))
         {
             RCLCPP_WARN_STREAM(logger_, COLOR_STR("Cannot create a plan: the robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?", logger_.get_name()));
-            result_struct.path = plan;
-            result_struct.information_total = -1;
-            result_struct.success = false;
-            return result_struct;
+            goal_point_w.setPathLength(std::numeric_limits<double>::max());
+            goal_point_w.setFisherInformation(0);
+            return;
         }
         int map_start[2];
         map_start[0] = mx;
         map_start[1] = my;
 
         // goal point
-        if (!exploration_costmap_->worldToMap(goal_point_w.goal_point.x, goal_point_w.goal_point.y, mx, my))
+        if (!exploration_costmap_->worldToMap(goal_point_w.getGoalPoint().x, goal_point_w.getGoalPoint().y, mx, my))
         {
             RCLCPP_WARN_STREAM(logger_, COLOR_STR("The goal sent to the planner is off the global costmap Planning will always fail to this goal.", logger_.get_name()));
-            result_struct.path = plan;
-            result_struct.information_total = -1;
-            result_struct.success = false;
-            return result_struct;
+            goal_point_w.setPathLength(std::numeric_limits<double>::max());
+            goal_point_w.setFisherInformation(0);
+            return;
         }
 
         int map_goal[2];
@@ -209,10 +216,9 @@ namespace frontier_exploration
         if (!planner_->calcNavFnAstar())
         {
             RCLCPP_ERROR(logger_, "Plan not Found.");
-            result_struct.path = plan;
-            result_struct.information_total = -1;
-            result_struct.success = false;
-            return result_struct;
+            goal_point_w.setPathLength(std::numeric_limits<double>::max());
+            goal_point_w.setFisherInformation(0);
+            return;
         }
 
         const int &max_cycles = (exploration_costmap_->getSizeInCellsX() >= exploration_costmap_->getSizeInCellsY()) ? (exploration_costmap_->getSizeInCellsX() * 4) : (exploration_costmap_->getSizeInCellsY() * 4);
@@ -220,10 +226,9 @@ namespace frontier_exploration
         if (path_len == 0)
         {
             RCLCPP_WARN_STREAM(logger_, COLOR_STR("Path length is zero", logger_.get_name()));
-            result_struct.path = plan;
-            result_struct.information_total = -1;
-            result_struct.success = false;
-            return result_struct;
+            goal_point_w.setPathLength(std::numeric_limits<double>::max());
+            goal_point_w.setFisherInformation(0);
+            return;
         }
 
         auto cost = planner_->getLastPathCost();
@@ -286,32 +291,73 @@ namespace frontier_exploration
             }
         }
         fov_marker_publisher_->publish(marker_msg_);
-        if (plan.poses.empty())
+        if (plan.poses.size() == 0)
         {
-            result_struct.path = plan;
-            result_struct.information_total = -1;
-            result_struct.success = false;
-            return result_struct;
+            goal_point_w.setPathLength(std::numeric_limits<double>::max());
+            goal_point_w.setFisherInformation(0);
+            return;
         }
-        result_struct.path = plan;
+        goal_point_w.setPathLength(plan.poses.size());
         if (number_of_wayp == 0)
         {
-            result_struct.information_total = information_for_path;
+            goal_point_w.setFisherInformation(information_for_path);
         }
         if (number_of_wayp != 0)
         {
             // This is done so as to normalize the information on the path.
-            result_struct.information_total = information_for_path / number_of_wayp;
+            goal_point_w.setFisherInformation(information_for_path / number_of_wayp);
         }
-        result_struct.success = true;
-        return result_struct;
+        rosVisualizer_->frontierPlanViz(plan);
+        return;
     }
 
-    GetPlanResult FrontierCostCalculator::getPlanForFrontierRRT(geometry_msgs::msg::Point start_point_w, frontier_msgs::msg::Frontier goal_point_w,
-                                                        std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_)
+    void FrontierCostCalculator::getPlanForFrontierRRT(geometry_msgs::msg::Point start_point_w, Frontier &goal_point_w,
+                                                       std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_)
     {
         rrt_planner::RRTPlanner planner(exploration_costmap_, 1.0, 1000, logger_);
-        std::vector<rrt_planner::Node> path = planner.plan(start_point_w.x, start_point_w.y, goal_point_w.goal_point.x, goal_point_w.goal_point.y);
+        std::vector<rrt_planner::Node> path = planner.plan(start_point_w.x, start_point_w.y, goal_point_w.getGoalPoint().x, goal_point_w.getGoalPoint().y);
+    }
+
+    void FrontierCostCalculator::setPlanForFrontierEuclidean(geometry_msgs::msg::Point start_point_w, Frontier &goal_point_w,
+                                                             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_)
+    {
+        auto length_to_frontier = sqrt(pow(start_point_w.x - goal_point_w.getGoalPoint().x, 2) + pow(start_point_w.y - goal_point_w.getGoalPoint().y, 2));
+        goal_point_w.setPathLength(length_to_frontier);
+        if (length_to_frontier == 0)
+            goal_point_w.setPathLength(std::numeric_limits<double>::max());
+        goal_point_w.setFisherInformation(0.0);
+        return;
+    }
+
+    double FrontierCostCalculator::getRandomVal()
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> dis(0.0, 1.0);
+        return dis(gen);
+    }
+
+    void FrontierCostCalculator::setRandomMetaData(Frontier &goal_point_w)
+    {
+        goal_point_w.setArrivalInformation(getRandomVal());
+        goal_point_w.setGoalOrientation(getRandomVal());
+        goal_point_w.setPathLength(getRandomVal());
+        goal_point_w.setFisherInformation(getRandomVal());
+    }
+
+    void FrontierCostCalculator::setClosestFrontierMetaData(geometry_msgs::msg::Point start_point_w, Frontier &goal_point_w,
+                                                            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_)
+    {
+        goal_point_w.setArrivalInformation(1e-9);
+        goal_point_w.setGoalOrientation(1e-9);
+        setPlanForFrontierEuclidean(start_point_w, goal_point_w, map_data, compute_information, planner_allow_unknown_);
+        goal_point_w.setFisherInformation(1e-9);
+    }
+
+    void FrontierCostCalculator::recomputeNormalizationFactors(Frontier &frontier)
+    {
+        min_traversable_distance = std::min(min_traversable_distance, frontier.getPathLength());
+        max_arrival_info_per_frontier = std::max(max_arrival_info_per_frontier, frontier.getArrivalInformation());
     }
 
     void FrontierCostCalculator::bresenham2D(

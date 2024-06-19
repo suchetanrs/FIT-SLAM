@@ -17,7 +17,7 @@
 #include "frontier_multirobot_allocator/taskAllocator.hpp"
 #include "frontier_exploration/colorize.hpp"
 #include "frontier_exploration/bounded_explore_layer.hpp"
-#include "frontier_exploration/frontier_search.hpp"
+#include "frontier_exploration/FrontierSearch.hpp"
 #include "frontier_exploration/kdtree.hpp"
 
 namespace frontier_exploration
@@ -37,7 +37,7 @@ namespace frontier_exploration
         // new goal - set goal_complete to true, goal completed, aborted, cancelled - set goal_complete to false
         void processActiveGoalsAllRobots(bool goal_complete);
 
-        std::shared_ptr<frontier_exploration::GetFrontierCostsResponse> processCostsAllRobots(std::shared_ptr<TaskAllocator> taskAllocator, std::vector<frontier_msgs::msg::Frontier>& frontier_list,
+        std::shared_ptr<frontier_exploration::GetFrontierCostsResponse> processCostsAllRobots(std::shared_ptr<TaskAllocator> taskAllocator, std::vector<Frontier>& frontier_list,
                                    std::vector<std::vector<double>>& every_frontier, geometry_msgs::msg::PoseStamped& robot_pose, std::string robot_name);
 
         void run();
@@ -102,7 +102,7 @@ namespace frontier_exploration
         std::mutex robot_active_goals_mutex_;
         std::map<std::string, std::shared_ptr<geometry_msgs::msg::PoseStamped>> robot_active_goals_;
         bool use_custom_sim_;
-        std::vector<frontier_msgs::msg::Frontier> blacklisted_frontiers_; // these are the frontiers traversed by this robot.
+        std::vector<Frontier> blacklisted_frontiers_; // these are the frontiers traversed by this robot.
         std::vector<std::string> config_;
         int min_frontier_cluster_size_;          ///< Minimum size of a frontier cluster.
         int max_frontier_cluster_size_;

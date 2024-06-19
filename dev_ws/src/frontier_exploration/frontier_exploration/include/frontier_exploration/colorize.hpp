@@ -4,7 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <rclcpp/rclcpp.hpp>
-#include <frontier_msgs/msg/frontier.hpp>
+#include <frontier_exploration/Frontier.hpp>
 
 // Color_id	    Color
 //        1	    Aqua
@@ -95,21 +95,19 @@ inline std::string COLOR_STR(const std::string &str, const char *robotName)
         std::cout << GET_STR_STREAM("\033[1;94m" << functionName << " Execution Time: " << seconds << " Seconds\033[0m") << std::endl;
 
 
-inline bool equateFrontiers(frontier_msgs::msg::Frontier& f1, frontier_msgs::msg::Frontier& f2, bool printValues)
+inline bool equateFrontiers(Frontier& f1, Frontier& f2, bool printValues)
 {
-    if (f1.goal_point != f2.goal_point ||
-        f1.size != f2.size) {
+    if (f1.getGoalPoint() != f2.getGoalPoint() ||
+        f1.getSize() != f2.getSize()) {
         if(printValues)
         {
-            std::cout << "list1.goal_point: " << f1.goal_point.x << std::endl;
-            std::cout << "list1.goal_point: " << f1.goal_point.y << std::endl;
-            std::cout << "list1.min_distance: " << f1.min_distance << std::endl;
+            std::cout << "list1.goal_point: " << f1.getGoalPoint().x << std::endl;
+            std::cout << "list1.goal_point: " << f1.getGoalPoint().y << std::endl;
             std::cout << "********************" << std::endl;
-            std::cout << "list2.goal_point: " << f2.goal_point.x << std::endl;
-            std::cout << "list2.goal_point: " << f2.goal_point.y << std::endl;
-            std::cout << "list2.min_distance: " << f2.min_distance << std::endl;
-            std::cout << "list1.size: " << f1.size << std::endl;
-            std::cout << "list2.size: " << f2.size << std::endl;
+            std::cout << "list2.goal_point: " << f2.getGoalPoint().x << std::endl;
+            std::cout << "list2.goal_point: " << f2.getGoalPoint().y << std::endl;
+            std::cout << "list1.size: " << f1.getSize() << std::endl;
+            std::cout << "list2.size: " << f2.getSize() << std::endl;
             std::cout << "********************" << std::endl;
         }
         return false;
@@ -118,7 +116,7 @@ inline bool equateFrontiers(frontier_msgs::msg::Frontier& f1, frontier_msgs::msg
 }
 
 
-inline bool equateFrontierList(const std::vector<frontier_msgs::msg::Frontier> &list1, const std::vector<frontier_msgs::msg::Frontier> &list2)
+inline bool equateFrontierList(const std::vector<Frontier> &list1, const std::vector<Frontier> &list2)
 {
     bool listflag = true;
     // Check if the lists have the same size
@@ -144,10 +142,10 @@ inline bool equateFrontierList(const std::vector<frontier_msgs::msg::Frontier> &
   * Therefore, to verify if only the traversal point is the same, 
   * we use the hash and equality as intial points.
 */
-// Define hash function specialization for frontier_msgs::msg::Frontier
+// Define hash function specialization for Frontier
 struct FrontierHash
 {
-    size_t operator()(const frontier_msgs::msg::Frontier &key) const
+    size_t operator()(const Frontier &key) const
     {
         // Calculate hash based on some combination of member variables
         size_t hash = 0;
@@ -155,35 +153,13 @@ struct FrontierHash
         //         std::hash<double>()(key.min_distance) ^
         //         std::hash<double>()(key.unique_id);
 
-        hash = std::hash<double>()(key.goal_point.x) ^
-                std::hash<double>()(key.goal_point.y);
+        hash = std::hash<double>()(key.getGoalPoint().x) ^
+                std::hash<double>()(key.getGoalPoint().y);
                 // std::hash<uint32_t>()(key.size) ^
                 // std::hash<double>()(key.min_distance) ^
                 // std::hash<double>()(key.unique_id);
         return hash;
     }
-};
-
-// Custom equality function
-struct FrontierEquality {
-    bool operator()(const frontier_msgs::msg::Frontier& lhs, const frontier_msgs::msg::Frontier& rhs) const {
-        // return  lhs.size == rhs.size &&
-        //         lhs.min_distance == rhs.min_distance &&
-        //         lhs.unique_id == rhs.unique_id;
-        return lhs.goal_point == rhs.goal_point;
-    }
-};
-
-inline size_t generateUID(const frontier_msgs::msg::Frontier& output)
-{
-    std::hash<double> hash_fn;
-    
-    // Hash each double value
-    std::size_t hash1 = hash_fn(output.goal_point.x);
-    std::size_t hash2 = hash_fn(output.goal_point.y);
-
-    // return hash1 ^ (hash2 << 1);
-    return hash1 ^ (hash2 << 1);
 };
 
 inline size_t generateUID(std::vector<double>& output)
@@ -199,11 +175,10 @@ inline size_t generateUID(std::vector<double>& output)
     // return output[0] + output[1];
 };
 
-
-struct FrontierLessThan
+template<typename T>
+inline bool vectorContains(const std::vector<T>& vec, const T& value)
 {
-    bool operator()(const frontier_msgs::msg::Frontier& lhs, const frontier_msgs::msg::Frontier& rhs) const {
-        return generateUID(lhs) < generateUID(rhs);
-    }
-};
+    return std::find(vec.begin(), vec.end(), value) != vec.end();
+}
+
 #endif // COLOR_H

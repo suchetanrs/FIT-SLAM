@@ -1,5 +1,5 @@
 #include <frontier_exploration/bounded_explore_layer.hpp>
-#include <frontier_exploration/frontier_search.hpp>
+#include <frontier_exploration/FrontierSearch.hpp>
 
 namespace frontier_exploration
 {
@@ -26,26 +26,21 @@ namespace frontier_exploration
         internal_node_->declare_parameter("counter", rclcpp::ParameterValue(11087));
         internal_node_->get_parameter("counter", counter_);
 
-
-        tf_buffer_ = std::make_shared<tf2_ros::Buffer>(internal_node_->get_clock());
-        tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
-
         RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::onInitialize", internal_node_->get_logger().get_name()));
 
         client_get_map_data2_ = internal_node_->create_client<slam_msgs::srv::GetMap>("orb_slam3_get_map_data");
         rosViz_ = std::make_shared<RosVisualizer>(internal_node_, layered_costmap_->getCostmap());
-        frontierSelect_ = std::make_shared<frontier_exploration::FrontierSelectionNode>(internal_node_, layered_costmap_->getCostmap());
+        frontierSelect_ = std::make_shared<frontier_exploration::FrontierCostsManager>(internal_node_, layered_costmap_->getCostmap());
     }
 
     BoundedExploreLayer::~BoundedExploreLayer()
     {
         RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::~BoundedExploreLayer()", internal_node_->get_logger().get_name()));
         delete layered_costmap_;
-        tf_buffer_.reset();
         rclcpp::shutdown();
     }
 
-    SelectionResult BoundedExploreLayer::processOurApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list, geometry_msgs::msg::Point& start_point_w)
+    bool BoundedExploreLayer::processOurApproach(std::vector<Frontier> &frontier_list, geometry_msgs::msg::Point& start_point_w)
     {
         RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::processOurApproach", internal_node_->get_logger().get_name()));
         auto startTime = std::chrono::high_resolution_clock::now();
@@ -93,10 +88,18 @@ namespace frontier_exploration
         }
         RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer -- End map data.", internal_node_->get_logger().get_name()));
         */
+        std::vector<std::vector<std::string>> costTypes;
+        for (auto frontier: frontier_list)
+        {
+            // costTypes.push_back({"PlannerDistance", "ArrivalInformation"});
+            // costTypes.push_back({"EuclideanDistance", "ArrivalInformation"});
+            costTypes.push_back({"RandomCosts"});
+            // costTypes.push_back({});
+        }
         // Select the frontier
-        SelectionResult costsResult;
-        costsResult = frontierSelect_->selectFrontierOurs(frontier_list, polygon_xy_min_max_, start_point_w, response_map_data);
-        if (costsResult.success == false)
+        bool costsResult;
+        costsResult = frontierSelect_->assignCosts(frontier_list, polygon_xy_min_max_, start_point_w, response_map_data, costTypes);
+        if (costsResult == false)
         {
             RCLCPP_ERROR(internal_node_->get_logger(), "The selection result for our method is false!");
             return costsResult;
@@ -105,20 +108,6 @@ namespace frontier_exploration
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = (endTime - startTime).count() / 1.0;
         RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Time taken to comppute cost to all frontiers is: " + std::to_string(duration), internal_node_->get_logger().get_name()));
-        return costsResult;
-    }
-
-    std::pair<frontier_msgs::msg::Frontier, bool> BoundedExploreLayer::processGreedyApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list)
-    {
-        auto costsResult = frontierSelect_->selectFrontierClosest(frontier_list);
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::processGreedyApproach", internal_node_->get_logger().get_name()));
-        return costsResult;
-    }
-
-    std::pair<frontier_msgs::msg::Frontier, bool> BoundedExploreLayer::processRandomApproach(std::vector<frontier_msgs::msg::Frontier> &frontier_list)
-    {
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::processRandomApproach", internal_node_->get_logger().get_name()));
-        auto costsResult = frontierSelect_->selectFrontierRandom(frontier_list);
         return costsResult;
     }
 
@@ -132,57 +121,29 @@ namespace frontier_exploration
     {
         frontierSelect_->setFrontierBlacklist(requestData->prohibited_frontiers);
         // Select the frontier (Modify this for different algorithms)
-        frontier_msgs::msg::Frontier selected;
-        if (exploration_mode_ == "greedy")
-        {
-            throw std::runtime_error("Not supported for multirobot");
-            auto costsResult = BoundedExploreLayer::processGreedyApproach(requestData->frontier_list);
-            if (costsResult.second == false)
-            {
-                resultData->success = false;
-                return resultData->success;
-            }
-            resultData->success = true;
-            // resultData->next_frontier = costsResult.first;
-        }
+        Frontier selected;
 
-        else if (exploration_mode_ == "random")
+        if (exploration_mode_ == "ours")
         {
-            throw std::runtime_error("Not supported for multirobot");
-            auto costsResult = BoundedExploreLayer::processRandomApproach(requestData->frontier_list);
-            if (costsResult.second == false)
+            bool costsResult = BoundedExploreLayer::processOurApproach(requestData->frontier_list, requestData->start_pose.pose.position);
+            if (costsResult == false)
             {
                 resultData->success = false;
                 return resultData->success;
             }
             resultData->success = true;
-            // resultData->next_frontier = costsResult.first;
-        }
-
-        else if (exploration_mode_ == "ours")
-        {
-            SelectionResult costsResult = BoundedExploreLayer::processOurApproach(requestData->frontier_list, requestData->start_pose.pose.position);
-            if (costsResult.success == false)
-            {
-                resultData->success = false;
-                return resultData->success;
-            }
-            resultData->success = true;
-            std::vector<frontier_msgs::msg::Frontier> frontiers_list;
+            std::vector<Frontier> frontiers_list;
             std::vector<double> frontier_costs;
             std::vector<double> frontier_distances;
             std::vector<double> frontier_arrival_information;
             std::vector<double> frontier_path_information;
-            RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Selection result's frontier costs size: " + std::to_string(costsResult.frontier_costs.size()), internal_node_->get_logger().get_name()));
             for (auto& frontier : requestData->frontier_list)
             {
-                if(costsResult.frontier_costs.count(frontier) != 1)
-                    throw std::runtime_error("Frontier not found");
-                frontier.best_orientation = nav2_util::geometry_utils::orientationAroundZAxis(costsResult.frontier_costs[frontier].theta_s_star_);
                 frontiers_list.push_back(frontier);
-                frontier_costs.push_back(costsResult.frontier_costs[frontier].cost_);
-                frontier_distances.push_back(costsResult.frontier_costs[frontier].path_length_);
-                frontier_arrival_information.push_back(costsResult.frontier_costs[frontier].information_);
+                RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Frontier cost" + std::to_string(frontier.getWeightedCost()), internal_node_->get_logger().get_name()));
+                frontier_costs.push_back(frontier.getWeightedCost());
+                frontier_distances.push_back(frontier.getPathLength());
+                frontier_arrival_information.push_back(frontier.getArrivalInformation());
                 // RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Cost is: " + std::to_string(resultData->frontier_costs.size()), internal_node_->get_logger().get_name()));
             }
             RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Making list", internal_node_->get_logger().get_name()));

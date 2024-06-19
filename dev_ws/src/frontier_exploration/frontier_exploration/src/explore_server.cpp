@@ -1,10 +1,10 @@
 #include <frontier_exploration/explore_server.hpp>
 #include <frontier_exploration/geometry_tools.hpp>
 
-#if defined(FRONTIER_POINT_CENTROID) + defined(FRONTIER_POINT_MIDDLE) + defined(FRONTIER_POINT_INITIAL) > 1
-    #error "Only one of FRONTIER_POINT_CENTROID, FRONTIER_POINT_MIDDLE, or FRONTIER_POINT_INITIAL can be defined at a time."
-#elif !defined(FRONTIER_POINT_CENTROID) && !defined(FRONTIER_POINT_MIDDLE) && !defined(FRONTIER_POINT_INITIAL)
-    #error "One of FRONTIER_POINT_CENTROID, FRONTIER_POINT_MIDDLE, or FRONTIER_POINT_INITIAL must be defined."
+#if defined(FRONTIER_POINT_CENTROID) + defined(FRONTIER_POINT_INITIAL) > 1
+    #error "Only one of FRONTIER_POINT_CENTROID, or FRONTIER_POINT_INITIAL can be defined at a time."
+#elif !defined(FRONTIER_POINT_CENTROID) && !defined(FRONTIER_POINT_INITIAL)
+    #error "One of FRONTIER_POINT_CENTROID, or FRONTIER_POINT_INITIAL must be defined."
 #endif
 
 namespace frontier_exploration
@@ -179,7 +179,7 @@ namespace frontier_exploration
         }
     }
 
-    std::shared_ptr<frontier_exploration::GetFrontierCostsResponse> FrontierExplorationServer::processCostsAllRobots(std::shared_ptr<TaskAllocator> taskAllocator, std::vector<frontier_msgs::msg::Frontier>& frontier_list,
+    std::shared_ptr<frontier_exploration::GetFrontierCostsResponse> FrontierExplorationServer::processCostsAllRobots(std::shared_ptr<TaskAllocator> taskAllocator, std::vector<Frontier>& frontier_list,
                                    std::vector<std::vector<double>>& every_frontier, geometry_msgs::msg::PoseStamped& robot_pose, std::string robot_name)
     {
         auto frontierCostsRequestPtr = std::make_shared<GetFrontierCostsRequest>();
@@ -318,7 +318,7 @@ namespace frontier_exploration
             }
             else if (costResultCurrentRobot->success == true)
             {
-                std::vector<frontier_msgs::msg::Frontier> globalFrontierList = {};
+                std::vector<Frontier> globalFrontierList = {};
                 // for (auto dist : srv_res->frontier_distances)
                 // {
                 //     RCLCPP_ERROR_STREAM(this->get_logger(), COLOR_STR("Other Frontier distances: " + std::to_string(dist), this->get_namespace()));
@@ -344,14 +344,14 @@ namespace frontier_exploration
                 auto allocatedIndex = taskAllocator->getAllocatedTasks()[this->get_namespace()];
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated index" + std::to_string(allocatedIndex), this->get_namespace()));
                 auto allocatedFrontier = globalFrontierList[allocatedIndex];
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier x:" + std::to_string(allocatedFrontier.goal_point.x), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier y:" + std::to_string(allocatedFrontier.goal_point.y), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier z:" + std::to_string(allocatedFrontier.goal_point.z), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier oz:" + std::to_string(allocatedFrontier.best_orientation.z), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier ow:" + std::to_string(allocatedFrontier.best_orientation.w), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier ox:" + std::to_string(allocatedFrontier.best_orientation.x), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier oy:" + std::to_string(allocatedFrontier.best_orientation.y), this->get_namespace()));
-                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier uid:" + std::to_string(allocatedFrontier.unique_id), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier x:" + std::to_string(allocatedFrontier.getGoalPoint().x), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier y:" + std::to_string(allocatedFrontier.getGoalPoint().y), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier z:" + std::to_string(allocatedFrontier.getGoalPoint().z), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier oz:" + std::to_string(allocatedFrontier.getGoalOrientation().z), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier ow:" + std::to_string(allocatedFrontier.getGoalOrientation().w), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier ox:" + std::to_string(allocatedFrontier.getGoalOrientation().x), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier oy:" + std::to_string(allocatedFrontier.getGoalOrientation().y), this->get_namespace()));
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier uid:" + std::to_string(allocatedFrontier.getUID()), this->get_namespace()));
                 // if(allocatedFrontier.best_orientation != srv_res->next_frontier.pose.orientation)
                 // {
                 // throw std::runtime_error("The orientations are not same. What are you doing?");
@@ -361,15 +361,15 @@ namespace frontier_exploration
                 // throw std::runtime_error("The initial positions are not same. What are you doing?");
                 // }
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Next frontier Result success. Sending goal to Nav2", this->get_namespace()));
-                if(allocatedFrontier.goal_point.x == 0 && allocatedFrontier.goal_point.y == 0 && allocatedFrontier.size == 0)
+                if(allocatedFrontier.getGoalPoint().x == 0 && allocatedFrontier.getGoalPoint().y == 0 && allocatedFrontier.getSize() == 0)
                     throw std::runtime_error("Sanity check detected. Frontier allocated without positive size");
 
                 RCLCPP_ERROR(this->get_logger(), "USING MULTIROBOT FRONTIER");
-                goal_pose.pose.position = allocatedFrontier.goal_point;
-                goal_pose.pose.orientation = allocatedFrontier.best_orientation;
+                goal_pose.pose.position = allocatedFrontier.getGoalPoint();
+                goal_pose.pose.orientation = allocatedFrontier.getGoalOrientation();
                 goal_pose.header.frame_id = "map";
                 goal_pose.header.stamp = rclcpp::Clock().now();
-                RCLCPP_ERROR_STREAM(this->get_logger(), "UID: " << allocatedFrontier.unique_id);
+                RCLCPP_ERROR_STREAM(this->get_logger(), "UID: " << allocatedFrontier.getUID());
                 if (std::find(blacklisted_frontiers_.begin(), blacklisted_frontiers_.end(), allocatedFrontier) == blacklisted_frontiers_.end())
                 {
                     blacklisted_frontiers_.push_back(allocatedFrontier);
