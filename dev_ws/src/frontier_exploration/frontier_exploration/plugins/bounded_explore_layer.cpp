@@ -92,8 +92,8 @@ namespace frontier_exploration
         for (auto frontier: frontier_list)
         {
             // costTypes.push_back({"PlannerDistance", "ArrivalInformation"});
-            // costTypes.push_back({"EuclideanDistance", "ArrivalInformation"});
-            costTypes.push_back({"RandomCosts"});
+            costTypes.push_back({"EuclideanDistance", "ArrivalInformation"});
+            // costTypes.push_back({"RandomCosts"});
             // costTypes.push_back({});
         }
         // Select the frontier

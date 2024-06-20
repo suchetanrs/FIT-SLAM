@@ -64,7 +64,8 @@ include_directories(
 )
 
 # Add executable 2
-add_executable(explore_server src/explore_server.cpp plugins/bounded_explore_layer.cpp src/FrontierSearch.cpp src/FrontierCostsManager.cpp 
+# src/FrontierSearch.cpp
+add_executable(explore_server src/explore_server.cpp plugins/bounded_explore_layer.cpp src/FrontierSearchAllCells.cpp src/FrontierCostsManager.cpp 
                src/planners/planner.cpp src/planners/rrt.cpp src/kdtree.cpp src/rosVisualizer.cpp src/CostCalculator.cpp src/main.cpp
                src/Frontier.cpp)
 ament_target_dependencies(explore_server ${dependencies})

@@ -280,9 +280,9 @@ namespace frontier_exploration
              */
             RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Starting computation", this->get_namespace()));
             // initialize frontier search implementation
-            frontier_exploration::FrontierSearch frontierSearch(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_);
+            frontier_exploration::FrontierSearchAllCells frontierSearch(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_);
             // get list of frontiers from search implementation.
-            auto frontier_list = frontierSearch.searchFrom(robot_pose.pose.position);
+            auto frontier_list = frontierSearch.searchAllCells();
             auto every_frontier = frontierSearch.getAllFrontiers();
 
             std::shared_ptr<frontier_exploration::GetFrontierCostsResponse> costResultCurrentRobot; 
@@ -483,6 +483,7 @@ namespace frontier_exploration
             nav2_goal_lock_.unlock();
             setMoving(true);
         }
+        setMoving(true);
         // Create a publisher to publish messages on cmd_vel_nav topic
         auto publisher = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_nav", 10);
         geometry_msgs::msg::Twist twist_msg;

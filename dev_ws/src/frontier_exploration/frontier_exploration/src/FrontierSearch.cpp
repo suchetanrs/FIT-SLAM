@@ -210,7 +210,6 @@ namespace frontier_exploration
 
     bool FrontierSearch::isNewFrontierCell(unsigned int idx, const std::vector<bool> &frontier_flag)
     {
-
         // check that cell is unknown and not already marked as frontier
         if (map_[idx] != NO_INFORMATION || frontier_flag[idx])
         {

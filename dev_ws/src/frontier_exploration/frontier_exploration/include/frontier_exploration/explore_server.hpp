@@ -17,7 +17,7 @@
 #include "frontier_multirobot_allocator/taskAllocator.hpp"
 #include "frontier_exploration/colorize.hpp"
 #include "frontier_exploration/bounded_explore_layer.hpp"
-#include "frontier_exploration/FrontierSearch.hpp"
+#include "frontier_exploration/FrontierSearchAllCells.hpp"
 #include "frontier_exploration/kdtree.hpp"
 
 namespace frontier_exploration
