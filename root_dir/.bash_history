@@ -800,3 +800,127 @@ cd /root/dev_ws/src/frontier_exploration/frontier_exploration/scripts/viz/nan_ch
 cd /root/dev_ws/src/frontier_exploration/frontier_exploration/scripts/viz/
 g++ -o nan_check nan_check.cpp 
 ./nan_check 
+ros2 run exploration_sim explore_sim 
+./shell_scripts/3_exploration.sh 
+nano shell_scripts/3_exploration.sh 
+kk
+./shell_scripts/3_exploration.sh 
+nano shell_scripts/3_exploration.sh 
+./shell_scripts/3_exploration.sh 
+clear
+./shell_scripts/3_exploration.sh 
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make
+make install
+cd dev_ws/
+vsc
+colcon build --symlink-install
+rm -rf build/ install/ log/
+colcon build --symlink-install
+rm -rf build/ install/ log/
+colcon build --symlink-install
+rviz2
+tmux
+ls
+cd ros2_ws/src/scout_v2/scout_
+cd ros2_ws/src/scout_v2/scout_ros2/scout_description/
+ls
+cd config/
+ls
+cat scout_control.yaml 
+ls
+cd ..
+ls
+cd launch/
+ls
+cat scout_base_description.launch.py 
+cd ../..
+ls
+cd ..
+sl
+ls
+cd scout_gazebo/
+ls
+cd launch/
+ls
+nano spawn_scout.launch.py 
+cat spawn_scout.launch.py 
+ros2 launch scout_gazebo start_world.launch.py 
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_X=1.0
+export SCOUT_Y=1.0
+ros2 launch scout_gazebo scout_simu.launch.py 
+tmux
+nautilus .
+ros2 run tf2_tools view_frames 
+nautilus .
+rviz2
+cd ros2_ws/
+vsc
+ros2 launch scout_gazebo spawn_scout.launch.py 
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_X=1.0
+export SCOUT_Y=1.0
+ros2 launch scout_gazebo scout_simu.launch.py 
+ros2 launch scout_gazebo start_world.launch.py 
+tmux
+ls
+tmux
+cd dev_ws/
+vsc
+firefox
+snap install firefox
+firefox
+chrome
+sudo apt-get install libxss1 libappindicator1 libindicator7
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+sudo apt install ./google-chrome*.deb
+ls
+cd 
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
+sudo sh -c 'echo "deb https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+sudo apt-get update
+sudo apt-get install google-chrome-stable
+google-chrome-stable 
+google-chrome-stable --no-sandbox
+cd dev_ws/
+vsc
+google-chrome-stable --no-sandbox
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
+sudo sh -c 'echo "deb https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+sudo apt-get update
+sudo apt-get install google-chrome-stable
+ls
+cd
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
+sudo sh -c 'echo "deb https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+sudo apt-get update
+sudo apt-get install google-chrome-stable
+ls
+rm -rf core.*
+ls
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
+sudo sh -c 'echo "deb https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+sudo apt-get update
+sudo apt-get install google-chrome-stable
+cd dev_ws/
+vsc
+google-chrome-stable --no-sandbox
+cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/planners/
+g++ -o astar_on_graph2.cpp astar2
+g++ -o astar2 astar_on_graph2.cpp
+./astar2 
+g++ -o astar2 astar_on_graph2.cpp
+./astar2 
+cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/planners/
+ls
+clear
+g++ -o astar astar_on_graph.cpp 
+./astar 
+g++ -o astar astar_on_graph.cpp 
+./astar 
+clear
+g++ -o astar astar_on_graph.cpp 
+clear
+./astar 

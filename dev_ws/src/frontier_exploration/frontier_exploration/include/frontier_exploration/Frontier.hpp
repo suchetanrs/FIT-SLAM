@@ -86,6 +86,12 @@ struct FrontierGoalPointEquality {
     }
 };
 
+struct FrontierGoalPointEqualityInRange {
+    bool operator()(const Frontier& lhs, const Frontier& rhs) const {
+        return abs(lhs.getGoalPoint().x - rhs.getGoalPoint().x) < 0.3 && abs(lhs.getGoalPoint().y - rhs.getGoalPoint().y) < 0.3;
+    }
+};
+
 inline size_t generateUID(const Frontier& output)
 {
     std::hash<double> hash_fn;

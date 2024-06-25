@@ -18,7 +18,9 @@
 #include "frontier_exploration/colorize.hpp"
 #include "frontier_exploration/bounded_explore_layer.hpp"
 #include "frontier_exploration/FrontierSearchAllCells.hpp"
+#include "frontier_exploration/FrontierSearch.hpp"
 #include "frontier_exploration/kdtree.hpp"
+#include "frontier_exploration/planners/FrontierRoadmap.hpp"
 
 namespace frontier_exploration
 {
@@ -92,6 +94,7 @@ namespace frontier_exploration
         // Exploration related
         geometry_msgs::msg::PolygonStamped explore_boundary_;
         geometry_msgs::msg::PointStamped explore_center_;
+        Frontier nextRoadMapParent_;
 
         std::mutex moving_lock_;
         bool moving_;
@@ -107,6 +110,7 @@ namespace frontier_exploration
         int min_frontier_cluster_size_;          ///< Minimum size of a frontier cluster.
         int max_frontier_cluster_size_;
         std::shared_ptr<BoundedExploreLayer> bel_ptr_;
+        std::shared_ptr<FrontierRoadMap> roadmap_ptr_;
         bool process_other_robots_;
     };
 }

@@ -81,6 +81,8 @@ namespace frontier_exploration
             "multirobot_send_current_goal", std::bind(&FrontierExplorationServer::handle_multirobot_current_goal_request, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
             rmw_qos_profile_default, multirobot_service_callback_group_);
 
+        roadmap_ptr_ = std::make_shared<FrontierRoadMap>(explore_costmap_ros_->getLayeredCostmap()->getCostmap());
+
         //---------------------------------------------ROS RELATED------------------------------------------
         tf_listener_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
         buildBoundaryAndCenter();
@@ -254,6 +256,7 @@ namespace frontier_exploration
          */
         while (rclcpp::ok())
         {
+            // rclcpp::sleep_for(std::chrono::seconds(5));
             /** 
              * ======================= initialize placeholders ===================
              */
@@ -275,14 +278,21 @@ namespace frontier_exploration
             {
                 RCLCPP_ERROR(this->get_logger(), "Could not get robot position from explore costmap.");
             }
+            nextRoadMapParent_.setGoalPoint(robot_pose.pose.position.x, robot_pose.pose.position.y);
             /** 
              * ======================= search for frontiers ======================= 
              */
             RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Starting computation", this->get_namespace()));
+            // // initialize frontier search implementation
+            // frontier_exploration::FrontierSearchAllCells frontierSearch(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_);
+            // // get list of frontiers from search implementation.
+            // auto frontier_list = frontierSearch.searchAllCells();
+            // auto every_frontier = frontierSearch.getAllFrontiers();
+
             // initialize frontier search implementation
-            frontier_exploration::FrontierSearchAllCells frontierSearch(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_);
+            frontier_exploration::FrontierSearch frontierSearch(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_);
             // get list of frontiers from search implementation.
-            auto frontier_list = frontierSearch.searchAllCells();
+            auto frontier_list = frontierSearch.searchFrom(robot_pose.pose.position);
             auto every_frontier = frontierSearch.getAllFrontiers();
 
             std::shared_ptr<frontier_exploration::GetFrontierCostsResponse> costResultCurrentRobot; 
@@ -344,6 +354,9 @@ namespace frontier_exploration
                 auto allocatedIndex = taskAllocator->getAllocatedTasks()[this->get_namespace()];
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated index" + std::to_string(allocatedIndex), this->get_namespace()));
                 auto allocatedFrontier = globalFrontierList[allocatedIndex];
+                roadmap_ptr_->addNodes(costResultCurrentRobot->frontier_list);
+                roadmap_ptr_->getPlan(10.5, 4.3, 0.0, 0.0);
+                nextRoadMapParent_ = globalFrontierList[allocatedIndex];
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier x:" + std::to_string(allocatedFrontier.getGoalPoint().x), this->get_namespace()));
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier y:" + std::to_string(allocatedFrontier.getGoalPoint().y), this->get_namespace()));
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier z:" + std::to_string(allocatedFrontier.getGoalPoint().z), this->get_namespace()));
@@ -411,6 +424,7 @@ namespace frontier_exploration
 
             if (!isMoving() && costResultCurrentRobot->success == true)
             {
+                RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Moving to next frontier", this->get_namespace()));
                 nav2_goal_lock_.lock();
                 nav2_goal_ = std::make_shared<NavigateToPose::Goal>();
                 nav2_goal_->pose = goal_pose;

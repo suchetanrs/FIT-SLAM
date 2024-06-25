@@ -154,7 +154,7 @@ struct FrontierHash
         //         std::hash<double>()(key.unique_id);
 
         hash = std::hash<double>()(key.getGoalPoint().x) ^
-                std::hash<double>()(key.getGoalPoint().y);
+                (std::hash<double>()(key.getGoalPoint().y) << 1);
                 // std::hash<uint32_t>()(key.size) ^
                 // std::hash<double>()(key.min_distance) ^
                 // std::hash<double>()(key.unique_id);

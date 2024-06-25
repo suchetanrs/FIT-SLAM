@@ -15,71 +15,6 @@ namespace frontier_exploration
         max_arrival_info_per_frontier = 0.0;
     }
 
-    bool FrontierCostCalculator::getTracedCells(double sx, double sy, double wx, double wy, RayTracedCells &cell_gatherer, double max_length)
-    {
-        unsigned int min_length = 0.0;
-        int resolution_cut_factor = 1;
-        // Calculate map coordinates
-        unsigned int x1, y1;
-        unsigned int x0, y0;
-        if (!exploration_costmap_->worldToMap(wx, wy, x1, y1) || !exploration_costmap_->worldToMap(sx, sy, x0, y0))
-        {
-            RCLCPP_ERROR(logger_, "Not world to map");
-            return false;
-        }
-
-        // Calculate distance and adjust starting point to min_length distance
-        int dx_full = x1 - x0;
-        int dy_full = y1 - y0;
-        double dist = std::hypot(dx_full, dy_full);
-        if (dist < min_length)
-        {
-            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Distance to ray trace is lesser than minimum distance. Proceeding to next frontier.", logger_.get_name()));
-            return false;
-        }
-        unsigned int min_x0, min_y0;
-        if (dist > 0.0)
-        {
-            // Adjust starting point and offset to start from min_length distance
-            min_x0 = (unsigned int)(x0 + dx_full / dist * min_length);
-            min_y0 = (unsigned int)(y0 + dy_full / dist * min_length);
-        }
-        else
-        {
-            min_x0 = x0;
-            min_y0 = y0;
-        }
-        unsigned int offset = min_y0 * exploration_costmap_->getSizeInCellsX() + min_x0;
-
-        int dx = x1 - min_x0;
-        int dy = y1 - min_y0;
-
-        unsigned int abs_dx = abs(dx);
-        unsigned int abs_dy = abs(dy);
-
-        int offset_dx = sign(dx);
-        int offset_dy = sign(dy) * exploration_costmap_->getSizeInCellsX();
-
-        double scale = (dist == 0.0) ? 1.0 : std::min(1.0, max_length / dist);
-        // Calculate the maximum number of steps based on resolution_cut_factor
-        // if x is dominant
-        if (abs_dx >= abs_dy)
-        {
-            int error_y = abs_dx / 2;
-
-            FrontierCostCalculator::bresenham2D(
-                cell_gatherer, abs_dx, abs_dy, error_y, offset_dx, offset_dy, offset, (unsigned int)(scale * abs_dx), resolution_cut_factor);
-        }
-        else
-        {
-            // otherwise y is dominant
-            int error_x = abs_dy / 2;
-            FrontierCostCalculator::bresenham2D(
-                cell_gatherer, abs_dy, abs_dx, error_x, offset_dy, offset_dx, offset, (unsigned int)(scale * abs_dy), resolution_cut_factor);
-        }
-        return true;
-    }
-
     void FrontierCostCalculator::setArrivalInformationForFrontier(Frontier &frontier, std::vector<double> &polygon_xy_min_max)
     {
         auto startTime = std::chrono::high_resolution_clock::now();
@@ -98,7 +33,7 @@ namespace frontier_exploration
         for (double theta = 0; theta <= (2 * M_PI); theta += delta_theta)
         {
             std::vector<nav2_costmap_2d::MapLocation> traced_cells;
-            RayTracedCells cell_gatherer(*exploration_costmap_, traced_cells);
+            RayTracedCells cell_gatherer(exploration_costmap_, traced_cells);
 
             wx = sx + (radius * cos(theta));
             wy = sy + (radius * sin(theta));
@@ -108,7 +43,7 @@ namespace frontier_exploration
             wx = std::max(polygon_xy_min_max[0], std::max(exploration_costmap_->getOriginX(), std::min(polygon_xy_min_max[2], std::min(exploration_costmap_->getOriginX() + exploration_costmap_->getSizeInMetersX(), wx))));
             wy = std::max(polygon_xy_min_max[1], std::max(exploration_costmap_->getOriginY(), std::min(polygon_xy_min_max[3], std::min(exploration_costmap_->getOriginY() + exploration_costmap_->getSizeInMetersY(), wy))));
 
-            if (!getTracedCells(sx, sy, wx, wy, cell_gatherer, max_length))
+            if (!getTracedCells(sx, sy, wx, wy, cell_gatherer, max_length, exploration_costmap_))
             {
                 frontier.setArrivalInformation(0.0);
                 frontier.setGoalOrientation(0.0);
@@ -358,29 +293,5 @@ namespace frontier_exploration
     {
         min_traversable_distance = std::min(min_traversable_distance, frontier.getPathLength());
         max_arrival_info_per_frontier = std::max(max_arrival_info_per_frontier, frontier.getArrivalInformation());
-    }
-
-    void FrontierCostCalculator::bresenham2D(
-        RayTracedCells at, unsigned int abs_da, unsigned int abs_db, int error_b,
-        int offset_a,
-        int offset_b, unsigned int offset,
-        unsigned int max_length,
-        int resolution_cut_factor)
-    {
-        auto max_offset = exploration_costmap_->getSizeInCellsX() * exploration_costmap_->getSizeInCellsY();
-        unsigned int end = std::min(max_length, abs_da);
-        for (unsigned int i = 0; i < end; ++i)
-        {
-            if (i % resolution_cut_factor == 0)
-                at(offset);
-            offset += offset_a;
-            error_b += abs_db;
-            if ((unsigned int)error_b >= abs_da)
-            {
-                offset += offset_b;
-                error_b -= abs_da;
-            }
-        }
-        at(offset);
     }
 }

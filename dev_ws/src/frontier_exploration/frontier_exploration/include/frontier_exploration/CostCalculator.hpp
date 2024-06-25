@@ -34,87 +34,13 @@
 #include <slam_msgs/srv/get_map.hpp>
 #include <frontier_exploration/colorize.hpp>
 #include <frontier_exploration/rosVisualizer.hpp>
+#include <frontier_exploration/Helpers.hpp>
 
 namespace frontier_exploration
 {
-    inline int sign(int x)
-    {
-        return x > 0 ? 1.0 : -1.0;
-    }
-
-    class RayTracedCells
-    {
-    public:
-        /**
-         * @brief Constructor for RayTracedCells.
-         *
-         * @param costmap The reference to the costmap.
-         * @param cells The vector of map locations to store ray-traced cells.
-         */
-        RayTracedCells(
-            const nav2_costmap_2d::Costmap2D &costmap,
-            std::vector<nav2_costmap_2d::MapLocation> &cells)
-            : costmap_(costmap), cells_(cells)
-        {
-            hit_obstacle = false;
-        }
-
-        /**
-         * @brief Function call operator to add unexplored cells to the list.
-         * This operator adds cells that are currently unexplored to the list of cells.
-         * i.e pushes the relevant cells back onto the list.
-         * @param offset The offset of the cell to consider.
-         */
-        inline void operator()(unsigned int offset)
-        {
-            nav2_costmap_2d::MapLocation loc;
-            costmap_.indexToCells(offset, loc.x, loc.y);
-            bool presentflag = false;
-            for (auto item : cells_)
-            {
-                if (item.x == loc.x && item.y == loc.y)
-                    presentflag = true;
-            }
-            if (presentflag == false)
-            {
-                if ((int)costmap_.getCost(offset) == 255 && hit_obstacle == false)
-                {
-                    cells_.push_back(loc);
-                }
-                if ((int)costmap_.getCost(offset) > 240 && (int)costmap_.getCost(offset) != 255)
-                {
-                    hit_obstacle = true;
-                }
-            }
-        }
-
-        /**
-         * @brief Getter function for the vector of cells.
-         * @return std::vector<nav2_costmap_2d::MapLocation> The vector of map locations.
-         */
-        std::vector<nav2_costmap_2d::MapLocation> getCells()
-        {
-            return cells_;
-        }
-
-    private:
-        const nav2_costmap_2d::Costmap2D &costmap_;
-        std::vector<nav2_costmap_2d::MapLocation> &cells_;
-        bool hit_obstacle;
-    };
-
     class FrontierCostCalculator {
     public:
         FrontierCostCalculator(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap);
-
-        // -----------------General helpers--------------------
-        bool getTracedCells(double start_wx, double start_wy, double end_wx, double end_wy, RayTracedCells& cell_gatherer, double max_length);
-
-        void bresenham2D(RayTracedCells at, unsigned int abs_da, unsigned int abs_db, int error_b,
-                            int offset_a,
-                            int offset_b, unsigned int offset,
-                            unsigned int max_length,
-                            int resolution_cut_factor);
 
         // ----------------Arrival information related--------------------
         /**
@@ -165,7 +91,7 @@ namespace frontier_exploration
         void reset()
         {
             min_traversable_distance = std::numeric_limits<double>::max();
-            max_arrival_info_per_frontier = 0.0;
+            max_arrival_info_per_frontier = -1.0;
         };
 
     private:
