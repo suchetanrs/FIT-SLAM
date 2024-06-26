@@ -12,6 +12,35 @@ namespace frontier_exploration
         marker_pub_roadmap_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("frontier_roadmap", 10);
         marker_pub_plan_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("frontier_roadmap_plan", 10);
         astar_planner_ = std::make_shared<FrontierRoadmapAStar>();
+
+        // Subscriber to handle clicked points
+        clicked_point_sub_ = node_->create_subscription<geometry_msgs::msg::PointStamped>(
+            "/clicked_point", 10, std::bind(&FrontierRoadMap::clickedPointCallback, this, std::placeholders::_1));
+        std::thread t1([this]() {
+            rclcpp::spin(node_);
+        });
+        t1.detach();
+        rosViz_ = std::make_shared<RosVisualizer>(node_, costmap_);
+    }
+
+    void FrontierRoadMap::clickedPointCallback(const geometry_msgs::msg::PointStamped::SharedPtr msg)
+    {
+        clicked_points_.push_back(msg->point);
+
+        // If we have two points, calculate the plan
+        if (clicked_points_.size() == 2)
+        {
+            auto p1 = clicked_points_[0];
+            auto p2 = clicked_points_[1];
+
+            RCLCPP_INFO(node_->get_logger(), "Calculating plan from (%.2f, %.2f) to (%.2f, %.2f)",
+                        p1.x, p1.y, p2.x, p2.y);
+
+            getPlan(p1.x, p1.y, p2.x, p2.y);
+
+            // Reset the clicked points for next input
+            clicked_points_.clear();
+        }
     }
 
     void FrontierRoadMap::addNodes(const std::vector<Frontier> &frontiers)
@@ -66,17 +95,23 @@ namespace frontier_exploration
 
     bool FrontierRoadMap::isConnectable(const Frontier &f1, const Frontier &f2)
     {
+        // rclcpp::sleep_for(std::chrono::milliseconds(200));
         // if (distanceBetweenFrontiers(f1, f2) > max_connection_length_)
         //     return false;
         std::vector<nav2_costmap_2d::MapLocation> traced_cells;
-        RayTracedCells cell_gatherer(costmap_, traced_cells);
+        RayTracedCells cell_gatherer(costmap_, traced_cells, 254, 254, 0, 255);
         unsigned int max_length = max_connection_length_ / costmap_->getResolution();
-        if (!getTracedCells(f1.getGoalPoint().x, f1.getGoalPoint().y, f2.getGoalPoint().x, f1.getGoalPoint().y, cell_gatherer, max_length, costmap_))
+        if (!getTracedCells(f1.getGoalPoint().x, f1.getGoalPoint().y, f2.getGoalPoint().x, f2.getGoalPoint().y, cell_gatherer, max_length, costmap_))
         {
             return false;
         }
+        auto allCells = cell_gatherer.getCells();
         if (cell_gatherer.hasHitObstacle())
+        {
             return false;
+        }
+        rosViz_->observableCellsViz(cell_gatherer.getCells());
+        // RCLCPP_INFO_STREAM(node_->get_logger(), "ray trace cell size" << cell_gatherer.getCells().size());
 
         return true;
     }
@@ -219,7 +254,7 @@ namespace frontier_exploration
         edge_marker.type = visualization_msgs::msg::Marker::LINE_LIST;
         edge_marker.action = visualization_msgs::msg::Marker::ADD;
         edge_marker.pose.orientation.w = 1.0;
-        edge_marker.scale.x = 0.05; // Thickness of the lines
+        edge_marker.scale.x = 0.15; // Thickness of the lines
         edge_marker.color.a = 1.0;  // Fully opaque
         edge_marker.color.r = 0.0;
         edge_marker.color.g = 0.0;

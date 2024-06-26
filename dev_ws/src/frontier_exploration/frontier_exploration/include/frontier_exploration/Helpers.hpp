@@ -18,14 +18,19 @@ namespace frontier_exploration
          *
          * @param costmap The reference to the costmap.
          * @param cells The vector of map locations to store ray-traced cells.
+         * @param all_min_max These values are taken <= and >= on both sides.
          */
         RayTracedCells(
             nav2_costmap_2d::Costmap2D* costmap,
-            std::vector<nav2_costmap_2d::MapLocation> &cells)
-            : costmap_(costmap), cells_(cells)
+            std::vector<nav2_costmap_2d::MapLocation> &cells,
+            int obstacle_min, int obstacle_max,
+            int trace_min, int trace_max)
+            : costmap_(costmap), cells_(cells),
+            obstacle_min_(obstacle_min), obstacle_max_(obstacle_max),
+            trace_min_(trace_min), trace_max_(trace_max)
         {
             hit_obstacle = false;
-        }
+        };
 
         /**
          * @brief Function call operator to add unexplored cells to the list.
@@ -45,16 +50,16 @@ namespace frontier_exploration
             }
             if (presentflag == false)
             {
-                if ((int)costmap_->getCost(offset) == 255 && hit_obstacle == false)
+                if ((int)costmap_->getCost(offset) <= trace_max_ && (int)costmap_->getCost(offset) >= trace_min_ && !hit_obstacle)
                 {
                     cells_.push_back(loc);
                 }
-                if ((int)costmap_->getCost(offset) > 240 && (int)costmap_->getCost(offset) != 255)
+                if ((int)costmap_->getCost(offset) >= obstacle_min_ && (int)costmap_->getCost(offset) <= obstacle_max_)
                 {
                     hit_obstacle = true;
                 }
             }
-        }
+        };
 
         /**
          * @brief Getter function for the vector of cells.
@@ -63,17 +68,19 @@ namespace frontier_exploration
         std::vector<nav2_costmap_2d::MapLocation> getCells()
         {
             return cells_;
-        }
+        };
 
         bool hasHitObstacle()
         {
             return hit_obstacle;
-        }
+        };
 
     private:
         nav2_costmap_2d::Costmap2D* costmap_;
         std::vector<nav2_costmap_2d::MapLocation> &cells_;
         bool hit_obstacle;
+        int obstacle_min_, obstacle_max_;
+        int trace_min_, trace_max_;
     };
 
     inline int sign(int x)
@@ -81,7 +88,7 @@ namespace frontier_exploration
         return x > 0 ? 1.0 : -1.0;
     }
 
-    void bresenham2D(RayTracedCells at, unsigned int abs_da, unsigned int abs_db, int error_b,
+    void bresenham2D(RayTracedCells& at, unsigned int abs_da, unsigned int abs_db, int error_b,
                      int offset_a,
                      int offset_b, unsigned int offset,
                      unsigned int max_length,

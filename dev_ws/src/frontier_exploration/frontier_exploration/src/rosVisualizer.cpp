@@ -13,6 +13,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node)
     landmark_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("landmark_marker", 10);
 
     observable_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("observable_cells", 10);
+    connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
     costmap_ = nullptr;
 }
@@ -30,6 +31,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Cost
     landmark_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("landmark_marker", 10);
 
     observable_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("observable_cells", 10);
+    connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
     costmap_ = costmap;
 }
@@ -87,6 +89,36 @@ void RosVisualizer::observableCellsViz(std::vector<geometry_msgs::msg::Pose> &po
         marker_msg_.points.push_back(point1);
     }
     observable_cells_publisher_->publish(marker_msg_);
+}
+
+void RosVisualizer::observableCellsViz(std::vector<nav2_costmap_2d::MapLocation> points)
+{
+    if(costmap_ == nullptr)
+    {
+        throw std::runtime_error("You called the wrong constructor. Costmap is a nullptr");
+    }
+    visualization_msgs::msg::Marker marker_msg_;
+    // Initialize the Marker message
+    marker_msg_.header.frame_id = "map"; // Set the frame ID
+    marker_msg_.type = visualization_msgs::msg::Marker::POINTS;
+    marker_msg_.action = visualization_msgs::msg::Marker::ADD;
+
+    // Set the scale of the points
+    marker_msg_.scale.x = costmap_->getResolution(); // Point size
+    marker_msg_.scale.y = costmap_->getResolution();
+
+    // Set the color (green in RGBA format)
+    marker_msg_.color.r = 0.0;
+    marker_msg_.color.g = 1.0;
+    marker_msg_.color.b = 0.0;
+    marker_msg_.color.a = 1.0;
+    for (auto point : points)
+    {
+        geometry_msgs::msg::Point point1;
+        costmap_->mapToWorld(point.x, point.y, point1.x, point1.y);
+        marker_msg_.points.push_back(point1);
+    }
+    connecting_cells_publisher_->publish(marker_msg_);
 }
 
 void RosVisualizer::landmarkViz(std::vector<Eigen::Vector3f> &points)

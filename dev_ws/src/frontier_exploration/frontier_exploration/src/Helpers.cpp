@@ -5,7 +5,7 @@
 namespace frontier_exploration
 {
     void bresenham2D(
-        RayTracedCells at, unsigned int abs_da, unsigned int abs_db, int error_b,
+        RayTracedCells& at, unsigned int abs_da, unsigned int abs_db, int error_b,
         int offset_a,
         int offset_b, unsigned int offset,
         unsigned int max_length,

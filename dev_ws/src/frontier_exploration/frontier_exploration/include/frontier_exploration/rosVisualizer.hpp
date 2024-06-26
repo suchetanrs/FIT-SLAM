@@ -28,6 +28,7 @@ public:
     RosVisualizer(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap);
     void landmarkViz(std::vector<std::vector<double>> &points, visualization_msgs::msg::Marker &marker_msg_);
     void observableCellsViz(std::vector<geometry_msgs::msg::Pose> &points);
+    void observableCellsViz(std::vector<nav2_costmap_2d::MapLocation> points);
     void landmarkViz(std::vector<Eigen::Vector3f> &points);
     void visualizeFrontier(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
     void exportMapCoverage(std::vector<double> polygon_xy_min_max, int counter_value_, std::string mode_);
@@ -38,6 +39,7 @@ private:
     rclcpp::Logger logger_ = rclcpp::get_logger("rosVisualizer");
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr landmark_publisher_;   ///< Publisher for landmarks in the path FOVs
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr observable_cells_publisher_;   ///< Publisher for landmarks in the path FOVs
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr connecting_cells_publisher_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr frontier_cloud_pub_;     ///< Publisher for frontier cloud.
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr all_frontier_cloud_pub_; ///< Publisher for every frontier cloud.
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_plan_pub_;

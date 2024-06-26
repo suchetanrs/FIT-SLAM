@@ -17,6 +17,7 @@ namespace frontier_exploration
 
     void FrontierCostCalculator::setArrivalInformationForFrontier(Frontier &frontier, std::vector<double> &polygon_xy_min_max)
     {
+        // rclcpp::sleep_for(std::chrono::milliseconds(1000));
         auto startTime = std::chrono::high_resolution_clock::now();
         const double radius = 2.0;       // max depth of camera fov
         const double delta_theta = 0.15; // spatial density
@@ -33,7 +34,7 @@ namespace frontier_exploration
         for (double theta = 0; theta <= (2 * M_PI); theta += delta_theta)
         {
             std::vector<nav2_costmap_2d::MapLocation> traced_cells;
-            RayTracedCells cell_gatherer(exploration_costmap_, traced_cells);
+            RayTracedCells cell_gatherer(exploration_costmap_, traced_cells, 240, 254, 255, 255);
 
             wx = sx + (radius * cos(theta));
             wy = sy + (radius * sin(theta));
@@ -52,6 +53,7 @@ namespace frontier_exploration
 
             auto info_addition = cell_gatherer.getCells();
             information_along_ray.push_back(info_addition.size());
+            // RCLCPP_INFO_STREAM(logger_, "Has hit obstacle? " << cell_gatherer.hasHitObstacle());
             // loop for visualization
             for (size_t counter_info = 0; counter_info < info_addition.size(); counter_info++)
             {

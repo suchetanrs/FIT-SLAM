@@ -354,8 +354,18 @@ namespace frontier_exploration
                 auto allocatedIndex = taskAllocator->getAllocatedTasks()[this->get_namespace()];
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated index" + std::to_string(allocatedIndex), this->get_namespace()));
                 auto allocatedFrontier = globalFrontierList[allocatedIndex];
+                // std::vector<Frontier> sample_frontier_list;
+                // Frontier sample_frontier;
+                // sample_frontier.setGoalPoint(5.0, 5.0);
+                // sample_frontier.setUID(1);
+                // sample_frontier_list.push_back(sample_frontier);
+                // sample_frontier.setGoalPoint(5.0, 8.0);
+                // sample_frontier.setUID(1);
+                // sample_frontier_list.push_back(sample_frontier);
+                // roadmap_ptr_->addNodes(sample_frontier_list);
+
                 roadmap_ptr_->addNodes(costResultCurrentRobot->frontier_list);
-                roadmap_ptr_->getPlan(10.5, 4.3, 0.0, 0.0);
+                // roadmap_ptr_->getPlan(10.5, 4.3, 0.0, 0.0);
                 nextRoadMapParent_ = globalFrontierList[allocatedIndex];
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier x:" + std::to_string(allocatedFrontier.getGoalPoint().x), this->get_namespace()));
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier y:" + std::to_string(allocatedFrontier.getGoalPoint().y), this->get_namespace()));

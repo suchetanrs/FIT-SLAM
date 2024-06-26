@@ -11,6 +11,7 @@
 #include "frontier_exploration/Helpers.hpp"
 #include "frontier_exploration/colorize.hpp"
 #include "frontier_exploration/planners/astar.hpp"
+#include "frontier_exploration/rosVisualizer.hpp"
 
 namespace frontier_exploration
 {
@@ -18,6 +19,8 @@ namespace frontier_exploration
     {
     public:
         FrontierRoadMap(nav2_costmap_2d::Costmap2D *costmap);
+
+        void clickedPointCallback(const geometry_msgs::msg::PointStamped::SharedPtr msg);
 
         void addNodes(const std::vector<Frontier> &frontiers);
 
@@ -49,6 +52,9 @@ namespace frontier_exploration
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_roadmap_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_plan_;
         std::shared_ptr<FrontierRoadmapAStar> astar_planner_;
+        rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr clicked_point_sub_;
+        std::vector<geometry_msgs::msg::Point> clicked_points_;
+        std::shared_ptr<RosVisualizer> rosViz_;
     };
 }
 

@@ -924,3 +924,40 @@ clear
 g++ -o astar astar_on_graph.cpp 
 clear
 ./astar 
+ls
+cd dev_ws/
+vsc
+colcon build --symlink-install
+source install/setup.bash
+ros2 run exploration_sim explore_sim 
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+kill -9 %1
+ros2 run exploration_sim explore_sim 
+kill -9 %1
+ros2 run exploration_sim explore_sim 
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd
+cd -
+ros2 topic echo /scout_2/connecting_cells
+rviz2
+bash
+cd dev_ws/
+colcon build --symlink-install
+./shell_scripts/3_exploration.sh 
+nano shell_scripts/3_exploration.sh 
+./shell_scripts/3_exploration.sh 
+nano shell_scripts/3_exploration.sh 
+./shell_scripts/3_exploration.sh 
+bash
+cd dev_ws/
+vscs
+vsc
+cd
+tmux
