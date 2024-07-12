@@ -66,8 +66,8 @@ include_directories(
 # Add executable 2
 # src/FrontierSearch.cpp
 add_executable(explore_server src/explore_server.cpp plugins/bounded_explore_layer.cpp src/FrontierSearch.cpp src/FrontierCostsManager.cpp 
-               src/planners/planner.cpp src/planners/rrt.cpp src/kdtree.cpp src/rosVisualizer.cpp src/CostCalculator.cpp src/main.cpp
-               src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/planners/astar.cpp)
+               src/planners/planner.cpp src/planners/rrt.cpp src/rosVisualizer.cpp src/CostCalculator.cpp src/main.cpp
+               src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/planners/astar.cpp src/FisherInfoManager.cpp)
 ament_target_dependencies(explore_server ${dependencies})
 target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES})
 

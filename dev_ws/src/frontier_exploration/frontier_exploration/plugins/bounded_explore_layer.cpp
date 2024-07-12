@@ -91,8 +91,9 @@ namespace frontier_exploration
         std::vector<std::vector<std::string>> costTypes;
         for (auto frontier: frontier_list)
         {
-            // costTypes.push_back({"PlannerDistance", "ArrivalInformation"});
-            costTypes.push_back({"EuclideanDistance", "ArrivalInformation"});
+            // costTypes.push_back({"A*PlannerDistance", "ArrivalInformation"});
+            costTypes.push_back({"RoadmapPlannerDistance", "ArrivalInformation"});
+            // costTypes.push_back({"EuclideanDistance", "ArrivalInformation"});
             // costTypes.push_back({"RandomCosts"});
             // costTypes.push_back({});
         }
@@ -140,7 +141,7 @@ namespace frontier_exploration
             for (auto& frontier : requestData->frontier_list)
             {
                 frontiers_list.push_back(frontier);
-                RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Frontier cost" + std::to_string(frontier.getWeightedCost()), internal_node_->get_logger().get_name()));
+                // RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Frontier cost" + std::to_string(frontier.getWeightedCost()), internal_node_->get_logger().get_name()));
                 frontier_costs.push_back(frontier.getWeightedCost());
                 frontier_distances.push_back(frontier.getPathLength());
                 frontier_arrival_information.push_back(frontier.getArrivalInformation());

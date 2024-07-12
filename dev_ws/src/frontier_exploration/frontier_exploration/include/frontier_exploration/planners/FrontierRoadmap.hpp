@@ -13,6 +13,8 @@
 #include "frontier_exploration/planners/astar.hpp"
 #include "frontier_exploration/rosVisualizer.hpp"
 
+const double GRID_CELL_SIZE = 1.0; // Assuming each cell is 1x1 in size
+
 namespace frontier_exploration
 {
     class FrontierRoadMap
@@ -22,31 +24,44 @@ namespace frontier_exploration
 
         void clickedPointCallback(const geometry_msgs::msg::PointStamped::SharedPtr msg);
 
-        void addNodes(const std::vector<Frontier> &frontiers);
+        // Custom hash function for std::pair<int, int>
+        struct spatialHash {
+            template <class T1, class T2>
+            std::size_t operator() (const std::pair<T1, T2> &pair) const {
+                auto hash1 = std::hash<T1>{}(pair.first);
+                auto hash2 = std::hash<T2>{}(pair.second);
+                return hash1 ^ (hash2 << 1); // Combine the two hashes
+            }
+        };
+
+        std::pair<int, int> getGridCell(double x, double y);
+
+        void addNodes(const std::vector<Frontier> &frontiers, bool populateClosest);
 
         void constructGraph();
 
-        const std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash> &getRoadMap() const;
-
-        void populateNodes(const std::vector<Frontier> &frontiers);
+        void populateNodes(const std::vector<Frontier> &frontiers, bool populateClosest);
 
         void getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, double radius);
 
         void getClosestNode(const Frontier &interestNode, Frontier &closestNode);
 
-        void getPlan(double xs, double ys, double xe, double ye);
+        void getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd);
+
+        void getPlan(Frontier &startNode, Frontier &endNode);
 
         void publishRoadMap();
 
-        void publishPlan(const std::vector<Node>& plan);
+        void publishPlan(const std::vector<std::shared_ptr<Node>> &plan);
 
     private:
         bool isConnectable(const Frontier &f1, const Frontier &f2);
 
         nav2_costmap_2d::Costmap2D *costmap_;
-        std::vector<Frontier> graph_nodes_;
+        std::unordered_map<std::pair<int, int>, std::vector<Frontier>, spatialHash> spatial_hash_map_;
+        std::mutex spatial_hash_map_mutex_;
         std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash> roadmap_;
-        std::map<Frontier, int, FrontierGoalPointEquality> assigned_children_;
+        std::mutex roadmap_mutex_;
         double max_connection_length_;
         rclcpp::Node::SharedPtr node_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_roadmap_;

@@ -58,6 +58,7 @@ namespace frontier_exploration
                                                geometry_msgs::msg::Point start_point_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
                                                std::vector<std::vector<std::string>>& costTypes)
     {
+        costCalculator_->updateRoadmapData(frontier_list);
         costCalculator_->reset();
         RCLCPP_INFO_STREAM(logger_, COLOR_STR("FrontierCostsManager::assignCostsOurs", logger_.get_name()));
         // sanity checks
@@ -93,9 +94,13 @@ namespace frontier_exploration
                 continue;
             }
             
-            if (vectorContains(costTypes[frontier_idx], std::string("PlannerDistance")))
+            if (vectorContains(costTypes[frontier_idx], std::string("A*PlannerDistance")))
             {
                 costCalculator_->setPlanForFrontier(start_point_w, frontier, map_data, false, planner_allow_unknown_);
+            }
+            else if(vectorContains(costTypes[frontier_idx], std::string("RoadmapPlannerDistance")))
+            {
+                costCalculator_->setPlanForFrontierRoadmap(start_point_w, frontier, map_data, false, planner_allow_unknown_);
             }
             else if(vectorContains(costTypes[frontier_idx], std::string("EuclideanDistance")))
             {
@@ -126,13 +131,13 @@ namespace frontier_exploration
             auto utility = (alpha_ * (static_cast<double>(frontier_with_properties.getArrivalInformation()) / static_cast<double>(costCalculator_->getMaxArrivalInformation()))) +
                            ((1.0 - alpha_) * (static_cast<double>(costCalculator_->getMinPlanDistance()) / frontier_with_properties.getPathLength()));
 
-            RCLCPP_INFO_STREAM(logger_, "Utility U1 information:" << frontier_with_properties.getArrivalInformation());
-            RCLCPP_INFO_STREAM(logger_, "Utility U1 distance:" << costCalculator_->getMinPlanDistance());
-            RCLCPP_INFO_STREAM(logger_, "Utility U1 max info:" << costCalculator_->getMaxArrivalInformation());
-            RCLCPP_INFO_STREAM(logger_, "Utility U1 max distance:" << frontier_with_properties.getPathLength());
-            RCLCPP_INFO_STREAM(logger_, "arrival utility" << alpha_ * (static_cast<double>(frontier_with_properties.getArrivalInformation()) / static_cast<double>(costCalculator_->getMaxArrivalInformation())));
-            RCLCPP_INFO_STREAM(logger_, "distance utility" << (1.0 - alpha_) * (static_cast<double>(costCalculator_->getMinPlanDistance()) / frontier_with_properties.getPathLength()));
-            RCLCPP_INFO_STREAM(logger_, "Utility U1 before fix:" << utility);
+            // RCLCPP_INFO_STREAM(logger_, "Utility U1 information:" << frontier_with_properties.getArrivalInformation());
+            // RCLCPP_INFO_STREAM(logger_, "Utility U1 distance:" << costCalculator_->getMinPlanDistance());
+            // RCLCPP_INFO_STREAM(logger_, "Utility U1 max info:" << costCalculator_->getMaxArrivalInformation());
+            // RCLCPP_INFO_STREAM(logger_, "Utility U1 max distance:" << frontier_with_properties.getPathLength());
+            // RCLCPP_INFO_STREAM(logger_, "arrival utility" << alpha_ * (static_cast<double>(frontier_with_properties.getArrivalInformation()) / static_cast<double>(costCalculator_->getMaxArrivalInformation())));
+            // RCLCPP_INFO_STREAM(logger_, "distance utility" << (1.0 - alpha_) * (static_cast<double>(costCalculator_->getMinPlanDistance()) / frontier_with_properties.getPathLength()));
+            // RCLCPP_INFO_STREAM(logger_, "Utility U1 before fix:" << utility);
             // It is added with Beta multiplied. If the frontier lies in the N best then this value will be replaced with information on path.
             // If it does not lie in the N best then the information on path is treated as 0 and hence it is appropriate to multiply with beta.
 
@@ -140,9 +145,9 @@ namespace frontier_exploration
             //     throw std::runtime_error("Something is wrong. Duplicate frontiers?");
 
             frontier_with_properties.setWeightedCost((beta_ * utility) == 0 ? std::numeric_limits<double>::max() : 1 / (beta_ * utility));
-            RCLCPP_INFO_STREAM(logger_, "Utility U1 cost after fix:" << 1 / (beta_ * utility));
-            RCLCPP_INFO_STREAM(logger_, "MAX info:" << costCalculator_->getMaxArrivalInformation());
-            RCLCPP_INFO_STREAM(logger_, "Currnt path length" << frontier_with_properties.getPathLength());
+            // RCLCPP_INFO_STREAM(logger_, "Utility U1 cost after fix:" << 1 / (beta_ * utility));
+            // RCLCPP_INFO_STREAM(logger_, "MAX info:" << costCalculator_->getMaxArrivalInformation());
+            // RCLCPP_INFO_STREAM(logger_, "Currnt path length" << frontier_with_properties.getPathLength());
         }
         RCLCPP_DEBUG_STREAM(logger_, "Alpha_: " << alpha_);
         RCLCPP_DEBUG_STREAM(logger_, "Beta_: " << beta_);

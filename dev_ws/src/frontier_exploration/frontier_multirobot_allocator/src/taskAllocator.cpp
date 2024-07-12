@@ -20,9 +20,9 @@ void TaskAllocator::solveAllocationHungarian() {
         std::cout << "Element size: " << elem.size() << std::endl;
         for (auto elem1 : elem)
         {
-            std::cout << "Element: " << elem1 << std::endl;
+            // std::cout << "Element: " << elem1 << std::endl;
         }
-        std::cout << "=================" << std::endl;
+        // std::cout << "=================" << std::endl;
     }
     double cost = HungAlgo.Solve(costMatrix, assignment);
     std::cout << "Assignment size: " << assignment.size() << std::endl;

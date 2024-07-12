@@ -93,28 +93,28 @@ bool Frontier::operator==(const Frontier &other) const
 size_t Frontier::getUID() const
 {
     if (unique_id == nullptr)
-        throw std::runtime_error("A frontier property is null");
+        throw std::runtime_error("Goal uid frontier property is null");
     return *unique_id;
 }
 
 int Frontier::getSize() const
 {
     if (size == nullptr)
-        throw std::runtime_error("A frontier property is null");
+        throw std::runtime_error("Size frontier property is null");
     return *size;
 }
 
 geometry_msgs::msg::Point Frontier::getGoalPoint() const
 {
     if (goal_point == nullptr)
-        throw std::runtime_error("A frontier property is null");
+        throw std::runtime_error("Goal point frontier property is null");
     return *goal_point;
 }
 
 geometry_msgs::msg::Quaternion Frontier::getGoalOrientation() const
 {
     if (best_orientation == nullptr || theta_s_star == nullptr)
-        throw std::runtime_error("A frontier property is null");
+        throw std::runtime_error("Goal orientation frontier property is null");
     return *best_orientation;
 }
 

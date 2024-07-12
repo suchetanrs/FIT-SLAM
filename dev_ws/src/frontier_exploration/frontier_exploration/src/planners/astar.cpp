@@ -6,73 +6,82 @@ FrontierRoadmapAStar::FrontierRoadmapAStar()
 
 // Function to calculate heuristic (Euclidean distance in this case)
 double FrontierRoadmapAStar::heuristic(const Node& a, const Node& b) {
-    return sqrt((a.frontier.getGoalPoint().x - b.frontier.getGoalPoint().x) * (a.frontier.getGoalPoint().x - b.frontier.getGoalPoint().x) + (a.frontier.getGoalPoint().y - b.frontier.getGoalPoint().y) * (a.frontier.getGoalPoint().y - b.frontier.getGoalPoint().y));
+    return (a.frontier.getGoalPoint().x - b.frontier.getGoalPoint().x) * (a.frontier.getGoalPoint().x - b.frontier.getGoalPoint().x) + (a.frontier.getGoalPoint().y - b.frontier.getGoalPoint().y) * (a.frontier.getGoalPoint().y - b.frontier.getGoalPoint().y);
+}
+
+double FrontierRoadmapAStar::heuristic(const Frontier& a, const Frontier& b) {
+    return (a.getGoalPoint().x - b.getGoalPoint().x) * (a.getGoalPoint().x - b.getGoalPoint().x) + (a.getGoalPoint().y - b.getGoalPoint().y) * (a.getGoalPoint().y - b.getGoalPoint().y);
 }
 
 // Function to get the successors of a node (example for a grid)
-std::vector<Node> FrontierRoadmapAStar::getSuccessors(const Node& current, const Node& goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_) {
-    std::vector<Node> successors;
-    if(roadmap_.count(current.frontier) == 0) {
+std::vector<std::shared_ptr<Node>> FrontierRoadmapAStar::getSuccessors(std::shared_ptr<Node> current, std::shared_ptr<Node> goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_) {
+    // PROFILE_FUNCTION;
+    // std::cout << "Successor size: " << roadmap_[current->frontier].size() << std::endl;
+    std::vector<std::shared_ptr<Node>> successors;
+    if(roadmap_.count(current->frontier) == 0) {
         throw std::runtime_error("This should never happen. Frontier not found in roadmap.");
     }
 
-    for (auto& dir : roadmap_[current.frontier]) {
-        double newG = current.g + frontier_exploration::distanceBetweenFrontiers(current.frontier, dir); // Assuming uniform cost for each move
-        double newH = heuristic(Node(dir, 0, 0), goal);
-        successors.emplace_back(dir, newG, newH);
+
+    for (auto& dir : roadmap_[current->frontier]) {
+        double newG = current->g + frontier_exploration::sqDistanceBetweenFrontiers(current->frontier, dir); // Assuming uniform cost for each move
+        double newH = heuristic(dir, goal->frontier);
+        auto newNode = std::make_shared<Node>(dir, newG, newH);
+        successors.push_back(newNode);
     }
     return successors;
 }
 
 // A* Algorithm function
-std::vector<Node> FrontierRoadmapAStar::getPlan(const Frontier& start, const Frontier& goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_) {
-    auto start_ = Node(start, 0, 0);
-    auto goal_ = Node(goal, 0, 0);
-    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList; // Min-heap priority queue
+std::vector<std::shared_ptr<Node>> FrontierRoadmapAStar::getPlan(const Frontier& start, const Frontier& goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_) {
+    // PROFILE_FUNCTION;
+    auto start_ = std::make_shared<Node>(start, 0, 0);
+    auto goal_ = std::make_shared<Node>(goal, 0, 0);
+    std::priority_queue<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, fCostNodeCompare> openList; // Min-heap priority queue
     std::unordered_set<int> closedSet;
-    std::unordered_map<int, Node*> allNodes; // To store all nodes and their costs
+    std::unordered_map<int, std::shared_ptr<Node>> allNodes; // To store all nodes and their costs
 
     openList.push(start_);
-    allNodes[start_.frontier.getUID()] = new Node(start_);
+    allNodes[start_->frontier.getUID()] = start_;
 
     while (!openList.empty()) {
-        Node current = openList.top();
+        std::shared_ptr<Node> current = openList.top();
         openList.pop();
 
         // If goal is reached
-        if (current.frontier.getGoalPoint().x == goal_.frontier.getGoalPoint().x && current.frontier.getGoalPoint().y == goal_.frontier.getGoalPoint().y) {
-            std::vector<Node> path;
-            Node* node = allNodes[current.frontier.getUID()];
+        if (current->frontier.getGoalPoint().x == goal_->frontier.getGoalPoint().x && current->frontier.getGoalPoint().y == goal_->frontier.getGoalPoint().y) {
+            std::vector<std::shared_ptr<Node>> path;
+            std::shared_ptr<Node> node = allNodes[current->frontier.getUID()];
             while (node != nullptr) {
-                path.push_back(*node);
+                path.push_back(node);
                 node = node->parent;
             }
             reverse(path.begin(), path.end());
             return path;
         }
 
-        closedSet.insert(current.frontier.getGoalPoint().x);
+        closedSet.insert(current->frontier.getUID());
 
         // Generate successors
-        std::vector<Node> successors = getSuccessors(current, goal_, roadmap_);
+        std::vector<std::shared_ptr<Node>> successors = getSuccessors(current, goal_, roadmap_);
 
         for (auto& successor : successors) {
-            int successorHash = successor.frontier.getUID();
+            int successorHash = successor->frontier.getUID();
 
             if (closedSet.find(successorHash) != closedSet.end()) {
                 continue;
             }
 
-            if (allNodes.find(successorHash) == allNodes.end() || allNodes[successorHash]->g > successor.g) {
-                successor.parent = allNodes[current.frontier.getUID()];
-                allNodes[successorHash] = new Node(successor);
+            if (allNodes.find(successorHash) == allNodes.end() || allNodes[successorHash]->g > successor->g) {
+                successor->parent = allNodes[current->frontier.getUID()];
+                allNodes[successorHash] = successor;
                 openList.push(successor);
             }
         }
     }
 
     // If no path found, return an empty path
-    return std::vector<Node>();
+    return std::vector<std::shared_ptr<Node>>();
 }
 
 // int main() {

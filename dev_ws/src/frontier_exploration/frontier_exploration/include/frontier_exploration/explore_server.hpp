@@ -19,8 +19,6 @@
 #include "frontier_exploration/bounded_explore_layer.hpp"
 #include "frontier_exploration/FrontierSearchAllCells.hpp"
 #include "frontier_exploration/FrontierSearch.hpp"
-#include "frontier_exploration/kdtree.hpp"
-#include "frontier_exploration/planners/FrontierRoadmap.hpp"
 
 namespace frontier_exploration
 {
@@ -110,7 +108,6 @@ namespace frontier_exploration
         int min_frontier_cluster_size_;          ///< Minimum size of a frontier cluster.
         int max_frontier_cluster_size_;
         std::shared_ptr<BoundedExploreLayer> bel_ptr_;
-        std::shared_ptr<FrontierRoadMap> roadmap_ptr_;
         bool process_other_robots_;
     };
 }

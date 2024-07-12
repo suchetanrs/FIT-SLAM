@@ -99,6 +99,8 @@ namespace frontier_exploration
                         nav2_costmap_2d::Costmap2D *exploration_costmap_);
 
     double distanceBetweenFrontiers(const Frontier& f1, const Frontier& f2);
+
+    double sqDistanceBetweenFrontiers(const Frontier& f1, const Frontier& f2);
 }
 
 #endif // HELPERS_HPP

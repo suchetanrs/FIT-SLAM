@@ -95,6 +95,30 @@ inline std::string COLOR_STR(const std::string &str, const char *robotName)
         std::cout << GET_STR_STREAM("\033[1;94m" << functionName << " Execution Time: " << seconds << " Seconds\033[0m") << std::endl;
 
 
+class Profiler
+{
+  public:
+    Profiler(const std::string & functionName) : functionName(functionName)
+    {
+        start = std::chrono::high_resolution_clock::now();
+    }
+
+    ~Profiler()
+    {
+        auto end      = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        float seconds = duration.count() / 1e6;
+        std::cout << "\033[1;94m" << functionName << " Execution Time: " << seconds << " Seconds\033[0m" << std::endl;
+        // TIME_PROFILER(functionName, seconds);
+    }
+
+  private:
+    std::string functionName;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start;
+};
+
+#define PROFILE_FUNCTION Profiler profiler_instance(__func__);
+
 inline bool equateFrontiers(Frontier& f1, Frontier& f2, bool printValues)
 {
     if (f1.getGoalPoint() != f2.getGoalPoint() ||

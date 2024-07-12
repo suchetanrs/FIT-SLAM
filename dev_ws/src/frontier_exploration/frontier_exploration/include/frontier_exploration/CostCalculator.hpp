@@ -17,7 +17,7 @@
 #include <frontier_exploration/Frontier.hpp>
 
 #include <frontier_exploration/planners/planner.hpp>
-#include <frontier_exploration/planners/rrt.hpp>
+// #include <frontier_exploration/planners/rrt.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
@@ -35,6 +35,8 @@
 #include <frontier_exploration/colorize.hpp>
 #include <frontier_exploration/rosVisualizer.hpp>
 #include <frontier_exploration/Helpers.hpp>
+#include <frontier_exploration/planners/FrontierRoadmap.hpp>
+#include <frontier_exploration/FisherInfoManager.hpp>
 
 namespace frontier_exploration
 {
@@ -59,11 +61,13 @@ namespace frontier_exploration
         void setPlanForFrontier(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
                                                             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
 
-        void getPlanForFrontierRRT(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
-                                                            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
-
         void setPlanForFrontierEuclidean(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
                                                             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
+
+        void setPlanForFrontierRoadmap(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
+                                                            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
+        
+        void updateRoadmapData(std::vector<Frontier>& frontiers);
         
         // -----------------Random costs--------------
         double getRandomVal();
@@ -99,6 +103,8 @@ namespace frontier_exploration
         rclcpp::Node::SharedPtr node_;
         // nav2_costmap_2d::Costmap2D *costmap_;
         nav2_costmap_2d::Costmap2D *exploration_costmap_;
+        std::shared_ptr<FrontierRoadMap> roadmap_ptr_;
+        std::shared_ptr<FisherInformationManager> fisherInfoManager_ptr_;
         rclcpp::Logger logger_ = rclcpp::get_logger("cost_calculator");
         std::shared_ptr<RosVisualizer> rosVisualizer_;
         rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_plan_pub_;                ///< Publisher for planned path to the frontiers.

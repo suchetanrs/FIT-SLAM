@@ -118,3 +118,5 @@ sros
 sws
 sexp
 #scesar
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export CYCLONEDDS_URI=~/.ros/cyclonedds.xml

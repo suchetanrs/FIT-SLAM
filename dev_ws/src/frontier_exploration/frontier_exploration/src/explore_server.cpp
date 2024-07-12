@@ -9,22 +9,6 @@
 
 namespace frontier_exploration
 {
-    void print_nodes(const Kdtree::KdNodeVector &nodes) {
-    size_t i,j;
-    for (i = 0; i < nodes.size(); ++i) {
-        if (i > 0)
-        cout << " ";
-        cout << "(";
-        for (j = 0; j < nodes[i].point.size(); j++) {
-        if (j > 0)
-            cout << ",";
-        cout << nodes[i].point[j];
-        }
-        cout << ")";
-    }
-    cout << endl;
-    }
-
     FrontierExplorationServer::FrontierExplorationServer() : Node("explore_server")
     {
         this->declare_parameter("retry_count", 30);
@@ -80,8 +64,6 @@ namespace frontier_exploration
         service_send_current_goal_ = this->create_service<frontier_msgs::srv::SendCurrentGoal>(
             "multirobot_send_current_goal", std::bind(&FrontierExplorationServer::handle_multirobot_current_goal_request, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
             rmw_qos_profile_default, multirobot_service_callback_group_);
-
-        roadmap_ptr_ = std::make_shared<FrontierRoadMap>(explore_costmap_ros_->getLayeredCostmap()->getCostmap());
 
         //---------------------------------------------ROS RELATED------------------------------------------
         tf_listener_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
@@ -363,8 +345,7 @@ namespace frontier_exploration
                 // sample_frontier.setUID(1);
                 // sample_frontier_list.push_back(sample_frontier);
                 // roadmap_ptr_->addNodes(sample_frontier_list);
-
-                roadmap_ptr_->addNodes(costResultCurrentRobot->frontier_list);
+                
                 // roadmap_ptr_->getPlan(10.5, 4.3, 0.0, 0.0);
                 nextRoadMapParent_ = globalFrontierList[allocatedIndex];
                 RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Allocated frontier x:" + std::to_string(allocatedFrontier.getGoalPoint().x), this->get_namespace()));

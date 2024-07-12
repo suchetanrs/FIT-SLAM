@@ -961,3 +961,936 @@ vscs
 vsc
 cd
 tmux
+rviz2
+ros2 run exploration_sim explore_sim 
+cd dev_ws/
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+ls
+cd dev_ws/
+colcon build --symlink-install
+bash
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make
+make install
+cd dev_ws/
+colcon build --symlink-install
+cd
+./shell_scripts/3_exploration.sh 
+cd dev_ws/
+colcon build --symlink-install
+./../shell_scripts/3_exploration.sh 
+colcon build --symlink-install
+./../shell_scripts/3_exploration.sh 
+colcon build --symlink-install
+./../shell_scripts/3_exploration.sh 
+./shell_scripts/3_exploration.sh 
+bash
+cd dev_ws/
+vsc
+ls
+rm -rf go2_sim.tar.xz unitree_guide2.tar.xz 
+ls
+cd src/
+ls
+rm -rf go1_sim/ unitree_guide2/
+ls
+cd ..
+ls
+clear
+bash
+clear
+ls
+clear
+ls
+clear
+ls
+clear
+ls
+cd dev_ws/
+ls
+cd src/
+ls
+cd frontier_exploration/
+ls
+rm -rf COLCON_IGNORE 
+ls
+cd ..
+ls
+cd exploration_sim/
+rm -rf COLCON_IGNORE 
+ls
+cd ..
+ls
+clear
+ls
+cd ..
+ls
+tmux
+ros2 launch go2_gazebo spawn_go2.launch.py 
+nano dev_ws/src/go2_sim/go2_gazebo/launch/spawn_go2.launch.py 
+ros2 launch go2_gazebo spawn_go2.launch.py 
+nano dev_ws/src/go2_sim/go2_gazebo/launch/spawn_go2.launch.py 
+ros2 launch go2_gazebo spawn_go2.launch.py 
+nano dev_ws/src/go2_sim/go2_gazebo/launch/spawn_go2.launch.py 
+ros2 launch go2_gazebo spawn_go2.launch.py 
+nano dev_ws/src/go2_sim/go2_gazebo/launch/spawn_go2.launch.py 
+ros2 launch go2_gazebo spawn_go2.launch.py 
+ros2 launch go2_gazebo spawn_go.launch
+source dev_ws/install/setup.bash
+ros2 launch go2_gazebo spawn_go.launch
+ros2 launch go2_gazebo start_world.launch.py
+ls
+ros2 run unitree_guide2 junior_ctrl 
+cd dev_ws/
+ls
+colcon build --symlink-install --packages-select ros2_unitree_legged_
+colcon build --symlink-install --packages-select ros2_unitree_legged_msgs 
+ros2 run unitree_guide2 junior_ctrl 
+ls
+cd dev_ws/
+vsc
+cd
+cd /root/dev_ws/src/go2_sim/go2_description/xacro
+vsc
+cd
+cd dev_ws/
+vsc
+ls
+cd src/
+ls
+cd go1_sim/
+ls
+cd ..
+ls
+rm -rf go2_sim/
+ls
+cd ..
+ls
+rm -rf build/ install/ log/
+colcon build --symlink-install
+ros2 topic list
+ros2 topic echo /joint_states 
+ros2 topic list
+clear
+ls
+cd dev_ws/
+ls
+cd src/
+ls
+cd ..
+ls
+unzip go2_sim.tar.xz 
+apt-get install unzip
+unzip go2_sim.tar.xz 
+tar -xvzf go2_sim.tar.xz src/
+ls
+cd src/
+ls
+cd ..
+ls
+tar -xvzf go2_sim.tar.xz
+sudo apt install xz-utils
+tar -Jxvf unitree_guide2.tar.xz 
+ls
+mv unitree_guide2 src/
+ls
+tar -Jxvf go2_sim.tar.xz 
+ls
+mv go2_sim src/
+ls
+colcon build --symlink-install --packages-select unitree_guide2 
+colcon build --symlink-install --packages-select ros2_unitree_legged_msgs 
+colcon build --symlink-install
+source install/setup.bash
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/planners/
+cd ..
+ls
+cd ..
+ls
+cd ..
+ls
+cd frontier_multirobot_allocator/
+ls
+cmake ..
+make
+cd build/
+make install
+cd
+ls
+cd dev_ws/
+colcon build --symlink-install
+ls
+cd src/
+ls
+cd exploration_sim/
+ls
+touch COLCON_IGNORE
+cd ..
+ls
+cd frontier_exploration/
+touch COLCON_IGNORE
+cd
+cd dev_ws/
+colcon build --symlink-install
+ls
+rm -rf build/ install/ log/
+colcon build --symlink-install
+rm -rf build/ install/ log/
+colcon build --symlink-install --packages-select ros2_unitree_legged_msgs 
+colcon build --symlink-install
+apt-get install lcm
+pip3 install lcm
+colcon build --symlink-install
+ls
+cd src/
+ls
+cd ..
+ls
+wget https://github.com/lcm-proj/lcm/archive/refs/tags/v1.5.0.zip
+ls
+unzip v1.5.0.zip 
+ls
+cd lcm-1.5.0/
+ls
+mkdir build
+cd build/
+cmake ..
+make
+make install
+ls
+cd
+cd dev_ws/
+ls
+colcon build --symlink-install
+ls
+clear
+ls
+clear
+ls
+clear
+ls
+clear
+ls
+clear
+ls
+clear
+ls
+clear
+ls
+clear
+ls
+clear
+ls
+clear
+ls
+clear
+tmux
+ros2 launch go2_gazebo start_world.launch.py 
+kill -9 %1
+ros2 launch go2_gazebo spawn_go2.launch
+cd dev_ws/
+source install/setup.bash
+ros2 launch go2_gazebo spawn_go2.launch.py 
+ls
+cd src/
+ls
+cd shared_pkgs/
+vsc
+ros2 launch go2_gazebo spawn_go2.launch.py 
+source dev_ws/install/setup.bash
+ros2 run unitree_guide2 junior_ctrl 
+cd dev_ws/
+ls
+colcon build --symlink-install
+ros2 run unitree_guide2 junior_ctrl 
+ros2 topic list
+ros2 topic echo /RR_calf_controller/state
+ros2 topic hz /RR_calf_controller/state
+ros2 run unitree_guide2 junior_ctrl 
+htop
+top
+htop
+jtop
+top
+ros2 topic hz /RR_calf_controller/state
+ros2 topic hz /RR_calf_controller/command 
+top
+clear
+apt-get install ros-humble-plot-juggler
+apt-get install ros-humble-plotjuggler
+apt-get install ros-humble-plotjuggler-ros
+ros2 run plotjuggler plotjuggler 
+ls
+cd dev_ws/
+ls
+colcon build --symlink-install
+rm -rf build/ install/ log/
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make
+make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+ls
+cd 
+ls
+unzip lcm-1.5.0
+ls
+rm -rf lcm-1.5.0.zip 
+ls
+cd lcm-1.5.0/
+ls
+cd build/
+cmake ..
+make
+make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+tmux
+./shell_scripts/3_exploration.sh 
+ls
+cd dev_ws/
+ros2 run exploration_sim explore_sim 
+rviz2
+cd dev_ws/
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make
+make install
+cd d
+cd dev_ws/
+vsc
+tmux
+ls
+cd dev_ws/
+vsc
+clear
+ls
+clear
+ls
+clear
+ls
+clear
+ls
+clear
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+kill -9 %1
+ros2 run exploration_sim explore_sim 
+ls
+clear
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd
+./shell_scripts/3_exploration.sh 
+rviz2
+cd dev_ws/
+colcon build --symlink-install
+ls
+tmux
+cd .ros/
+ls
+cd log/
+ls
+rm -rf *
+ls
+cd ..
+ls
+cd log/
+ls
+rm -rf *
+ls
+clear
+ls
+clear
+ls
+cd ..
+ls
+zip log/ log.zip
+ls
+apt-get install zip
+zup log/ -o log.zip
+zip log/ -o log.zip
+zip log/
+ls
+cd log/
+ls
+cd ..
+ls
+zip log
+man zip
+zip -r logs_2_pressed.zip log
+ls
+ros2 launch go2_gazebo spawn_go2.launch.py 
+clear
+ros2 launch go2_gazebo spawn_go2.launch.py 
+clear
+ros2 launch go2_gazebo spawn_go2.launch.py 
+ros2 run unitree_guide2 junior_ctrl 
+clear
+ros2 run unitree_guide2 junior_ctrl 
+ls
+cd dev_ws/
+ls
+cd src/
+ls
+rm -rf shared_pkgs/
+ls
+cd
+ls
+rm -rf shared_pkgs-20240702T154954Z-001.zip
+ls
+unzip shared_pkgs-20240703T072847Z-001.zip 
+apt-get install unzip
+unzip shared_pkgs-20240703T072847Z-001.zip 
+ls
+cd sh
+mv shared_pkgs dev_ws/src/
+ls
+cd lcm-1.5.0/
+cd build/
+cmake ..
+make 
+make install
+cd
+cd dev_ws/
+ls
+cd src/
+ls
+cd ..
+ls
+colcon build --symlink-install
+ls
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+ls
+cd src/
+ls
+cd shared_pkgs/
+la
+unzip *
+ls
+unzip ros2_unitree_legged_*
+ls
+unzip go1_sim.zip 
+ls
+unzip quadruped_sim.zip 
+ls
+unzip ros2_unitree_legged_controller.zip 
+ls
+unzip ros2_unitree_legged_msgs.zip 
+ls
+unzip unitree_guide2.zip 
+ls
+rm -rf go1_sim.zip quadruped_sim.zip ros2_unitree_legged_controller.zip ros2_unitree_legged_msgs.zip unitree_guide2.zip 
+ls
+cd ../..
+colcon build --symlink-install
+ls
+cd src/
+ls
+cd shared_pkgs/
+ls
+rm -rf quadruped_sim/
+ls
+cd ../..
+colcon build --symlink-install
+ls
+tmux
+ros2 launch go2_gazebo spawn_go2.launch.py 
+ros2 run unitree_guide2 junior_ctrl 
+ros2 bag record /joint_states /RL_calf_joint/*
+ros2 bag record /joint_states /RL_calf_joint/command
+ls
+rm -rf rosbag2_2024_07_03-13_34_52/
+ls
+cd .ros/
+ls
+ros2 topic list
+ros2 bag record /RL_calf_controller/command /RL_calf_controller/state /RL_calf_controller/transition_event /joint_states
+cd .ros/
+ls
+cd log/
+ls
+rm -rf *
+ls
+cd ..
+ls
+zip -r -v log_2_dabake_1.zip log
+apt-get install zip
+zip -r -v log_2_dabake_1.zip log
+ls
+cd log
+ls
+rm -rf *
+ls
+cd ..
+ls
+zip -r -v log_2_dabake_2.zip log
+ls
+cd log/
+ls
+rm -rf *
+ls
+cd ..
+ls
+zip -r -v log_2_dabake_5_dabake_bag_ke_saath.zip log
+ls
+zip -r -v rosbag2_2_dabake_5_dabake rosbag2_2024_07_03-13_36_13/
+ls
+ls
+tmux
+ls
+ros2 launch go2_gazebo spawn_go2.launch.py 
+ros2 run unitree_guide2 junior_ctrl 
+ros2 bag record --all 
+ls
+rm -rf rosbag2_2024_07_03-23_58_26/
+ros2 bag record --all 
+ls
+cd lcm-1.5.0/
+s
+cd build/
+cmake ..
+make install
+cd
+sl
+ls
+cd dev_ws/
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+source install/setup.bash
+cd
+ls
+tmux
+ros2 launch scout_gazebo start_world.launch.py 
+ros2 launch scout_gazebo scout_simu.launch.py 
+export SCOUT_X= 1.0
+export SCOUT_X=1.0
+export SCOUT_Y=1.0
+ros2 launch scout_gazebo scout_simu.launch.py 
+echo $ROS_DOMAIN_ID 
+rviz2
+ls
+tmux
+ros2 launch scout_gazebo start_world.launch.py 
+ros2 launch gazebo_ros gazebo.launch.py 
+kill -9 %1
+bash
+ros2 run exploration_sim explore_sim 
+source dev_ws/install/setup.bash
+ros2 launch go1_gazebo spawn_go1.launch.py 
+ls
+clear
+cd dev_ws/
+ls
+cd src/
+ls
+cd go1/
+ls
+nano go1_sim/go1_gazebo/launch/spawn_go1.launch.py 
+cd
+ros2 launch go1_gazebo spawn_go1.launch.py 
+rviz2
+./shell_scripts/3_exploration.sh 
+ls
+cd lcm-1.5.0/
+cd build/
+ls
+cmake ..
+make install
+cd
+cd dev_ws/
+ls
+cd
+apt-get install unzip
+unzip working.zip 
+ls
+cd dev_ws/
+ls
+cd ..
+mv working.zip dev_ws/
+ls
+cd dev_ws/
+ls
+mv working.zip src/
+ls
+cd src/
+ls
+rm -rf shared_pkgs/
+ls
+mkdir go1
+cd go1/
+ls
+cd ..
+mv working.zip go1/
+ls
+cd go1/
+ls
+unzip working.zip 
+ls
+cd ..
+ls
+cd ..
+ls
+colcon build --symlink-install
+ls
+rm -rf build/ install/ log/
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+ls
+cd dev_ws/
+vsc
+tmux
+ls
+clear
+ros2 run unitree_guide2 junior_ctrl 
+cd dev_ws/
+colcon build --symlink-install
+ros2 run teleop_twist_keyboard teleop_twist_keyboard 
+ros2 run unitree_guide2 junior_ctrl 
+ls
+c
+cd
+ls
+code .
+vsc
+ros2 run unitree_guide2 junior_ctrl 
+ls
+cd ros2_
+cd ros2_ws/
+ls
+cd src/
+ls
+cd
+cd dev_ws/
+ls
+cd src/
+ls
+cd go1/
+ls
+rm -rf working.zip 
+ls
+cd ..
+ls
+nautilus .
+ls
+rm -rf go1.zip 
+nautilus .
+ls
+clear
+ls
+clear
+ros2 launch scout_navigation2 navigation.launch.py 
+ls
+cd ros2_ws/src/scout_v2/scout_navigation2/
+ls
+cd launch/
+ls
+nano navigation.launch.py 
+echo $SCOUT_NAMESPACE 
+export SCOUT_NAMESPACE=""
+ros2 launch scout_navigation2 navigation.launch.py 
+nano navigation.launch.py 
+ros2 launch scout_navigation2 navigation.launch.py 
+cd ../..
+ls
+zip scout_navigation2/
+apt-get install scout_navigation2/
+apt-get install zip
+zip scout_navigation2/
+nautilus .
+ros2 topic echo /scan
+cd ros2_ws/
+vsc
+ros2 launch slam_toolbox online_async_launch.py params_file:=/root/dev_ws/src/go1/go1_sim/go1_description/config/mapper
+_params.yaml use_sim_time:=true 
+ros2 launch slam_toolbox online_async_launch.py params_file:=/root/dev_ws/src/go1/go1_sim/go1_description/config/mapper_params.yaml use_sim_time:=true 
+cd dev_ws/
+colcon build --symlink-install
+ros2 launch slam_toolbox online_async_launch.py params_file:=/root/dev_ws/src/go1/go1_sim/go1_description/config/mapper_params.yaml use_sim_time:=true 
+ros2 run teleop_twist_keyboard 
+ros2 run teleop_twist_keyboard teleop_twist_keyboard 
+ros2 launch slam_toolbox online_async_launch.py params_file:=/root/dev_ws/src/go1/go1_sim/go1_description/config/mapper_params.yaml use_sim_time:=true 
+cd
+nano /opt/ros/humble/share/slam_toolbox/launch/online_async_launch.py 
+ros2 launch slam_toolbox online_async_launch.py slam_params_file:=/root/dev_ws/src/go1/go1_sim/go1_description/config/mapper_params.yaml use_sim_time:=true 
+ros2 launch go1_gazebo spawn_go1.launch.py 
+ls
+nano ros2_ws/src/scout_v2/
+cd ros2_ws/src/scout_v2/
+ls
+nano scout_gazebo/launch/start_world.launch.py 
+ros2 run teleop_twist_keyboard teleop_twist_keyboard 
+cd
+cd dev_ws/
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+apt-get install ros-humble-slam-toolbox
+clear
+cd
+ls
+clear
+cd lcm-1.5.0/
+cd build/
+cmake ..
+make install
+ros2 run unitree_guide2 junior_ctrl 
+ros2 launch slam_toolbox online_async_launch.py params_file:=/root/dev_ws/src/go1/go1_sim/go1_description/config/mapper_params.yaml 
+ros2 launch slam_toolbox online_async_launch.py params_file:=/root/dev_ws/src/go1/go1_sim/go1_description/config/mapper_params.yaml use_sim_time:=true
+bash
+ros2 topic list | grep cmd_vel
+ros2 topic list | grep cmd_vel_nav
+ros2 topic echo /cmd_vel_nav
+ros2 topic echo /cmd_vel
+ros2 topic echo /cmd_vel_nav
+ros2 topic echo /cmd_vel
+ros2 run teleop_twist_keyboard teleop_twist_keyboard 
+ros2 launch go1_gazebo spawn_go1.launch.py 
+ros2 launch scout_gazebo start_world.launch.py 
+cd dev_ws/
+vsc
+ros2 launch scout_gazebo start_world.launch.py 
+colcon build --symlink-install
+ros2 launch scout_gazebo start_world.launch.py 
+kill -9 %1
+ros2 launch scout_gazebo start_world.launch.py 
+ros2 run tf2_ros tf2_echo odom laser_link
+ros2 topic echo /odom
+ros2 topic echz /odom
+ros2 topic hz /odom
+ls
+ros2 run tf2_tools view_frames 
+nautilus .
+ros2 topic hz /odom
+ros2 topic echo /odom
+ros2 run tf2_tools view_frames 
+nautilus .
+nano go1_odom.py
+python3 go1_
+python3 go1_odom.py 
+clear
+tmux
+ls
+cd dev_ws/
+ls
+cd src/
+ls
+cd unitree/
+ls
+cd ..
+ls
+colcon build --symlink-install
+cd
+cd lcm-1.5.0/
+cd build/
+cmake ..
+make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+ros2 run unitree_guide2 junior_ctrl 
+cd dev_ws/
+ls
+ros2 launch go1_gazebo spawn_go1.launch.py 
+ros2 launch go1_navigation navigation.launch.py 
+ls
+bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard 
+cd dev_ws/
+ls
+cd src/
+ls
+cd unitree/
+ls
+cd README.md 
+ls
+nano README.md 
+ls
+nano README.md 
+cd go1_sim/
+ls
+cd go1_navigation/
+ls
+cd params/
+ls
+nano nav2_params.yaml 
+vsc
+ls
+cd dev_ws/
+ls
+apt-get install unzip
+unzip unitree_gazebo_ros2.zip 
+ls
+rm -rf go1_sim/ ros2_unitree_legged_*
+ls
+rm -rf unitree_guide2/
+ls
+mv unitree_gazebo_ros2.zip src/
+ls
+cd src/
+ls
+mkdir unitree
+ls
+mv unitree_gazebo_ros2.zip unitree
+ls
+cd unitree/
+ls
+unzip unitree_gazebo_ros2.zip 
+ls
+cd ..
+ls
+cd ..
+ls
+colcon build --symlink-install
+ls
+rm -rf build/ install/ log/
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+tmux
+ls
+cd dev_ws/
+vsc
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+./shell_scripts/3_exploration.sh 
+cd dev_ws/
+colcon build --symlink-install
+cd
+./shell_scripts/3_exploration.sh 
+rviz2
+ls
+cd dev_ws/
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd dev_ws/
+colcon build --symlink-install
+cd
+ls
+cd hotspot/
+ls
+./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
+cd
+cd sh
+cd shell_scripts/
+./install_hotspot.sh 
+nano install_hotspot.sh 
+./install_hotspot.sh 
+cd
+cd hotspot/
+./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
+ls
+cd 
+cd sh
+cd shell_scripts/
+ls
+nano install_hotspot.sh 
+cd
+cd hotspot/
+./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd
+cd hotspot/
+ls
+./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
+pidof explore_server
+rviz2
+./shell_scripts/3_exploration.sh 
+ls
+./shell_scripts/3_exploration.sh 
+htop
+top
+pidof explore_server
+cd dev_ws/
+colcon build --symlink-install
+pidof explore_server
+colcon build --symlink-install
+top
+colcon build --symlink-install
+clear
+ros2 run exploration_sim explore_sim 
+kill -9 %1
+cd
+cd shell_scripts/
+ls
+nano install_hotspot.sh 
+./install_hotspot.sh 
+cd
+ls
+cd hotspot/
+ls
+./hotspot-v1.4.1-292-g5a974a4-x86_64.AppImage 
+ls
+rm -rf perf.data perf.data.old 
+ls
+cd
+ros2 run exploration_sim explore_sim 
+cd dev_ws/
+vsc
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+kill -9 %1
+ros2 run exploration_sim explore_sim 
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+colcon build --symlink-install
+ros2 run exploration_sim explore_sim 
+clear
+ls
+clear
+cd dev_ws/
+vsc
+tmux
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd dev_ws/
+vsc
+clear
+vsc
+colcon build --symlink-install
+clear
+tmux
+clear
+ls
+clear
+cd dev_ws/
+vsc

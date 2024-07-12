@@ -15,11 +15,11 @@ struct Node {
     double g; // Cost from the start node to this node
     double h; // Heuristic cost estimate to the goal
     double f; // Total cost (f = g + h)
-    Node* parent; // Pointer to the parent node
+    std::shared_ptr<Node> parent; // Pointer to the parent node
 
     Node();
 
-    Node(Frontier frontier_in, double g, double h, Node* parent = nullptr) 
+    Node(Frontier frontier_in, double g, double h, std::shared_ptr<Node> parent = nullptr) 
         : frontier(frontier_in), g(g), h(h), f(g + h), parent(parent) {}
 
     // Comparator for priority queue to order by f value
@@ -28,15 +28,23 @@ struct Node {
     }
 };
 
+struct fCostNodeCompare {
+    bool operator()(const std::shared_ptr<Node>& a, const std::shared_ptr<Node>& b) const {
+        return a->f > b->f;
+    }
+};
+
 class FrontierRoadmapAStar {
 public:
     FrontierRoadmapAStar();
 
-    std::vector<Node> getPlan(const Frontier& start, const Frontier& goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_);
+    std::vector<std::shared_ptr<Node>> getPlan(const Frontier& start, const Frontier& goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_);
 
 protected:
     double heuristic(const Node& a, const Node& b);
 
-    std::vector<Node> getSuccessors(const Node& current, const Node& goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_);
+    double heuristic(const Frontier& a, const Frontier& b);
+
+    std::vector<std::shared_ptr<Node>> getSuccessors(std::shared_ptr<Node> current, std::shared_ptr<Node> goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_);
 
 };

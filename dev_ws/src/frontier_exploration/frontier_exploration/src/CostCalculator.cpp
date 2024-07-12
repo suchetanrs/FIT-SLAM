@@ -8,6 +8,8 @@ namespace frontier_exploration
         node_ = node;
         logger_ = node_->get_logger();
         exploration_costmap_ = costmap;
+        roadmap_ptr_ = std::make_shared<FrontierRoadMap>(costmap);
+        fisherInfoManager_ptr_ = std::make_shared<FisherInformationManager>(node);
         rosVisualizer_ = std::make_shared<RosVisualizer>(node, exploration_costmap_);
         fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
         rosVisualizer_ = std::make_shared<RosVisualizer>(node, exploration_costmap_);
@@ -248,11 +250,18 @@ namespace frontier_exploration
         return;
     }
 
-    void FrontierCostCalculator::getPlanForFrontierRRT(geometry_msgs::msg::Point start_point_w, Frontier &goal_point_w,
-                                                       std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_)
+    void FrontierCostCalculator::setPlanForFrontierRoadmap(geometry_msgs::msg::Point start_point_w, Frontier &goal_point_w,
+                                                           std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_)
     {
-        rrt_planner::RRTPlanner planner(exploration_costmap_, 1.0, 1000, logger_);
-        std::vector<rrt_planner::Node> path = planner.plan(start_point_w.x, start_point_w.y, goal_point_w.getGoalPoint().x, goal_point_w.getGoalPoint().y);
+        roadmap_ptr_->getPlan(start_point_w.x, start_point_w.y, true, goal_point_w.getGoalPoint().x, goal_point_w.getGoalPoint().y, true);
+        goal_point_w.setPathLength(1.0);
+        goal_point_w.setFisherInformation(0.0);
+        return;
+    }
+
+    void FrontierCostCalculator::updateRoadmapData(std::vector<Frontier> &frontiers)
+    {
+        roadmap_ptr_->addNodes(frontiers, true);
     }
 
     void FrontierCostCalculator::setPlanForFrontierEuclidean(geometry_msgs::msg::Point start_point_w, Frontier &goal_point_w,

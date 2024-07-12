@@ -99,4 +99,9 @@ namespace frontier_exploration
     {
         return sqrt(pow(f1.getGoalPoint().x - f2.getGoalPoint().x, 2) + pow(f1.getGoalPoint().y - f2.getGoalPoint().y, 2));
     }
+
+    double sqDistanceBetweenFrontiers(const Frontier& f1, const Frontier& f2)
+    {
+        return pow(f1.getGoalPoint().x - f2.getGoalPoint().x, 2) + pow(f1.getGoalPoint().y - f2.getGoalPoint().y, 2);
+    }
 }
