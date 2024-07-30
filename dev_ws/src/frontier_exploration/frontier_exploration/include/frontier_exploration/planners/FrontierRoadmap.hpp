@@ -14,6 +14,7 @@
 #include "frontier_exploration/rosVisualizer.hpp"
 
 const double GRID_CELL_SIZE = 1.0; // Assuming each cell is 1x1 in size
+const double RADIUS_TO_DECIDE_EDGES = 2.8; // a node within this radius of another node is considered a child of the other node.
 
 namespace frontier_exploration
 {
@@ -42,7 +43,9 @@ namespace frontier_exploration
 
         void populateNodes(const std::vector<Frontier> &frontiers, bool populateClosest);
 
-        void getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, double radius);
+        void getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, const double radius);
+
+        void getNodesWithinRadius(const geometry_msgs::msg::Point &interestPoint, std::vector<Frontier> &closestNodeVector, const double radius);
 
         void getClosestNode(const Frontier &interestNode, Frontier &closestNode);
 
@@ -53,6 +56,16 @@ namespace frontier_exploration
         void publishRoadMap();
 
         void publishPlan(const std::vector<std::shared_ptr<Node>> &plan);
+
+        std::mutex& getRoadmapMutex()
+        {
+            return roadmap_mutex_;
+        };
+
+        std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& getRoadMap()
+        {
+            return roadmap_;
+        };
 
     private:
         bool isConnectable(const Frontier &f1, const Frontier &f2);

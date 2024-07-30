@@ -9,7 +9,7 @@ namespace frontier_exploration
         logger_ = node_->get_logger();
         exploration_costmap_ = costmap;
         roadmap_ptr_ = std::make_shared<FrontierRoadMap>(costmap);
-        fisherInfoManager_ptr_ = std::make_shared<FisherInformationManager>(node);
+        // fisherInfoManager_ptr_ = std::make_shared<FisherInformationManager>(node, roadmap_ptr_);
         rosVisualizer_ = std::make_shared<RosVisualizer>(node, exploration_costmap_);
         fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
         rosVisualizer_ = std::make_shared<RosVisualizer>(node, exploration_costmap_);

@@ -1,6 +1,7 @@
 // node_graph.cpp
 
 #include "frontier_exploration/planners/FrontierRoadmap.hpp"
+#include "frontier_exploration/GeometryUtils.hpp"
 
 namespace frontier_exploration
 {
@@ -65,7 +66,7 @@ namespace frontier_exploration
             for (const auto &point : pair.second)
             {
                 std::vector<Frontier> closestNodes;
-                getNodesWithinRadius(point, closestNodes, 2.8);
+                getNodesWithinRadius(point, closestNodes, RADIUS_TO_DECIDE_EDGES);
                 // Ensure the point is added if not already present
                 // if (roadmap_.find(point) == roadmap_.end())
                 // {
@@ -242,7 +243,7 @@ namespace frontier_exploration
         }
     }
 
-    void FrontierRoadMap::getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, double radius)
+    void FrontierRoadMap::getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, const double radius)
     {
         // Get the central grid cell of the interest node
         auto interest_point = interestNode.getGoalPoint();
@@ -261,6 +262,33 @@ namespace frontier_exploration
                     for (const auto &existing_frontier : spatial_hash_map_[neighbor_cell])
                     {
                         if (distanceBetweenFrontiers(interestNode, existing_frontier) < radius)
+                        {
+                            closestNodeVector.push_back(existing_frontier);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void FrontierRoadMap::getNodesWithinRadius(const geometry_msgs::msg::Point &interestPoint, std::vector<Frontier> &closestNodeVector, const double radius)
+    {
+        // Get the central grid cell of the interest node
+        auto center_cell = getGridCell(interestPoint.x, interestPoint.y);
+
+        // Calculate the number of grid cells to check in each direction (radius in cells)
+        int cell_radius = static_cast<int>(std::ceil(radius / GRID_CELL_SIZE));
+        for (int dx = -cell_radius; dx <= cell_radius; ++dx)
+        {
+            for (int dy = -cell_radius; dy <= cell_radius; ++dy)
+            {
+                auto neighbor_cell = std::make_pair(center_cell.first + dx, center_cell.second + dy);
+                // The spatial hash map is not protected with the mutex here because the function itself is protected at the caller line.
+                if (spatial_hash_map_.count(neighbor_cell) > 0)
+                {
+                    for (const auto &existing_frontier : spatial_hash_map_[neighbor_cell])
+                    {
+                        if (distanceBetweenPoints(interestPoint, existing_frontier.getGoalPoint()) < radius)
                         {
                             closestNodeVector.push_back(existing_frontier);
                         }

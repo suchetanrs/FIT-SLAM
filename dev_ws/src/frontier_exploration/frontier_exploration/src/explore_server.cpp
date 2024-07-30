@@ -68,7 +68,7 @@ namespace frontier_exploration
         //---------------------------------------------ROS RELATED------------------------------------------
         tf_listener_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
         buildBoundaryAndCenter();
-        RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR(COLOR_STR("FrontierExplorationServer::FrontierExplorationServer()", this->get_namespace()), this->get_namespace()));
+        RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("FrontierExplorationServer::FrontierExplorationServer()", this->get_namespace()));
     }
 
     void FrontierExplorationServer::buildBoundaryAndCenter()

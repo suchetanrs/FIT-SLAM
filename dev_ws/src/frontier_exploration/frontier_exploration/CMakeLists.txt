@@ -71,14 +71,16 @@ add_executable(explore_server src/explore_server.cpp plugins/bounded_explore_lay
 ament_target_dependencies(explore_server ${dependencies})
 target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES})
 
-# Add executable 5
-# add_executable(localization_pose_sub src/viz/localization_pose_sub.cpp)
-# ament_target_dependencies(localization_pose_sub SYSTEM ${dependencies})
+# -------------------------- Test files ----------------------------
+# add_executable(main_fisher_information_manager src/FisherInfoManager.cpp src/rosVisualizer.cpp src/Frontier.cpp tests/main_fisher_information_manager.cpp)
+# ament_target_dependencies(main_fisher_information_manager ${dependencies})
+# target_link_libraries(main_fisher_information_manager taskAllocator_lib ${PCL_LIBRARIES})
 
-# Add executable 5
-# add_executable(srv_cl src/srv_cl.cpp)
-# ament_target_dependencies(srv_cl SYSTEM ${dependencies})
-# srv_cl
+# install(TARGETS main_fisher_information_manager
+# DESTINATION lib/${PROJECT_NAME}
+# )
+# ------------------------------------------------------------------
+
 
 install(TARGETS explore_server
 DESTINATION lib/${PROJECT_NAME}

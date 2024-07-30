@@ -1,4 +1,5 @@
 #include "frontier_exploration/planners/astar.hpp"
+#include "frontier_exploration/GeometryUtils.hpp"
 
 FrontierRoadmapAStar::FrontierRoadmapAStar()
 {

@@ -15,6 +15,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node)
     observable_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("observable_cells", 10);
     connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
+    fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
     costmap_ = nullptr;
 }
 
@@ -33,6 +34,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Cost
     observable_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("observable_cells", 10);
     connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
+    fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
     costmap_ = costmap;
 }
 
@@ -147,6 +149,35 @@ void RosVisualizer::landmarkViz(std::vector<Eigen::Vector3f> &points)
         marker_msg_.points.push_back(point1);
     }
     landmark_publisher_->publish(marker_msg_);
+}
+
+void RosVisualizer::landmarkViz(std::vector<frontier_exploration::Point2D> &points, double r, double g, double b)
+{
+    visualization_msgs::msg::Marker marker;
+    marker.header.frame_id = "map";
+    marker.header.stamp = node_->now();
+    marker.ns = "fov_triangles";
+    marker.id = 0;
+    marker.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
+    marker.action = visualization_msgs::msg::Marker::ADD;
+    // marker.lifetime = rclcpp::Duration(1.0);  // Marker lifetime in seconds
+    marker.scale.x = 1.0;
+    marker.scale.y = 1.0;
+    marker.scale.z = 1.0;
+
+    marker.color.r = r;
+    marker.color.g = g;
+    marker.color.b = b;
+    marker.color.a = 0.8;
+    for (auto point : points)
+    {
+        geometry_msgs::msg::Point point1;
+        point1.x = point.x;
+        point1.y = point.y;
+        // point1.z = point.z;
+        marker.points.push_back(point1);
+    }
+    fov_marker_publisher_->publish(marker);
 }
 
 void RosVisualizer::visualizeFrontier(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID)

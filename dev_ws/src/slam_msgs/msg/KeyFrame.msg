@@ -1,2 +1,2 @@
 int32 id
-geometry_msgs/Vector3[] word_pts
+geometry_msgs/Point[] word_pts

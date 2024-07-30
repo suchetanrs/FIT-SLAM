@@ -91,8 +91,8 @@ namespace frontier_exploration
         std::vector<std::vector<std::string>> costTypes;
         for (auto frontier: frontier_list)
         {
-            // costTypes.push_back({"A*PlannerDistance", "ArrivalInformation"});
-            costTypes.push_back({"RoadmapPlannerDistance", "ArrivalInformation"});
+            costTypes.push_back({"A*PlannerDistance", "ArrivalInformation"});
+            // costTypes.push_back({"RoadmapPlannerDistance", "ArrivalInformation"});
             // costTypes.push_back({"EuclideanDistance", "ArrivalInformation"});
             // costTypes.push_back({"RandomCosts"});
             // costTypes.push_back({});

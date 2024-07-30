@@ -7,6 +7,9 @@
 #include <iostream>
 #include "nav2_costmap_2d/costmap_2d.hpp"
 #include "frontier_exploration/Frontier.hpp"
+#include "frontier_exploration/GeometryUtils.hpp"
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
 namespace frontier_exploration
 {
@@ -98,9 +101,20 @@ namespace frontier_exploration
     bool getTracedCells(double start_wx, double start_wy, double end_wx, double end_wy, RayTracedCells &cell_gatherer, double max_length,
                         nav2_costmap_2d::Costmap2D *exploration_costmap_);
 
-    double distanceBetweenFrontiers(const Frontier& f1, const Frontier& f2);
+// -------------------------- FISHER INFORMATION COMPUTATION RELATED --------------------------------
+    Eigen::Matrix3f getSkewMatrix(const Eigen::Vector3f &v);
 
-    double sqDistanceBetweenFrontiers(const Frontier& f1, const Frontier& f2);
+    Eigen::Affine3f getTransformFromPose(geometry_msgs::msg::Pose &pose);
+
+    Eigen::Matrix<float, 3, 6> computeJacobianForPoint(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig, Eigen::Affine3f &T_w_c_est);
+
+    Eigen::Matrix<float, 6, 6> computeFIM(Eigen::Matrix<float, 3, 6> &jacobian, Eigen::Matrix3f &Q);
+
+    float computeInformationOfPoint(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig,
+                                     Eigen::Affine3f &T_w_c_est, Eigen::Matrix3f &Q);
+
+    float computeInformationFrontierPair(std::vector<geometry_msgs::msg::Point>& lndmrk_w, 
+                                         geometry_msgs::msg::Pose& kf_pose_w, geometry_msgs::msg::Pose& est_pose_w, std::vector<Point2D>& FOVFrontierPair);
 }
 
 #endif // HELPERS_HPP

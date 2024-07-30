@@ -49,7 +49,7 @@ Attributes	        Foreground color	   Background color
 
 inline std::string COLOR_STR(const std::string &str, const char *robotName)
 {
-    if (static_cast<std::string>(robotName).compare(0, 8, "/scout_1") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_1") == 0)
+    if (static_cast<std::string>(robotName).compare(0, 8, "/robot_0") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_1") == 0)
         return "\e[0;42m" + str + "\e[m";
     else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_2") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_2") == 0)
         return "\e[0;44m" + str + "\e[m";
