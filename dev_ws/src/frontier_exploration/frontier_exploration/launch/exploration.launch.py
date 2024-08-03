@@ -25,12 +25,11 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         name='use_sim_time',
-        default_value='False',
+        default_value='True',
         description='Use simulation (Gazebo) clock if true')
 
     robot_namespace =  LaunchConfiguration('robot_namespace')
-    SCOUT_NAMESPACE = os.environ['SCOUT_NAMESPACE']
-    robot_namespace_arg = DeclareLaunchArgument('robot_namespace', default_value=TextSubstitution(text=SCOUT_NAMESPACE),
+    robot_namespace_arg = DeclareLaunchArgument('robot_namespace', default_value=TextSubstitution(text="robot_ns_exploration"),
         description='The namespace of the robot')
     
 #---------------------------------------------
@@ -43,8 +42,7 @@ def generate_launch_description():
             description='Full path to the ROS2 parameters file to use for all launched nodes')
 
         param_substitutions = {
-            'robot_base_frame': context.launch_configurations['robot_namespace'] + '/base_link',
-            'velodyne_frame': context.launch_configurations['robot_namespace'] + '/velodyne',
+            'robot_base_frame': context.launch_configurations['robot_namespace'] + '/base_footprint',
             'use_sim_time': context.launch_configurations['use_sim_time']
             }
 

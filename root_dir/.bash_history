@@ -1,113 +1,3 @@
-make install
-pidof explore_server
-kill -9 4068
-pidof explore_server
-kill -9 3647
-pidof explore_server
-pidof frontier_multirobot_allocatorConfig
-pidof explore_server
-pidof frontier_multirobot_allocatorConfig
-pidof explore_server
-htop -p 16140
-top -p 16140
-pidof explore_server
-kill -9 %1
-kill -9 16140
-pidof explore_server
-kill -9 18675
-pidof explore_server
-kill -9 18675
-pidof explore_server
-kill -9 18866
-pidof explore_server
-kill -9 20073 20069
-pidof explore_server
-cd
-ls
-clear
-ls
-cd dev_ws/
-ls
-cd
-ls
-rm -r 12904_greedy_frontier_map_data_coverage_.csv 
-ls
-rm -r 12904_*
-ls
-nano shell_scripts/3_exploration.sh 
-ls
-clear
-ls
-cd /home/
-ls
-cd scout_
-cd scout_1/
-ls
-cd
-ls
-cd dev_ws/src/
-ls
-cd frontier_exploration/
-ls
-cd
-ls
-s
-ls
-rm -rf scout_*
-pidof explore_server
-kill -9 24524
-pidof explore_server
-ls
-nano scout_1_12904_ours_frontier_map_data_coverage.csv 
-bash
-ros2 run frontier_exploration explore_
-ros2 run frontier_exploration explore_server 
-ros2 run exploration_sim explore_sim 
-kk
-kkk
-kk
-ros2 run exploration_sim explore_sim 
-kk
-ros2 run exploration_sim explore_sim 
-kk
-k
-ros2 run exploration_sim explore_sim 
-bash
-./shell_scripts/scout_1_exploration.sh 
-./shell_scripts/only_exploration.sh 
-./shell_scripts/3_exploration.sh 
-ls
-./shell_scripts/3_exploration.sh 
-ls
-clear
-./shell_scripts/3_exploration.sh 
-./shell_scripts/scout_1_exploration.sh 
-bash
-bash
-cd dev_ws/
-colcon build --symlink-install
-rm -rf build/ install/ log/
-colcon build --symlink-install
-colcon build --symlink-install --packages-select frontier_exploration
-rviz2
-colcon build --symlink-install --packages-select frontier_exploration
-rviz2
-colcon build --symlink-install --packages-select frontier_exploration
-rviz2
-colcon build --symlink-install --packages-select frontier_exploration
-rviz2
-ls
-colcon build --symlink-install --packages-select frontier_exploration
-rviz2
-colcon build --symlink-install --packages-select frontier_exploration
-rviz2
-colcon build --symlink-install --packages-select frontier_exploration
-rviz2
-cd dev_ws/
-vsc
-colcon build --symlink-install
-colcon build --symlink-install --packages-select frontier_exploration
-bash
 bash
 ./shell_scripts/scout_2_exploration.sh 
 ros2 topic echo /scout_1/execution_pose
@@ -1894,3 +1784,217 @@ ls
 clear
 cd dev_ws/
 vsc
+clear
+ls
+cd dev_ws/src/
+ls
+vsc
+ls
+cd ros2_
+cd ros2_ws/
+ls
+clear
+ls
+clear
+ls
+clear
+ls
+cd
+ls
+cd dev_ws/
+lsd
+ls
+cd
+ls
+rm -rf ros2_ws/ slam_ws/
+ls
+rm -rf building_editor_models/
+ls
+gazebo
+rm -rf turtlebot3/ v1.5.0.zip shared_pkgs-20240703T072847Z-001.zip foxglove-studio-2.7.0-linux-amd64.deb 
+ls
+rm -rf openrmf_ws/
+ls
+clear
+ls
+rm -rf go1_
+rm -rf go1_odom.py 
+s
+ls
+rm -rf refactored_old/
+ls
+rm -rf ros2_unitree_legged_*
+ls
+rm -rf scout_1*
+ls
+rm -rf scout_*
+ls
+rm -rf frames_2024-0*
+ls
+rm -rf perf.data.old 
+ls
+rm -rf right_*
+ls
+rm -rf robot_0_12904_ours_frontier_map_data_coverage.csv 
+ls
+rm -rf map 
+ls
+rm -rf data_stereo.py compute.py coloured.cpp colo
+ls
+rm -rf 12904_ours_frontier_map_data_coverage.csv 
+ls
+rm -rf gazebo_models_worlds_collection/
+ls
+clear
+ls
+cd dev_ws/
+ls
+rm -rf build/ install/ log/
+rm -rf core.*
+ls
+rm -rf cpu.py 
+l;s
+ls
+rm -rf call.py full_config.rviz 
+ls
+rm -rf scout_2_12904_ours_frontier_map_data_coverage.csv 
+ls
+colcon build --symlink-install
+rosdep install --from-paths src --ignore-src -r -y --simulate
+vsc
+ls
+cd src/
+ls
+rm -rf traversability_packages/
+ls
+rm -rf unitree/
+ls
+cd ..
+ls
+colcon build --symlink-install
+rosdep install --from-paths src --ignore-src -r -y --simulate
+ros2 topic list
+nano ~/.bashrc 
+cd dev_ws/
+colcon build --symlink-install
+rm -rf build/ install/ log/
+colcon build --symlink-install
+rosdep install --from-paths src --ignore-src -r -y --simulate
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch frontier_exploration exploration
+ros2 launch frontier_exploration exploration.launch.py 
+ros2 topic list
+ls
+cd dev_ws/
+colcon build --symlink-install
+vsc
+nano ~/.bashrc 
+bash
+ls
+bash
+rviz2
+apt-get install ros-humble-navigation2
+rviz2
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+cd dev_ws/
+ls
+colcon build --symlink-install
+ros2 launch robot_navigation2 navigation.launch.py
+apt-get install ros-humble-navigation2
+ros2 launch robot_navigation2 navigation.launch.py
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation.launch.py
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ros2 topic list
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0\
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+colcon build --symlink-install
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+colcon build --symlink-install
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ls
+cd dev_ws/
+ls
+clear
+ls
+vsc
+ls
+cd src/
+ls
+cd ..
+ls
+cd src/
+lks
+ls
+cd ..
+ls
+colcon build --symlink-install
+ls
+cd src/
+ls
+cd scout_v2/
+ls
+cd scout_ros2/
+ls
+rm -rf scout_control/
+ls
+cd ..
+ls
+cd ../..
+ls
+colcon build --symlink-install
+rm -rf build/ install/ log/
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+clear
+ls
+clear
+vsc
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch robot_navigation2 navigation.launch.py 
+bash
+cd shell_scripts/
+ls
+nano uni_launch.nodes.sh 
+rviz2
+ls
+cd dev_ws/
+ls
+colcon build --symlink-install
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+clear
+ls
+clear
+colcon build --symlink-install
+tmux
+ls
+nano ~/.bashrc 
+bash
+ls
+cd dev_ws/
+rm -rf build/ install/ log/
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
+cmake ..
+make install
+cd
+cd dev_ws/
+c\olcon build --symlink-install

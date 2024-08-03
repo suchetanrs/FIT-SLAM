@@ -19,5 +19,4 @@ apt install apt-transport-https
 apt-get update
 apt update --fix-missing
 apt install code -y
-apt-get upgrade
-rm -rf /var/lib/apt/lists/*
+apt-get upgrade -y

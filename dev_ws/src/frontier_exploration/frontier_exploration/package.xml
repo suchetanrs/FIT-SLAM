@@ -11,22 +11,23 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   
-  <build_depend>rclcpp</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>nav2_costmap_2d</build_depend>
-  <build_depend>frontier_msgs</build_depend>
-  <build_depend>pcl_ros</build_depend>
-  <build_depend>sensor_msgs</build_depend>
-  <build_depend>frontier_multirobot_allocator</build_depend>
-  <build_depend>slam_msgs</build_depend>
-  
-  <exec_depend>rclcpp</exec_depend>
-  <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>nav2_costmap_2d</exec_depend>
-  <exec_depend>frontier_msgs</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-  <exec_depend>pcl_ros</exec_depend>
-  <exec_depend>frontier_multirobot_allocator</exec_depend>
+  <depend>ament_cmake</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>geometry_msgs</depend>
+  <depend>action_msgs</depend>
+  <depend>nav2_msgs</depend>
+  <depend>nav2_costmap_2d</depend>
+  <depend>frontier_msgs</depend>
+  <depend>pcl_ros</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2</depend>
+  <depend>pluginlib</depend>
+  <depend>slam_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>nav2_util</depend>
+  <depend>example_interfaces</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

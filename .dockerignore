@@ -1,0 +1,6 @@
+root_dir/
+.vscode
+dev_ws/
+ros2_ws/
+slam_ws/
+!root_dir/shell_scripts

@@ -1,7 +1,7 @@
 version: "3"
 services:
   fit-slam:
-    image: active-slam:22.04
+    image: fit-slam:22.04
     volumes:
       #full dev
       - /dev:/dev:rw
@@ -13,9 +13,6 @@ services:
       #ros-workspaces
       - ./root_dir/:/root/:rw
       - ../.ros/:/root/.ros
-
-      #cesar-workspaces
-      - /home/suchetan/cesar_slam/:/home/cesar_slam/:rw
     env_file:
       - .env
     privileged: true

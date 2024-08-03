@@ -1,8 +1,0 @@
-<launch version="0.1.1">
-  <arg name="config" default="robot"
-    description="The name of the config to use with RViz" />
-  <arg name="rviz_file"
-    default="$(find-pkg-share leo_viz)/rviz/$(var config).rviz" />
-
-  <node pkg="rviz2" exec="rviz2" output="screen" args="-d $(var rviz_file)" />
-</launch>

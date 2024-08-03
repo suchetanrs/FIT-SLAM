@@ -13,4 +13,6 @@ apt-get install tmux -y
 apt-get install mlocate -y
 apt-get install vim -y
 apt-get install ranger -y
-rm -rf /var/lib/apt/lists/*
+apt-get install neovim -y
+apt-get install libboost-all-dev -y
+apt-get install nautilus -y

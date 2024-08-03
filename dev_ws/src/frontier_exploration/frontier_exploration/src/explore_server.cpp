@@ -611,6 +611,7 @@ namespace frontier_exploration
         auto nav2_feedback_ = std::make_shared<NavigateToPose::Feedback>();
         nav2_feedback_->current_pose = feedback->current_pose;
         nav2_feedback_->distance_remaining = feedback->distance_remaining;
+        RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("DISTANCE REMAINING: " + std::to_string(nav2_feedback_->distance_remaining), this->get_namespace()));
     }
 
     void FrontierExplorationServer::nav2GoalResultCallback(const GoalHandleNav2::WrappedResult &result)

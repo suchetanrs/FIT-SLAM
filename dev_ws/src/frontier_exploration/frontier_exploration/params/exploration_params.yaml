@@ -49,7 +49,7 @@ explore_costmap:
       plugins: ["static_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: /traversability_thresholded
+        map_topic: /robot_0/traversability_thresholded
         # map_topic: /simulation_costmap
         map_subscribe_transient_local: True
         enabled: True
