@@ -28,6 +28,7 @@ private:
     // Variables unique to a robot
     std::shared_ptr<double> path_length;
     std::shared_ptr<double> fisher_information_in_path;
+    bool is_achievable;
 
     // Individual costs
     std::map<std::string, double> costs;
@@ -58,6 +59,8 @@ public:
 
     void setWeightedCost(double cost);
 
+    void setAchievability(bool value);
+
     bool operator==(const Frontier& other) const;
 
     size_t getUID() const;
@@ -77,6 +80,8 @@ public:
     double getCost(const std::string& costName) const;
 
     double getWeightedCost() const;
+
+    bool isAchievable() const;
 };
 
 // Custom equality function

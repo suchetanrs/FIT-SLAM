@@ -37,29 +37,6 @@
 
 namespace frontier_exploration
 {
-    /**
-     * @brief Functor class for comparing frontiers based on their associated costs.
-     * This class provides a functor for comparing frontiers based on the costs associated with them.
-     */
-    // class FrontierU1ComparatorCost
-    // {
-    // public:
-    //     /**
-    //      * @brief Function call operator for comparing frontiers.
-    //      *
-    //      * This operator compares two pairs of frontier-metadata and cost based on their associated costs.
-    //      *
-    //      * @param a The first pair of frontier-metadata and cost.
-    //      * @param b The second pair of frontier-metadata and cost.
-    //      * @return bool True if the cost associated with the first pair is
-    //      * less than the cost associated with the second pair, false otherwise.
-    //      */
-    //     bool operator()(const std::pair<FrontierWithMetaData, double> &a, const std::pair<FrontierWithMetaData, double> &b) const
-    //     {
-    //         return a.second < b.second;
-    //     }
-    // };
-
     class FrontierCostsManager
     {
     public:
@@ -67,7 +44,12 @@ namespace frontier_exploration
 
         /**
          * @param costTypes can take the values
-         * "ArrivalInformation", "PlannerDistance" OR "EuclideanDistance", "FisherInformation"
+         * "ArrivalInformation", 
+         * "A*PlannerDistance" OR "EuclideanDistance" OR "RoadmapPlannerDistance", 
+         * 
+         * "RandomCosts",
+         * 
+         * "ClosestFrontier"
          */
         bool assignCosts(std::vector<Frontier> &frontier_list, std::vector<double> polygon_xy_min_max,
                              geometry_msgs::msg::Point start_point_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
@@ -83,7 +65,6 @@ namespace frontier_exploration
         std::unordered_map<Frontier, bool, FrontierHash, FrontierGoalPointEquality> frontier_blacklist_; ///< Stores the blacklisted frontiers.                                      ///< Variable used to give a unique value for each run. This is used as a prefix for the csv files.
         rclcpp::Logger logger_ = rclcpp::get_logger("frontier_costs_manager");
         bool planner_allow_unknown_;
-        bool use_planning_;
         std::mutex blacklist_mutex_;
 
         double frontierDetectRadius_; ///< Sets the minimum detection radius for frontiers.

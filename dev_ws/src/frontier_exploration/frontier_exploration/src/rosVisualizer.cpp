@@ -11,6 +11,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node)
     all_frontier_cloud_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("all_frontiers", custom_qos);
 
     landmark_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("landmark_marker", 10);
+    frontier_marker_array_publisher_ = node->create_publisher<visualization_msgs::msg::MarkerArray>("frontier_cell_markers", 10);
 
     observable_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("observable_cells", 10);
     connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
@@ -30,6 +31,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Cost
     all_frontier_cloud_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("all_frontiers", custom_qos);
 
     landmark_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("landmark_marker", 10);
+    frontier_marker_array_publisher_ = node->create_publisher<visualization_msgs::msg::MarkerArray>("frontier_cell_markers", 10);
 
     observable_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("observable_cells", 10);
     connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
@@ -66,7 +68,7 @@ void RosVisualizer::landmarkViz(std::vector<std::vector<double>> &points, visual
 
 void RosVisualizer::observableCellsViz(std::vector<geometry_msgs::msg::Pose> &points)
 {
-    if(costmap_ == nullptr)
+    if (costmap_ == nullptr)
     {
         throw std::runtime_error("You called the wrong constructor. Costmap is a nullptr");
     }
@@ -95,7 +97,7 @@ void RosVisualizer::observableCellsViz(std::vector<geometry_msgs::msg::Pose> &po
 
 void RosVisualizer::observableCellsViz(std::vector<nav2_costmap_2d::MapLocation> points)
 {
-    if(costmap_ == nullptr)
+    if (costmap_ == nullptr)
     {
         throw std::runtime_error("You called the wrong constructor. Costmap is a nullptr");
     }
@@ -221,9 +223,79 @@ void RosVisualizer::visualizeFrontier(const std::vector<Frontier> &frontier_list
     all_frontier_cloud_pub_->publish(all_frontier_viz_output);
 }
 
+void RosVisualizer::visualizeFrontierMarker(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID)
+{
+    visualization_msgs::msg::MarkerArray markers;
+    int id = 0;
+
+    for (const auto& frontier : frontier_list)
+    {
+        // Create a marker for each frontier
+        visualization_msgs::msg::Marker marker;
+        marker.header.frame_id = "map"; // Replace with your desired frame_id
+        marker.header.stamp = node_->now();
+        marker.id = id++;
+        marker.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING; // Text marker type
+
+        // Set marker pose (position)
+        marker.pose.position.x = frontier.getGoalPoint().x;
+        marker.pose.position.y = frontier.getGoalPoint().y;
+        marker.pose.position.z = 0.0; // Assuming 2D visualization
+
+        // Set marker orientation (optional)
+        marker.pose.orientation.w = 1.0;
+
+        // Set marker scale
+        marker.scale.z = 0.15; // Text height
+
+        // Set marker color
+        marker.color.a = 1.0; // Fully opaque
+        marker.color.r = 1.0; // Red
+        marker.color.g = 1.0; // Green
+        marker.color.b = 1.0; // Blue
+
+        // Set marker text
+        std::stringstream ss;
+        ss << "weighted_cost:" << frontier.getWeightedCost() << "\n dist_ut:" << frontier.getCost("distance_utility") << "\n arrival_ut:" << frontier.getCost("arrival_gain_utility") << "\n lethal_pen:" << frontier.getCost("lethal_penalty_factor"); // Example: Display weighted cost
+        marker.text = ss.str();
+
+        markers.markers.push_back(marker);
+
+        // Create a sphere marker for visualizing point location
+        visualization_msgs::msg::Marker arrow_marker;
+        arrow_marker.header.frame_id = "map"; // Replace with your desired frame_id
+        arrow_marker.header.stamp = node_->now();
+        arrow_marker.id = id++;
+        arrow_marker.type = visualization_msgs::msg::Marker::ARROW; // Sphere marker type
+
+        // Set marker pose (position)
+        arrow_marker.pose.position.x = frontier.getGoalPoint().x;
+        arrow_marker.pose.position.y = frontier.getGoalPoint().y;
+        arrow_marker.pose.position.z = 0.0; // On the ground (adjust as needed)
+
+        arrow_marker.pose.orientation = frontier.getGoalOrientation();
+
+        // Set marker scale (sphere diameter)
+        arrow_marker.scale.x = 0.25; // Arrow length
+        arrow_marker.scale.y = 0.1; // Arrow width
+        arrow_marker.scale.z = 0.1; // Arrow height
+
+        // Set marker color
+        arrow_marker.color.a = 0.5; // Fully opaque
+        arrow_marker.color.r = 1.0; // Red
+        arrow_marker.color.g = 0.0; // Green
+        arrow_marker.color.b = 0.0; // Blue
+
+        markers.markers.push_back(arrow_marker);
+    }
+
+    // Publish the marker array
+    frontier_marker_array_publisher_->publish(markers);
+}
+
 void RosVisualizer::exportMapCoverage(std::vector<double> polygon_xy_min_max, int counter_value_, std::string mode_)
 {
-    if(costmap_ == nullptr)
+    if (costmap_ == nullptr)
     {
         throw std::runtime_error("You called the wrong constructor. Costmap is a nullptr");
     }
@@ -275,7 +347,7 @@ void RosVisualizer::exportMapCoverage(std::vector<double> polygon_xy_min_max, in
     file.close();
 }
 
-void RosVisualizer::frontierPlanViz(nav_msgs::msg::Path& path)
+void RosVisualizer::frontierPlanViz(nav_msgs::msg::Path &path)
 {
     frontier_plan_pub_->publish(path);
 }

@@ -95,6 +95,183 @@ namespace frontier_exploration
         return true;
     }
 
+    bool surroundingCellsMapped(geometry_msgs::msg::Point& checkPoint, nav2_costmap_2d::Costmap2D& exploration_costmap_)
+    {
+        unsigned int mx, my;
+        if(!exploration_costmap_.worldToMap(checkPoint.x, checkPoint.y, mx, my))
+        {
+            return false;
+        }
+        auto out = nhood20(exploration_costmap_.getIndex(mx, my), exploration_costmap_);
+        for(auto cell : out)
+        {
+            auto cost = exploration_costmap_.getCost(cell);
+            std::cout << "Cost is: " << static_cast<int>(cost) << std::endl;
+            if(static_cast<int>(cost) == 255)
+            {
+                std::cout << "Returning false " << std::endl;
+                return false;
+            }
+        }
+        std::cout << "Returning true " << std::endl;
+        return true;
+    }
+
+// -------------------------- COSTMAP TOOLS ---------------------------------------------------------
+
+    /**
+     * @brief Determine 4-connected neighbourhood of an input cell, checking for map edges
+     * @param idx input cell index
+     * @param costmap Reference to map data
+     * @return neighbour cell indexes
+     */
+    std::vector<unsigned int> nhood4(unsigned int idx, const nav2_costmap_2d::Costmap2D &costmap)
+    {
+        // get 4-connected neighbourhood indexes, check for edge of map
+        std::vector<unsigned int> out;
+
+        unsigned int size_x_ = costmap.getSizeInCellsX();
+        unsigned int size_y_ = costmap.getSizeInCellsY();
+
+        if (idx > size_x_ * size_y_ - 1)
+        {
+            std::cout << "Evaluating nhood for offmap point" << std::endl;
+            return out;
+        }
+
+        if (idx % size_x_ > 0)
+        {
+            out.push_back(idx - 1);
+        }
+        if (idx % size_x_ < size_x_ - 1)
+        {
+            out.push_back(idx + 1);
+        }
+        if (idx >= size_x_)
+        {
+            out.push_back(idx - size_x_);
+        }
+        if (idx < size_x_ * (size_y_ - 1))
+        {
+            out.push_back(idx + size_x_);
+        }
+        return out;
+    }
+
+    /**
+     * @brief Determine 8-connected neighbourhood of an input cell, checking for map edges
+     * @param idx input cell index
+     * @param costmap Reference to map data
+     * @return neighbour cell indexes
+     */
+    std::vector<unsigned int> nhood8(unsigned int idx, const nav2_costmap_2d::Costmap2D &costmap)
+    {
+        // get 8-connected neighbourhood indexes, check for edge of map
+        std::vector<unsigned int> out = nhood4(idx, costmap);
+
+        unsigned int size_x_ = costmap.getSizeInCellsX();
+        unsigned int size_y_ = costmap.getSizeInCellsY();
+
+        if (idx > size_x_ * size_y_ - 1)
+        {
+            return out;
+        }
+
+        if (idx % size_x_ > 0 && idx >= size_x_)
+        {
+            out.push_back(idx - 1 - size_x_);
+        }
+        if (idx % size_x_ > 0 && idx < size_x_ * (size_y_ - 1))
+        {
+            out.push_back(idx - 1 + size_x_);
+        }
+        if (idx % size_x_ < size_x_ - 1 && idx >= size_x_)
+        {
+            out.push_back(idx + 1 - size_x_);
+        }
+        if (idx % size_x_ < size_x_ - 1 && idx < size_x_ * (size_y_ - 1))
+        {
+            out.push_back(idx + 1 + size_x_);
+        }
+
+        return out;
+    }
+
+    /**
+     * @brief Determine 20-connected neighbourhood of an input cell, checking for map edges
+     * @param idx input cell index
+     * @param costmap Reference to map data
+     * @return neighbour cell indexes
+     */
+    std::vector<unsigned int> nhood20(unsigned int idx, const nav2_costmap_2d::Costmap2D &costmap)
+    {
+        // get 8-connected neighbourhood indexes, check for edge of map
+        std::vector<unsigned int> out = nhood4(idx, costmap);
+        auto out_copy = out;
+        for (auto val : out_copy)
+        {
+            auto out_4 = nhood8(val, costmap);
+            out.insert(out.end(), out_4.begin(), out_4.end());
+        }
+
+        return out;
+    }
+
+    /**
+     * @brief Find nearest cell of a specified value
+     * @param result Index of located cell
+     * @param start Index initial cell to search from
+     * @param val Specified value to search for
+     * @param costmap Reference to map data
+     * @return True if a cell with the requested value was found
+     */
+    bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, const nav2_costmap_2d::Costmap2D &costmap)
+    {
+
+        const unsigned char *map = costmap.getCharMap();
+        const unsigned int size_x = costmap.getSizeInCellsX();
+        const unsigned int size_y = costmap.getSizeInCellsY();
+
+        if (start >= size_x * size_y)
+        {
+            return false;
+        }
+
+        // initialize breadth first search
+        std::queue<unsigned int> bfs;
+        std::vector<bool> visited_flag(size_x * size_y, false);
+
+        // push initial cell
+        bfs.push(start);
+        visited_flag[start] = true;
+
+        // search for neighbouring cell matching value
+        while (!bfs.empty())
+        {
+            unsigned int idx = bfs.front();
+            bfs.pop();
+
+            // return if cell of correct value is found
+            if (map[idx] == val)
+            {
+                result = idx;
+                return true;
+            }
+
+            // iterate over all adjacent unvisited cells
+            for (unsigned nbr : nhood8(idx, costmap))
+            {
+                if (!visited_flag[nbr])
+                {
+                    bfs.push(nbr);
+                    visited_flag[nbr] = true;
+                }
+            }
+        }
+
+        return false;
+    }
+
 // -------------------------- FISHER INFORMATION COMPUTATION RELATED --------------------------------
     Eigen::Matrix3f getSkewMatrix(const Eigen::Vector3f &v)
     {

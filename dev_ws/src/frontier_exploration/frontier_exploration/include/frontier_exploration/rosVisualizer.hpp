@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <rclcpp/rclcpp.hpp>
 #include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <Eigen/Dense>
 #include <frontier_exploration/Frontier.hpp>
@@ -33,6 +34,7 @@ public:
     void landmarkViz(std::vector<Eigen::Vector3f> &points);
     void landmarkViz(std::vector<frontier_exploration::Point2D> &points, double r = 1.0, double g = 1.0, double b = 1.0);
     void visualizeFrontier(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
+    void visualizeFrontierMarker(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
     void exportMapCoverage(std::vector<double> polygon_xy_min_max, int counter_value_, std::string mode_);
     void frontierPlanViz(nav_msgs::msg::Path& path);
 
@@ -46,6 +48,7 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr all_frontier_cloud_pub_; ///< Publisher for every frontier cloud.
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_plan_pub_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr frontier_marker_array_publisher_;
     nav2_costmap_2d::Costmap2D *costmap_;
 };
 

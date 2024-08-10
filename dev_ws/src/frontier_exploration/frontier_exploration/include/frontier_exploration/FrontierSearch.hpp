@@ -15,6 +15,7 @@
 
 #include <frontier_exploration/Frontier.hpp>
 #include <frontier_exploration/colorize.hpp>
+#include "frontier_exploration/Helpers.hpp"
 
 namespace frontier_exploration
 {
@@ -30,6 +31,11 @@ namespace frontier_exploration
          * @param costmap Reference to costmap data to search.
          */
         FrontierSearch(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size, int max_frontier_cluster_size);
+
+        void reset()
+        {
+            every_frontier_list.clear();
+        };
 
         /**
          * @brief Runs search implementation, outward from the start position

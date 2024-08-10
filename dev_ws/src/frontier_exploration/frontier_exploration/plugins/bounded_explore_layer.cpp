@@ -42,52 +42,13 @@ namespace frontier_exploration
 
     bool BoundedExploreLayer::processOurApproach(std::vector<Frontier> &frontier_list, geometry_msgs::msg::Point& start_point_w)
     {
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::processOurApproach", internal_node_->get_logger().get_name()));
+        RCLCPP_DEBUG_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::processOurApproach", internal_node_->get_logger().get_name()));
         auto startTime = std::chrono::high_resolution_clock::now();
 
         // Getting map data
         // Create a service request
         auto request_map_data = std::make_shared<slam_msgs::srv::GetMap::Request>();
         auto response_map_data = std::make_shared<slam_msgs::srv::GetMap::Response>();
-        /** Uncomment this if you want to use map data.
-        request_map_data->tracked_points = true;
-        // Adding landmarks from 1 to 100 to the vector
-        std::vector<int32_t> kf_id_for_landmarks;
-        for (int i = 0; i <= 10000; ++i)
-        {
-            kf_id_for_landmarks.push_back(i);
-        }
-        request_map_data->kf_id_for_landmarks = kf_id_for_landmarks;
-        while (!client_get_map_data2_->wait_for_service(std::chrono::seconds(1))) {
-            if(!rclcpp::ok()) {
-                RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("ROS shutdown request in between waiting for service.", internal_node_->get_logger().get_name()));
-            }
-            RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Waiting for get map data service", internal_node_->get_logger().get_name()));
-        }
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Got get map data service.", internal_node_->get_logger().get_name()));
-        auto result_map_data = client_get_map_data2_->async_send_request(request_map_data);
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer -- Start map data.", internal_node_->get_logger().get_name()));
-        if (result_map_data.wait_for(std::chrono::seconds(20)) == std::future_status::ready)
-        {
-            response_map_data = result_map_data.get();
-            if (response_map_data->data.nodes.empty())
-            {
-                RCLCPP_WARN(internal_node_->get_logger(), "No map data recieved");
-            }
-            else
-            {
-                // Process the received poses as needed
-                RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Map data has " << response_map_data->data.graph.poses.size() << " poses"));
-                RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Map data has " << response_map_data->data.graph.poses_id.size() << " pose ids"));
-                RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Map data has " << response_map_data->data.nodes.size() << " keyframes"));
-            }
-        }
-        else
-        {
-            RCLCPP_ERROR(internal_node_->get_logger(), "Failed to call the service map_data.");
-        }
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer -- End map data.", internal_node_->get_logger().get_name()));
-        */
         std::vector<std::vector<std::string>> costTypes;
         for (auto frontier: frontier_list)
         {
@@ -114,8 +75,12 @@ namespace frontier_exploration
 
     void BoundedExploreLayer::logMapData(std::shared_ptr<GetFrontierCostsRequest> requestData)
     {
+        // for(auto frontier : requestData->frontier_list)
+        // {
+        //     std::cout << "Frontier cost : " << frontier.getWeightedCost() << std::endl;
+        // }
         rosViz_->exportMapCoverage(polygon_xy_min_max_, counter_, exploration_mode_);
-        rosViz_->visualizeFrontier(requestData->frontier_list, requestData->every_frontier, layered_costmap_->getGlobalFrameID());
+        rosViz_->visualizeFrontierMarker(requestData->frontier_list, requestData->every_frontier, layered_costmap_->getGlobalFrameID());
     }
 
     bool BoundedExploreLayer::getFrontierCosts(std::shared_ptr<GetFrontierCostsRequest> requestData, std::shared_ptr<GetFrontierCostsResponse> resultData)
@@ -147,7 +112,7 @@ namespace frontier_exploration
                 frontier_arrival_information.push_back(frontier.getArrivalInformation());
                 // RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Cost is: " + std::to_string(resultData->frontier_costs.size()), internal_node_->get_logger().get_name()));
             }
-            RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Making list", internal_node_->get_logger().get_name()));
+            RCLCPP_DEBUG_STREAM(internal_node_->get_logger(), COLOR_STR("Making list", internal_node_->get_logger().get_name()));
             resultData->frontier_list = frontiers_list;
             resultData->frontier_costs = frontier_costs;
             resultData->frontier_distances = frontier_distances;
@@ -163,8 +128,8 @@ namespace frontier_exploration
             RCLCPP_ERROR(internal_node_->get_logger(), "Invalid mode of exploration");
             rclcpp::shutdown();
         }
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Res frontier costs size: " + std::to_string(resultData->frontier_costs.size()), internal_node_->get_logger().get_name()));
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Res frontier list size: " + std::to_string(resultData->frontier_list.size()), internal_node_->get_logger().get_name()));
+        RCLCPP_DEBUG_STREAM(internal_node_->get_logger(), COLOR_STR("Res frontier costs size: " + std::to_string(resultData->frontier_costs.size()), internal_node_->get_logger().get_name()));
+        RCLCPP_DEBUG_STREAM(internal_node_->get_logger(), COLOR_STR("Res frontier list size: " + std::to_string(resultData->frontier_list.size()), internal_node_->get_logger().get_name()));
         return resultData->success;
     }
 

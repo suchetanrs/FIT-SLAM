@@ -5,13 +5,13 @@
 int main(void)
 {
     // please use "-std=c++11" for this initialization of vector.
-	// vector< vector<double> > costMatrix = { { 0, 15, 18, 20, 25 }, 
-	// 										{ 0, 20, 12, 14, 15 }, 
-	// 										{ 0, 23, 25, 27, 25 }, 
-	// 										{ 0, 18, 21, 23, 20 },
-	// 										{ 0, 18, 16, 19, 20 } };
+	vector< vector<double> > costMatrix = { { 0, 15, 18, 20, 25 }, 
+											{ 0, 2, 12, 14, 15 }, 
+											{ 0, 23, 1, 27, 25 }, 
+											{ 0, 18, 21, 4, 20 },
+											{ 0, 18, 16, 19, 5 } };
 
-	vector< vector<double> > costMatrix = { { 0, 0, 0, 0, 0 } };
+	// vector< vector<double> > costMatrix = { { 0, 0, 0, 0, 0 } };
 
 	// vector< vector<double> > costMatrix = { { 20, 15, 18, 20, 25 }, 
 	// 										{ 18, 20, 12, 14, 15 } };

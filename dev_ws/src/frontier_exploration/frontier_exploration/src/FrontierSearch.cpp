@@ -1,4 +1,3 @@
-#include <frontier_exploration/costmap_tools.hpp>
 #include <frontier_exploration/FrontierSearch.hpp>
 namespace frontier_exploration
 {

@@ -101,6 +101,18 @@ namespace frontier_exploration
     bool getTracedCells(double start_wx, double start_wy, double end_wx, double end_wy, RayTracedCells &cell_gatherer, double max_length,
                         nav2_costmap_2d::Costmap2D *exploration_costmap_);
 
+    bool surroundingCellsMapped(geometry_msgs::msg::Point& checkPoint, nav2_costmap_2d::Costmap2D& exploration_costmap_);
+
+// -------------------------- COSTMAP TOOLS ---------------------------------------------------------
+
+    std::vector<unsigned int> nhood4(unsigned int idx, const nav2_costmap_2d::Costmap2D &costmap);
+
+    std::vector<unsigned int> nhood8(unsigned int idx, const nav2_costmap_2d::Costmap2D &costmap);
+
+    std::vector<unsigned int> nhood20(unsigned int idx, const nav2_costmap_2d::Costmap2D &costmap);
+
+    bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, const nav2_costmap_2d::Costmap2D &costmap);
+
 // -------------------------- FISHER INFORMATION COMPUTATION RELATED --------------------------------
     Eigen::Matrix3f getSkewMatrix(const Eigen::Vector3f &v);
 

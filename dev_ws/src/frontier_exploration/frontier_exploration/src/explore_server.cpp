@@ -271,12 +271,6 @@ namespace frontier_exploration
             // auto frontier_list = frontierSearch.searchAllCells();
             // auto every_frontier = frontierSearch.getAllFrontiers();
 
-            // initialize frontier search implementation
-            frontier_exploration::FrontierSearch frontierSearch(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_);
-            // get list of frontiers from search implementation.
-            auto frontier_list = frontierSearch.searchFrom(robot_pose.pose.position);
-            auto every_frontier = frontierSearch.getAllFrontiers();
-
             std::shared_ptr<frontier_exploration::GetFrontierCostsResponse> costResultCurrentRobot; 
             for (auto robot_name : robot_namespaces_)
             {
@@ -426,14 +420,28 @@ namespace frontier_exploration
                 nav2_goal_lock_.unlock();
                 setMoving(true);
                 int waitCount_ = 0;
+                geometry_msgs::msg::PoseStamped robot_pose_recalculate;
                 while (isMoving() && rclcpp::ok())
                 {
                     rclcpp::sleep_for(std::chrono::milliseconds(100));
                     waitCount_++;
                     RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Wait count goal is: " + std::to_string(waitCount_), this->get_namespace()));
+                    explore_costmap_ros_->getRobotPose(robot_pose_recalculate);
+                    float distance_to_goal = sqrt(pow(goal_pose.pose.position.x - robot_pose_recalculate.pose.position.x, 2) + pow(goal_pose.pose.position.y - robot_pose_recalculate.pose.position.y, 2));
+                    RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("DISTANCE REMAINING EUC: " + std::to_string(distance_to_goal), this->get_namespace()));
+                    if(distance_to_goal < 0.5)
+                    {
+                        RCLCPP_ERROR(this->get_logger(), "RECOMPUTING!");
+                        nav2Client_->async_cancel_all_goals();
+                        nav2_goal_lock_.lock();
+                        processActiveGoalsAllRobots(false);
+                        nav2_goal_lock_.unlock();
+                        break;   
+                    }
                     // get the units of waitTime to match waitCount_
                     if (waitCount_ > nav2WaitTime_ * 10)
                     {
+                        RCLCPP_ERROR(this->get_logger(), "TIME EXCEEDED");
                         nav2Client_->async_cancel_all_goals();
                         FrontierExplorationServer::performBackupRotation();
                         FrontierExplorationServer::performBackupReverse();
@@ -611,7 +619,6 @@ namespace frontier_exploration
         auto nav2_feedback_ = std::make_shared<NavigateToPose::Feedback>();
         nav2_feedback_->current_pose = feedback->current_pose;
         nav2_feedback_->distance_remaining = feedback->distance_remaining;
-        RCLCPP_WARN_STREAM(this->get_logger(), COLOR_STR("DISTANCE REMAINING: " + std::to_string(nav2_feedback_->distance_remaining), this->get_namespace()));
     }
 
     void FrontierExplorationServer::nav2GoalResultCallback(const GoalHandleNav2::WrappedResult &result)
@@ -628,13 +635,14 @@ namespace frontier_exploration
             break;
         case rclcpp_action::ResultCode::ABORTED:
             RCLCPP_ERROR(this->get_logger(), "Nav2 internal fault! Nav2 aborted the goal!");
-            FrontierExplorationServer::performBackupRotation();
-            FrontierExplorationServer::performBackupReverse();
-            nav2_goal_lock_.lock();
-            nav2_goal_ = nullptr;
-            setMoving(false);
-            processActiveGoalsAllRobots(false);
-            nav2_goal_lock_.unlock();
+            // FrontierExplorationServer::performBackupRotation();
+            // FrontierExplorationServer::performBackupReverse();
+            // nav2_goal_lock_.lock();
+            // nav2_goal_ = nullptr;
+            // setMoving(false);
+            // processActiveGoalsAllRobots(false);
+            // nav2_goal_lock_.unlock();
+            // RCLCPP_ERROR(this->get_logger(), "ABORT complete.");
             break;
         case rclcpp_action::ResultCode::CANCELED:
             RCLCPP_INFO_STREAM(this->get_logger(), COLOR_STR("Nav2 goal canceled successfully", this->get_namespace()));

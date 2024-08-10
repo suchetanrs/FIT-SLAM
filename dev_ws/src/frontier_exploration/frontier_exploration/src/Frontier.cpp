@@ -12,6 +12,7 @@ Frontier::Frontier()
     information = nullptr;
     path_length = nullptr;
     weighted_cost = nullptr;
+    is_achievable = true;
 }
 
 void Frontier::setUID(size_t uid)
@@ -66,6 +67,11 @@ void Frontier::setCost(const std::string &costName, double value)
 void Frontier::setWeightedCost(double cost)
 {
     weighted_cost = std::make_shared<double>(cost);
+}
+
+void Frontier::setAchievability(bool value)
+{
+    is_achievable = value;
 }
 
 // Equality operator definition
@@ -154,6 +160,11 @@ double Frontier::getWeightedCost() const
     if (weighted_cost == nullptr)
         throw std::runtime_error("Weighted cost frontier property is null");
     return *weighted_cost;
+}
+
+bool Frontier::isAchievable() const
+{
+    return is_achievable;
 }
 
 // double Frontier::getWeightedCost() {

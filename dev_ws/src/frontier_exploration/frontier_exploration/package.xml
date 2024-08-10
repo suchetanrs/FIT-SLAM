@@ -28,7 +28,8 @@
   <depend>visualization_msgs</depend>
   <depend>nav2_util</depend>
   <depend>example_interfaces</depend>
-
+  <depend>behaviortree_cpp</depend>
+  
   <export>
     <build_type>ament_cmake</build_type>
   </export>

@@ -1,5 +1,5 @@
-#ifndef COST_CALCULATOR_HPP
-#define COST_CALCULATOR_HPP
+#ifndef COST_CALCULATOR_HPP_
+#define COST_CALCULATOR_HPP_
 
 #include <algorithm>
 #include <fstream>
@@ -37,6 +37,12 @@
 #include <frontier_exploration/Helpers.hpp>
 #include <frontier_exploration/planners/FrontierRoadmap.hpp>
 #include <frontier_exploration/FisherInfoManager.hpp>
+
+// ARRIVAL INFORMATION RELATED
+const double MAX_CAMERA_DEPTH = 2.0;
+const double DELTA_THETA = 0.10;
+const double CAMERA_FOV = 1.04;
+
 
 namespace frontier_exploration
 {
@@ -87,6 +93,16 @@ namespace frontier_exploration
             return min_traversable_distance;
         };
 
+        double getMaxPlanDistance()
+        {
+            return max_traversable_distance;
+        };
+
+        double getMinArrivalInformation()
+        {
+            return min_arrival_info_per_frontier;
+        };
+
         double getMaxArrivalInformation()
         {
             return max_arrival_info_per_frontier;
@@ -95,23 +111,26 @@ namespace frontier_exploration
         void reset()
         {
             min_traversable_distance = std::numeric_limits<double>::max();
+            max_traversable_distance = -1.0;
+            min_arrival_info_per_frontier = std::numeric_limits<double>::max();
             max_arrival_info_per_frontier = -1.0;
         };
 
     private:
         // Add private methods or member variables if needed
         rclcpp::Node::SharedPtr node_;
-        // nav2_costmap_2d::Costmap2D *costmap_;
         nav2_costmap_2d::Costmap2D *exploration_costmap_;
-        std::shared_ptr<FrontierRoadMap> roadmap_ptr_;
-        std::shared_ptr<FisherInformationManager> fisherInfoManager_ptr_;
         rclcpp::Logger logger_ = rclcpp::get_logger("cost_calculator");
         std::shared_ptr<RosVisualizer> rosVisualizer_;
-        rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_plan_pub_;                ///< Publisher for planned path to the frontiers.
-        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)
-        std::shared_ptr<RosVisualizer> rosViz_;
         double min_traversable_distance = std::numeric_limits<double>::max();
+        double max_traversable_distance = 0.0;
+        double min_arrival_info_per_frontier = std::numeric_limits<double>::max();
         double max_arrival_info_per_frontier = 0.0;
+        
+        std::shared_ptr<FrontierRoadMap> roadmap_ptr_;
+        std::shared_ptr<FisherInformationManager> fisherInfoManager_ptr_;
+
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)
     };
 };
 

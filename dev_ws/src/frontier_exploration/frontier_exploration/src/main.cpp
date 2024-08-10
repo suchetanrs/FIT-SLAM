@@ -1,5 +1,5 @@
 #include "rclcpp/rclcpp.hpp"
-#include <frontier_exploration/explore_server.hpp>
+#include <frontier_exploration/ExplorationBT.hpp>
 
 void threadFunction(std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> ptr)
 {
@@ -9,14 +9,15 @@ void threadFunction(std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> pt
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
+    auto node = rclcpp::Node::make_shared("bt_exploration_node");
+    auto serverObject = std::make_shared<frontier_exploration::FrontierExplorationServer>(node);
 
-    auto serverObject = std::make_shared<frontier_exploration::FrontierExplorationServer>();
-
-    std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-    executor->add_node(serverObject);
+    auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+    executor->add_node(node);
     std::thread t1(threadFunction, executor);
     t1.detach();
-    serverObject->run();
+    serverObject->makeBTNodes();
+    // serverObject->run();
 
     rclcpp::shutdown();
     return 0;

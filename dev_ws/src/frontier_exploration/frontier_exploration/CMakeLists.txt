@@ -24,6 +24,10 @@ find_package(nav2_util)
 find_package(PCL REQUIRED)
 find_package(example_interfaces REQUIRED)
 find_package(frontier_multirobot_allocator REQUIRED)
+find_package(behaviortree_cpp REQUIRED)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(dependencies
 ament_cmake
@@ -48,6 +52,7 @@ PCL
 nav2_util
 example_interfaces
 frontier_multirobot_allocator
+behaviortree_cpp
 )
 
 # Add compile definitions for visualization flags
@@ -65,7 +70,7 @@ include_directories(
 
 # Add executable 2
 # src/FrontierSearch.cpp
-add_executable(explore_server src/explore_server.cpp plugins/bounded_explore_layer.cpp src/FrontierSearch.cpp src/FrontierCostsManager.cpp 
+add_executable(explore_server src/ExplorationBT.cpp src/Nav2Interface.cpp plugins/bounded_explore_layer.cpp src/FrontierSearch.cpp src/FrontierCostsManager.cpp 
                src/planners/planner.cpp src/planners/rrt.cpp src/rosVisualizer.cpp src/CostCalculator.cpp src/main.cpp
                src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/planners/astar.cpp src/FisherInfoManager.cpp)
 ament_target_dependencies(explore_server ${dependencies})
@@ -76,9 +81,14 @@ target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES})
 # ament_target_dependencies(main_fisher_information_manager ${dependencies})
 # target_link_libraries(main_fisher_information_manager taskAllocator_lib ${PCL_LIBRARIES})
 
-# install(TARGETS main_fisher_information_manager
-# DESTINATION lib/${PROJECT_NAME}
-# )
+add_executable(nav2_interface_main src/Nav2Interface.cpp tests/nav2_interface_main.cpp)
+ament_target_dependencies(nav2_interface_main ${dependencies})
+# target_link_libraries(nav2_interface_main taskAllocator_lib ${PCL_LIBRARIES})
+
+# main_fisher_information_manager
+install(TARGETS nav2_interface_main
+DESTINATION lib/${PROJECT_NAME}
+)
 # ------------------------------------------------------------------
 
 

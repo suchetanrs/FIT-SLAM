@@ -10,6 +10,7 @@ void TaskAllocator::addRobotTasks(std::vector<double> costs, std::vector<double>
     robotNames.push_back(robotName);
 }
 
+// allocates hungarian using minimum costs. Minimises the total cost values while assigning unique tasks.
 void TaskAllocator::solveAllocationHungarian() {
     HungarianAlgorithm HungAlgo;
     std::vector<int> assignment;

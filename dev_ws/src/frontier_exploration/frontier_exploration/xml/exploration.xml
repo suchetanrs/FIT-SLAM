@@ -1,0 +1,21 @@
+<root BTCPP_format="4">
+    <BehaviorTree ID="MainTree">
+        <Sequence name="root">
+            <AlwaysSuccess/>
+            <WaitForCurrent/>
+            <UpdateBoundaryPolygon />
+            <SearchForFrontiers frontier_list="{the_frontier_list}" every_frontier="{the_every_frontier}"/>
+            <ProcessFrontierCosts frontier_list="{the_frontier_list}" every_frontier="{the_every_frontier}" robot_name="/robot_0" frontier_costs_result="{the_frontier_costs}"/>
+            <GetAllocatedGoal frontier_costs_result="{the_frontier_costs}" allocated_frontier="{the_allocated_frontier}"/>
+            <ReactiveSequence>
+                <Inverter>
+                    <CheckIfGoalMapped allocated_frontier="{the_allocated_frontier}"/>
+                </Inverter>
+                <Fallback>
+                    <SendNav2Goal allocated_frontier="{the_allocated_frontier}"/>
+                    <RecoveryMoveBack move_back_duration="2.0"/>
+                </Fallback>
+            </ReactiveSequence>
+        </Sequence>
+    </BehaviorTree>
+</root>

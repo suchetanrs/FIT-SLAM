@@ -10,8 +10,8 @@ explore_server:
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4', '/scout_5']
-    min_frontier_cluster_size: 5
-    max_frontier_cluster_size: 42
+    min_frontier_cluster_size: 2
+    max_frontier_cluster_size: 10
     frontier_match_xy_threshold: 1.0
     frontier_match_yaw_threshold: 0.40
     process_other_robots: true
@@ -23,11 +23,10 @@ bounded_explore_layer:
     
 frontier_costs_manager_node:
   ros__parameters:
-    alpha: 0.50 #set to 1.0 for maximum weight to arrival information and 0.0 for maximum weight to frontier path distance.
-    beta: 0.50 #set to 1.0 for maximum weight to u1 and 0.0 for maximum weight to information on path.
+    alpha: 0.5 #set to 1.0 for maximum weight to arrival information and 0.0 for maximum weight to frontier path distance.
+    beta: 1.0 #set to 1.0 for maximum weight to u1 and 0.0 for maximum weight to information on path.
     N_best_for_u2: 100000 #set to -1 for considering all the frontier for path computation (this will make the algorithm very time instensive!)
     planner_allow_unknown: true
-    frontier_detect_radius: 0.0
     use_planning: false #if false, uses euclidean distance to frontier(cannot use FIMs to compute path information). If true, plans to the frontier.
 
 localization_pose_sub_node:

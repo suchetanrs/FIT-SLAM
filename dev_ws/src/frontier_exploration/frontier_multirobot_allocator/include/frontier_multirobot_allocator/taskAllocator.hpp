@@ -21,6 +21,13 @@ public:
     void solveAllocationHungarian();
     void solveAllocationMinPos();
     std::map<std::string, int> getAllocatedTasks();
+    void reset()
+    {
+        costMatrix.clear();
+        distanceMatrix.clear();
+        robotNames.clear();
+        tasksAllocated.clear();
+    };
 };
 
 #endif // TASK_ALLOCATOR_HPP
