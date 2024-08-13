@@ -80,6 +80,7 @@ namespace frontier_exploration
         std::vector<std::string> config_;
         int min_frontier_cluster_size_; ///< Minimum size of a frontier cluster.
         int max_frontier_cluster_size_;
+        double max_frontier_distance_;
         std::shared_ptr<BoundedExploreLayer> bel_ptr_;
         bool process_other_robots_;
         RobotActiveGoals robot_active_goals_;

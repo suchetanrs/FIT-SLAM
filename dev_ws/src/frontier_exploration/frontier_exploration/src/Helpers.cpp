@@ -102,18 +102,21 @@ namespace frontier_exploration
         {
             return false;
         }
+        // return if the frontier is on a lethal cell.
+        if(exploration_costmap_.getCost(mx, my) == 254)
+            return true;
         auto out = nhood20(exploration_costmap_.getIndex(mx, my), exploration_costmap_);
         for(auto cell : out)
         {
             auto cost = exploration_costmap_.getCost(cell);
-            std::cout << "Cost is: " << static_cast<int>(cost) << std::endl;
+            // std::cout << "Cost is: " << static_cast<int>(cost) << std::endl;
             if(static_cast<int>(cost) == 255)
             {
-                std::cout << "Returning false " << std::endl;
+                std::cout << "Surrounding cells mapped Returning false " << std::endl;
                 return false;
             }
         }
-        std::cout << "Returning true " << std::endl;
+        std::cout << "Surrounding cells mapped Returning true " << std::endl;
         return true;
     }
 

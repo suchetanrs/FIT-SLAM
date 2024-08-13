@@ -137,9 +137,15 @@ namespace frontier_exploration
             auto frontier_list = frontierSearchPtr_->searchFrom(pose.pose.position);
             auto every_frontier = frontierSearchPtr_->getAllFrontiers();
             if (frontier_list.size() == 0)
+            {
+                double increment_value = 0.1;
+                getInput("increment_search_distance_by", increment_value);
+                frontierSearchPtr_->incrementSearchDistance(increment_value);
                 return BT::NodeStatus::FAILURE;
+            }
             setOutput("frontier_list", frontier_list);
             setOutput("every_frontier", every_frontier);
+            frontierSearchPtr_->resetSearchDistance();
             return BT::NodeStatus::SUCCESS;
         }
 
@@ -159,6 +165,7 @@ namespace frontier_exploration
             return {
                 BT::OutputPort<std::vector<Frontier>>("frontier_list"),
                 BT::OutputPort<std::vector<std::vector<double>>>("every_frontier"),
+                BT::InputPort<double>("increment_search_distance_by"),
             };
         }
 
@@ -435,7 +442,7 @@ namespace frontier_exploration
         {
             explore_costmap_ros_ = explore_costmap_ros;
             ros_node_ptr_ = ros_node_ptr;
-            cmd_vel_publisher_ = ros_node_ptr->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_nav", 10);
+            cmd_vel_publisher_ = ros_node_ptr->create_publisher<geometry_msgs::msg::Twist>("/smb_velocity_controller/cmd_vel", 10);
             std::cout << COLOR_STR("RecoveryMoveBack Constructor", ros_node_ptr_->get_namespace()) << std::endl;
         }
 
@@ -500,6 +507,7 @@ namespace frontier_exploration
         bt_node_->declare_parameter("config", rclcpp::ParameterValue(config_));
         bt_node_->declare_parameter("min_frontier_cluster_size", rclcpp::ParameterValue(1));
         bt_node_->declare_parameter("max_frontier_cluster_size", rclcpp::ParameterValue(20));
+        bt_node_->declare_parameter("max_frontier_distance", rclcpp::ParameterValue(0.5));
         bt_node_->declare_parameter("process_other_robots", rclcpp::ParameterValue(false));
 
         bt_node_->get_parameter("retry_count", retry_);
@@ -509,6 +517,7 @@ namespace frontier_exploration
         bt_node_->get_parameter("config", config_);
         bt_node_->get_parameter("min_frontier_cluster_size", min_frontier_cluster_size_);
         bt_node_->get_parameter("max_frontier_cluster_size", max_frontier_cluster_size_);
+        bt_node_->get_parameter("max_frontier_distance", max_frontier_distance_);
         bt_node_->get_parameter("process_other_robots", process_other_robots_);
         //--------------------------------------------NAV2 CLIENT RELATED-------------------------------
         nav2_interface_ = std::make_shared<Nav2Interface>(bt_node_);
@@ -522,7 +531,7 @@ namespace frontier_exploration
         explore_costmap_ros_->activate();
 
         //------------------------------------------BOUNDED EXPLORE LAYER RELATED------------------------
-        bel_ptr_ = std::make_shared<BoundedExploreLayer>(explore_costmap_ros_->getLayeredCostmap());
+        bel_ptr_ = std::make_shared<BoundedExploreLayer>(explore_costmap_ros_);
         task_allocator_ptr_ = std::make_shared<TaskAllocator>();
 
         multirobot_service_callback_group_ = bt_node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -530,7 +539,7 @@ namespace frontier_exploration
             "multirobot_send_current_goal", std::bind(&FrontierExplorationServer::handle_multirobot_current_goal_request, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
             rmw_qos_profile_default, multirobot_service_callback_group_);
 
-        frontierSearchPtr_ = std::make_shared<FrontierSearch>(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_);
+        frontierSearchPtr_ = std::make_shared<FrontierSearch>(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_, max_frontier_distance_);
 
         //---------------------------------------------ROS RELATED------------------------------------------
         tf_listener_ = std::make_shared<tf2_ros::Buffer>(bt_node_->get_clock());

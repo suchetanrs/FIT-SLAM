@@ -58,7 +58,7 @@ namespace frontier_exploration
     class BoundedExploreLayer
     {
     public:
-        BoundedExploreLayer(nav2_costmap_2d::LayeredCostmap* costmap);
+        BoundedExploreLayer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros);
         
         ~BoundedExploreLayer();
 

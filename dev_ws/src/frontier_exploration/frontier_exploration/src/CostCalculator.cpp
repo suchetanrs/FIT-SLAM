@@ -3,10 +3,10 @@
 
 namespace frontier_exploration
 {
-    FrontierCostCalculator::FrontierCostCalculator(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap)
+    FrontierCostCalculator::FrontierCostCalculator(rclcpp::Node::SharedPtr node, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros)
     {
         node_ = node;
-        exploration_costmap_ = costmap;
+        exploration_costmap_ = explore_costmap_ros->getCostmap();
         logger_ = node_->get_logger();
         rosVisualizer_ = std::make_shared<RosVisualizer>(node, exploration_costmap_);
         min_traversable_distance = std::numeric_limits<double>::max();
@@ -15,7 +15,7 @@ namespace frontier_exploration
         max_arrival_info_per_frontier = 0.0;
 
         // TODO: Check these two.
-        roadmap_ptr_ = std::make_shared<FrontierRoadMap>(costmap);
+        roadmap_ptr_ = std::make_shared<FrontierRoadMap>(explore_costmap_ros);
         // fisherInfoManager_ptr_ = std::make_shared<FisherInformationManager>(node, roadmap_ptr_);
 
         fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
@@ -282,6 +282,7 @@ namespace frontier_exploration
 
     void FrontierCostCalculator::updateRoadmapData(std::vector<Frontier> &frontiers)
     {
+        PROFILE_FUNCTION;
         roadmap_ptr_->addNodes(frontiers, true);
     }
 

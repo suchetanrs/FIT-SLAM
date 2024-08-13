@@ -1,17 +1,18 @@
-explore_server:
+bt_exploration_node:
   ros__parameters:
     retry_count: 20
     nav2_goal_timeout_sec: 30 #secs
     # config: ["48.0", "60.0", "48.0", "1.25", "1.25", "1.25", "1.25", "60.0"]
-    config: ["48.0", "60.0", "48.0", "-60.0", "-48.0", "-60.0", "48.0", "60.0"]
+    config: ["310.0", "260.0", "310.0", "-120.0", "-70.0", "-120.0", "-70.0", "260.0"]
     use_custom_sim: false
     # robot_namespaces: ['/scout_1', '/scout_2']
     robot_namespaces: ['/robot_0']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4', '/scout_5']
-    min_frontier_cluster_size: 2
-    max_frontier_cluster_size: 10
+    min_frontier_cluster_size: 1
+    max_frontier_cluster_size: 20
+    max_frontier_distance: 50.0 # This should be equal to the parameter max_frontier_distance in frontier_roadmap_node
     frontier_match_xy_threshold: 1.0
     frontier_match_yaw_threshold: 0.40
     process_other_robots: true
@@ -23,7 +24,7 @@ bounded_explore_layer:
     
 frontier_costs_manager_node:
   ros__parameters:
-    alpha: 0.5 #set to 1.0 for maximum weight to arrival information and 0.0 for maximum weight to frontier path distance.
+    alpha: 0.25 #set to 1.0 for maximum weight to arrival information and 0.0 for maximum weight to frontier path distance.
     beta: 1.0 #set to 1.0 for maximum weight to u1 and 0.0 for maximum weight to information on path.
     N_best_for_u2: 100000 #set to -1 for considering all the frontier for path computation (this will make the algorithm very time instensive!)
     planner_allow_unknown: true
@@ -33,6 +34,10 @@ localization_pose_sub_node:
   ros__parameters:
     exploration_mode: ours
     counter: 031150
+
+frontier_roadmap_node:
+  ros__parameters:
+    max_frontier_distance: 25.1
 
 explore_costmap:
   explore_costmap:

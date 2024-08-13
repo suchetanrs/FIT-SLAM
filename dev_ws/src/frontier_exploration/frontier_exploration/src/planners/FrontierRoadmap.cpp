@@ -5,14 +5,21 @@
 
 namespace frontier_exploration
 {
-    FrontierRoadMap::FrontierRoadMap(nav2_costmap_2d::Costmap2D *costmap)
-        : costmap_(costmap)
+    FrontierRoadMap::FrontierRoadMap(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros)
+        : costmap_(explore_costmap_ros->getCostmap()),
+          explore_costmap_ros_(explore_costmap_ros)
     {
-        max_connection_length_ = 5.0;
-        node_ = rclcpp::Node::make_shared("FRM");
+        max_connection_length_ = RADIUS_TO_DECIDE_EDGES * 1.5;
+        node_ = rclcpp::Node::make_shared("frontier_roadmap_node");
         marker_pub_roadmap_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("frontier_roadmap", 10);
+        marker_pub_roadmap_edges_ = node_->create_publisher<visualization_msgs::msg::Marker>("frontier_roadmap_edges", 10);
+        marker_pub_roadmap_vertices_ = node_->create_publisher<visualization_msgs::msg::Marker>("frontier_roadmap_nodes", 10);
         marker_pub_plan_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("frontier_roadmap_plan", 10);
         astar_planner_ = std::make_shared<FrontierRoadmapAStar>();
+
+        node_->declare_parameter("max_frontier_distance", rclcpp::ParameterValue(5.12));
+        node_->get_parameter("max_frontier_distance", max_frontier_distance_);
+        RCLCPP_ERROR_STREAM(node_->get_logger(), "Max frontier distance: " << max_frontier_distance_);
 
         // Subscriber to handle clicked points
         clicked_point_sub_ = node_->create_subscription<geometry_msgs::msg::PointStamped>(
@@ -53,16 +60,22 @@ namespace frontier_exploration
     void FrontierRoadMap::addNodes(const std::vector<Frontier> &frontiers, bool populateClosest)
     {
         RCLCPP_INFO_STREAM(node_->get_logger(), "Addition frontier list size:" << frontiers.size());
-
+        geometry_msgs::msg::PoseStamped robotPose;
+        explore_costmap_ros_->getRobotPose(robotPose);
         populateNodes(frontiers, populateClosest);
-        roadmap_mutex_.lock();
-        roadmap_.clear();
-        roadmap_mutex_.unlock();
+        // roadmap_mutex_.lock();
+        // roadmap_.clear();
+        // roadmap_mutex_.unlock();
 
         // Add each point as a child of the parent if no obstacle is present
         spatial_hash_map_mutex_.lock();
         for (const auto &pair : spatial_hash_map_)
         {
+            if (sqrt(pow(robotPose.pose.position.x - pair.first.first, 2) + pow(robotPose.pose.position.y - pair.first.second, 2)) > max_frontier_distance_)
+            {
+                RCLCPP_INFO_STREAM(node_->get_logger(), "Skipping x: " << pair.first.first << ", y: " << pair.first.second << " from roadmap");
+                continue;
+            }
             for (const auto &point : pair.second)
             {
                 std::vector<Frontier> closestNodes;
@@ -181,6 +194,7 @@ namespace frontier_exploration
 
     void FrontierRoadMap::populateNodes(const std::vector<Frontier> &frontiers, bool populateClosest)
     {
+        PROFILE_FUNCTION;
         for (auto &new_frontier : frontiers)
         {
             bool isNew = true;
@@ -234,7 +248,7 @@ namespace frontier_exploration
             {
                 spatial_hash_map_mutex_.lock();
                 spatial_hash_map_[grid_cell].push_back(new_frontier);
-                if(spatial_hash_map_[grid_cell].size() > 20)
+                if (spatial_hash_map_[grid_cell].size() > 20)
                 {
                     throw std::runtime_error("The size is too big");
                 }
@@ -245,6 +259,7 @@ namespace frontier_exploration
 
     void FrontierRoadMap::getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, const double radius)
     {
+        PROFILE_FUNCTION;
         // Get the central grid cell of the interest node
         auto interest_point = interestNode.getGoalPoint();
         auto center_cell = getGridCell(interest_point.x, interest_point.y);
@@ -273,6 +288,7 @@ namespace frontier_exploration
 
     void FrontierRoadMap::getNodesWithinRadius(const geometry_msgs::msg::Point &interestPoint, std::vector<Frontier> &closestNodeVector, const double radius)
     {
+        PROFILE_FUNCTION;
         // Get the central grid cell of the interest node
         auto center_cell = getGridCell(interestPoint.x, interestPoint.y);
 
@@ -349,7 +365,7 @@ namespace frontier_exploration
         node_marker.scale.x = 0.2; // Size of each sphere
         node_marker.scale.y = 0.2;
         node_marker.scale.z = 0.2;
-        node_marker.color.a = 1.0; // Fully opaque
+        node_marker.color.a = 0.30; // 1.0 - Fully opaque
         node_marker.color.r = 0.0;
         node_marker.color.g = 1.0;
         node_marker.color.b = 0.0;
@@ -363,21 +379,23 @@ namespace frontier_exploration
         edge_marker.action = visualization_msgs::msg::Marker::ADD;
         edge_marker.pose.orientation.w = 1.0;
         edge_marker.scale.x = 0.02; // Thickness of the lines
-        edge_marker.color.a = 1.0;  // Fully opaque
-        edge_marker.color.r = 1.0;
-        edge_marker.color.g = 0.3;
-        edge_marker.color.b = 0.5;
+        edge_marker.color.a = 0.18;  // 1.0 - Fully opaque
+        edge_marker.color.r = 0.3;  // Red channel
+        edge_marker.color.g = 0.7;  // Green channel
+        edge_marker.color.b = 1.0;  // Blue channel
 
         // Populate the markers
         for (const auto &pair : roadmap_)
         {
             Frontier parent = pair.first;
             geometry_msgs::msg::Point parent_point = parent.getGoalPoint();
+            parent_point.z = 0.15;
             node_marker.points.push_back(parent_point);
 
             for (const auto &child : pair.second)
             {
                 geometry_msgs::msg::Point child_point = child.getGoalPoint();
+                child_point.z = 0.15;
                 node_marker.points.push_back(child_point);
 
                 edge_marker.points.push_back(parent_point);
@@ -386,7 +404,9 @@ namespace frontier_exploration
         }
 
         // Add the markers to the marker array
+        marker_pub_roadmap_vertices_->publish(node_marker);
         marker_array.markers.push_back(node_marker);
+        marker_pub_roadmap_edges_->publish(edge_marker);
         marker_array.markers.push_back(edge_marker);
 
         // Publish the markers

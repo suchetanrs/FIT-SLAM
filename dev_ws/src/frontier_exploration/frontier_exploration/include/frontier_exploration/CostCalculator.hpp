@@ -48,7 +48,7 @@ namespace frontier_exploration
 {
     class FrontierCostCalculator {
     public:
-        FrontierCostCalculator(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap);
+        FrontierCostCalculator(rclcpp::Node::SharedPtr node, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros);
 
         // ----------------Arrival information related--------------------
         /**

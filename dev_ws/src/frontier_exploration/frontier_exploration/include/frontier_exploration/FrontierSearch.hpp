@@ -16,6 +16,7 @@
 #include <frontier_exploration/Frontier.hpp>
 #include <frontier_exploration/colorize.hpp>
 #include "frontier_exploration/Helpers.hpp"
+#include "frontier_exploration/GeometryUtils.hpp"
 
 namespace frontier_exploration
 {
@@ -30,11 +31,21 @@ namespace frontier_exploration
          * @brief Constructor for search task
          * @param costmap Reference to costmap data to search.
          */
-        FrontierSearch(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size, int max_frontier_cluster_size);
+        FrontierSearch(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size, int max_frontier_cluster_size, double max_frontier_distance);
 
         void reset()
         {
             every_frontier_list.clear();
+        };
+
+        void incrementSearchDistance(double value)
+        {
+            max_frontier_distance_ += value;
+        };
+
+        void resetSearchDistance()
+        {
+            max_frontier_distance_ = original_search_distance_;
         };
 
         /**
@@ -75,6 +86,8 @@ namespace frontier_exploration
         std::vector<std::vector<double>> every_frontier_list;
         int min_frontier_cluster_size_;
         int max_frontier_cluster_size_;
+        double max_frontier_distance_;
+        double original_search_distance_;
     };
 
 }

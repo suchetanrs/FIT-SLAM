@@ -40,7 +40,7 @@ namespace frontier_exploration
     class FrontierCostsManager
     {
     public:
-        FrontierCostsManager(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap);
+        FrontierCostsManager(rclcpp::Node::SharedPtr node, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros);
 
         /**
          * @param costTypes can take the values

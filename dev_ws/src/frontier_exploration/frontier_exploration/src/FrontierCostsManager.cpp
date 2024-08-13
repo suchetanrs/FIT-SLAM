@@ -3,7 +3,7 @@
 namespace frontier_exploration
 {
 
-    FrontierCostsManager::FrontierCostsManager(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap)
+    FrontierCostsManager::FrontierCostsManager(rclcpp::Node::SharedPtr node, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros)
     {
         logger_ = rclcpp::get_logger(static_cast<std::string>(node->get_namespace()) + ".frontier_costs_manager");
 
@@ -22,8 +22,8 @@ namespace frontier_exploration
         frontier_costs_manager_node_->declare_parameter("N_best_for_u2", 6);
         frontier_costs_manager_node_->get_parameter("N_best_for_u2", N_best_for_u2_);
 
-        costmap_ = costmap;
-        costCalculator_ = std::make_shared<FrontierCostCalculator>(node, costmap_);
+        costmap_ = explore_costmap_ros->getCostmap();
+        costCalculator_ = std::make_shared<FrontierCostCalculator>(node, explore_costmap_ros);
     }
 
     std::vector<Frontier> findDuplicates(const std::vector<Frontier> &vec)
@@ -141,14 +141,14 @@ namespace frontier_exploration
                 arrival_info_utility = 0.0;
             else
                 arrival_info_utility = static_cast<double>(frontier_with_properties.getArrivalInformation() - costCalculator_->getMinArrivalInformation()) /
-                                              static_cast<double>(costCalculator_->getMaxArrivalInformation() - costCalculator_->getMinArrivalInformation());
+                                       static_cast<double>(costCalculator_->getMaxArrivalInformation() - costCalculator_->getMinArrivalInformation());
 
             double frontier_plan_utility;
             if (static_cast<double>(costCalculator_->getMaxPlanDistance() - costCalculator_->getMinPlanDistance()) == 0.0)
                 frontier_plan_utility = 1.0; // keep it 1 cuz it's -1.0'd later
             else
                 frontier_plan_utility = static_cast<double>(frontier_with_properties.getPathLength() - costCalculator_->getMinPlanDistance()) /
-                                               static_cast<double>(costCalculator_->getMaxPlanDistance() - costCalculator_->getMinPlanDistance());
+                                        static_cast<double>(costCalculator_->getMaxPlanDistance() - costCalculator_->getMinPlanDistance());
             frontier_plan_utility = 1.0 - frontier_plan_utility;
 
             std::cout << "Path length : " << frontier_with_properties.getPathLength() << std::endl;
@@ -162,11 +162,16 @@ namespace frontier_exploration
             std::cout << "Max Info : " << costCalculator_->getMaxArrivalInformation() << std::endl;
             std::cout << "Info Utility:" << arrival_info_utility << std::endl;
 
-            if(arrival_info_utility > 1.0 || arrival_info_utility < 0.0 || frontier_plan_utility > 1.0 || frontier_plan_utility < 0.0)
+            if (arrival_info_utility > 1.0 || arrival_info_utility < 0.0 || frontier_plan_utility > 1.0 || frontier_plan_utility < 0.0)
                 throw std::runtime_error("Cost out of bounds");
 
             double utility = (alpha_ * arrival_info_utility) +
                              ((1.0 - alpha_) * frontier_plan_utility);
+            if (utility == 0.0)
+            {
+                // set to small value to prevent infinite costs.
+                utility = 1e-16;
+            }
 
             // std::cout << "Weighted utility: " << utility << std::endl;
 

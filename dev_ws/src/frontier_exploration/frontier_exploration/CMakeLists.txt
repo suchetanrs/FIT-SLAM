@@ -85,8 +85,12 @@ add_executable(nav2_interface_main src/Nav2Interface.cpp tests/nav2_interface_ma
 ament_target_dependencies(nav2_interface_main ${dependencies})
 # target_link_libraries(nav2_interface_main taskAllocator_lib ${PCL_LIBRARIES})
 
+# -------------------------- Comparision files ---------------------
+add_executable(explored_map_counter comparision_scripts/explored_map_counter.cpp)
+ament_target_dependencies(explored_map_counter ${dependencies})
+
 # main_fisher_information_manager
-install(TARGETS nav2_interface_main
+install(TARGETS nav2_interface_main explored_map_counter
 DESTINATION lib/${PROJECT_NAME}
 )
 # ------------------------------------------------------------------

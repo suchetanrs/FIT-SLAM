@@ -8,9 +8,9 @@ namespace frontier_exploration
     using nav2_costmap_2d::NO_INFORMATION;
     using rcl_interfaces::msg::ParameterType;
 
-    BoundedExploreLayer::BoundedExploreLayer(nav2_costmap_2d::LayeredCostmap* costmap) 
+    BoundedExploreLayer::BoundedExploreLayer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros) 
     {
-        layered_costmap_ = costmap;
+        layered_costmap_ = explore_costmap_ros->getLayeredCostmap();
         internal_node_ = rclcpp::Node::make_shared("bounded_explore_layer");
         internal_executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
         internal_executor_->add_node(internal_node_);
@@ -30,7 +30,7 @@ namespace frontier_exploration
 
         client_get_map_data2_ = internal_node_->create_client<slam_msgs::srv::GetMap>("orb_slam3_get_map_data");
         rosViz_ = std::make_shared<RosVisualizer>(internal_node_, layered_costmap_->getCostmap());
-        frontierSelect_ = std::make_shared<frontier_exploration::FrontierCostsManager>(internal_node_, layered_costmap_->getCostmap());
+        frontierSelect_ = std::make_shared<frontier_exploration::FrontierCostsManager>(internal_node_, explore_costmap_ros);
     }
 
     BoundedExploreLayer::~BoundedExploreLayer()
@@ -81,6 +81,7 @@ namespace frontier_exploration
         // }
         rosViz_->exportMapCoverage(polygon_xy_min_max_, counter_, exploration_mode_);
         rosViz_->visualizeFrontierMarker(requestData->frontier_list, requestData->every_frontier, layered_costmap_->getGlobalFrameID());
+        rosViz_->visualizeFrontier(requestData->frontier_list, requestData->every_frontier, layered_costmap_->getGlobalFrameID());
     }
 
     bool BoundedExploreLayer::getFrontierCosts(std::shared_ptr<GetFrontierCostsRequest> requestData, std::shared_ptr<GetFrontierCostsResponse> resultData)
