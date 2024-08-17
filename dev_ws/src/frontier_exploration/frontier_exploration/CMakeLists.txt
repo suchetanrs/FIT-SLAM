@@ -57,8 +57,8 @@ behaviortree_cpp
 
 # Add compile definitions for visualization flags
 add_compile_definitions(
-  # FRONTIER_POINT_CENTROID
-  FRONTIER_POINT_INITIAL
+  FRONTIER_POINT_MEDIAN
+  # FRONTIER_POINT_INITIAL
 )
 
 include_directories(

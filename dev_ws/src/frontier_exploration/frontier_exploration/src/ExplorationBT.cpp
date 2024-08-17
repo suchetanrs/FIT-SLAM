@@ -1,10 +1,10 @@
 #include <frontier_exploration/ExplorationBT.hpp>
 #include <frontier_exploration/geometry_tools.hpp>
 
-#if defined(FRONTIER_POINT_CENTROID) + defined(FRONTIER_POINT_INITIAL) > 1
-#error "Only one of FRONTIER_POINT_CENTROID, or FRONTIER_POINT_INITIAL can be defined at a time."
-#elif !defined(FRONTIER_POINT_CENTROID) && !defined(FRONTIER_POINT_INITIAL)
-#error "One of FRONTIER_POINT_CENTROID, or FRONTIER_POINT_INITIAL must be defined."
+#if defined(FRONTIER_POINT_MEDIAN) + defined(FRONTIER_POINT_INITIAL) > 1
+#error "Only one of FRONTIER_POINT_MEDIAN, or FRONTIER_POINT_INITIAL can be defined at a time."
+#elif !defined(FRONTIER_POINT_MEDIAN) && !defined(FRONTIER_POINT_INITIAL)
+#error "One of FRONTIER_POINT_MEDIAN, or FRONTIER_POINT_INITIAL must be defined."
 #endif
 
 namespace frontier_exploration
@@ -170,6 +170,50 @@ namespace frontier_exploration
         }
 
         std::shared_ptr<FrontierSearch> frontierSearchPtr_;
+        std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
+        rclcpp::Node::SharedPtr ros_node_ptr_;
+    };
+
+    class VerifyFrontierSearchBT : public BT::StatefulActionNode
+    {
+    public:
+        VerifyFrontierSearchBT(const std::string &name, const BT::NodeConfig &config,
+                             std::shared_ptr<FrontierSearch> frontierSearchPtr, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros,
+                             rclcpp::Node::SharedPtr ros_node_ptr) : BT::StatefulActionNode(name, config)
+        {
+            explore_costmap_ros_ = explore_costmap_ros;
+            ros_node_ptr_ = ros_node_ptr;
+            std::cout << COLOR_STR("VerifyFrontierSearchBT Constructor", ros_node_ptr_->get_namespace()) << std::endl;
+        }
+
+        BT::NodeStatus onStart() override
+        {
+            std::cout << COLOR_STR("VerifyFrontierSearchBT OnStart called ", ros_node_ptr_->get_namespace()) << std::endl;
+            std::vector<Frontier> frontier_list;
+            getInput<std::vector<Frontier>>("frontier_list", frontier_list);
+            if(verifyFrontierList(frontier_list, explore_costmap_ros_->getCostmap()))
+                return BT::NodeStatus::SUCCESS;
+            return BT::NodeStatus::FAILURE;
+        }
+
+        BT::NodeStatus onRunning()
+        {
+            std::cout << COLOR_STR("VerifyFrontierSearchBT On running called ", ros_node_ptr_->get_namespace()) << std::endl;
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        void onHalted()
+        {
+            return;
+        }
+
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::vector<Frontier>>("frontier_list")
+            };
+        }
+
         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
         rclcpp::Node::SharedPtr ros_node_ptr_;
     };
@@ -576,6 +620,13 @@ namespace frontier_exploration
             return std::make_unique<SearchForFrontiersBT>(name, config, frontierSearchPtr_, explore_costmap_ros_, bt_node_);
         };
         factory.registerBuilder<SearchForFrontiersBT>("SearchForFrontiers", builder_frontier_search);
+
+        BT::NodeBuilder builder_frontier_search_verification =
+            [&](const std::string &name, const BT::NodeConfiguration &config)
+        {
+            return std::make_unique<VerifyFrontierSearchBT>(name, config, frontierSearchPtr_, explore_costmap_ros_, bt_node_);
+        };
+        factory.registerBuilder<VerifyFrontierSearchBT>("VerifyFrontierSearch", builder_frontier_search);
 
         BT::NodeBuilder builder_frontier_costs =
             [&](const std::string &name, const BT::NodeConfiguration &config)

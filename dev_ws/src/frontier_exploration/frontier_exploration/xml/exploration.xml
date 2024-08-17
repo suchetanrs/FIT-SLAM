@@ -3,7 +3,10 @@
         <Sequence name="root">
             <WaitForCurrent/>
             <UpdateBoundaryPolygon />
-            <SearchForFrontiers frontier_list="{the_frontier_list}" every_frontier="{the_every_frontier}" increment_search_distance_by="0.1"/>
+            <Sequence>
+                <SearchForFrontiers frontier_list="{the_frontier_list}" every_frontier="{the_every_frontier}" increment_search_distance_by="0.1"/>
+                <VerifyFrontierSearch frontier_list="{the_frontier_list}"/>
+            </Sequence>
             <ProcessFrontierCosts frontier_list="{the_frontier_list}" every_frontier="{the_every_frontier}" robot_name="/robot_0" frontier_costs_result="{the_frontier_costs}"/>
             <GetAllocatedGoal frontier_costs_result="{the_frontier_costs}" allocated_frontier="{the_allocated_frontier}"/>
             <ReactiveSequence>

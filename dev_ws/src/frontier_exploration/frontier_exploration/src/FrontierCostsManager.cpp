@@ -167,6 +167,7 @@ namespace frontier_exploration
 
             double utility = (alpha_ * arrival_info_utility) +
                              ((1.0 - alpha_) * frontier_plan_utility);
+            utility = utility * frontier_with_properties.getCost("lethal_penalty_factor");
             if (utility == 0.0)
             {
                 // set to small value to prevent infinite costs.

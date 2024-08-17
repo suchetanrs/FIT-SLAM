@@ -79,6 +79,43 @@ namespace frontier_exploration
          */
         bool isNewFrontierCell(unsigned int idx, const std::vector<bool> &frontier_flag);
 
+        std::pair<double, double> getCentroidOfCells(std::vector<std::pair<double, double>> &cells, double max_cluster_size_in_m)
+        {
+            double sumX = 0;
+            double sumY = 0;
+
+            for (const auto &point : cells)
+            {
+                sumX += point.first;
+                sumY += point.second;
+            }
+
+            double centerX = static_cast<double>(sumX) / cells.size();
+            double centerY = static_cast<double>(sumY) / cells.size();
+
+            double varX = 0;
+            double varY = 0;
+            for (const auto &point : cells)
+            {
+                varX += abs(point.first - centerX);
+                varY += abs(point.second - centerY);
+            }
+            std::cout << "Centroid before: " << centerX << " , " << centerY << std::endl;
+
+            if(varX > varY)
+            {
+                centerY -= max_cluster_size_in_m;
+            }
+            if(varX < varY)
+            {
+                centerX -= max_cluster_size_in_m;
+            }
+
+            std::cout << "Centroid: " << centerX << " , " << centerY << std::endl;
+
+            return std::make_pair(centerX, centerY);
+        }
+
     private:
         nav2_costmap_2d::Costmap2D &costmap_;
         unsigned char *map_;
@@ -88,6 +125,37 @@ namespace frontier_exploration
         int max_frontier_cluster_size_;
         double max_frontier_distance_;
         double original_search_distance_;
+    };
+
+    // Define a custom functor with an extra argument
+    class SortByMedianFunctor
+    {
+    public:
+        SortByMedianFunctor(std::pair<double, double> centroid) : centroid(centroid) {}
+
+        bool operator()(const std::pair<double, double> &a, const std::pair<double, double> &b) const
+        {
+            // auto angle_a = atan2(a.second - centroid.second, a.first - centroid.first); // delta y / delta x
+            // if(angle_a < 0) angle_a = angle_a + (2 * M_PI);
+            // auto angle_b = atan2(b.second - centroid.second, b.first - centroid.first);
+            // if(angle_b < 0) angle_b = angle_b + (2 * M_PI);
+            // return angle_a < angle_b;
+
+            auto angle_a = atan2(a.second - centroid.second, a.first - centroid.first); // delta y / delta x
+            if (angle_a < 0)
+                angle_a = angle_a + (2 * M_PI);
+            auto angle_b = atan2(b.second - centroid.second, b.first - centroid.first);
+            if (angle_b < 0)
+                angle_b = angle_b + (2 * M_PI);
+            if (0 <= angle_a && angle_a <= M_PI / 2 && 3 * M_PI / 2 <= angle_b && angle_b <= 2 * M_PI)
+                return false;
+            if (0 <= angle_b && angle_b <= M_PI / 2 && 3 * M_PI / 2 <= angle_a && angle_a <= 2 * M_PI)
+                return true;
+            return angle_a < angle_b;
+        }
+
+    private:
+        std::pair<double, double> centroid;
     };
 
 }

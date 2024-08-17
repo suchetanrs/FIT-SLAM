@@ -7,7 +7,10 @@ namespace frontier_exploration
     using nav2_costmap_2d::LETHAL_OBSTACLE;
     using nav2_costmap_2d::NO_INFORMATION;
 
-    FrontierSearchAllCells::FrontierSearchAllCells(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size, int max_frontier_cluster_size) : costmap_(costmap), min_frontier_cluster_size_(min_frontier_cluster_size), max_frontier_cluster_size_(max_frontier_cluster_size)
+    FrontierSearchAllCells::FrontierSearchAllCells(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size, int max_frontier_cluster_size)
+        : costmap_(costmap),
+          min_frontier_cluster_size_(min_frontier_cluster_size),
+          max_frontier_cluster_size_(max_frontier_cluster_size)
     {
         RCLCPP_DEBUG(rclcpp::get_logger("frontier_search_all_cells"), "FrontierSearch::FrontierSearch");
     }
@@ -121,7 +124,6 @@ namespace frontier_exploration
         }
         return calculated_frontiers;
     }
-
 
     bool FrontierSearchAllCells::isNewFrontierCell(unsigned int idx, const std::vector<bool> &frontier_flag)
     {

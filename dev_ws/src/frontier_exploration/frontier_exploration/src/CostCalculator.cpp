@@ -19,6 +19,7 @@ namespace frontier_exploration
         // fisherInfoManager_ptr_ = std::make_shared<FisherInformationManager>(node, roadmap_ptr_);
 
         fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
+        robot_radius_ = explore_costmap_ros->getRobotRadius();
     }
 
     void FrontierCostCalculator::setArrivalInformationForFrontier(Frontier &frontier, std::vector<double> &polygon_xy_min_max)
@@ -76,11 +77,13 @@ namespace frontier_exploration
             }
         } // theta end
 
-        double lethalPenaltyFactor = (maxHitObstacles - hitObstacleCount) / maxHitObstacles;
-        frontier.setCost("lethal_penalty_factor", lethalPenaltyFactor);
+        unsigned int sxm, sym;
+        exploration_costmap_->worldToMap(sx, sy, sxm, sym);
+        double footprintInLethalPenalty = isRobotFootprintInLethal(exploration_costmap_, sxm, sym, std::ceil(robot_radius_ / exploration_costmap_->getResolution()));
+        frontier.setCost("lethal_penalty_factor", 1.0 - footprintInLethalPenalty);
         // std::cout << "maxHitObstacles" << maxHitObstacles << std::endl;
         // std::cout << "hitObstacleCount" << hitObstacleCount << std::endl;
-        // std::cout << "lethalPenaltyFactor" << lethalPenaltyFactor << std::endl;
+        // std::cout << "footprintInLethalPenalty" << footprintInLethalPenalty << std::endl;
 
         std::vector<int> kernel(static_cast<int>(CAMERA_FOV / DELTA_THETA), 1); // initialize a kernal vector of size 6 and all elements = 1
         int n = information_along_ray.size();                                   // number of rays computed in 2PI
@@ -94,7 +97,6 @@ namespace frontier_exploration
             {
                 result[i] += information_along_ray[i + j] * kernel[j];
             }
-            result[i] *= lethalPenaltyFactor;
         }
         int maxIndex = 0;
         int maxValue = result[0];

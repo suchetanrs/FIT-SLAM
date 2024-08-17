@@ -103,6 +103,9 @@ namespace frontier_exploration
 
     bool surroundingCellsMapped(geometry_msgs::msg::Point& checkPoint, nav2_costmap_2d::Costmap2D& exploration_costmap_);
 
+    bool isRobotFootprintInLethal(const nav2_costmap_2d::Costmap2D *costmap, unsigned int center_x, unsigned int center_y, double radius_in_cells);
+
+    bool verifyFrontierList(std::vector<Frontier>& frontier_list, const nav2_costmap_2d::Costmap2D *costmap);
 // -------------------------- COSTMAP TOOLS ---------------------------------------------------------
 
     std::vector<unsigned int> nhood4(unsigned int idx, const nav2_costmap_2d::Costmap2D &costmap);

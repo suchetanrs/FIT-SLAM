@@ -5,7 +5,7 @@
 namespace frontier_exploration
 {
     void bresenham2D(
-        RayTracedCells& at, unsigned int abs_da, unsigned int abs_db, int error_b,
+        RayTracedCells &at, unsigned int abs_da, unsigned int abs_db, int error_b,
         int offset_a,
         int offset_b, unsigned int offset,
         unsigned int max_length,
@@ -95,22 +95,34 @@ namespace frontier_exploration
         return true;
     }
 
-    bool surroundingCellsMapped(geometry_msgs::msg::Point& checkPoint, nav2_costmap_2d::Costmap2D& exploration_costmap_)
+    bool surroundingCellsMapped(geometry_msgs::msg::Point &checkPoint, nav2_costmap_2d::Costmap2D &exploration_costmap_)
     {
         unsigned int mx, my;
-        if(!exploration_costmap_.worldToMap(checkPoint.x, checkPoint.y, mx, my))
+        if (!exploration_costmap_.worldToMap(checkPoint.x, checkPoint.y, mx, my))
         {
             return false;
         }
         // return if the frontier is on a lethal cell.
-        if(exploration_costmap_.getCost(mx, my) == 254)
+        if (exploration_costmap_.getCost(mx, my) == 254)
             return true;
         auto out = nhood20(exploration_costmap_.getIndex(mx, my), exploration_costmap_);
-        for(auto cell : out)
+        auto out8 = nhood8(exploration_costmap_.getIndex(mx, my), exploration_costmap_);
+        int surrounding_lethal = 0;
+        for (auto cell : out8)
+        {
+            auto cost = exploration_costmap_.getCost(cell);
+            if (static_cast<int>(cost) == 254)
+            {
+                ++surrounding_lethal;
+            }
+        }
+        if (surrounding_lethal >= 3)
+            return true;
+        for (auto cell : out)
         {
             auto cost = exploration_costmap_.getCost(cell);
             // std::cout << "Cost is: " << static_cast<int>(cost) << std::endl;
-            if(static_cast<int>(cost) == 255)
+            if (static_cast<int>(cost) == 255)
             {
                 std::cout << "Surrounding cells mapped Returning false " << std::endl;
                 return false;
@@ -120,7 +132,49 @@ namespace frontier_exploration
         return true;
     }
 
-// -------------------------- COSTMAP TOOLS ---------------------------------------------------------
+    bool isRobotFootprintInLethal(const nav2_costmap_2d::Costmap2D *costmap, unsigned int center_x, unsigned int center_y, double radius_in_cells)
+    {
+        for (int dx = -radius_in_cells; dx <= radius_in_cells; ++dx)
+        {
+            for (int dy = -radius_in_cells; dy <= radius_in_cells; ++dy)
+            {
+                // Check if the point is within the circle
+                if (dx * dx + dy * dy <= radius_in_cells * radius_in_cells)
+                {
+                    unsigned int x = center_x + dx;
+                    unsigned int y = center_y + dy;
+                    unsigned int cost = costmap->getCost(x, y);
+                    if (cost == 254)
+                    {
+                        return true; // Robot does not fit
+                    }
+                }
+            }
+        }
+        return false; // Robot fits
+    }
+
+    bool verifyFrontierList(std::vector<Frontier>& frontier_list, const nav2_costmap_2d::Costmap2D *costmap)
+    {
+        for (auto& frontier : frontier_list)
+        {
+            bool verification_success = false;
+            unsigned int mx, my;
+            costmap->worldToMap(frontier.getGoalPoint().x, frontier.getGoalPoint().y, mx, my);
+            auto out = nhood8(costmap->getIndex(mx, my), *costmap);
+            for (auto& cell : out)
+            {
+                unsigned int cost = costmap->getCost(cell);
+                if(cost == 255)
+                    verification_success = true;
+            }
+            if(!verification_success)
+                return false;
+        }
+        return true;
+    }
+
+    // -------------------------- COSTMAP TOOLS ---------------------------------------------------------
 
     /**
      * @brief Determine 4-connected neighbourhood of an input cell, checking for map edges
@@ -275,7 +329,7 @@ namespace frontier_exploration
         return false;
     }
 
-// -------------------------- FISHER INFORMATION COMPUTATION RELATED --------------------------------
+    // -------------------------- FISHER INFORMATION COMPUTATION RELATED --------------------------------
     Eigen::Matrix3f getSkewMatrix(const Eigen::Vector3f &v)
     {
         Eigen::Matrix3f skewMat;
@@ -325,16 +379,16 @@ namespace frontier_exploration
     }
 
     float computeInformationOfPoint(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig,
-                                     Eigen::Affine3f &T_w_c_est, Eigen::Matrix3f Q)
+                                    Eigen::Affine3f &T_w_c_est, Eigen::Matrix3f Q)
     {
         auto jac = computeJacobianForPoint(p3d_c_eig, p3d_w_eig, T_w_c_est);
         auto fim = computeFIM(jac, Q);
         return fim.trace();
     }
 
-    float computeInformationFrontierPair(std::vector<geometry_msgs::msg::Point>& lndmrk_w, 
-                                         geometry_msgs::msg::Pose& kf_pose_w, geometry_msgs::msg::Pose& est_pose_w, 
-                                         std::vector<Point2D>& FOVFrontierPair)
+    float computeInformationFrontierPair(std::vector<geometry_msgs::msg::Point> &lndmrk_w,
+                                         geometry_msgs::msg::Pose &kf_pose_w, geometry_msgs::msg::Pose &est_pose_w,
+                                         std::vector<Point2D> &FOVFrontierPair)
     {
         float pair_information = 0;
         Eigen::Affine3f T_w_c_est = getTransformFromPose(est_pose_w);
@@ -342,7 +396,7 @@ namespace frontier_exploration
         for (auto p3d_w : lndmrk_w)
         {
             Eigen::Vector3f p3d_w_eig(p3d_w.x, p3d_w.y, p3d_w.z);
-            if(isInside(p3d_w.x, p3d_w.y, FOVFrontierPair[0], FOVFrontierPair[1], FOVFrontierPair[2]))
+            if (isInside(p3d_w.x, p3d_w.y, FOVFrontierPair[0], FOVFrontierPair[1], FOVFrontierPair[2]))
             {
                 auto p3d_c_eig = T_w_c.inverse() * p3d_w_eig;
                 auto Q = Eigen::Matrix3f::Identity();

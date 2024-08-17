@@ -126,6 +126,7 @@ namespace frontier_exploration
         double max_traversable_distance = 0.0;
         double min_arrival_info_per_frontier = std::numeric_limits<double>::max();
         double max_arrival_info_per_frontier = 0.0;
+        double robot_radius_;
         
         std::shared_ptr<FrontierRoadMap> roadmap_ptr_;
         std::shared_ptr<FisherInformationManager> fisherInfoManager_ptr_;
