@@ -52,10 +52,15 @@ namespace frontier_exploration
          * "ClosestFrontier"
          */
         bool assignCosts(std::vector<Frontier> &frontier_list, std::vector<double> polygon_xy_min_max,
-                             geometry_msgs::msg::Point start_point_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
+                             geometry_msgs::msg::Pose start_pose_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
                              std::vector<std::vector<std::string>>& costTypes);
 
         void setFrontierBlacklist(std::vector<Frontier> &blacklist);
+
+        std::shared_ptr<FrontierCostCalculator> getCostCalcPtr()
+        {
+            return costCalculator_;
+        };
 
     private:
         nav2_costmap_2d::Costmap2D *costmap_;
@@ -71,6 +76,9 @@ namespace frontier_exploration
         double alpha_;                ///< Stores the alpha value used for weights.
         double beta_;                 ///< Stores the beta value used for weights.
         int N_best_for_u2_;           ///< Stores the number of frontiers to consider for u2 computation.
+        bool add_heading_cost_;
+        double max_vx_;
+        double max_wx_;
     };
 
 } // namespace frontier_exploration

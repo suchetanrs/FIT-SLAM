@@ -22,6 +22,15 @@ namespace frontier_exploration
         frontier_costs_manager_node_->declare_parameter("N_best_for_u2", 6);
         frontier_costs_manager_node_->get_parameter("N_best_for_u2", N_best_for_u2_);
 
+        frontier_costs_manager_node_->declare_parameter("add_heading_cost", true);
+        frontier_costs_manager_node_->get_parameter("add_heading_cost", add_heading_cost_);
+
+        frontier_costs_manager_node_->declare_parameter("vx_max", 0.5);
+        frontier_costs_manager_node_->get_parameter("vx_max", max_vx_);
+
+        frontier_costs_manager_node_->declare_parameter("wz_max", 0.5);
+        frontier_costs_manager_node_->get_parameter("wz_max", max_wx_);
+
         costmap_ = explore_costmap_ros->getCostmap();
         costCalculator_ = std::make_shared<FrontierCostCalculator>(node, explore_costmap_ros);
     }
@@ -49,10 +58,10 @@ namespace frontier_exploration
     }
 
     bool FrontierCostsManager::assignCosts(std::vector<Frontier> &frontier_list, std::vector<double> polygon_xy_min_max,
-                                           geometry_msgs::msg::Point start_point_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
+                                           geometry_msgs::msg::Pose start_pose_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
                                            std::vector<std::vector<std::string>> &costTypes)
     {
-        costCalculator_->updateRoadmapData(frontier_list);
+        costCalculator_->updateRoadmapData(start_pose_w, frontier_list);
         costCalculator_->reset();
         RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("FrontierCostsManager::assignCosts", logger_.get_name()));
         // sanity checks
@@ -85,27 +94,32 @@ namespace frontier_exploration
                 frontier.setGoalOrientation(0.0);
                 frontier.setFisherInformation(0.0);
                 frontier.setPathLength(std::numeric_limits<double>::max());
+                frontier.setPathLengthInM(std::numeric_limits<double>::max());
                 frontier.setWeightedCost(std::numeric_limits<double>::max());
                 continue;
             }
 
-            if (vectorContains(costTypes[frontier_idx], std::string("A*PlannerDistance")))
-            {
-                costCalculator_->setPlanForFrontier(start_point_w, frontier, map_data, false, planner_allow_unknown_);
-            }
-            else if (vectorContains(costTypes[frontier_idx], std::string("RoadmapPlannerDistance")))
-            {
-                costCalculator_->setPlanForFrontierRoadmap(start_point_w, frontier, map_data, false, planner_allow_unknown_);
-            }
-            else if (vectorContains(costTypes[frontier_idx], std::string("EuclideanDistance")))
-            {
-                costCalculator_->setPlanForFrontierEuclidean(start_point_w, frontier, map_data, false, planner_allow_unknown_);
-            }
+            /**
+             * IMPORTANT! Always compute the arrival information first before the planning.
+             * If the frontier is not achievable, the plan is not computed.
+             */
             if (vectorContains(costTypes[frontier_idx], std::string("ArrivalInformation")))
             {
                 // Calculate frontier information and add to metadata vector
                 // camera_fov / 2 is added because until here the maxIndex is only the starting index.
                 costCalculator_->setArrivalInformationForFrontier(frontier, polygon_xy_min_max);
+            }
+            if (vectorContains(costTypes[frontier_idx], std::string("A*PlannerDistance")))
+            {
+                costCalculator_->setPlanForFrontier(start_pose_w, frontier, map_data, false, planner_allow_unknown_);
+            }
+            else if (vectorContains(costTypes[frontier_idx], std::string("RoadmapPlannerDistance")))
+            {
+                costCalculator_->setPlanForFrontierRoadmap(start_pose_w, frontier, map_data, false, planner_allow_unknown_);
+            }
+            else if (vectorContains(costTypes[frontier_idx], std::string("EuclideanDistance")))
+            {
+                costCalculator_->setPlanForFrontierEuclidean(start_pose_w.position, frontier, map_data, false, planner_allow_unknown_);
             }
             if (vectorContains(costTypes[frontier_idx], std::string("RandomCosts")))
             {
@@ -113,7 +127,7 @@ namespace frontier_exploration
             }
             if (vectorContains(costTypes[frontier_idx], std::string("ClosestFrontier")))
             {
-                costCalculator_->setClosestFrontierMetaData(start_point_w, frontier, map_data, false, planner_allow_unknown_);
+                costCalculator_->setClosestFrontierMetaData(start_pose_w.position, frontier, map_data, false, planner_allow_unknown_);
             }
             costCalculator_->recomputeNormalizationFactors(frontier);
         } // frontier end
@@ -140,15 +154,24 @@ namespace frontier_exploration
             if (static_cast<double>(costCalculator_->getMaxArrivalInformation() - costCalculator_->getMinArrivalInformation()) == 0.0)
                 arrival_info_utility = 0.0;
             else
-                arrival_info_utility = static_cast<double>(frontier_with_properties.getArrivalInformation() - costCalculator_->getMinArrivalInformation()) /
-                                       static_cast<double>(costCalculator_->getMaxArrivalInformation() - costCalculator_->getMinArrivalInformation());
+                // arrival_info_utility = static_cast<double>(frontier_with_properties.getArrivalInformation() - costCalculator_->getMinArrivalInformation()) /
+                //                        static_cast<double>(costCalculator_->getMaxArrivalInformation() - costCalculator_->getMinArrivalInformation());
+
+                arrival_info_utility = static_cast<double>(frontier_with_properties.getArrivalInformation()) /
+                                       static_cast<double>(costCalculator_->getMaxArrivalInformation());
+
+            if(arrival_info_utility > 1.0)
+                throw std::runtime_error("ARRIVAL UTILITY ERROR! MORE THAN 1. It is: " + std::to_string(frontier_with_properties.getArrivalInformation()));
 
             double frontier_plan_utility;
-            if (static_cast<double>(costCalculator_->getMaxPlanDistance() - costCalculator_->getMinPlanDistance()) == 0.0)
+            if (static_cast<double>((costCalculator_->getMaxPlanDistance()  / max_vx_ + M_PI / max_wx_) - (costCalculator_->getMinPlanDistance() / max_vx_ + 0.0 / max_wx_) == 0.0))
                 frontier_plan_utility = 1.0; // keep it 1 cuz it's -1.0'd later
             else
-                frontier_plan_utility = static_cast<double>(frontier_with_properties.getPathLength() - costCalculator_->getMinPlanDistance()) /
-                                        static_cast<double>(costCalculator_->getMaxPlanDistance() - costCalculator_->getMinPlanDistance());
+                // frontier_plan_utility = static_cast<double>(frontier_with_properties.getPathLength() - costCalculator_->getMinPlanDistance()) /
+                //                         static_cast<double>(costCalculator_->getMaxPlanDistance() - costCalculator_->getMinPlanDistance());
+
+                frontier_plan_utility = static_cast<double>(frontier_with_properties.getPathLength() / max_vx_ + frontier_with_properties.getPathHeading() / max_wx_) /
+                                        static_cast<double>(costCalculator_->getMaxPlanDistance() / max_vx_ + M_PI / max_wx_);
             frontier_plan_utility = 1.0 - frontier_plan_utility;
 
             std::cout << "Path length : " << frontier_with_properties.getPathLength() << std::endl;
@@ -167,7 +190,6 @@ namespace frontier_exploration
 
             double utility = (alpha_ * arrival_info_utility) +
                              ((1.0 - alpha_) * frontier_plan_utility);
-            utility = utility * frontier_with_properties.getCost("lethal_penalty_factor");
             if (utility == 0.0)
             {
                 // set to small value to prevent infinite costs.
@@ -224,7 +246,7 @@ namespace frontier_exploration
         //         {
         //             break;
         //         }
-        //         auto plan_result = getPlanForFrontier(start_point_w, frontier_with_u1_utility[m].first.frontier_, map_data, true);
+        //         auto plan_result = getPlanForFrontier(start_pose_w.position, frontier_with_u1_utility[m].first.frontier_, map_data, true);
         //         if (plan_result.first.information_total > maximum_path_information)
         //         {
         //             maximum_path_information = plan_result.first.information_total;

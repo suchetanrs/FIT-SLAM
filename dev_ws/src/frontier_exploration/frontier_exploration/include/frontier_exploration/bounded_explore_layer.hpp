@@ -68,11 +68,16 @@ namespace frontier_exploration
     
         void logMapData(std::shared_ptr<GetFrontierCostsRequest> requestData);
 
+        std::shared_ptr<frontier_exploration::FrontierCostsManager> getCostManagerPtr()
+        {
+            return frontierSelect_;
+        };
+
     protected:
 
         bool processOurApproach(
             std::vector<Frontier> &frontier_list,
-            geometry_msgs::msg::Point& start_point_w);
+            geometry_msgs::msg::Pose& start_pose_w);
 
     private:
         geometry_msgs::msg::Polygon polygon_;

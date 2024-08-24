@@ -28,7 +28,9 @@ frontier_costs_manager_node:
     beta: 1.0 #set to 1.0 for maximum weight to u1 and 0.0 for maximum weight to information on path.
     N_best_for_u2: 100000 #set to -1 for considering all the frontier for path computation (this will make the algorithm very time instensive!)
     planner_allow_unknown: true
-    use_planning: false #if false, uses euclidean distance to frontier(cannot use FIMs to compute path information). If true, plans to the frontier.
+    add_heading_cost: true
+    vx_max: 0.5 # max linear speed of the robot. m/s (required if heading cost is added)
+    wz_max: 0.5 # max angular speed of the robot. rad/s (required if heading cost is added)
 
 localization_pose_sub_node:
   ros__parameters:

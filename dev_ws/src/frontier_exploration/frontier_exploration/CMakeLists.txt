@@ -71,8 +71,8 @@ include_directories(
 # Add executable 2
 # src/FrontierSearch.cpp
 add_executable(explore_server src/ExplorationBT.cpp src/Nav2Interface.cpp plugins/bounded_explore_layer.cpp src/FrontierSearch.cpp src/FrontierCostsManager.cpp 
-               src/planners/planner.cpp src/planners/rrt.cpp src/rosVisualizer.cpp src/CostCalculator.cpp src/main.cpp
-               src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/planners/astar.cpp src/FisherInfoManager.cpp)
+               src/FullPathOptimizer.cpp src/planners/planner.cpp src/planners/rrt.cpp src/rosVisualizer.cpp src/CostCalculator.cpp src/main.cpp
+               src/event_logger.cpp src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/planners/astar.cpp src/FisherInfoManager.cpp)
 ament_target_dependencies(explore_server ${dependencies})
 target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES})
 
@@ -85,12 +85,19 @@ add_executable(nav2_interface_main src/Nav2Interface.cpp tests/nav2_interface_ma
 ament_target_dependencies(nav2_interface_main ${dependencies})
 # target_link_libraries(nav2_interface_main taskAllocator_lib ${PCL_LIBRARIES})
 
+add_executable(logger_test tests/logger_test.cpp src/Frontier.cpp)
+ament_target_dependencies(logger_test ${dependencies})
+# target_link_libraries(logger_test taskAllocator_lib ${PCL_LIBRARIES})
+
 # -------------------------- Comparision files ---------------------
 add_executable(explored_map_counter comparision_scripts/explored_map_counter.cpp)
 ament_target_dependencies(explored_map_counter ${dependencies})
 
+add_executable(exploration_path_followed comparision_scripts/exploration_path_followed.cpp)
+ament_target_dependencies(exploration_path_followed ${dependencies})
+
 # main_fisher_information_manager
-install(TARGETS nav2_interface_main explored_map_counter
+install(TARGETS nav2_interface_main explored_map_counter exploration_path_followed
 DESTINATION lib/${PROJECT_NAME}
 )
 # ------------------------------------------------------------------

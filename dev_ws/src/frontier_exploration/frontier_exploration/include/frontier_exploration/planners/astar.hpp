@@ -38,10 +38,12 @@ class FrontierRoadmapAStar {
 public:
     FrontierRoadmapAStar();
 
-    std::vector<std::shared_ptr<Node>> getPlan(const Frontier& start, const Frontier& goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_);
+    std::pair<std::vector<std::shared_ptr<Node>>, double> getPlan(const Frontier& start, const Frontier& goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_);
 
 protected:
     double heuristic(const Node& a, const Node& b);
+
+    double heuristic(std::shared_ptr<Node> a, std::shared_ptr<Node> b);
 
     double heuristic(const Frontier& a, const Frontier& b);
 

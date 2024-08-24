@@ -79,7 +79,7 @@ namespace frontier_exploration
          */
         bool isNewFrontierCell(unsigned int idx, const std::vector<bool> &frontier_flag);
 
-        std::pair<double, double> getCentroidOfCells(std::vector<std::pair<double, double>> &cells, double max_cluster_size_in_m)
+        std::pair<double, double> getCentroidOfCells(std::vector<std::pair<double, double>> &cells, double distance_to_offset)
         {
             double sumX = 0;
             double sumY = 0;
@@ -92,23 +92,30 @@ namespace frontier_exploration
 
             double centerX = static_cast<double>(sumX) / cells.size();
             double centerY = static_cast<double>(sumY) / cells.size();
-
-            double varX = 0;
-            double varY = 0;
+            
+            bool offset_centroid = false;
+            double varX = 0, varY = 0;
             for (const auto &point : cells)
             {
+                if(sqrt(pow(point.first - centerX, 2) + pow(point.second - centerY, 2)) < costmap_.getResolution() * 3)
+                {
+                    offset_centroid = true;
+                }
                 varX += abs(point.first - centerX);
                 varY += abs(point.second - centerY);
             }
+            std::cout << "*************" << std::endl;
             std::cout << "Centroid before: " << centerX << " , " << centerY << std::endl;
+            std::cout << "VarX: " << varX << std::endl;
+            std::cout << "VarY: " << varY << std::endl;
 
-            if(varX > varY)
+            if(varX > varY && offset_centroid)
             {
-                centerY -= max_cluster_size_in_m;
+                centerY -= distance_to_offset;
             }
-            if(varX < varY)
+            if(varX < varY && offset_centroid)
             {
-                centerX -= max_cluster_size_in_m;
+                centerX -= distance_to_offset;
             }
 
             std::cout << "Centroid: " << centerX << " , " << centerY << std::endl;

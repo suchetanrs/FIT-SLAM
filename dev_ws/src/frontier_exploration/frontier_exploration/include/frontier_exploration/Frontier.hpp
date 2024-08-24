@@ -15,6 +15,25 @@
 #define ALPHA 0.5
 #define BETA 0.5 
 
+template <typename T>
+inline void setValue(std::shared_ptr<T>& ptr, T value) {
+    if (ptr == nullptr) {
+        ptr = std::make_shared<T>(value);
+    } else {
+        *ptr = value;
+    }
+}
+
+inline void setMapValue(std::shared_ptr<std::map<std::string, double>>& mapPtr, std::string key, double value) {
+    // Check if the map itself is initialized
+    if (mapPtr == nullptr) {
+        mapPtr = std::make_shared<std::map<std::string, double>>();
+    }
+
+    // Set or update the value for the given key in the map
+    (*mapPtr)[key] = value;
+}
+
 class Frontier {
 private:
     // Variables not unique to a robot
@@ -27,11 +46,13 @@ private:
 
     // Variables unique to a robot
     std::shared_ptr<double> path_length;
+    std::shared_ptr<double> path_length_m;
+    std::shared_ptr<double> path_heading;
     std::shared_ptr<double> fisher_information_in_path;
-    bool is_achievable;
+    std::shared_ptr<bool> is_achievable;
 
     // Individual costs
-    std::map<std::string, double> costs;
+    std::shared_ptr<std::map<std::string, double>> costs;
     // Weighted cost
     std::shared_ptr<double> weighted_cost;
 
@@ -53,9 +74,13 @@ public:
     
     void setPathLength(double pl);
 
+    void setPathLengthInM(double pl);
+
+    void setPathHeading(double heading_rad);
+
     void setFisherInformation(double fi);
 
-    void setCost(const std::string& costName, double value);
+    void setCost(std::string costName, double value);
 
     void setWeightedCost(double cost);
 
@@ -75,6 +100,10 @@ public:
     
     double getPathLength() const;
 
+    double getPathLengthInM() const;
+
+    double getPathHeading() const;
+
     double getFisherInformation() const;
 
     double getCost(const std::string& costName) const;
@@ -82,6 +111,17 @@ public:
     double getWeightedCost() const;
 
     bool isAchievable() const;
+
+    bool operator<(const Frontier& other) const {
+        return getUID() < other.getUID();
+    };
+
+    friend std::ostream& operator<<(std::ostream& os, const Frontier& obj) {
+        // Customize the output format here
+        os << "Frontier(x: " << obj.getGoalPoint().x << ", y: " << obj.getGoalPoint().y << ")";
+        os << "Frontier Path Length(PL: " << obj.getPathLength() << ", PLm: " << obj.getPathLength() << ")";
+        return os;
+    }
 };
 
 // Custom equality function
@@ -100,7 +140,7 @@ struct FrontierGoalPointEqualityInRange {
 inline size_t generateUID(const Frontier& output)
 {
     std::hash<double> hash_fn;
-    
+    // std::cout << "Generating UID" << std::endl;
     // Hash each double value
     std::size_t hash1 = hash_fn(output.getGoalPoint().x);
     std::size_t hash2 = hash_fn(output.getGoalPoint().y);

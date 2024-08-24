@@ -37,6 +37,7 @@
 #include <frontier_exploration/Helpers.hpp>
 #include <frontier_exploration/planners/FrontierRoadmap.hpp>
 #include <frontier_exploration/FisherInfoManager.hpp>
+#include <frontier_exploration/GeometryUtils.hpp>
 
 // ARRIVAL INFORMATION RELATED
 const double MAX_CAMERA_DEPTH = 2.0;
@@ -58,22 +59,24 @@ namespace frontier_exploration
         */
         void setArrivalInformationForFrontier(Frontier& goal_point_w, std::vector<double>& polygon_xy_min_max);
 
+        double setMaxArrivalInformation();
+
         // ----------------Planning related--------------------
         /**
          * Sets path length to inf if there is an error occurred or no path is found.
          * Sets Fisher information to 0 if there is an error occurred or no path is found.
          * If successful, sets the two values accordingly.
         */
-        void setPlanForFrontier(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
+        void setPlanForFrontier(geometry_msgs::msg::Pose start_pose_w, Frontier& goal_point_w,
                                                             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
 
         void setPlanForFrontierEuclidean(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
                                                             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
 
-        void setPlanForFrontierRoadmap(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
+        void setPlanForFrontierRoadmap(geometry_msgs::msg::Pose start_pose_w, Frontier& goal_point_w,
                                                             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
         
-        void updateRoadmapData(std::vector<Frontier>& frontiers);
+        void updateRoadmapData(geometry_msgs::msg::Pose& start_pose_w, std::vector<Frontier>& frontiers);
         
         // -----------------Random costs--------------
         double getRandomVal();
@@ -105,7 +108,12 @@ namespace frontier_exploration
 
         double getMaxArrivalInformation()
         {
-            return max_arrival_info_per_frontier;
+            return max_arrival_info_gt_;
+        };
+
+        std::shared_ptr<FrontierRoadMap> getRoadmapPtr()
+        {
+            return roadmap_ptr_;
         };
 
         void reset()
@@ -127,6 +135,7 @@ namespace frontier_exploration
         double min_arrival_info_per_frontier = std::numeric_limits<double>::max();
         double max_arrival_info_per_frontier = 0.0;
         double robot_radius_;
+        double max_arrival_info_gt_ = 0.0;
         
         std::shared_ptr<FrontierRoadMap> roadmap_ptr_;
         std::shared_ptr<FisherInformationManager> fisherInfoManager_ptr_;

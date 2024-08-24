@@ -13,12 +13,20 @@
 #include "frontier_exploration/colorize.hpp"
 #include "frontier_exploration/planners/astar.hpp"
 #include "frontier_exploration/rosVisualizer.hpp"
+#include "frontier_exploration/event_logger.hpp"
 
 const double GRID_CELL_SIZE = 1.0; // Assuming each cell is 1x1 in size
 const double RADIUS_TO_DECIDE_EDGES = 5.1; // a node within this radius of another node is considered a child of the other node.
 
 namespace frontier_exploration
 {
+    struct RoadmapPlanResult
+    {
+        std::vector<std::shared_ptr<Node>> path;
+        double path_length_m;
+        bool path_exists;
+    };
+
     class FrontierRoadMap
     {
     public:
@@ -40,7 +48,9 @@ namespace frontier_exploration
 
         void addNodes(const std::vector<Frontier> &frontiers, bool populateClosest);
 
-        void constructGraph();
+        void reConstructGraph();
+
+        void addRobotPoseAsNode(geometry_msgs::msg::Pose& start_pose_w);
 
         void populateNodes(const std::vector<Frontier> &frontiers, bool populateClosest);
 
@@ -50,13 +60,15 @@ namespace frontier_exploration
 
         void getClosestNode(const Frontier &interestNode, Frontier &closestNode);
 
-        void getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd);
+        RoadmapPlanResult getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd);
 
-        void getPlan(Frontier &startNode, Frontier &endNode);
+        RoadmapPlanResult getPlan(Frontier &startNode, bool useClosestToStart, Frontier &endNode, bool useClosestToEnd);
 
         void publishRoadMap();
 
-        void publishPlan(const std::vector<std::shared_ptr<Node>> &plan);
+        void publishPlan(const std::vector<std::shared_ptr<Node>> &plan, float r, float g, float b);
+
+        void publishPlan(const std::vector<Frontier> &plan);
 
         std::mutex& getRoadmapMutex()
         {
@@ -88,6 +100,7 @@ namespace frontier_exploration
         rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr clicked_point_sub_;
         std::vector<geometry_msgs::msg::Point> clicked_points_;
         std::shared_ptr<RosVisualizer> rosViz_;
+        std::shared_ptr<EventLogger> eventLogger_;
     };
 }
 

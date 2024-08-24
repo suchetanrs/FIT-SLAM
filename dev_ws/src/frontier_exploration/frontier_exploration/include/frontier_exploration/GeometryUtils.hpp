@@ -55,6 +55,11 @@ namespace frontier_exploration
         return sqrt(pow(f1.x - f2.x, 2) + pow(f1.y - f2.y, 2));
     };
 
+    inline double distanceBetweenPoints(const geometry_msgs::msg::Point &f1, const double x2, const double y2)
+    {
+        return sqrt(pow(f1.x - x2, 2) + pow(f1.y - y2, 2));
+    };
+
     inline double sqDistanceBetweenFrontiers(const Frontier &f1, const Frontier &f2)
     {
         return pow(f1.getGoalPoint().x - f2.getGoalPoint().x, 2) + pow(f1.getGoalPoint().y - f2.getGoalPoint().y, 2);

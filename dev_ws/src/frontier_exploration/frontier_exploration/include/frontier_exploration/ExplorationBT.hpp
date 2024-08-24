@@ -20,7 +20,7 @@
 #include "frontier_exploration/FrontierSearch.hpp"
 #include "frontier_exploration/Nav2Interface.hpp"
 #include "frontier_exploration/Helpers.hpp"
-
+#include "frontier_exploration/FullPathOptimizer.hpp"
 #include "behaviortree_cpp/bt_factory.h"
 
 namespace frontier_exploration
@@ -68,6 +68,7 @@ namespace frontier_exploration
         Frontier nextRoadMapParent_;
 
         std::shared_ptr<FrontierSearch> frontierSearchPtr_;
+        std::shared_ptr<FullPathOptimizer> full_path_optimizer_;
 
         std::mutex moving_lock_;
         bool moving_;
@@ -85,7 +86,6 @@ namespace frontier_exploration
         bool process_other_robots_;
         RobotActiveGoals robot_active_goals_;
         std::shared_ptr<TaskAllocator> task_allocator_ptr_;
-
         rclcpp::Node::SharedPtr bt_node_;
         BT::BehaviorTreeFactory factory;
         BT::Blackboard::Ptr blackboard;

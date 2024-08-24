@@ -228,7 +228,7 @@ void RosVisualizer::visualizeFrontierMarker(const std::vector<Frontier> &frontie
     visualization_msgs::msg::MarkerArray markers;
     int id = 0;
 
-    for (const auto& frontier : frontier_list)
+    for (const auto &frontier : frontier_list)
     {
         // Create a marker for each frontier
         visualization_msgs::msg::Marker marker;
@@ -256,7 +256,10 @@ void RosVisualizer::visualizeFrontierMarker(const std::vector<Frontier> &frontie
 
         // Set marker text
         std::stringstream ss;
-        ss << "weighted_cost:" << frontier.getWeightedCost() << "\n dist_ut:" << frontier.getCost("distance_utility") << "\n arrival_ut:" << frontier.getCost("arrival_gain_utility") << "\n lethal_pen:" << frontier.getCost("lethal_penalty_factor"); // Example: Display weighted cost
+        ss << "weighted_cost:" << frontier.getWeightedCost() << "\n dist_ut:" << frontier.getCost("distance_utility")
+           << "\n path_len:" << frontier.getPathLength() << ", " << frontier.getPathLengthInM() << "\n path_heading:" << frontier.getPathHeading() * 180 / M_PI
+           << "\n arrival_ut:" << frontier.getCost("arrival_gain_utility") << "\n arrival_info:" << frontier.getArrivalInformation()
+           << "\n achievability:" << frontier.isAchievable(); // Example: Display weighted cost
         marker.text = ss.str();
 
         markers.markers.push_back(marker);
@@ -277,8 +280,8 @@ void RosVisualizer::visualizeFrontierMarker(const std::vector<Frontier> &frontie
 
         // Set marker scale (sphere diameter)
         arrow_marker.scale.x = 0.25; // Arrow length
-        arrow_marker.scale.y = 0.1; // Arrow width
-        arrow_marker.scale.z = 0.1; // Arrow height
+        arrow_marker.scale.y = 0.1;  // Arrow width
+        arrow_marker.scale.z = 0.1;  // Arrow height
 
         // Set marker color
         arrow_marker.color.a = 0.5; // Fully opaque

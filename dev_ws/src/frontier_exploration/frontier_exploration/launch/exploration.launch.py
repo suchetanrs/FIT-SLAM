@@ -56,6 +56,8 @@ def generate_launch_description():
             package='frontier_exploration',
             executable='explore_server',
             output='screen',
+            # prefix=['gdbserver localhost:3000'],
+            # emulate_tty=True,
             namespace=context.launch_configurations['robot_namespace'],
             parameters=[configured_params])
         

@@ -1,27 +1,3 @@
-bash
-./shell_scripts/scout_2_exploration.sh 
-ros2 topic echo /scout_1/execution_pose
-ros2 topic echo /scout_2/execution_pose
-./shell_scripts/scout_2_exploration.sh 
-bash
-bash
-./shell_scripts/3_exploration.sh 
-clear
-./shell_scripts/3_exploration.sh 
-bash
-cd dev_ws/
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kk
-clear
-ros2 run exploration_sim explore_sim 
-k
-kk
-k
-kk
-ros2 run exploration_sim explore_sim 
 kill -9 %1
 clear
 ros2 run exploration_sim explore_sim 
@@ -1998,3 +1974,27 @@ make install
 cd
 cd dev_ws/
 c\olcon build --symlink-install
+clear
+ls
+cd dev_ws/
+vsc
+cat ~/.tmux.conf 
+bash
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+rviz2
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+rviz2
+ls
+rm -rf ram.sh 
+ls
+nano launch_exploration.sh
+vsc
+tmux
+ls
+sudo chmod +x launch_exploration.sh 
+./launch_exploration.sh 
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+cd dev_ws && vsc
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+rviz2

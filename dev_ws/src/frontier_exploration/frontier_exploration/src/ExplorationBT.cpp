@@ -131,16 +131,19 @@ namespace frontier_exploration
         BT::NodeStatus onStart() override
         {
             frontierSearchPtr_->reset();
+            explore_costmap_ros_->getCostmap()->getMutex()->lock();
             std::cout << COLOR_STR("SearchForFrontiersBT OnStart called ", ros_node_ptr_->get_namespace()) << std::endl;
-            geometry_msgs::msg::PoseStamped pose;
-            explore_costmap_ros_->getRobotPose(pose);
-            auto frontier_list = frontierSearchPtr_->searchFrom(pose.pose.position);
+            geometry_msgs::msg::PoseStamped robotP;
+            explore_costmap_ros_->getRobotPose(robotP);
+            config().blackboard->set<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP); 
+            auto frontier_list = frontierSearchPtr_->searchFrom(robotP.pose.position);
             auto every_frontier = frontierSearchPtr_->getAllFrontiers();
             if (frontier_list.size() == 0)
             {
                 double increment_value = 0.1;
                 getInput("increment_search_distance_by", increment_value);
                 frontierSearchPtr_->incrementSearchDistance(increment_value);
+                explore_costmap_ros_->getCostmap()->getMutex()->unlock();
                 return BT::NodeStatus::FAILURE;
             }
             setOutput("frontier_list", frontier_list);
@@ -258,14 +261,14 @@ namespace frontier_exploration
                 BT::RuntimeError("No correct input recieved for every_frontier");
             }
 
-            explore_costmap_ros_->getRobotPose(frontierCostsRequestPtr->start_pose);
+            config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", frontierCostsRequestPtr->start_pose);
             config().blackboard->get<std::vector<Frontier>>("frontier_blacklist", frontierCostsRequestPtr->prohibited_frontiers);
-
             bool frontierCostsSuccess = bel_ptr_->getFrontierCosts(frontierCostsRequestPtr, frontierCostsResultPtr);
             std::cout << COLOR_STR("Sent GNF request", ros_node_ptr_->get_namespace()) << std::endl;
             if (frontierCostsSuccess == false)
             {
                 std::cout << COLOR_STR("Failed to receive response for getNextFrontier called from within the robot.", ros_node_ptr_->get_namespace()) << std::endl;
+                explore_costmap_ros_->getCostmap()->getMutex()->unlock();
                 return BT::NodeStatus::FAILURE;
             }
             setOutput("frontier_costs_result", frontierCostsResultPtr->frontier_list);
@@ -301,15 +304,59 @@ namespace frontier_exploration
         rclcpp::Node::SharedPtr ros_node_ptr_;
     };
 
+    class OptimizeFullPath : public BT::StatefulActionNode
+    {
+    public:
+        OptimizeFullPath(const std::string &name, const BT::NodeConfig &config,
+                          std::shared_ptr<FullPathOptimizer> full_path_optimizer,
+                          std::shared_ptr<BoundedExploreLayer> bel_ptr) : BT::StatefulActionNode(name, config)
+        {
+            full_path_optimizer_ = full_path_optimizer;
+            // std::cout << COLOR_STR("OptimizeFullPath Constructor", ros_node_ptr_->get_namespace()) << std::endl;
+        }
+
+        BT::NodeStatus onStart() override
+        {
+            // std::cout << COLOR_STR("OptimizeFullPath OnStart called ", ros_node_ptr_->get_namespace()) << std::endl;
+            std::vector<Frontier> globalFrontierList;
+            getInput<std::vector<Frontier>>("frontier_costs_result", globalFrontierList);
+            // full_path_optimizer_->getTopThreeFrontiers(globalFrontierList);
+            geometry_msgs::msg::PoseStamped robotP;
+            config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP);
+            full_path_optimizer_->publishLocalSearchArea(globalFrontierList, 3, robotP);
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        BT::NodeStatus onRunning()
+        {
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        void onHalted()
+        {
+            return;
+        }
+
+        static BT::PortsList providedPorts()
+        {
+            return {BT::InputPort<std::vector<Frontier>>("frontier_costs_result"),
+                    BT::OutputPort<Frontier>("allocated_frontier")};
+        }
+
+        std::shared_ptr<FullPathOptimizer> full_path_optimizer_;
+    };
+
     class GetAllocatedGoalBT : public BT::StatefulActionNode
     {
     public:
         GetAllocatedGoalBT(const std::string &name, const BT::NodeConfig &config,
                           std::shared_ptr<TaskAllocator> taskAllocator,
-                          rclcpp::Node::SharedPtr ros_node_ptr) : BT::StatefulActionNode(name, config)
+                          rclcpp::Node::SharedPtr ros_node_ptr, 
+                          std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros) : BT::StatefulActionNode(name, config)
         {
             taskAllocator_ = taskAllocator;
             ros_node_ptr_ = ros_node_ptr;
+            explore_costmap_ros_ = explore_costmap_ros;
             std::cout << "!!!!! NODE NAME! " << ros_node_ptr_->get_namespace() << std::endl;
             std::cout << COLOR_STR("GetAllocatedGoalBT Constructor", ros_node_ptr_->get_namespace()) << std::endl;
         }
@@ -331,6 +378,7 @@ namespace frontier_exploration
             std::cout << COLOR_STR("Allocated frontier oy:" + std::to_string(allocatedFrontier.getGoalOrientation().y), ros_node_ptr_->get_namespace()) << std::endl;
             std::cout << COLOR_STR("Allocated frontier uid:" + std::to_string(allocatedFrontier.getUID()), ros_node_ptr_->get_namespace()) << std::endl;
             setOutput<Frontier>("allocated_frontier", allocatedFrontier);
+            explore_costmap_ros_->getCostmap()->getMutex()->unlock();
             return BT::NodeStatus::SUCCESS;
         }
 
@@ -352,6 +400,7 @@ namespace frontier_exploration
 
         std::shared_ptr<TaskAllocator> taskAllocator_;
         rclcpp::Node::SharedPtr ros_node_ptr_;
+        std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
     };
 
     class SendNav2Goal : public BT::StatefulActionNode
@@ -584,7 +633,7 @@ namespace frontier_exploration
             rmw_qos_profile_default, multirobot_service_callback_group_);
 
         frontierSearchPtr_ = std::make_shared<FrontierSearch>(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_, max_frontier_distance_);
-
+        full_path_optimizer_ = std::make_shared<FullPathOptimizer>(bt_node_, explore_costmap_ros_, bel_ptr_->getCostManagerPtr()->getCostCalcPtr()->getRoadmapPtr());
         //---------------------------------------------ROS RELATED------------------------------------------
         tf_listener_ = std::make_shared<tf2_ros::Buffer>(bt_node_->get_clock());
         RCLCPP_INFO_STREAM(bt_node_->get_logger(), COLOR_STR("FrontierExplorationServer::FrontierExplorationServer()", bt_node_->get_namespace()));
@@ -634,11 +683,18 @@ namespace frontier_exploration
             return std::make_unique<ProcessFrontierCostsBT>(name, config, explore_costmap_ros_, bel_ptr_, robot_active_goals_, task_allocator_ptr_, bt_node_);
         };
         factory.registerBuilder<ProcessFrontierCostsBT>("ProcessFrontierCosts", builder_frontier_costs);
+        
+        BT::NodeBuilder builder_full_path_optimizer =
+            [&](const std::string &name, const BT::NodeConfiguration &config)
+        {
+            return std::make_unique<OptimizeFullPath>(name, config, full_path_optimizer_, bel_ptr_);
+        };
+        factory.registerBuilder<OptimizeFullPath>("OptimizeFullPath", builder_full_path_optimizer);
 
         BT::NodeBuilder builder_task_allocator =
             [&](const std::string &name, const BT::NodeConfiguration &config)
         {
-            return std::make_unique<GetAllocatedGoalBT>(name, config, task_allocator_ptr_, bt_node_);
+            return std::make_unique<GetAllocatedGoalBT>(name, config, task_allocator_ptr_, bt_node_, explore_costmap_ros_);
         };
         factory.registerBuilder<GetAllocatedGoalBT>("GetAllocatedGoal", builder_task_allocator);
 

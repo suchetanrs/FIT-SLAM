@@ -11,23 +11,30 @@ Frontier::Frontier()
     theta_s_star = nullptr;
     information = nullptr;
     path_length = nullptr;
+    path_length_m = nullptr;
+    path_heading = nullptr;
+    fisher_information_in_path = nullptr;
+    is_achievable = std::make_shared<bool>(true);
+    costs = nullptr;
     weighted_cost = nullptr;
-    is_achievable = true;
 }
 
 void Frontier::setUID(size_t uid)
 {
-    unique_id = std::make_shared<size_t>(uid);
+    setValue(unique_id, uid);
+    // unique_id = std::make_shared<size_t>(uid);
 }
 
 void Frontier::setSize(int sz)
 {
-    size = std::make_shared<int>(sz);
+    setValue(size, sz);
+    // size = std::make_shared<int>(sz);
 }
 
 void Frontier::setGoalPoint(geometry_msgs::msg::Point gp)
 {
-    goal_point = std::make_shared<geometry_msgs::msg::Point>(gp);
+    setValue(goal_point, gp);
+    // goal_point = std::make_shared<geometry_msgs::msg::Point>(gp);
 }
 
 void Frontier::setGoalPoint(double x, double y)
@@ -35,63 +42,93 @@ void Frontier::setGoalPoint(double x, double y)
     geometry_msgs::msg::Point pnt;
     pnt.x = x;
     pnt.y = y;
-    goal_point = std::make_shared<geometry_msgs::msg::Point>(pnt);
+    setValue(goal_point, pnt);
+    // goal_point = std::make_shared<geometry_msgs::msg::Point>(pnt);
 }
 
 void Frontier::setGoalOrientation(double theta)
 {
-    theta_s_star = std::make_shared<double>(theta);
-    best_orientation = std::make_shared<geometry_msgs::msg::Quaternion>(nav2_util::geometry_utils::orientationAroundZAxis(theta));
+    setValue(theta_s_star, theta);
+    // theta_s_star = std::make_shared<double>(theta);
+    setValue(best_orientation, nav2_util::geometry_utils::orientationAroundZAxis(theta));
+    // best_orientation = std::make_shared<geometry_msgs::msg::Quaternion>(nav2_util::geometry_utils::orientationAroundZAxis(theta));
 }
 
 void Frontier::setArrivalInformation(double info)
 {
-    information = std::make_shared<double>(info);
+    setValue(information, info);
+    // information = std::make_shared<double>(info);
 }
 
 void Frontier::setPathLength(double pl)
 {
-    path_length = std::make_shared<double>(pl);
+    setValue(path_length, pl);
+    // path_length = std::make_shared<double>(pl);
+}
+
+void Frontier::setPathLengthInM(double pl)
+{
+    setValue(path_length_m, pl);
+    // path_length_m = std::make_shared<double>(pl);
+}
+
+void Frontier::setPathHeading(double heading_rad)
+{
+    setValue(path_heading, heading_rad);
+    // path_heading = std::make_shared<double>(heading_rad);
 }
 
 void Frontier::setFisherInformation(double fi)
 {
-    fisher_information_in_path = std::make_shared<double>(fi);
+    setValue(fisher_information_in_path, fi);
+    // fisher_information_in_path = std::make_shared<double>(fi);
 }
 
-void Frontier::setCost(const std::string &costName, double value)
+void Frontier::setCost(std::string costName, double value)
 {
-    costs[costName] = value;
+    setMapValue(costs, costName, value);
+    // costs[costName] = value;
 }
 
 void Frontier::setWeightedCost(double cost)
 {
-    weighted_cost = std::make_shared<double>(cost);
+    setValue(weighted_cost, cost);
+    // weighted_cost = std::make_shared<double>(cost);
 }
 
 void Frontier::setAchievability(bool value)
 {
-    is_achievable = value;
+    setValue(is_achievable, value);
+    // is_achievable = value;
 }
 
 // Equality operator definition
 bool Frontier::operator==(const Frontier &other) const
 {
-    if (unique_id != other.unique_id ||
-        size != other.size)
+    // if (!unique_id)
+    //     throw std::runtime_error("Cannot check equality. unique_id is null");
+    // if (!size)
+    //     throw std::runtime_error("Cannot check equality. size is null");
+    if (!goal_point || !other.goal_point)
+        throw std::runtime_error("Cannot check equality. goal_point is null");
+    // if (!best_orientation)
+    //     throw std::runtime_error("Cannot check equality. best_orientation is null");
+
+    // if (*unique_id != *other.unique_id ||
+    //     *size != *other.size)
+    // {
+    //     return false;
+    // }
+
+    if (*goal_point != *other.goal_point)
     {
         return false;
     }
 
-    if (goal_point != other.goal_point)
-    {
-        return false;
-    }
-
-    if (best_orientation != other.best_orientation)
-    {
-        return false;
-    }
+    // if (*best_orientation != *other.best_orientation)
+    // {
+    //     return false;
+    // }
 
     return true;
 }
@@ -138,6 +175,20 @@ double Frontier::getPathLength() const
     return *path_length;
 }
 
+double Frontier::getPathLengthInM() const
+{
+    if (path_length_m == nullptr)
+        throw std::runtime_error("Path length in m frontier property is null");
+    return *path_length_m;
+}
+
+double Frontier::getPathHeading() const
+{
+    if (path_heading == nullptr)
+        throw std::runtime_error("Path heading frontier property is null");
+    return *path_heading;
+}
+
 double Frontier::getFisherInformation() const
 {
     if (fisher_information_in_path == nullptr)
@@ -147,8 +198,10 @@ double Frontier::getFisherInformation() const
 
 double Frontier::getCost(const std::string &costName) const
 {
-    auto it = costs.find(costName);
-    if (it != costs.end())
+    if (costs == nullptr)
+        throw std::runtime_error("Costs map is null");
+    auto it = costs->find(costName);
+    if (it != costs->end())
     {
         return it->second;
     }
@@ -164,7 +217,9 @@ double Frontier::getWeightedCost() const
 
 bool Frontier::isAchievable() const
 {
-    return is_achievable;
+    if (is_achievable == nullptr)
+        throw std::runtime_error("Is achievable property is null");
+    return *is_achievable;
 }
 
 // double Frontier::getWeightedCost() {

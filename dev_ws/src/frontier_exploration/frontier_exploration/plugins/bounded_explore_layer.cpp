@@ -40,7 +40,7 @@ namespace frontier_exploration
         rclcpp::shutdown();
     }
 
-    bool BoundedExploreLayer::processOurApproach(std::vector<Frontier> &frontier_list, geometry_msgs::msg::Point& start_point_w)
+    bool BoundedExploreLayer::processOurApproach(std::vector<Frontier> &frontier_list, geometry_msgs::msg::Pose& start_pose_w)
     {
         RCLCPP_DEBUG_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::processOurApproach", internal_node_->get_logger().get_name()));
         auto startTime = std::chrono::high_resolution_clock::now();
@@ -52,15 +52,15 @@ namespace frontier_exploration
         std::vector<std::vector<std::string>> costTypes;
         for (auto frontier: frontier_list)
         {
-            costTypes.push_back({"A*PlannerDistance", "ArrivalInformation"});
-            // costTypes.push_back({"RoadmapPlannerDistance", "ArrivalInformation"});
+            // costTypes.push_back({"A*PlannerDistance", "ArrivalInformation"});
+            costTypes.push_back({"RoadmapPlannerDistance", "ArrivalInformation"});
             // costTypes.push_back({"EuclideanDistance", "ArrivalInformation"});
             // costTypes.push_back({"RandomCosts"});
             // costTypes.push_back({});
         }
         // Select the frontier
         bool costsResult;
-        costsResult = frontierSelect_->assignCosts(frontier_list, polygon_xy_min_max_, start_point_w, response_map_data, costTypes);
+        costsResult = frontierSelect_->assignCosts(frontier_list, polygon_xy_min_max_, start_pose_w, response_map_data, costTypes);
         if (costsResult == false)
         {
             RCLCPP_ERROR(internal_node_->get_logger(), "The selection result for our method is false!");
@@ -92,7 +92,7 @@ namespace frontier_exploration
 
         if (exploration_mode_ == "ours")
         {
-            bool costsResult = BoundedExploreLayer::processOurApproach(requestData->frontier_list, requestData->start_pose.pose.position);
+            bool costsResult = BoundedExploreLayer::processOurApproach(requestData->frontier_list, requestData->start_pose.pose);
             if (costsResult == false)
             {
                 resultData->success = false;

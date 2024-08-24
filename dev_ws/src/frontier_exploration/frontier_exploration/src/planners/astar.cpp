@@ -10,6 +10,10 @@ double FrontierRoadmapAStar::heuristic(const Node& a, const Node& b) {
     return (a.frontier.getGoalPoint().x - b.frontier.getGoalPoint().x) * (a.frontier.getGoalPoint().x - b.frontier.getGoalPoint().x) + (a.frontier.getGoalPoint().y - b.frontier.getGoalPoint().y) * (a.frontier.getGoalPoint().y - b.frontier.getGoalPoint().y);
 }
 
+double FrontierRoadmapAStar::heuristic(std::shared_ptr<Node> a, std::shared_ptr<Node> b) {
+    return (a->frontier.getGoalPoint().x - b->frontier.getGoalPoint().x) * (a->frontier.getGoalPoint().x - b->frontier.getGoalPoint().x) + (a->frontier.getGoalPoint().y - b->frontier.getGoalPoint().y) * (a->frontier.getGoalPoint().y - b->frontier.getGoalPoint().y);
+}
+
 double FrontierRoadmapAStar::heuristic(const Frontier& a, const Frontier& b) {
     return (a.getGoalPoint().x - b.getGoalPoint().x) * (a.getGoalPoint().x - b.getGoalPoint().x) + (a.getGoalPoint().y - b.getGoalPoint().y) * (a.getGoalPoint().y - b.getGoalPoint().y);
 }
@@ -34,8 +38,8 @@ std::vector<std::shared_ptr<Node>> FrontierRoadmapAStar::getSuccessors(std::shar
 }
 
 // A* Algorithm function
-std::vector<std::shared_ptr<Node>> FrontierRoadmapAStar::getPlan(const Frontier& start, const Frontier& goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_) {
-    // PROFILE_FUNCTION;
+std::pair<std::vector<std::shared_ptr<Node>>, double> FrontierRoadmapAStar::getPlan(const Frontier& start, const Frontier& goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_) {
+    PROFILE_FUNCTION;
     auto start_ = std::make_shared<Node>(start, 0, 0);
     auto goal_ = std::make_shared<Node>(goal, 0, 0);
     std::priority_queue<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, fCostNodeCompare> openList; // Min-heap priority queue
@@ -53,12 +57,15 @@ std::vector<std::shared_ptr<Node>> FrontierRoadmapAStar::getPlan(const Frontier&
         if (current->frontier.getGoalPoint().x == goal_->frontier.getGoalPoint().x && current->frontier.getGoalPoint().y == goal_->frontier.getGoalPoint().y) {
             std::vector<std::shared_ptr<Node>> path;
             std::shared_ptr<Node> node = allNodes[current->frontier.getUID()];
+            double total_path_length = 0;
             while (node != nullptr) {
                 path.push_back(node);
+                if(path.size() > 1)
+                    total_path_length += sqrt(heuristic(path[path.size() - 2], node));
                 node = node->parent;
             }
             reverse(path.begin(), path.end());
-            return path;
+            return std::make_pair(path, total_path_length);
         }
 
         closedSet.insert(current->frontier.getUID());
@@ -82,7 +89,7 @@ std::vector<std::shared_ptr<Node>> FrontierRoadmapAStar::getPlan(const Frontier&
     }
 
     // If no path found, return an empty path
-    return std::vector<std::shared_ptr<Node>>();
+    return std::make_pair(std::vector<std::shared_ptr<Node>>(), 0);
 }
 
 // int main() {

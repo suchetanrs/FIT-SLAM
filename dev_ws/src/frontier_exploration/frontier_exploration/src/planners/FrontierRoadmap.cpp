@@ -28,6 +28,7 @@ namespace frontier_exploration
                        { rclcpp::spin(node_); });
         t1.detach();
         rosViz_ = std::make_shared<RosVisualizer>(node_, costmap_);
+        eventLogger_ = std::make_shared<EventLogger>("roadmap");
     }
 
     void FrontierRoadMap::clickedPointCallback(const geometry_msgs::msg::PointStamped::SharedPtr msg)
@@ -59,14 +60,18 @@ namespace frontier_exploration
 
     void FrontierRoadMap::addNodes(const std::vector<Frontier> &frontiers, bool populateClosest)
     {
+        eventLogger_->startEvent("addNodes");
         RCLCPP_INFO_STREAM(node_->get_logger(), "Addition frontier list size:" << frontiers.size());
+        eventLogger_->startEvent("populateNodes");
+        populateNodes(frontiers, populateClosest);
+        eventLogger_->endEvent("populateNodes");
+        eventLogger_->endEvent("addNodes");
+    }
+
+    void FrontierRoadMap::reConstructGraph()
+    {
         geometry_msgs::msg::PoseStamped robotPose;
         explore_costmap_ros_->getRobotPose(robotPose);
-        populateNodes(frontiers, populateClosest);
-        // roadmap_mutex_.lock();
-        // roadmap_.clear();
-        // roadmap_mutex_.unlock();
-
         // Add each point as a child of the parent if no obstacle is present
         spatial_hash_map_mutex_.lock();
         for (const auto &pair : spatial_hash_map_)
@@ -103,12 +108,35 @@ namespace frontier_exploration
                 }
             }
         }
+        // roadmap_mutex_.lock();
+        // roadmap_.clear();
+        // roadmap_mutex_.unlock();
         spatial_hash_map_mutex_.unlock();
+        eventLogger_->startEvent("publishRoadmap");
         publishRoadMap();
+        eventLogger_->endEvent("publishRoadmap");
     }
 
-    void FrontierRoadMap::getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd)
+    void FrontierRoadMap::addRobotPoseAsNode(geometry_msgs::msg::Pose& start_pose_w)
     {
+        Frontier start;
+        start.setGoalPoint(start_pose_w.position.x, start_pose_w.position.y);
+        start.setUID(generateUID(start));
+        std::vector<Frontier> frontier_vec;
+        frontier_vec.push_back(start);
+        addNodes(frontier_vec, false);
+    }
+
+    RoadmapPlanResult FrontierRoadMap::getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd)
+    {
+        RoadmapPlanResult planResult;
+        if(xs == xe && ys == ye)
+        {
+            planResult.path_exists = true;
+            planResult.path_length_m = 0.0;
+            planResult.path = std::vector<std::shared_ptr<Node>>();
+            return planResult;
+        }
         Frontier start;
         start.setGoalPoint(xs, ys);
         start.setUID(generateUID(start));
@@ -116,10 +144,17 @@ namespace frontier_exploration
         {
             if (!useClosestToStart)
             {
-                std::vector<Frontier> frontier_vec;
-                frontier_vec.push_back(start);
-                addNodes(frontier_vec, false);
-                start_closest = start;
+                if(roadmap_.count(start) == 0)
+                {
+                    std::vector<Frontier> frontier_vec;
+                    frontier_vec.push_back(start);
+                    addNodes(frontier_vec, false);
+                    start_closest = start;
+                }
+                else
+                {
+                    std::cout << "Start node: " << xs << ", " << ys << " already in the roadmap" << std::endl;
+                }
             }
             else
             {
@@ -134,10 +169,17 @@ namespace frontier_exploration
         {
             if (!useClosestToEnd)
             {
-                std::vector<Frontier> frontier_vec;
-                frontier_vec.push_back(goal);
-                addNodes(frontier_vec, false);
-                goal_closest = goal;
+                if(roadmap_.count(goal) == 0)
+                {
+                    std::vector<Frontier> frontier_vec;
+                    frontier_vec.push_back(goal);
+                    addNodes(frontier_vec, false);
+                    goal_closest = goal;
+                }
+                else
+                {
+                    std::cout << "End node: " << xs << ", " << ys << " already in the roadmap" << std::endl;
+                }
             }
             else
             {
@@ -146,15 +188,27 @@ namespace frontier_exploration
         }
 
         roadmap_mutex_.lock();
-        auto plan = astar_planner_->getPlan(start_closest, goal_closest, roadmap_);
+        auto aStarResult = astar_planner_->getPlan(start_closest, goal_closest, roadmap_);
+        planResult.path = aStarResult.first;
+        planResult.path_length_m = aStarResult.second;
+        if(planResult.path.size() == 0)
+        {
+            planResult.path_exists = false;
+            roadmap_mutex_.unlock();
+            return planResult;
+        }
         // RCLCPP_WARN(node_->get_logger(), "Plan size: %d", plan.size());
         // rclcpp::sleep_for(std::chrono::seconds(1));
         roadmap_mutex_.unlock();
-        publishPlan(plan);
+        eventLogger_->startEvent("publishPlan");
+        publishPlan(planResult.path, 0.0, 0.0, 1.0);
+        eventLogger_->endEvent("publishPlan");
+        return planResult;
     }
 
-    void FrontierRoadMap::getPlan(Frontier &startNode, Frontier &endNode)
+    RoadmapPlanResult FrontierRoadMap::getPlan(Frontier &startNode, bool useClosestToStart, Frontier &endNode, bool useClosestToEnd)
     {
+        return getPlan(startNode.getGoalPoint().x, startNode.getGoalPoint().y, useClosestToStart, endNode.getGoalPoint().x, endNode.getGoalPoint().y, useClosestToEnd);
         // Frontier start;
         // Frontier goal;
         // start.setGoalPoint(xs, ys);
@@ -194,7 +248,7 @@ namespace frontier_exploration
 
     void FrontierRoadMap::populateNodes(const std::vector<Frontier> &frontiers, bool populateClosest)
     {
-        PROFILE_FUNCTION;
+        // PROFILE_FUNCTION;
         for (auto &new_frontier : frontiers)
         {
             bool isNew = true;
@@ -259,7 +313,7 @@ namespace frontier_exploration
 
     void FrontierRoadMap::getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, const double radius)
     {
-        PROFILE_FUNCTION;
+        // PROFILE_FUNCTION;
         // Get the central grid cell of the interest node
         auto interest_point = interestNode.getGoalPoint();
         auto center_cell = getGridCell(interest_point.x, interest_point.y);
@@ -288,7 +342,7 @@ namespace frontier_exploration
 
     void FrontierRoadMap::getNodesWithinRadius(const geometry_msgs::msg::Point &interestPoint, std::vector<Frontier> &closestNodeVector, const double radius)
     {
-        PROFILE_FUNCTION;
+        // PROFILE_FUNCTION;
         // Get the central grid cell of the interest node
         auto center_cell = getGridCell(interestPoint.x, interestPoint.y);
 
@@ -413,7 +467,70 @@ namespace frontier_exploration
         marker_pub_roadmap_->publish(marker_array);
     }
 
-    void FrontierRoadMap::publishPlan(const std::vector<std::shared_ptr<Node>> &plan)
+    void FrontierRoadMap::publishPlan(const std::vector<std::shared_ptr<Node>> &plan, float r, float g, float b)
+    {
+        if (plan.size() == 0)
+            return;
+        // Create a MarkerArray to hold the markers for the plan
+        visualization_msgs::msg::MarkerArray marker_array;
+
+        // Marker for nodes
+        visualization_msgs::msg::Marker node_marker;
+        node_marker.header.frame_id = "map";
+        node_marker.header.stamp = rclcpp::Clock().now();
+        node_marker.ns = "plan_nodes";
+        node_marker.type = visualization_msgs::msg::Marker::SPHERE_LIST;
+        node_marker.action = visualization_msgs::msg::Marker::ADD;
+        node_marker.pose.orientation.w = 1.0;
+        node_marker.scale.x = 0.2; // Size of each sphere
+        node_marker.scale.y = 0.2;
+        node_marker.scale.z = 0.2;
+        node_marker.color.a = 1.0; // Fully opaque
+        node_marker.color.r = r;
+        node_marker.color.g = g;
+        node_marker.color.b = b; // Blue color for plan nodes
+
+        // Marker for edges
+        visualization_msgs::msg::Marker edge_marker;
+        edge_marker.header.frame_id = "map";
+        edge_marker.header.stamp = rclcpp::Clock().now();
+        edge_marker.ns = "plan_edges";
+        edge_marker.type = visualization_msgs::msg::Marker::LINE_LIST;
+        edge_marker.action = visualization_msgs::msg::Marker::ADD;
+        edge_marker.pose.orientation.w = 1.0;
+        edge_marker.scale.x = 0.15; // Thickness of the lines
+        edge_marker.color.a = 1.0;  // Fully opaque
+        edge_marker.color.r = 0.0;
+        edge_marker.color.g = 0.0;
+        edge_marker.color.b = 1.0;
+
+        // Populate the markers
+        for (const auto &node : plan)
+        {
+            geometry_msgs::msg::Point point = node->frontier.getGoalPoint();
+            node_marker.points.push_back(point);
+        }
+
+        for (size_t i = 0; i < plan.size() - 1; ++i)
+        {
+            std::cout << "New start point in plan: " << plan[i]->frontier.getGoalPoint().x << ", " << plan[i]->frontier.getGoalPoint().y << std::endl;
+            std::cout << "New end point in plan: " << plan[i + 1]->frontier.getGoalPoint().x << ", " << plan[i + 1]->frontier.getGoalPoint().y << std::endl;
+            geometry_msgs::msg::Point start_point = plan[i]->frontier.getGoalPoint();
+            geometry_msgs::msg::Point end_point = plan[i + 1]->frontier.getGoalPoint();
+
+            edge_marker.points.push_back(start_point);
+            edge_marker.points.push_back(end_point);
+        }
+
+        // Add the markers to the marker array
+        marker_array.markers.push_back(node_marker);
+        marker_array.markers.push_back(edge_marker);
+
+        // Publish the markers
+        marker_pub_plan_->publish(marker_array);
+    }
+
+    void FrontierRoadMap::publishPlan(const std::vector<Frontier> &plan)
     {
         if (plan.size() == 0)
             return;
@@ -446,21 +563,21 @@ namespace frontier_exploration
         edge_marker.pose.orientation.w = 1.0;
         edge_marker.scale.x = 0.15; // Thickness of the lines
         edge_marker.color.a = 1.0;  // Fully opaque
-        edge_marker.color.r = 0.0;
+        edge_marker.color.r = 1.0;
         edge_marker.color.g = 0.0;
-        edge_marker.color.b = 1.0;
+        edge_marker.color.b = 0.0;
 
         // Populate the markers
         for (const auto &node : plan)
         {
-            geometry_msgs::msg::Point point = node->frontier.getGoalPoint();
+            geometry_msgs::msg::Point point = node.getGoalPoint();
             node_marker.points.push_back(point);
         }
 
         for (size_t i = 0; i < plan.size() - 1; ++i)
         {
-            geometry_msgs::msg::Point start_point = plan[i]->frontier.getGoalPoint();
-            geometry_msgs::msg::Point end_point = plan[i + 1]->frontier.getGoalPoint();
+            geometry_msgs::msg::Point start_point = plan[i].getGoalPoint();
+            geometry_msgs::msg::Point end_point = plan[i + 1].getGoalPoint();
 
             edge_marker.points.push_back(start_point);
             edge_marker.points.push_back(end_point);

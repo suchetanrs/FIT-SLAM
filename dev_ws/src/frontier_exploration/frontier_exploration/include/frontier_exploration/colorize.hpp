@@ -47,52 +47,52 @@ Attributes	        Foreground color	   Background color
 #define DEBUG_LEVEL 0
 #define LOG_LEVEL 3
 
-inline std::string COLOR_STR(const std::string &str, const char *robotName)
-{
-    if (static_cast<std::string>(robotName).compare(0, 8, "/robot_0") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_1") == 0)
-        return "\e[0;42m" + str + "\e[m";
-    else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_2") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_2") == 0)
-        return "\e[0;44m" + str + "\e[m";
-    else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_3") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
-        return "\e[0;41m" + str + "\e[m";
-    else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_4") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
-        return "\e[0;40m" + str + "\e[m";
-    else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_5") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
-        return "\e[0;40m" + str + "\e[m";
-    else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_6") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
-        return "\e[0;40m" + str + "\e[m";
-    return static_cast<std::string>(robotName);
-}
+// inline std::string COLOR_STR(const std::string &str, const char *robotName)
+// {
+//     if (static_cast<std::string>(robotName).compare(0, 8, "/robot_0") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_1") == 0)
+//         return "\e[0;42m" + str + "\e[m";
+//     else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_2") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_2") == 0)
+//         return "\e[0;44m" + str + "\e[m";
+//     else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_3") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
+//         return "\e[0;41m" + str + "\e[m";
+//     else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_4") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
+//         return "\e[0;40m" + str + "\e[m";
+//     else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_5") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
+//         return "\e[0;40m" + str + "\e[m";
+//     else if (static_cast<std::string>(robotName).compare(0, 8, "/scout_6") == 0 || static_cast<std::string>(robotName).compare(0, 7, "scout_3") == 0)
+//         return "\e[0;40m" + str + "\e[m";
+//     return static_cast<std::string>(robotName);
+// }
 
-// #define LOG_INFO2(X, node) \
-//     if (LOG_LEVEL > 3) RCLCPP_INFO_STREAM(node, log_info2(X));
-#define LOG_INFO(X)    \
-    if (LOG_LEVEL > 2) \
-        std::cout << GET_STR_STREAM("\e[0;32m" << X << "\e[m") << std::endl;
-#define LOG_WARN(X)    \
-    if (LOG_LEVEL > 1) \
-        std::cout << GET_STR_STREAM("\e[0;93m" << X << "\e[m") << std::endl;
-#define LOG_ERROR(X)   \
-    if (LOG_LEVEL > 0) \
-        std::cout << GET_STR_STREAM("\e[0;31m" << X << "\e[m") << std::endl;
-#define LOG_FATAL(X) std::cout << GET_STR_STREAM("\e[1;37;41m" << X << "\e[m") << std::endl;
+// // #define LOG_INFO2(X, node) \
+// //     if (LOG_LEVEL > 3) RCLCPP_INFO_STREAM(node, log_info2(X));
+// #define LOG_INFO(X)    \
+//     if (LOG_LEVEL > 2) \
+//         std::cout << GET_STR_STREAM("\e[0;32m" << X << "\e[m") << std::endl;
+// #define LOG_WARN(X)    \
+//     if (LOG_LEVEL > 1) \
+//         std::cout << GET_STR_STREAM("\e[0;93m" << X << "\e[m") << std::endl;
+// #define LOG_ERROR(X)   \
+//     if (LOG_LEVEL > 0) \
+//         std::cout << GET_STR_STREAM("\e[0;31m" << X << "\e[m") << std::endl;
+// #define LOG_FATAL(X) std::cout << GET_STR_STREAM("\e[1;37;41m" << X << "\e[m") << std::endl;
 
-#define DEBUG(X)         \
-    if (DEBUG_LEVEL > 3) \
-        std::cout << GET_STR_STREAM("\e[0;33m" << X << "\e[m") << std::endl;
-#define DEBUG3(X)        \
-    if (DEBUG_LEVEL > 2) \
-        std::cout << GET_STR_STREAM("\e[0;34m" << X << "\e[m") << std::endl;
-#define DEBUG2(X)        \
-    if (DEBUG_LEVEL > 1) \
-        std::cout << GET_STR_STREAM("\e[0;37m" << X << "\e[m") << std::endl;
-#define DEBUG1(X)        \
-    if (DEBUG_LEVEL > 0) \
-        std::cout << GET_STR_STREAM("\e[0;91m" << X << "\e[m") << std::endl;
+// #define DEBUG(X)         \
+//     if (DEBUG_LEVEL > 3) \
+//         std::cout << GET_STR_STREAM("\e[0;33m" << X << "\e[m") << std::endl;
+// #define DEBUG3(X)        \
+//     if (DEBUG_LEVEL > 2) \
+//         std::cout << GET_STR_STREAM("\e[0;34m" << X << "\e[m") << std::endl;
+// #define DEBUG2(X)        \
+//     if (DEBUG_LEVEL > 1) \
+//         std::cout << GET_STR_STREAM("\e[0;37m" << X << "\e[m") << std::endl;
+// #define DEBUG1(X)        \
+//     if (DEBUG_LEVEL > 0) \
+//         std::cout << GET_STR_STREAM("\e[0;91m" << X << "\e[m") << std::endl;
 
-#define TIME_PROFILER(functionName, seconds) \
-    if (LOG_LEVEL > 0)                       \
-        std::cout << GET_STR_STREAM("\033[1;94m" << functionName << " Execution Time: " << seconds << " Seconds\033[0m") << std::endl;
+// #define TIME_PROFILER(functionName, seconds) \
+//     if (LOG_LEVEL > 0)                       \
+//         std::cout << GET_STR_STREAM("\033[1;94m" << functionName << " Execution Time: " << seconds << " Seconds\033[0m") << std::endl;
 
 
 class Profiler
