@@ -1,5 +1,5 @@
 #include "frontier_exploration/FisherInfoManager.hpp"
-#include "frontier_exploration/GeometryUtils.hpp"
+#include "frontier_exploration/util/GeometryUtils.hpp"
 
 namespace frontier_exploration
 {
@@ -14,7 +14,7 @@ namespace frontier_exploration
         timer_ = node_->create_wall_timer(
             std::chrono::seconds(1),
             std::bind(&FisherInformationManager::callServices, this), timer_cb_group_);
-        rosVisualizer_ = std::make_shared<RosVisualizer>(client_node_);
+        // rosVisualizer_ = std::make_shared<RosVisualizer>(client_node_);
     }
 
     FisherInformationManager::~FisherInformationManager()
@@ -137,7 +137,7 @@ namespace frontier_exploration
         {
             std::vector<Point2D> changedKFFOV;
             getFOVKeyframe(keyframe_poses_cache_[changedKF.id].pose, 2.5, 1.0472, changedKFFOV);
-            rosVisualizer_->landmarkViz(changedKFFOV);
+            // RosVisualizer::getInstance()landmarkViz(changedKFFOV);
             // rclcpp::sleep_for(std::chrono::seconds(1));
             std::vector<Frontier> closestNodeVector;
             roadmap_ptr_->getNodesWithinRadius(keyframe_poses_cache_[changedKF.id].pose.position, closestNodeVector, RADIUS_TO_DECIDE_EDGES);
@@ -158,13 +158,13 @@ namespace frontier_exploration
                         poseForEstimate.orientation = yawToQuat(pair_yaw);
                         double information = computeInformationFrontierPair(changedKF.word_pts, keyframe_poses_cache_[changedKF.id].pose, poseForEstimate, frontierPairFOV);
                         fisher_information_map_[std::make_pair(closerNode, nodeChild)] = information;
-                        rosVisualizer_->landmarkViz(frontierPairFOV, 1.0, 0.0, 0.0);
+                        // RosVisualizer::getInstance()landmarkViz(frontierPairFOV, 1.0, 0.0, 0.0);
                         // RCLCPP_INFO_STREAM(client_node_->get_logger(), "The information for KF: " << changedKF.id << " is: " << information);
                         // rclcpp::sleep_for(std::chrono::milliseconds(700));
                     }
                     else
                     {
-                        rosVisualizer_->landmarkViz(frontierPairFOV, 0.0, 1.0, 0.0);
+                        // RosVisualizer::getInstance()landmarkViz(frontierPairFOV, 0.0, 1.0, 0.0);
                         // rclcpp::sleep_for(std::chrono::milliseconds(700));
                     }
                 }

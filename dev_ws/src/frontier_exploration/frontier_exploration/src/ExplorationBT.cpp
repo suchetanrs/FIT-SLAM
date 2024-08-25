@@ -1,5 +1,5 @@
 #include <frontier_exploration/ExplorationBT.hpp>
-#include <frontier_exploration/geometry_tools.hpp>
+#include <frontier_exploration/util/geometry_tools.hpp>
 
 #if defined(FRONTIER_POINT_MEDIAN) + defined(FRONTIER_POINT_INITIAL) > 1
 #error "Only one of FRONTIER_POINT_MEDIAN, or FRONTIER_POINT_INITIAL can be defined at a time."
@@ -18,11 +18,12 @@ namespace frontier_exploration
         {
             explore_costmap_ros_ = explore_costmap_ros;
             ros_node_ptr_ = ros_node_ptr;
-            std::cout << "WaitForCurrent Constructor" << std::endl;
+            LOG_DEBUG("WaitForCurrentBT Constructor");
         }
 
         BT::NodeStatus onStart() override
         {
+            LOG_HIGHLIGHT("MODULE WaitForCurrent");
             return BT::NodeStatus::RUNNING;
         }
 
@@ -30,9 +31,10 @@ namespace frontier_exploration
         {
             if (!explore_costmap_ros_->isCurrent())
             {
-                std::cout << "Waiting for costmap to be current" << std::endl;
+                LOG_DEBUG("Waiting for costmap to be current");
                 return BT::NodeStatus::RUNNING;
             }
+            LOG_DEBUG("CostMap is current.");
             return BT::NodeStatus::SUCCESS;
         }
 
@@ -49,17 +51,18 @@ namespace frontier_exploration
     {
     public:
         UpdateBoundaryPolygonBT(const std::string &name, const BT::NodeConfig &config,
-                                std::shared_ptr<BoundedExploreLayer> bel_ptr, std::vector<std::string> boundary_config,
+                                std::shared_ptr<CostAssigner> bel_ptr, std::vector<std::string> boundary_config,
                                 rclcpp::Node::SharedPtr ros_node_ptr) : BT::StatefulActionNode(name, config)
         {
             bel_ptr_ = bel_ptr;
             config_ = boundary_config;
             ros_node_ptr_ = ros_node_ptr;
-            std::cout << COLOR_STR("UpdateBoundaryPolygonBT Constructor", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_DEBUG("UpdateBoundaryPolygonBT Constructor");
         }
 
         BT::NodeStatus onStart() override
         {
+            LOG_HIGHLIGHT("MODULE UpdateBoundaryPolygonBT");
             geometry_msgs::msg::PolygonStamped explore_boundary_;
             geometry_msgs::msg::PointStamped explore_center_;
             explore_boundary_.header.frame_id = "map";
@@ -71,24 +74,20 @@ namespace frontier_exploration
                 point.y = std::stof(config_[i + 1]);
                 explore_boundary_.polygon.points.push_back(point);
             }
-            // for (const auto &point : explore_boundary_.polygon.points)
-            // {
-            //     std::cout << "Sending Polygon from config x:" << point.x << " y: " << point.y << " z: " << point.z << std::endl;
-            // }
 
             explore_center_.header.frame_id = "map";
             explore_center_.point.x = 5.5;
             explore_center_.point.y = 5.5;
 
             auto updateBoundaryResult = bel_ptr_->updateBoundaryPolygon(explore_boundary_);
-            std::cout << COLOR_STR("Adding update boundary polygon for spin.", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_DEBUG("Adding update boundary polygon for spin.");
             if (updateBoundaryResult == true)
             {
-                std::cout << COLOR_STR("Region boundary set", ros_node_ptr_->get_namespace()) << std::endl;
+                LOG_INFO("Region boundary set");
             }
             else
             {
-                std::cout << COLOR_STR("Failed to receive response for updateBoundaryPolygon called from within.", ros_node_ptr_->get_namespace()) << std::endl;
+                LOG_ERROR("Failed to receive response for updateBoundaryPolygon");
                 return BT::NodeStatus::FAILURE;
             }
             return BT::NodeStatus::SUCCESS;
@@ -96,7 +95,7 @@ namespace frontier_exploration
 
         BT::NodeStatus onRunning()
         {
-            std::cout << COLOR_STR("UpdateBoundaryPolygonBT On running called ", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_DEBUG("UpdateBoundaryPolygonBT On running called ");
             return BT::NodeStatus::SUCCESS;
         }
 
@@ -110,7 +109,7 @@ namespace frontier_exploration
             return {};
         }
 
-        std::shared_ptr<BoundedExploreLayer> bel_ptr_;
+        std::shared_ptr<CostAssigner> bel_ptr_;
         rclcpp::Node::SharedPtr ros_node_ptr_;
         std::vector<std::string> config_;
     };
@@ -125,17 +124,19 @@ namespace frontier_exploration
             explore_costmap_ros_ = explore_costmap_ros;
             frontierSearchPtr_ = frontierSearchPtr;
             ros_node_ptr_ = ros_node_ptr;
-            std::cout << COLOR_STR("SearchForFrontiersBT Constructor", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_DEBUG("SearchForFrontiersBT Constructor");
         }
 
         BT::NodeStatus onStart() override
         {
+            LOG_HIGHLIGHT("MODULE SearchForFrontiersBT");
+            eventLoggerInstance.startEvent("SearchForF rontiers", 0);
             frontierSearchPtr_->reset();
             explore_costmap_ros_->getCostmap()->getMutex()->lock();
-            std::cout << COLOR_STR("SearchForFrontiersBT OnStart called ", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_DEBUG("SearchForFrontiersBT OnStart called ");
             geometry_msgs::msg::PoseStamped robotP;
             explore_costmap_ros_->getRobotPose(robotP);
-            config().blackboard->set<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP); 
+            config().blackboard->set<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP);
             auto frontier_list = frontierSearchPtr_->searchFrom(robotP.pose.position);
             auto every_frontier = frontierSearchPtr_->getAllFrontiers();
             if (frontier_list.size() == 0)
@@ -143,18 +144,24 @@ namespace frontier_exploration
                 double increment_value = 0.1;
                 getInput("increment_search_distance_by", increment_value);
                 frontierSearchPtr_->incrementSearchDistance(increment_value);
+                LOG_WARN("No frontiers found in search. Incrementing search radius and returning BT Failure.")
+                eventLoggerInstance.endEvent("SearchForFrontiers", 0);
                 explore_costmap_ros_->getCostmap()->getMutex()->unlock();
                 return BT::NodeStatus::FAILURE;
             }
+            LOG_INFO("Recieved " << frontier_list.size() << " frontiers");
             setOutput("frontier_list", frontier_list);
             setOutput("every_frontier", every_frontier);
+            RosVisualizer::getInstance().visualizeFrontier(frontier_list, every_frontier, explore_costmap_ros_->getLayeredCostmap()->getGlobalFrameID());
             frontierSearchPtr_->resetSearchDistance();
+            eventLoggerInstance.endEvent("SearchForFrontiers", 0);
+            explore_costmap_ros_->getCostmap()->getMutex()->unlock();
             return BT::NodeStatus::SUCCESS;
         }
 
         BT::NodeStatus onRunning()
         {
-            std::cout << COLOR_STR("SearchForFrontiersBT On running called ", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("SearchForFrontiersBT On running called ");
             return BT::NodeStatus::SUCCESS;
         }
 
@@ -177,31 +184,46 @@ namespace frontier_exploration
         rclcpp::Node::SharedPtr ros_node_ptr_;
     };
 
-    class VerifyFrontierSearchBT : public BT::StatefulActionNode
+    class UpdateRoadmapBT : public BT::StatefulActionNode
     {
     public:
-        VerifyFrontierSearchBT(const std::string &name, const BT::NodeConfig &config,
-                             std::shared_ptr<FrontierSearch> frontierSearchPtr, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros,
-                             rclcpp::Node::SharedPtr ros_node_ptr) : BT::StatefulActionNode(name, config)
+        UpdateRoadmapBT(const std::string &name, const BT::NodeConfig &config,
+                        rclcpp::Node::SharedPtr ros_node_ptr, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros) : BT::StatefulActionNode(name, config)
         {
             explore_costmap_ros_ = explore_costmap_ros;
-            ros_node_ptr_ = ros_node_ptr;
-            std::cout << COLOR_STR("VerifyFrontierSearchBT Constructor", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("UpdateRoadmapBT Constructor");
         }
 
         BT::NodeStatus onStart() override
         {
-            std::cout << COLOR_STR("VerifyFrontierSearchBT OnStart called ", ros_node_ptr_->get_namespace()) << std::endl;
+            eventLoggerInstance.startEvent("UpdateRoadmapBT", 0);
+            LOG_HIGHLIGHT("MODULE UpdateRoadmapBT");
             std::vector<Frontier> frontier_list;
             getInput<std::vector<Frontier>>("frontier_list", frontier_list);
-            if(verifyFrontierList(frontier_list, explore_costmap_ros_->getCostmap()))
-                return BT::NodeStatus::SUCCESS;
-            return BT::NodeStatus::FAILURE;
+            geometry_msgs::msg::PoseStamped robotP;
+            config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP);
+            FrontierRoadMap::getInstance().addNodes(frontier_list, true);
+            FrontierRoadMap::getInstance().addRobotPoseAsNode(robotP.pose, false);
+
+            eventLoggerInstance.startEvent("roadmapReconstruction", 1);
+            FrontierRoadMap::getInstance().constructNewEdges(frontier_list);
+            FrontierRoadMap::getInstance().constructNewEdgeRobotPose(robotP.pose);
+            // FrontierRoadMap::getInstance().reConstructGraph();
+            eventLoggerInstance.endEvent("roadmapReconstruction", 1);
+
+            eventLoggerInstance.startEvent("publishRoadmap", 2);
+            FrontierRoadMap::getInstance().publishRoadMap();
+            eventLoggerInstance.endEvent("publishRoadmap", 2);
+            // TODO: make sure to add a thing such that the entire roadmap within a certain distance (max frontier search distance) is reconstructed periodically
+            eventLoggerInstance.endEvent("UpdateRoadmapBT", 0);
+            // FrontierRoadMap::getInstance().countTotalItemsInSpatialMap();
+            // TODO: remove below line
+            return BT::NodeStatus::SUCCESS;
         }
 
         BT::NodeStatus onRunning()
         {
-            std::cout << COLOR_STR("VerifyFrontierSearchBT On running called ", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("UpdateRoadmapBT On running called ");
             return BT::NodeStatus::SUCCESS;
         }
 
@@ -213,8 +235,102 @@ namespace frontier_exploration
         static BT::PortsList providedPorts()
         {
             return {
-                BT::InputPort<std::vector<Frontier>>("frontier_list")
-            };
+                BT::InputPort<std::vector<Frontier>>("frontier_list")};
+        }
+
+        std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
+    };
+
+    class CleanupRoadMapBT : public BT::StatefulActionNode
+    {
+    public:
+        CleanupRoadMapBT(const std::string &name, const BT::NodeConfig &config,
+                         rclcpp::Node::SharedPtr ros_node_ptr, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros,
+                         std::shared_ptr<FullPathOptimizer> full_path_optimizer) : BT::StatefulActionNode(name, config)
+        {
+            full_path_optimizer_ = full_path_optimizer;
+            explore_costmap_ros_ = explore_costmap_ros;
+            LOG_INFO("CleanupRoadMapBT Constructor");
+        }
+
+        BT::NodeStatus onStart() override
+        {
+            LOG_HIGHLIGHT("MODULE CleanupRoadMapBT");
+            LOG_INFO("Time since last clearance: " << eventLoggerInstance.getTimeSinceStart("clearRoadmap", 0));
+            if (eventLoggerInstance.getTimeSinceStart("clearRoadmap", 0) < 15.0)
+            {
+                return BT::NodeStatus::FAILURE;
+            }
+            eventLoggerInstance.startEvent("clearRoadmap", 0);
+            eventLoggerInstance.startEvent("CleanupRoadMapBT", 0);
+            eventLoggerInstance.startEvent("roadmapReconstructionFull", 1);
+            FrontierRoadMap::getInstance().reConstructGraph();
+            eventLoggerInstance.endEvent("roadmapReconstructionFull", 1);
+            full_path_optimizer_->clearPlanCache();
+            // TODO: make sure to add a thing such that the entire roadmap within a certain distance (max frontier search distance) is reconstructed periodically
+            eventLoggerInstance.endEvent("CleanupRoadMapBT", 0);
+            // FrontierRoadMap::getInstance().countTotalItemsInSpatialMap();
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        BT::NodeStatus onRunning()
+        {
+            LOG_INFO("CleanupRoadMapBT On running called ");
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        void onHalted()
+        {
+            return;
+        }
+
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::vector<Frontier>>("frontier_list")};
+        }
+
+        std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
+        std::shared_ptr<FullPathOptimizer> full_path_optimizer_;
+    };
+
+    class VerifyFrontierSearchBT : public BT::StatefulActionNode
+    {
+    public:
+        VerifyFrontierSearchBT(const std::string &name, const BT::NodeConfig &config,
+                               std::shared_ptr<FrontierSearch> frontierSearchPtr, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros,
+                               rclcpp::Node::SharedPtr ros_node_ptr) : BT::StatefulActionNode(name, config)
+        {
+            explore_costmap_ros_ = explore_costmap_ros;
+            ros_node_ptr_ = ros_node_ptr;
+            LOG_INFO("VerifyFrontierSearchBT Constructor");
+        }
+
+        BT::NodeStatus onStart() override
+        {
+            LOG_INFO("VerifyFrontierSearchBT OnStart called ");
+            std::vector<Frontier> frontier_list;
+            getInput<std::vector<Frontier>>("frontier_list", frontier_list);
+            if (verifyFrontierList(frontier_list, explore_costmap_ros_->getCostmap()))
+                return BT::NodeStatus::SUCCESS;
+            return BT::NodeStatus::FAILURE;
+        }
+
+        BT::NodeStatus onRunning()
+        {
+            LOG_INFO("VerifyFrontierSearchBT On running called ");
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        void onHalted()
+        {
+            return;
+        }
+
+        static BT::PortsList providedPorts()
+        {
+            return {
+                BT::InputPort<std::vector<Frontier>>("frontier_list")};
         }
 
         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
@@ -225,11 +341,11 @@ namespace frontier_exploration
     {
     public:
         ProcessFrontierCostsBT(const std::string &name, const BT::NodeConfig &config,
-                           std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros,
-                           std::shared_ptr<BoundedExploreLayer> bel_ptr,
-                           RobotActiveGoals &robot_goals,
-                           std::shared_ptr<TaskAllocator> taskAllocator,
-                           rclcpp::Node::SharedPtr ros_node_ptr)
+                               std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros,
+                               std::shared_ptr<CostAssigner> bel_ptr,
+                               RobotActiveGoals &robot_goals,
+                               std::shared_ptr<TaskAllocator> taskAllocator,
+                               rclcpp::Node::SharedPtr ros_node_ptr)
             : BT::StatefulActionNode(name, config),
               robot_goals_(robot_goals)
         {
@@ -237,13 +353,14 @@ namespace frontier_exploration
             bel_ptr_ = bel_ptr;
             taskAllocator_ = taskAllocator;
             ros_node_ptr_ = ros_node_ptr;
-            std::cout << COLOR_STR("ProcessFrontierCostsBT Constructor", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("ProcessFrontierCostsBT Constructor");
         }
 
         BT::NodeStatus onStart() override
         {
+            eventLoggerInstance.startEvent("ProcessFrontierCosts", 0);
+            LOG_HIGHLIGHT("MODULE ProcessFrontierCostsBT");
             taskAllocator_->reset();
-            std::cout << COLOR_STR("ProcessFrontierCostsBT OnStart called ", ros_node_ptr_->get_namespace()) << std::endl;
             auto frontierCostsRequestPtr = std::make_shared<GetFrontierCostsRequest>();
             auto frontierCostsResultPtr = std::make_shared<GetFrontierCostsResponse>();
             std::string robot_name;
@@ -263,18 +380,19 @@ namespace frontier_exploration
 
             config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", frontierCostsRequestPtr->start_pose);
             config().blackboard->get<std::vector<Frontier>>("frontier_blacklist", frontierCostsRequestPtr->prohibited_frontiers);
+            LOG_INFO("Request to get frontier costs sent");
             bool frontierCostsSuccess = bel_ptr_->getFrontierCosts(frontierCostsRequestPtr, frontierCostsResultPtr);
-            std::cout << COLOR_STR("Sent GNF request", ros_node_ptr_->get_namespace()) << std::endl;
             if (frontierCostsSuccess == false)
             {
-                std::cout << COLOR_STR("Failed to receive response for getNextFrontier called from within the robot.", ros_node_ptr_->get_namespace()) << std::endl;
-                explore_costmap_ros_->getCostmap()->getMutex()->unlock();
+                LOG_INFO("Failed to receive response for getNextFrontier called from within the robot.");
+                eventLoggerInstance.endEvent("ProcessFrontierCosts", 0);
                 return BT::NodeStatus::FAILURE;
             }
             setOutput("frontier_costs_result", frontierCostsResultPtr->frontier_list);
             taskAllocator_->addRobotTasks(frontierCostsResultPtr->frontier_costs, frontierCostsResultPtr->frontier_distances, robot_name);
 
             bel_ptr_->logMapData(frontierCostsRequestPtr);
+            eventLoggerInstance.endEvent("ProcessFrontierCosts", 0);
             return BT::NodeStatus::SUCCESS;
         }
 
@@ -298,7 +416,7 @@ namespace frontier_exploration
 
         std::shared_ptr<FrontierSearch> frontierSearchPtr_;
         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
-        std::shared_ptr<BoundedExploreLayer> bel_ptr_;
+        std::shared_ptr<CostAssigner> bel_ptr_;
         RobotActiveGoals &robot_goals_;
         std::shared_ptr<TaskAllocator> taskAllocator_;
         rclcpp::Node::SharedPtr ros_node_ptr_;
@@ -308,22 +426,27 @@ namespace frontier_exploration
     {
     public:
         OptimizeFullPath(const std::string &name, const BT::NodeConfig &config,
-                          std::shared_ptr<FullPathOptimizer> full_path_optimizer,
-                          std::shared_ptr<BoundedExploreLayer> bel_ptr) : BT::StatefulActionNode(name, config)
+                         std::shared_ptr<FullPathOptimizer> full_path_optimizer,
+                         std::shared_ptr<CostAssigner> bel_ptr,
+                         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros) : BT::StatefulActionNode(name, config)
         {
+            explore_costmap_ros_ = explore_costmap_ros;
             full_path_optimizer_ = full_path_optimizer;
-            // std::cout << COLOR_STR("OptimizeFullPath Constructor", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("OptimizeFullPath Constructor");
         }
 
         BT::NodeStatus onStart() override
         {
-            // std::cout << COLOR_STR("OptimizeFullPath OnStart called ", ros_node_ptr_->get_namespace()) << std::endl;
+            eventLoggerInstance.startEvent("OptimizeFullPath", 0);
+            LOG_HIGHLIGHT("MODULE OptimizeFullPath");
             std::vector<Frontier> globalFrontierList;
             getInput<std::vector<Frontier>>("frontier_costs_result", globalFrontierList);
-            // full_path_optimizer_->getTopThreeFrontiers(globalFrontierList);
             geometry_msgs::msg::PoseStamped robotP;
             config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP);
-            full_path_optimizer_->publishLocalSearchArea(globalFrontierList, 3, robotP);
+            auto allocatedFrontier = full_path_optimizer_->getNextGoal(globalFrontierList, 3, robotP);
+            LOG_WARN("The next goal that will be sent to Nav2 is:" << allocatedFrontier);
+            eventLoggerInstance.endEvent("OptimizeFullPath", 0);
+            setOutput<Frontier>("allocated_frontier", allocatedFrontier);
             return BT::NodeStatus::SUCCESS;
         }
 
@@ -344,41 +467,41 @@ namespace frontier_exploration
         }
 
         std::shared_ptr<FullPathOptimizer> full_path_optimizer_;
+        std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
     };
 
     class GetAllocatedGoalBT : public BT::StatefulActionNode
     {
     public:
         GetAllocatedGoalBT(const std::string &name, const BT::NodeConfig &config,
-                          std::shared_ptr<TaskAllocator> taskAllocator,
-                          rclcpp::Node::SharedPtr ros_node_ptr, 
-                          std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros) : BT::StatefulActionNode(name, config)
+                           std::shared_ptr<TaskAllocator> taskAllocator,
+                           rclcpp::Node::SharedPtr ros_node_ptr,
+                           std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros) : BT::StatefulActionNode(name, config)
         {
             taskAllocator_ = taskAllocator;
             ros_node_ptr_ = ros_node_ptr;
             explore_costmap_ros_ = explore_costmap_ros;
-            std::cout << "!!!!! NODE NAME! " << ros_node_ptr_->get_namespace() << std::endl;
-            std::cout << COLOR_STR("GetAllocatedGoalBT Constructor", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("!!!!! NODE NAME! " << ros_node_ptr_->get_namespace());
+            LOG_INFO("GetAllocatedGoalBT Constructor");
         }
 
         BT::NodeStatus onStart() override
         {
-            std::cout << COLOR_STR("GetAllocatedGoalBT OnStart called ", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("GetAllocatedGoalBT OnStart called ");
             taskAllocator_->solveAllocationHungarian();
             auto allocatedIndex = taskAllocator_->getAllocatedTasks()[ros_node_ptr_->get_namespace()];
             std::vector<Frontier> globalFrontierList;
             getInput<std::vector<Frontier>>("frontier_costs_result", globalFrontierList);
             auto allocatedFrontier = globalFrontierList[allocatedIndex];
-            std::cout << COLOR_STR("Allocated frontier x:" + std::to_string(allocatedFrontier.getGoalPoint().x), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier y:" + std::to_string(allocatedFrontier.getGoalPoint().y), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier z:" + std::to_string(allocatedFrontier.getGoalPoint().z), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier oz:" + std::to_string(allocatedFrontier.getGoalOrientation().z), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier ow:" + std::to_string(allocatedFrontier.getGoalOrientation().w), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier ox:" + std::to_string(allocatedFrontier.getGoalOrientation().x), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier oy:" + std::to_string(allocatedFrontier.getGoalOrientation().y), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier uid:" + std::to_string(allocatedFrontier.getUID()), ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("Allocated frontier x:" + std::to_string(allocatedFrontier.getGoalPoint().x));
+            LOG_INFO("Allocated frontier y:" + std::to_string(allocatedFrontier.getGoalPoint().y));
+            LOG_INFO("Allocated frontier z:" + std::to_string(allocatedFrontier.getGoalPoint().z));
+            LOG_INFO("Allocated frontier oz:" + std::to_string(allocatedFrontier.getGoalOrientation().z));
+            LOG_INFO("Allocated frontier ow:" + std::to_string(allocatedFrontier.getGoalOrientation().w));
+            LOG_INFO("Allocated frontier ox:" + std::to_string(allocatedFrontier.getGoalOrientation().x));
+            LOG_INFO("Allocated frontier oy:" + std::to_string(allocatedFrontier.getGoalOrientation().y));
+            LOG_INFO("Allocated frontier uid:" + std::to_string(allocatedFrontier.getUID()));
             setOutput<Frontier>("allocated_frontier", allocatedFrontier);
-            explore_costmap_ros_->getCostmap()->getMutex()->unlock();
             return BT::NodeStatus::SUCCESS;
         }
 
@@ -412,22 +535,22 @@ namespace frontier_exploration
         {
             nav2_interface_ = nav2_interface;
             ros_node_ptr_ = ros_node_ptr;
-            std::cout << COLOR_STR("SendNav2Goal Constructor", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("SendNav2Goal Constructor");
         }
 
         BT::NodeStatus onStart() override
         {
-            std::cout << "SendNav2Goal onStart" << std::endl;
+            LOG_INFO("SendNav2Goal onStart");
             Frontier allocatedFrontier;
             getInput("allocated_frontier", allocatedFrontier);
-            std::cout << COLOR_STR("Allocated frontier x:" + std::to_string(allocatedFrontier.getGoalPoint().x), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier y:" + std::to_string(allocatedFrontier.getGoalPoint().y), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier z:" + std::to_string(allocatedFrontier.getGoalPoint().z), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier oz:" + std::to_string(allocatedFrontier.getGoalOrientation().z), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier ow:" + std::to_string(allocatedFrontier.getGoalOrientation().w), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier ox:" + std::to_string(allocatedFrontier.getGoalOrientation().x), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier oy:" + std::to_string(allocatedFrontier.getGoalOrientation().y), ros_node_ptr_->get_namespace()) << std::endl;
-            std::cout << COLOR_STR("Allocated frontier uid:" + std::to_string(allocatedFrontier.getUID()), ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("Allocated frontier x:" + std::to_string(allocatedFrontier.getGoalPoint().x));
+            LOG_INFO("Allocated frontier y:" + std::to_string(allocatedFrontier.getGoalPoint().y));
+            LOG_INFO("Allocated frontier z:" + std::to_string(allocatedFrontier.getGoalPoint().z));
+            LOG_INFO("Allocated frontier oz:" + std::to_string(allocatedFrontier.getGoalOrientation().z));
+            LOG_INFO("Allocated frontier ow:" + std::to_string(allocatedFrontier.getGoalOrientation().w));
+            LOG_INFO("Allocated frontier ox:" + std::to_string(allocatedFrontier.getGoalOrientation().x));
+            LOG_INFO("Allocated frontier oy:" + std::to_string(allocatedFrontier.getGoalOrientation().y));
+            LOG_INFO("Allocated frontier uid:" + std::to_string(allocatedFrontier.getUID()));
             geometry_msgs::msg::PoseStamped goalPose;
             goalPose.header.frame_id = "map";
             goalPose.pose.position = allocatedFrontier.getGoalPoint();
@@ -438,7 +561,7 @@ namespace frontier_exploration
 
         BT::NodeStatus onRunning()
         {
-            std::cout << "SendNav2Goal onRunning" << std::endl;
+            LOG_INFO("SendNav2Goal onRunning");
             if (nav2_interface_->goalStatus() == 0)
                 return BT::NodeStatus::RUNNING;
             else if (nav2_interface_->goalStatus() == 1)
@@ -474,22 +597,22 @@ namespace frontier_exploration
         {
             explore_costmap_ros_ = explore_costmap_ros;
             ros_node_ptr_ = ros_node_ptr;
-            std::cout << COLOR_STR("CheckIfGoalMapped Constructor", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("CheckIfGoalMapped Constructor");
         }
 
         BT::NodeStatus onStart() override
         {
-            std::cout << "CheckIfGoalMapped onStart" << std::endl;
+            LOG_INFO("CheckIfGoalMapped onStart");
             Frontier allocatedFrontier;
             getInput("allocated_frontier", allocatedFrontier);
-            // std::cout << COLOR_STR("Allocated frontier x:" + std::to_string(allocatedFrontier.getGoalPoint().x), ros_node_ptr_->get_namespace()) << std::endl;
-            // std::cout << COLOR_STR("Allocated frontier y:" + std::to_string(allocatedFrontier.getGoalPoint().y), ros_node_ptr_->get_namespace()) << std::endl;
-            // std::cout << COLOR_STR("Allocated frontier z:" + std::to_string(allocatedFrontier.getGoalPoint().z), ros_node_ptr_->get_namespace()) << std::endl;
-            // std::cout << COLOR_STR("Allocated frontier oz:" + std::to_string(allocatedFrontier.getGoalOrientation().z), ros_node_ptr_->get_namespace()) << std::endl;
-            // std::cout << COLOR_STR("Allocated frontier ow:" + std::to_string(allocatedFrontier.getGoalOrientation().w), ros_node_ptr_->get_namespace()) << std::endl;
-            // std::cout << COLOR_STR("Allocated frontier ox:" + std::to_string(allocatedFrontier.getGoalOrientation().x), ros_node_ptr_->get_namespace()) << std::endl;
-            // std::cout << COLOR_STR("Allocated frontier oy:" + std::to_string(allocatedFrontier.getGoalOrientation().y), ros_node_ptr_->get_namespace()) << std::endl;
-            // std::cout << COLOR_STR("Allocated frontier uid:" + std::to_string(allocatedFrontier.getUID()), ros_node_ptr_->get_namespace()) << std::endl;
+            // LOG_INFO("Allocated frontier x:" + std::to_string(allocatedFrontier.getGoalPoint().x));
+            // LOG_INFO("Allocated frontier y:" + std::to_string(allocatedFrontier.getGoalPoint().y));
+            // LOG_INFO("Allocated frontier z:" + std::to_string(allocatedFrontier.getGoalPoint().z));
+            // LOG_INFO("Allocated frontier oz:" + std::to_string(allocatedFrontier.getGoalOrientation().z));
+            // LOG_INFO("Allocated frontier ow:" + std::to_string(allocatedFrontier.getGoalOrientation().w));
+            // LOG_INFO("Allocated frontier ox:" + std::to_string(allocatedFrontier.getGoalOrientation().x));
+            // LOG_INFO("Allocated frontier oy:" + std::to_string(allocatedFrontier.getGoalOrientation().y));
+            // LOG_INFO("Allocated frontier uid:" + std::to_string(allocatedFrontier.getUID()));
             geometry_msgs::msg::PoseStamped goalPose;
             goalPose.header.frame_id = "map";
             goalPose.pose.position = allocatedFrontier.getGoalPoint();
@@ -500,7 +623,7 @@ namespace frontier_exploration
 
         BT::NodeStatus onRunning()
         {
-            std::cout << "CheckIfGoalMapped onRunning" << std::endl;
+            LOG_INFO("CheckIfGoalMapped onRunning");
             Frontier allocatedFrontier;
             getInput("allocated_frontier", allocatedFrontier);
             geometry_msgs::msg::PoseStamped goalPose;
@@ -525,35 +648,77 @@ namespace frontier_exploration
         rclcpp::Node::SharedPtr ros_node_ptr_;
     };
 
-
-    class RecoveryMoveBack : public BT::StatefulActionNode
+    class ReplanTimeoutCompleteBT : public BT::StatefulActionNode
     {
     public:
-        RecoveryMoveBack(const std::string &name, const BT::NodeConfig &config,
+        ReplanTimeoutCompleteBT(const std::string &name, const BT::NodeConfig &config,
                           std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros,
                           rclcpp::Node::SharedPtr ros_node_ptr) : BT::StatefulActionNode(name, config)
         {
             explore_costmap_ros_ = explore_costmap_ros;
             ros_node_ptr_ = ros_node_ptr;
-            cmd_vel_publisher_ = ros_node_ptr->create_publisher<geometry_msgs::msg::Twist>("/smb_velocity_controller/cmd_vel", 10);
-            std::cout << COLOR_STR("RecoveryMoveBack Constructor", ros_node_ptr_->get_namespace()) << std::endl;
+            LOG_INFO("ReplanTimeoutCompleteBT Constructor");
         }
 
         BT::NodeStatus onStart() override
         {
-            std::cout << "RecoveryMoveBack onStart" << std::endl;
+            LOG_INFO("ReplanTimeoutCompleteBT onStart");
+            if(eventLoggerInstance.getTimeSinceStart("replanTimeout", 0) > 1.0)
+            {
+                LOG_WARN("Replanning timed out. Restarting the frontier computation");
+                eventLoggerInstance.startEvent("replanTimeout", 0);
+                return BT::NodeStatus::SUCCESS;
+            }
+            return BT::NodeStatus::FAILURE;
+        }
+
+        BT::NodeStatus onRunning()
+        {
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        void onHalted()
+        {
+            return;
+        }
+
+        static BT::PortsList providedPorts()
+        {
+            return {BT::InputPort<Frontier>("allocated_frontier")};
+        }
+
+        std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
+        rclcpp::Node::SharedPtr ros_node_ptr_;
+    };
+
+    class RecoveryMoveBack : public BT::StatefulActionNode
+    {
+    public:
+        RecoveryMoveBack(const std::string &name, const BT::NodeConfig &config,
+                         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros,
+                         rclcpp::Node::SharedPtr ros_node_ptr) : BT::StatefulActionNode(name, config)
+        {
+            explore_costmap_ros_ = explore_costmap_ros;
+            ros_node_ptr_ = ros_node_ptr;
+            cmd_vel_publisher_ = ros_node_ptr->create_publisher<geometry_msgs::msg::Twist>("/smb_velocity_controller/cmd_vel", 10);
+            LOG_INFO("RecoveryMoveBack Constructor");
+        }
+
+        BT::NodeStatus onStart() override
+        {
+            LOG_INFO("RecoveryMoveBack onStart");
             startTime = std::chrono::high_resolution_clock::now();
             return BT::NodeStatus::RUNNING;
         }
 
         BT::NodeStatus onRunning()
         {
-            std::cout << "RecoveryMoveBack onRunning" << std::endl;
+            LOG_INFO("RecoveryMoveBack onRunning");
             auto endTime = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> duration = endTime - startTime;
             double maxDuration;
             getInput("move_back_duration", maxDuration);
-            if(duration.count() > maxDuration)
+            if (duration.count() > maxDuration)
             {
                 geometry_msgs::msg::Twist twist_msg;
                 cmd_vel_publisher_->publish(twist_msg);
@@ -588,6 +753,7 @@ namespace frontier_exploration
 {
     FrontierExplorationServer::FrontierExplorationServer(rclcpp::Node::SharedPtr node)
     {
+        LOG_TRACE("First BT constructor");
         bt_node_ = node;
         blackboard = BT::Blackboard::create();
 
@@ -612,8 +778,10 @@ namespace frontier_exploration
         bt_node_->get_parameter("max_frontier_cluster_size", max_frontier_cluster_size_);
         bt_node_->get_parameter("max_frontier_distance", max_frontier_distance_);
         bt_node_->get_parameter("process_other_robots", process_other_robots_);
+        LOG_TRACE("Declared BT params");
         //--------------------------------------------NAV2 CLIENT RELATED-------------------------------
         nav2_interface_ = std::make_shared<Nav2Interface>(bt_node_);
+        LOG_TRACE("Created Nav2 interface instance");
 
         //--------------------------------------------EXPLORE SERVER RELATED----------------------------
 
@@ -622,9 +790,13 @@ namespace frontier_exploration
         // Launch a thread to run the costmap node
         explore_costmap_thread_ = std::make_unique<nav2_util::NodeThread>(explore_costmap_ros_);
         explore_costmap_ros_->activate();
+        LOG_TRACE("Created costmap instance");
 
         //------------------------------------------BOUNDED EXPLORE LAYER RELATED------------------------
-        bel_ptr_ = std::make_shared<BoundedExploreLayer>(explore_costmap_ros_);
+        RosVisualizer::createInstance(bt_node_, explore_costmap_ros_->getCostmap());
+        FrontierRoadMap::createInstance(explore_costmap_ros_);
+        LOG_TRACE("Created ros visualizer instance");
+        bel_ptr_ = std::make_shared<CostAssigner>(explore_costmap_ros_);
         task_allocator_ptr_ = std::make_shared<TaskAllocator>();
 
         multirobot_service_callback_group_ = bt_node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -633,15 +805,15 @@ namespace frontier_exploration
             rmw_qos_profile_default, multirobot_service_callback_group_);
 
         frontierSearchPtr_ = std::make_shared<FrontierSearch>(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_, max_frontier_distance_);
-        full_path_optimizer_ = std::make_shared<FullPathOptimizer>(bt_node_, explore_costmap_ros_, bel_ptr_->getCostManagerPtr()->getCostCalcPtr()->getRoadmapPtr());
+        full_path_optimizer_ = std::make_shared<FullPathOptimizer>(bt_node_, explore_costmap_ros_);
         //---------------------------------------------ROS RELATED------------------------------------------
         tf_listener_ = std::make_shared<tf2_ros::Buffer>(bt_node_->get_clock());
-        RCLCPP_INFO_STREAM(bt_node_->get_logger(), COLOR_STR("FrontierExplorationServer::FrontierExplorationServer()", bt_node_->get_namespace()));
+        LOG_INFO("FrontierExplorationServer::FrontierExplorationServer()");
     }
 
     FrontierExplorationServer::~FrontierExplorationServer()
     {
-        RCLCPP_INFO_STREAM(bt_node_->get_logger(), COLOR_STR("FrontierExplorationServer::~FrontierExplorationServer()", bt_node_->get_namespace()));
+        LOG_INFO("FrontierExplorationServer::~FrontierExplorationServer()");
         explore_costmap_ros_->deactivate();
         explore_costmap_ros_->cleanup();
         explore_costmap_thread_.reset();
@@ -649,6 +821,8 @@ namespace frontier_exploration
 
     void FrontierExplorationServer::makeBTNodes()
     {
+        eventLoggerInstance.startEvent("clearRoadmap", 0);
+        eventLoggerInstance.startEvent("replanTimeout", 0);
         BT::NodeBuilder builder_wait_for_current =
             [&](const std::string &name, const BT::NodeConfiguration &config)
         {
@@ -677,17 +851,31 @@ namespace frontier_exploration
         };
         factory.registerBuilder<VerifyFrontierSearchBT>("VerifyFrontierSearch", builder_frontier_search);
 
+        BT::NodeBuilder builder_update_roadmap_data =
+            [&](const std::string &name, const BT::NodeConfiguration &config)
+        {
+            return std::make_unique<UpdateRoadmapBT>(name, config, bt_node_, explore_costmap_ros_);
+        };
+        factory.registerBuilder<UpdateRoadmapBT>("UpdateFrontierRoadmap", builder_update_roadmap_data);
+
+        BT::NodeBuilder builder_cleanup_roadmap_data =
+            [&](const std::string &name, const BT::NodeConfiguration &config)
+        {
+            return std::make_unique<CleanupRoadMapBT>(name, config, bt_node_, explore_costmap_ros_, full_path_optimizer_);
+        };
+        factory.registerBuilder<CleanupRoadMapBT>("CleanupRoadmap", builder_cleanup_roadmap_data);
+
         BT::NodeBuilder builder_frontier_costs =
             [&](const std::string &name, const BT::NodeConfiguration &config)
         {
             return std::make_unique<ProcessFrontierCostsBT>(name, config, explore_costmap_ros_, bel_ptr_, robot_active_goals_, task_allocator_ptr_, bt_node_);
         };
         factory.registerBuilder<ProcessFrontierCostsBT>("ProcessFrontierCosts", builder_frontier_costs);
-        
+
         BT::NodeBuilder builder_full_path_optimizer =
             [&](const std::string &name, const BT::NodeConfiguration &config)
         {
-            return std::make_unique<OptimizeFullPath>(name, config, full_path_optimizer_, bel_ptr_);
+            return std::make_unique<OptimizeFullPath>(name, config, full_path_optimizer_, bel_ptr_, explore_costmap_ros_);
         };
         factory.registerBuilder<OptimizeFullPath>("OptimizeFullPath", builder_full_path_optimizer);
 
@@ -712,6 +900,13 @@ namespace frontier_exploration
         };
         factory.registerBuilder<CheckIfGoalMapped>("CheckIfGoalMapped", builder_goal_mapped);
 
+        BT::NodeBuilder builder_replan_timeout =
+            [&](const std::string &name, const BT::NodeConfiguration &config)
+        {
+            return std::make_unique<ReplanTimeoutCompleteBT>(name, config, explore_costmap_ros_, bt_node_);
+        };
+        factory.registerBuilder<ReplanTimeoutCompleteBT>("ReplanTimeoutComplete", builder_replan_timeout);
+
         BT::NodeBuilder builder_recovery_back =
             [&](const std::string &name, const BT::NodeConfiguration &config)
         {
@@ -724,7 +919,7 @@ namespace frontier_exploration
         {
             behaviour_tree.tickOnce();
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            RCLCPP_ERROR(bt_node_->get_logger(), "TICKED ONCE");
+            LOG_DEBUG("TICKED ONCE");
         }
     }
 
@@ -734,7 +929,7 @@ namespace frontier_exploration
         std::shared_ptr<frontier_msgs::srv::SendCurrentGoal::Response> response)
     {
         std::lock_guard<std::mutex> lock(robot_active_goals_.mutex);
-        RCLCPP_ERROR_STREAM(bt_node_->get_logger(), COLOR_STR("Goal updated for: " + request->sending_robot_name + " New goal? " + std::to_string(request->goal_state), bt_node_->get_namespace()));
+        LOG_ERROR("Goal updated for: " + request->sending_robot_name + " New goal? " + std::to_string(request->goal_state));
         if (request->goal_state == 1)
             robot_active_goals_.goals[request->sending_robot_name] = std::make_shared<geometry_msgs::msg::PoseStamped>(request->current_goal);
         else if (request->goal_state == 0)

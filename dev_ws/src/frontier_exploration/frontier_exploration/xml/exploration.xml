@@ -4,12 +4,23 @@
             <WaitForCurrent/>
             <UpdateBoundaryPolygon />
             <SearchForFrontiers frontier_list="{the_frontier_list}" every_frontier="{the_every_frontier}" increment_search_distance_by="10.0"/>
+            <UpdateFrontierRoadmap frontier_list="{the_frontier_list}"/>
+            <Inverter>
+                <CleanupRoadmap frontier_list="{the_frontier_list}"/>
+            </Inverter>
             <ProcessFrontierCosts frontier_list="{the_frontier_list}" every_frontier="{the_every_frontier}" robot_name="/robot_0" frontier_costs_result="{the_frontier_costs}"/>
-            <GetAllocatedGoal frontier_costs_result="{the_frontier_costs}" allocated_frontier="{the_allocated_frontier}"/>
-            <OptimizeFullPath frontier_costs_result="{the_frontier_costs}"/>
+            
+            <!-- You can choose to either optimize the full 
+            path of send the immediete next goal to nav2 -->
+            <OptimizeFullPath frontier_costs_result="{the_frontier_costs}" allocated_frontier="{the_allocated_frontier}"/>
+            <!-- <GetAllocatedGoal frontier_costs_result="{the_frontier_costs}" allocated_frontier="{the_allocated_frontier}"/> -->
+            
             <ReactiveSequence>
                 <Inverter>
                     <CheckIfGoalMapped allocated_frontier="{the_allocated_frontier}"/>
+                </Inverter>
+                <Inverter>
+                    <ReplanTimeoutComplete allocated_frontier="{the_allocated_frontier}"/>
                 </Inverter>
                 <Fallback>
                     <SendNav2Goal allocated_frontier="{the_allocated_frontier}"/>

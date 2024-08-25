@@ -1,4 +1,4 @@
-#include <frontier_exploration/bounded_explore_layer.hpp>
+#include <frontier_exploration/CostAssigner.hpp>
 #include <frontier_exploration/FrontierSearch.hpp>
 
 namespace frontier_exploration
@@ -8,10 +8,10 @@ namespace frontier_exploration
     using nav2_costmap_2d::NO_INFORMATION;
     using rcl_interfaces::msg::ParameterType;
 
-    BoundedExploreLayer::BoundedExploreLayer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros) 
+    CostAssigner::CostAssigner(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros) 
     {
         layered_costmap_ = explore_costmap_ros->getLayeredCostmap();
-        internal_node_ = rclcpp::Node::make_shared("bounded_explore_layer");
+        internal_node_ = rclcpp::Node::make_shared("CostAssigner");
         internal_executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
         internal_executor_->add_node(internal_node_);
 
@@ -23,76 +23,72 @@ namespace frontier_exploration
         internal_node_->declare_parameter("exploration_mode", rclcpp::ParameterValue(std::string("ours")));
         internal_node_->get_parameter("exploration_mode", exploration_mode_);
 
-        internal_node_->declare_parameter("counter", rclcpp::ParameterValue(11087));
-        internal_node_->get_parameter("counter", counter_);
-
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::onInitialize", internal_node_->get_logger().get_name()));
+        LOG_INFO("CostAssigner::onInitialize");
 
         client_get_map_data2_ = internal_node_->create_client<slam_msgs::srv::GetMap>("orb_slam3_get_map_data");
-        rosViz_ = std::make_shared<RosVisualizer>(internal_node_, layered_costmap_->getCostmap());
-        frontierSelect_ = std::make_shared<frontier_exploration::FrontierCostsManager>(internal_node_, explore_costmap_ros);
+        // rosVisualizerInstance = std::make_shared<RosVisualizer>(internal_node_, layered_costmap_->getCostmap());
+        frontierCostsManager_ = std::make_shared<frontier_exploration::FrontierCostsManager>(internal_node_, explore_costmap_ros);
     }
 
-    BoundedExploreLayer::~BoundedExploreLayer()
+    CostAssigner::~CostAssigner()
     {
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::~BoundedExploreLayer()", internal_node_->get_logger().get_name()));
+        LOG_INFO("CostAssigner::~CostAssigner()");
         delete layered_costmap_;
         rclcpp::shutdown();
     }
 
-    bool BoundedExploreLayer::processOurApproach(std::vector<Frontier> &frontier_list, geometry_msgs::msg::Pose& start_pose_w)
+    bool CostAssigner::processOurApproach(std::vector<Frontier> &frontier_list, geometry_msgs::msg::Pose& start_pose_w)
     {
-        RCLCPP_DEBUG_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::processOurApproach", internal_node_->get_logger().get_name()));
-        auto startTime = std::chrono::high_resolution_clock::now();
+        LOG_DEBUG("CostAssigner::processOurApproach");
+        eventLoggerInstance.startEvent("processOurApproach", 1);
 
         // Getting map data
         // Create a service request
         auto request_map_data = std::make_shared<slam_msgs::srv::GetMap::Request>();
         auto response_map_data = std::make_shared<slam_msgs::srv::GetMap::Response>();
+        std::vector<std::string> chosenMethods = {"RoadmapPlannerDistance", "ArrivalInformation"};
+        // std::vector<std::string> chosenMethods = {"A*PlannerDistance", "ArrivalInformation"};
+        // std::vector<std::string> chosenMethods = {"EuclideanDistance", "ArrivalInformation"};
+        // std::vector<std::string> chosenMethods = {"RandomCosts"};
+        // std::vector<std::string> chosenMethods = {};
+        LOG_INFO("Methods chosen are: " << chosenMethods);
         std::vector<std::vector<std::string>> costTypes;
         for (auto frontier: frontier_list)
         {
-            // costTypes.push_back({"A*PlannerDistance", "ArrivalInformation"});
-            costTypes.push_back({"RoadmapPlannerDistance", "ArrivalInformation"});
-            // costTypes.push_back({"EuclideanDistance", "ArrivalInformation"});
-            // costTypes.push_back({"RandomCosts"});
-            // costTypes.push_back({});
+            costTypes.push_back(chosenMethods);
         }
         // Select the frontier
         bool costsResult;
-        costsResult = frontierSelect_->assignCosts(frontier_list, polygon_xy_min_max_, start_pose_w, response_map_data, costTypes);
+        costsResult = frontierCostsManager_->assignCosts(frontier_list, polygon_xy_min_max_, start_pose_w, response_map_data, costTypes);
         if (costsResult == false)
         {
-            RCLCPP_ERROR(internal_node_->get_logger(), "The selection result for our method is false!");
+            LOG_CRITICAL("The selection result for our method is false!");
             return costsResult;
         }
 
-        auto endTime = std::chrono::high_resolution_clock::now();
-        auto duration = (endTime - startTime).count() / 1.0;
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Time taken to comppute cost to all frontiers is: " + std::to_string(duration), internal_node_->get_logger().get_name()));
+        eventLoggerInstance.endEvent("processOurApproach", 1);
         return costsResult;
     }
 
-    void BoundedExploreLayer::logMapData(std::shared_ptr<GetFrontierCostsRequest> requestData)
+    void CostAssigner::logMapData(std::shared_ptr<GetFrontierCostsRequest> requestData)
     {
+        PROFILE_FUNCTION;
         // for(auto frontier : requestData->frontier_list)
         // {
         //     std::cout << "Frontier cost : " << frontier.getWeightedCost() << std::endl;
         // }
-        rosViz_->exportMapCoverage(polygon_xy_min_max_, counter_, exploration_mode_);
-        rosViz_->visualizeFrontierMarker(requestData->frontier_list, requestData->every_frontier, layered_costmap_->getGlobalFrameID());
-        rosViz_->visualizeFrontier(requestData->frontier_list, requestData->every_frontier, layered_costmap_->getGlobalFrameID());
+        // RosVisualizer::getInstance()exportMapCoverage(polygon_xy_min_max_, counter_, exploration_mode_);
+        RosVisualizer::getInstance().visualizeFrontierMarker(requestData->frontier_list, requestData->every_frontier, layered_costmap_->getGlobalFrameID());
     }
 
-    bool BoundedExploreLayer::getFrontierCosts(std::shared_ptr<GetFrontierCostsRequest> requestData, std::shared_ptr<GetFrontierCostsResponse> resultData)
+    bool CostAssigner::getFrontierCosts(std::shared_ptr<GetFrontierCostsRequest> requestData, std::shared_ptr<GetFrontierCostsResponse> resultData)
     {
-        frontierSelect_->setFrontierBlacklist(requestData->prohibited_frontiers);
-        // Select the frontier (Modify this for different algorithms)
-        Frontier selected;
+        frontierCostsManager_->setFrontierBlacklist(requestData->prohibited_frontiers);
 
         if (exploration_mode_ == "ours")
         {
-            bool costsResult = BoundedExploreLayer::processOurApproach(requestData->frontier_list, requestData->start_pose.pose);
+            bool costsResult = CostAssigner::processOurApproach(requestData->frontier_list, requestData->start_pose.pose);
+            eventLoggerInstance.startEvent("outside_processOurApproach", 1);
             if (costsResult == false)
             {
                 resultData->success = false;
@@ -107,13 +103,12 @@ namespace frontier_exploration
             for (auto& frontier : requestData->frontier_list)
             {
                 frontiers_list.push_back(frontier);
-                // RCLCPP_WARN_STREAM(internal_node_->get_logger(), COLOR_STR("Frontier cost" + std::to_string(frontier.getWeightedCost()), internal_node_->get_logger().get_name()));
                 frontier_costs.push_back(frontier.getWeightedCost());
-                frontier_distances.push_back(frontier.getPathLength());
+                frontier_distances.push_back(frontier.getPathLengthInM());
                 frontier_arrival_information.push_back(frontier.getArrivalInformation());
-                // RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("Cost is: " + std::to_string(resultData->frontier_costs.size()), internal_node_->get_logger().get_name()));
+                // LOG_INFO("Cost is: " << resultData->frontier_costs.size();
             }
-            RCLCPP_DEBUG_STREAM(internal_node_->get_logger(), COLOR_STR("Making list", internal_node_->get_logger().get_name()));
+            LOG_DEBUG("Making list");
             resultData->frontier_list = frontiers_list;
             resultData->frontier_costs = frontier_costs;
             resultData->frontier_distances = frontier_distances;
@@ -123,26 +118,25 @@ namespace frontier_exploration
                 throw std::runtime_error("Lists are not SAME!");
             }
         }
-
         else
         {
-            RCLCPP_ERROR(internal_node_->get_logger(), "Invalid mode of exploration");
+            LOG_FATAL("Invalid mode of exploration");
             rclcpp::shutdown();
         }
-        RCLCPP_DEBUG_STREAM(internal_node_->get_logger(), COLOR_STR("Res frontier costs size: " + std::to_string(resultData->frontier_costs.size()), internal_node_->get_logger().get_name()));
-        RCLCPP_DEBUG_STREAM(internal_node_->get_logger(), COLOR_STR("Res frontier list size: " + std::to_string(resultData->frontier_list.size()), internal_node_->get_logger().get_name()));
+        LOG_DEBUG("Res frontier costs size: " << resultData->frontier_costs.size());
+        LOG_DEBUG("Res frontier list size: " << resultData->frontier_list.size());
+        eventLoggerInstance.endEvent("outside_processOurApproach", 1);
         return resultData->success;
     }
 
-    bool BoundedExploreLayer::updateBoundaryPolygon(geometry_msgs::msg::PolygonStamped& explore_boundary)
+    bool CostAssigner::updateBoundaryPolygon(geometry_msgs::msg::PolygonStamped& explore_boundary)
     {
-        RCLCPP_INFO_STREAM(internal_node_->get_logger(), COLOR_STR("BoundedExploreLayer::updateBoundaryPolygonService", internal_node_->get_logger().get_name()));
-
         // Transform all points of boundary polygon into costmap frame
         geometry_msgs::msg::PointStamped in;
         in.header = explore_boundary.header;
         for (const auto &point32 : explore_boundary.polygon.points)
         {
+            LOG_TRACE("Sending Polygon from config x:" << point32.x << " y: " << point32.y << " z: " << point32.z);
             in.point = nav2_costmap_2d::toPoint(point32);
             polygon_.points.push_back(nav2_costmap_2d::toPoint32(in.point));
         }

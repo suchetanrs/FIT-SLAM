@@ -1,7 +1,10 @@
 // node_graph.cpp
 
 #include "frontier_exploration/planners/FrontierRoadmap.hpp"
-#include "frontier_exploration/GeometryUtils.hpp"
+#include "frontier_exploration/util/GeometryUtils.hpp"
+
+std::unique_ptr<frontier_exploration::FrontierRoadMap> frontier_exploration::FrontierRoadMap::frontierRoadmapPtr = nullptr;
+std::mutex frontier_exploration::FrontierRoadMap::instanceMutex_;
 
 namespace frontier_exploration
 {
@@ -19,7 +22,7 @@ namespace frontier_exploration
 
         node_->declare_parameter("max_frontier_distance", rclcpp::ParameterValue(5.12));
         node_->get_parameter("max_frontier_distance", max_frontier_distance_);
-        RCLCPP_ERROR_STREAM(node_->get_logger(), "Max frontier distance: " << max_frontier_distance_);
+        LOG_INFO("Max frontier distance: " << max_frontier_distance_);
 
         // Subscriber to handle clicked points
         clicked_point_sub_ = node_->create_subscription<geometry_msgs::msg::PointStamped>(
@@ -27,8 +30,7 @@ namespace frontier_exploration
         std::thread t1([this]()
                        { rclcpp::spin(node_); });
         t1.detach();
-        rosViz_ = std::make_shared<RosVisualizer>(node_, costmap_);
-        eventLogger_ = std::make_shared<EventLogger>("roadmap");
+        // rosVisualizerInstance = std::make_shared<RosVisualizer>(node_, costmap_);
     }
 
     void FrontierRoadMap::clickedPointCallback(const geometry_msgs::msg::PointStamped::SharedPtr msg)
@@ -41,10 +43,9 @@ namespace frontier_exploration
             auto p1 = clicked_points_[0];
             auto p2 = clicked_points_[1];
 
-            RCLCPP_INFO(node_->get_logger(), "Calculating plan from (%.2f, %.2f) to (%.2f, %.2f)",
-                        p1.x, p1.y, p2.x, p2.y);
+            LOG_INFO("Calculating plan from " << p1.x << ", " << p1.y << " to " << p2.x << p2.y);
 
-            getPlan(p1.x, p1.y, false, p2.x, p2.y, true);
+            getPlan(p1.x, p1.y, true, p2.x, p2.y, true);
 
             // Reset the clicked points for next input
             clicked_points_.clear();
@@ -58,195 +59,7 @@ namespace frontier_exploration
         return std::make_pair(cell_x, cell_y);
     }
 
-    void FrontierRoadMap::addNodes(const std::vector<Frontier> &frontiers, bool populateClosest)
-    {
-        eventLogger_->startEvent("addNodes");
-        RCLCPP_INFO_STREAM(node_->get_logger(), "Addition frontier list size:" << frontiers.size());
-        eventLogger_->startEvent("populateNodes");
-        populateNodes(frontiers, populateClosest);
-        eventLogger_->endEvent("populateNodes");
-        eventLogger_->endEvent("addNodes");
-    }
-
-    void FrontierRoadMap::reConstructGraph()
-    {
-        geometry_msgs::msg::PoseStamped robotPose;
-        explore_costmap_ros_->getRobotPose(robotPose);
-        // Add each point as a child of the parent if no obstacle is present
-        spatial_hash_map_mutex_.lock();
-        for (const auto &pair : spatial_hash_map_)
-        {
-            if (sqrt(pow(robotPose.pose.position.x - pair.first.first, 2) + pow(robotPose.pose.position.y - pair.first.second, 2)) > max_frontier_distance_)
-            {
-                RCLCPP_INFO_STREAM(node_->get_logger(), "Skipping x: " << pair.first.first << ", y: " << pair.first.second << " from roadmap");
-                continue;
-            }
-            for (const auto &point : pair.second)
-            {
-                std::vector<Frontier> closestNodes;
-                getNodesWithinRadius(point, closestNodes, RADIUS_TO_DECIDE_EDGES);
-                // Ensure the point is added if not already present
-                // if (roadmap_.find(point) == roadmap_.end())
-                // {
-                roadmap_mutex_.lock();
-                roadmap_[point] = {};
-                roadmap_mutex_.unlock();
-                // }
-
-                for (auto &closestNode : closestNodes)
-                {
-                    if (isConnectable(closestNode, point))
-                    {
-                        roadmap_mutex_.lock();
-                        roadmap_[point].push_back(closestNode);
-                        roadmap_mutex_.unlock();
-                    }
-                    else
-                    {
-                        // RCLCPP_ERROR(node_->get_logger(), "Not connectable");
-                    }
-                }
-            }
-        }
-        // roadmap_mutex_.lock();
-        // roadmap_.clear();
-        // roadmap_mutex_.unlock();
-        spatial_hash_map_mutex_.unlock();
-        eventLogger_->startEvent("publishRoadmap");
-        publishRoadMap();
-        eventLogger_->endEvent("publishRoadmap");
-    }
-
-    void FrontierRoadMap::addRobotPoseAsNode(geometry_msgs::msg::Pose& start_pose_w)
-    {
-        Frontier start;
-        start.setGoalPoint(start_pose_w.position.x, start_pose_w.position.y);
-        start.setUID(generateUID(start));
-        std::vector<Frontier> frontier_vec;
-        frontier_vec.push_back(start);
-        addNodes(frontier_vec, false);
-    }
-
-    RoadmapPlanResult FrontierRoadMap::getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd)
-    {
-        RoadmapPlanResult planResult;
-        if(xs == xe && ys == ye)
-        {
-            planResult.path_exists = true;
-            planResult.path_length_m = 0.0;
-            planResult.path = std::vector<std::shared_ptr<Node>>();
-            return planResult;
-        }
-        Frontier start;
-        start.setGoalPoint(xs, ys);
-        start.setUID(generateUID(start));
-        Frontier start_closest;
-        {
-            if (!useClosestToStart)
-            {
-                if(roadmap_.count(start) == 0)
-                {
-                    std::vector<Frontier> frontier_vec;
-                    frontier_vec.push_back(start);
-                    addNodes(frontier_vec, false);
-                    start_closest = start;
-                }
-                else
-                {
-                    std::cout << "Start node: " << xs << ", " << ys << " already in the roadmap" << std::endl;
-                }
-            }
-            else
-            {
-                getClosestNode(start, start_closest);
-            }
-        }
-
-        Frontier goal;
-        goal.setGoalPoint(xe, ye);
-        goal.setUID(generateUID(goal));
-        Frontier goal_closest;
-        {
-            if (!useClosestToEnd)
-            {
-                if(roadmap_.count(goal) == 0)
-                {
-                    std::vector<Frontier> frontier_vec;
-                    frontier_vec.push_back(goal);
-                    addNodes(frontier_vec, false);
-                    goal_closest = goal;
-                }
-                else
-                {
-                    std::cout << "End node: " << xs << ", " << ys << " already in the roadmap" << std::endl;
-                }
-            }
-            else
-            {
-                getClosestNode(goal, goal_closest);
-            }
-        }
-
-        roadmap_mutex_.lock();
-        auto aStarResult = astar_planner_->getPlan(start_closest, goal_closest, roadmap_);
-        planResult.path = aStarResult.first;
-        planResult.path_length_m = aStarResult.second;
-        if(planResult.path.size() == 0)
-        {
-            planResult.path_exists = false;
-            roadmap_mutex_.unlock();
-            return planResult;
-        }
-        // RCLCPP_WARN(node_->get_logger(), "Plan size: %d", plan.size());
-        // rclcpp::sleep_for(std::chrono::seconds(1));
-        roadmap_mutex_.unlock();
-        eventLogger_->startEvent("publishPlan");
-        publishPlan(planResult.path, 0.0, 0.0, 1.0);
-        eventLogger_->endEvent("publishPlan");
-        return planResult;
-    }
-
-    RoadmapPlanResult FrontierRoadMap::getPlan(Frontier &startNode, bool useClosestToStart, Frontier &endNode, bool useClosestToEnd)
-    {
-        return getPlan(startNode.getGoalPoint().x, startNode.getGoalPoint().y, useClosestToStart, endNode.getGoalPoint().x, endNode.getGoalPoint().y, useClosestToEnd);
-        // Frontier start;
-        // Frontier goal;
-        // start.setGoalPoint(xs, ys);
-        // goal.setGoalPoint(xe, ye);
-
-        // Frontier start_closest;
-        // Frontier goal_closest;
-        // getClosestNode(start, start_closest);
-        // getClosestNode(goal, goal_closest);
-
-        // roadmap_mutex_.lock();
-        // auto plan = astar_planner_->getPlan(goal_closest, start_closest, roadmap_);
-        // RCLCPP_WARN(node_->get_logger(), "Plan size: %d", plan.size());
-        // roadmap_mutex_.unlock();
-        // publishPlan(plan);
-    }
-
-    bool FrontierRoadMap::isConnectable(const Frontier &f1, const Frontier &f2)
-    {
-        // rclcpp::sleep_for(std::chrono::milliseconds(200));
-        std::vector<nav2_costmap_2d::MapLocation> traced_cells;
-        RayTracedCells cell_gatherer(costmap_, traced_cells, 253, 254, 0, 255);
-        unsigned int max_length = max_connection_length_ / costmap_->getResolution();
-        if (!getTracedCells(f1.getGoalPoint().x, f1.getGoalPoint().y, f2.getGoalPoint().x, f2.getGoalPoint().y, cell_gatherer, max_length, costmap_))
-        {
-            return false;
-        }
-        if (cell_gatherer.hasHitObstacle())
-        {
-            return false;
-        }
-        // rosViz_->observableCellsViz(cell_gatherer.getCells());
-        // RCLCPP_INFO_STREAM(node_->get_logger(), "ray trace cell size" << cell_gatherer.getCells().size());
-
-        return true;
-    }
-
-    void FrontierRoadMap::populateNodes(const std::vector<Frontier> &frontiers, bool populateClosest)
+    void FrontierRoadMap::populateNodes(const std::vector<Frontier> &frontiers, bool populateClosest, double min_distance_between_to_add)
     {
         // PROFILE_FUNCTION;
         for (auto &new_frontier : frontiers)
@@ -255,36 +68,46 @@ namespace frontier_exploration
             auto new_point = new_frontier.getGoalPoint();
             auto grid_cell = getGridCell(new_point.x, new_point.y);
             spatial_hash_map_mutex_.lock();
+            // make a cell in the spatial hash map if it does not exist already
             if (spatial_hash_map_.count(grid_cell) == 0)
                 spatial_hash_map_[grid_cell] = {};
             spatial_hash_map_mutex_.unlock();
             if (!populateClosest)
             {
+                // LOG_TRACE(new_frontier);
                 spatial_hash_map_mutex_.lock();
-                spatial_hash_map_[grid_cell].push_back(new_frontier);
+                for (auto &point : spatial_hash_map_[grid_cell])
+                {
+                    // LOG_TRACE("Existing frontier");
+                    // LOG_TRACE(point);
+                    if (distanceBetweenFrontiers(new_frontier, point) < 0.1)
+                        isNew = false;
+                }
+                if (isNew)
+                    spatial_hash_map_[grid_cell].push_back(new_frontier);
                 spatial_hash_map_mutex_.unlock();
                 continue;
             }
-            // RCLCPP_WARN_STREAM(node_->get_logger(), "New Point x is: " << new_point.x);
-            // RCLCPP_WARN_STREAM(node_->get_logger(), "New Point y is: " << new_point.y);
-            // RCLCPP_WARN_STREAM(node_->get_logger(), "Grid cell x is: " << grid_cell.first);
-            // RCLCPP_WARN_STREAM(node_->get_logger(), "Grid cell y is: " << grid_cell.second);
+            // LOG_INFO("New Point x is: " << new_point.x);
+            // LOG_INFO("New Point y is: " << new_point.y);
+            // LOG_INFO("Grid cell x is: " << grid_cell.first);
+            // LOG_INFO("Grid cell y is: " << grid_cell.second);
             for (int dx = -1; dx <= 1; ++dx)
             {
                 for (int dy = -1; dy <= 1; ++dy)
                 {
                     auto neighbor_cell = std::make_pair(grid_cell.first + dx, grid_cell.second + dy);
-                    // RCLCPP_WARN_STREAM(node_->get_logger(), "Neighbour cell at x: " << neighbor_cell.first << " and y: " << neighbor_cell.second);
+                    // LOG_INFO("Neighbour cell at x: " << neighbor_cell.first << " and y: " << neighbor_cell.second);
                     spatial_hash_map_mutex_.lock();
                     if (spatial_hash_map_.count(neighbor_cell) > 0)
                     {
                         for (const auto &existing_frontier : spatial_hash_map_[neighbor_cell])
                         {
-                            // RCLCPP_WARN_STREAM(node_->get_logger(), "Checking frontier at x: " << existing_frontier.getGoalPoint().x << " and y: " << existing_frontier.getGoalPoint().y);
-                            if (distanceBetweenFrontiers(new_frontier, existing_frontier) < 1.0)
+                            // LOG_INFO("Checking frontier at x: " << existing_frontier.getGoalPoint().x << " and y: " << existing_frontier.getGoalPoint().y);
+                            if (distanceBetweenFrontiers(new_frontier, existing_frontier) < min_distance_between_to_add)
                             {
                                 isNew = false;
-                                // RCLCPP_ERROR_STREAM(node_->get_logger(), "The frontier at x: " << new_frontier.getGoalPoint().x << " and y: "
+                                // LOG_INFO("The frontier at x: " << new_frontier.getGoalPoint().x << " and y: "
                                 //                                                                << new_frontier.getGoalPoint().y << " is very close (spatial hash). Discarding..");
                                 spatial_hash_map_mutex_.unlock();
                                 break;
@@ -309,6 +132,138 @@ namespace frontier_exploration
                 spatial_hash_map_mutex_.unlock();
             }
         }
+    }
+
+    void FrontierRoadMap::addNodes(const std::vector<Frontier> &frontiers, bool populateClosest)
+    {
+        eventLoggerInstance.startEvent("addNodes", 2);
+        LOG_INFO("Going to add these many frontiers to the spatial hash map:" << frontiers.size());
+        eventLoggerInstance.startEvent("populateNodes", 2);
+        populateNodes(frontiers, populateClosest, MIN_DISTANCE_BETWEEN_TWO_FRONTIER_NODES);
+        eventLoggerInstance.endEvent("populateNodes", 2);
+        eventLoggerInstance.endEvent("addNodes", 2);
+    }
+
+    void FrontierRoadMap::addRobotPoseAsNode(geometry_msgs::msg::Pose &start_pose_w, bool populateClosest)
+    {
+        Frontier start;
+        start.setGoalPoint(start_pose_w.position.x, start_pose_w.position.y);
+        start.setUID(generateUID(start));
+        std::vector<Frontier> frontier_vec;
+        frontier_vec.push_back(start);
+        populateNodes(frontier_vec, populateClosest, MIN_DISTANCE_BETWEEN_TWO_FRONTIER_NODES);
+    }
+
+    void FrontierRoadMap::constructNewEdges(const std::vector<Frontier> &frontiers)
+    {
+        LOG_INFO("Reconstructing new frontier edges");
+        // Add each point as a child of the parent if no obstacle is present
+        spatial_hash_map_mutex_.lock();
+        for (const auto &point : frontiers)
+        {
+            std::vector<Frontier> closestNodes;
+            getNodesWithinRadius(point, closestNodes, RADIUS_TO_DECIDE_EDGES);
+            // Ensure the point is added if not already present
+            if (roadmap_.find(point) == roadmap_.end())
+            {
+                roadmap_mutex_.lock();
+                roadmap_[point] = {};
+                roadmap_mutex_.unlock();
+            }
+            int numChildren = 0;
+            for (auto &closestNode : closestNodes)
+            {
+                if (closestNode == point)
+                    continue;
+                if (isConnectable(closestNode, point))
+                {
+                    roadmap_mutex_.lock();
+                    // initialize the closest node memory to add children.
+                    if (roadmap_.find(closestNode) == roadmap_.end())
+                        roadmap_[closestNode] = {};
+                    // add if only it does not already exist.
+                    auto addition1 = roadmap_[point];
+                    auto addition2 = roadmap_[closestNode];
+                    if (std::find(addition1.begin(), addition1.end(), closestNode) == addition1.end())
+                        roadmap_[point].push_back(closestNode);
+                    if (std::find(addition2.begin(), addition2.end(), point) == addition2.end())
+                        roadmap_[closestNode].push_back(point);
+                    roadmap_mutex_.unlock();
+                    numChildren++;
+                }
+                else
+                {
+                    // LOG_INFO("Not connectable");
+                }
+            }
+            LOG_TRACE("Clearing roadmap and constructing new edges for: " << point << " with " << numChildren << " children");
+        }
+        // roadmap_mutex_.lock();
+        // roadmap_.clear();
+        // roadmap_mutex_.unlock();
+        spatial_hash_map_mutex_.unlock();
+    }
+
+    void FrontierRoadMap::constructNewEdgeRobotPose(const geometry_msgs::msg::Pose &rPose)
+    {
+        LOG_INFO("Reconstructing new robot pose edges");
+        Frontier rPoseF;
+        rPoseF.setGoalPoint(rPose.position.x, rPose.position.y);
+        rPoseF.setUID(generateUID(rPoseF));
+        std::vector<Frontier> toAdd;
+        toAdd.push_back(rPoseF);
+        constructNewEdges(toAdd);
+    }
+
+    void FrontierRoadMap::reConstructGraph()
+    {
+        LOG_INFO("Reconstructing entire graph within radius: " << max_frontier_distance_);
+        geometry_msgs::msg::PoseStamped robotPose;
+        explore_costmap_ros_->getRobotPose(robotPose);
+        // Add each point as a child of the parent if no obstacle is present
+        spatial_hash_map_mutex_.lock();
+        for (const auto &pair : spatial_hash_map_)
+        {
+            if (sqrt(pow(robotPose.pose.position.x - pair.first.first, 2) + pow(robotPose.pose.position.y - pair.first.second, 2)) > max_frontier_distance_)
+            {
+                LOG_DEBUG("Skipping x: " << pair.first.first << ", y: " << pair.first.second << " from roadmap");
+                continue;
+            }
+            for (const auto &point : pair.second)
+            {
+                std::vector<Frontier> closestNodes;
+                getNodesWithinRadius(point, closestNodes, RADIUS_TO_DECIDE_EDGES);
+                // Ensure the point is added if not already present
+                // if (roadmap_.find(point) == roadmap_.end())
+                // {
+                roadmap_mutex_.lock();
+                roadmap_[point] = {};
+                roadmap_mutex_.unlock();
+                // }
+
+                for (auto &closestNode : closestNodes)
+                {
+                    if (closestNode == point)
+                        continue;
+                    if (isConnectable(closestNode, point))
+                    {
+                        roadmap_mutex_.lock();
+                        auto addition1 = roadmap_[point];
+                        if (std::find(addition1.begin(), addition1.end(), closestNode) == addition1.end())
+                            roadmap_[point].push_back(closestNode);
+                        roadmap_mutex_.unlock();
+                    }
+                    else
+                    {
+                        // LOG_INFO("Not connectable");
+                    }
+                }
+            }
+        }
+        // roadmap_mutex_.lock();
+        // roadmap_.clear();
+        // roadmap_mutex_.unlock();
+        spatial_hash_map_mutex_.unlock();
     }
 
     void FrontierRoadMap::getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, const double radius)
@@ -368,7 +323,7 @@ namespace frontier_exploration
         }
     }
 
-    void FrontierRoadMap::getClosestNode(const Frontier &interestNode, Frontier &closestNode)
+    void FrontierRoadMap::getClosestNodeInHashmap(const Frontier &interestNode, Frontier &closestNode)
     {
         auto grid_cell = getGridCell(interestNode.getGoalPoint().x, interestNode.getGoalPoint().y);
         double min_distance = std::numeric_limits<double>::max();
@@ -377,12 +332,14 @@ namespace frontier_exploration
         while (!foundClosestNode)
         {
             int searchRadius = GRID_CELL_SIZE * searchRadiusMultiplier;
+            if (searchRadius > 10)
+                LOG_CRITICAL("Cannot find closest node within 10m. This is not ok.")
             for (int dx = -searchRadius; dx <= searchRadius; ++dx)
             {
                 for (int dy = -searchRadius; dy <= searchRadius; ++dy)
                 {
                     auto neighbor_cell = std::make_pair(grid_cell.first + dx, grid_cell.second + dy);
-                    // RCLCPP_WARN_STREAM(node_->get_logger(), "Neighbour cell at x: " << neighbor_cell.first << " and y: " << neighbor_cell.second);
+                    // LOG_INFO("Neighbour cell at x: " << neighbor_cell.first << " and y: " << neighbor_cell.second);
                     spatial_hash_map_mutex_.lock();
                     if (spatial_hash_map_.count(neighbor_cell) > 0)
                     {
@@ -402,6 +359,175 @@ namespace frontier_exploration
             }
             ++searchRadiusMultiplier;
         }
+    }
+
+    void FrontierRoadMap::getClosestNodeInRoadMap(const Frontier &interestNode, Frontier &closestNode)
+    {
+        auto grid_cell = getGridCell(interestNode.getGoalPoint().x, interestNode.getGoalPoint().y);
+        double min_distance = std::numeric_limits<double>::max();
+        bool foundClosestNode = false;
+        int searchRadiusMultiplier = 1;
+        while (!foundClosestNode)
+        {
+            int searchRadius = GRID_CELL_SIZE * searchRadiusMultiplier;
+            if (searchRadius > 10)
+                LOG_CRITICAL("Cannot find closest node within 10m. This is not ok.")
+            for (int dx = -searchRadius; dx <= searchRadius; ++dx)
+            {
+                for (int dy = -searchRadius; dy <= searchRadius; ++dy)
+                {
+                    auto neighbor_cell = std::make_pair(grid_cell.first + dx, grid_cell.second + dy);
+                    // LOG_INFO("Neighbour cell at x: " << neighbor_cell.first << " and y: " << neighbor_cell.second);
+                    spatial_hash_map_mutex_.lock();
+                    if (spatial_hash_map_.count(neighbor_cell) > 0)
+                    {
+                        for (const auto &existing_frontier : spatial_hash_map_[neighbor_cell])
+                        {
+                            roadmap_mutex_.lock();
+                            if (roadmap_.count(existing_frontier) > 0)
+                            {
+                                double distance = distanceBetweenFrontiers(interestNode, existing_frontier);
+                                if (distance < min_distance)
+                                {
+                                    foundClosestNode = true;
+                                    min_distance = distance;
+                                    closestNode = existing_frontier;
+                                }
+                            }
+                            roadmap_mutex_.unlock();
+                        }
+                    }
+                    spatial_hash_map_mutex_.unlock();
+                }
+            }
+            ++searchRadiusMultiplier;
+        }
+    }
+
+    RoadmapPlanResult FrontierRoadMap::getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd)
+    {
+        RoadmapPlanResult planResult;
+        if (xs == xe && ys == ye)
+        {
+            planResult.path_exists = true;
+            planResult.path_length_m = 0.0;
+            planResult.path = std::vector<std::shared_ptr<Node>>();
+            return planResult;
+        }
+        Frontier start;
+        start.setGoalPoint(xs, ys);
+        start.setUID(generateUID(start));
+        Frontier start_closest;
+        {
+            if (!useClosestToStart)
+            {
+                if (roadmap_.count(start) == 0)
+                {
+                    std::vector<Frontier> frontier_vec;
+                    frontier_vec.push_back(start);
+                    addNodes(frontier_vec, false);
+                    start_closest = start;
+                }
+                else
+                {
+                    LOG_INFO("Start node: " << xs << ", " << ys << " already in the roadmap");
+                }
+            }
+            else
+            {
+                getClosestNodeInRoadMap(start, start_closest);
+            }
+        }
+
+        Frontier goal;
+        goal.setGoalPoint(xe, ye);
+        goal.setUID(generateUID(goal));
+        Frontier goal_closest;
+        {
+            if (!useClosestToEnd)
+            {
+                if (roadmap_.count(goal) == 0)
+                {
+                    std::vector<Frontier> frontier_vec;
+                    frontier_vec.push_back(goal);
+                    addNodes(frontier_vec, false);
+                    goal_closest = goal;
+                }
+                else
+                {
+                    LOG_INFO("End node: " << xs << ", " << ys << " already in the roadmap");
+                }
+            }
+            else
+            {
+                getClosestNodeInRoadMap(goal, goal_closest);
+            }
+        }
+
+        roadmap_mutex_.lock();
+        LOG_DEBUG("Getting path from: " << start << " to " << goal);
+        LOG_DEBUG("In turn calculating from:" << start_closest << " to " << goal_closest);
+        auto aStarResult = astar_planner_->getPlan(start_closest, goal_closest, roadmap_);
+        planResult.path = aStarResult.first;
+        planResult.path_length_m = aStarResult.second;
+        planResult.path_exists = true;
+        if (planResult.path.size() == 0)
+        {
+            LOG_WARN("Could not compute path from: " << xs << ", " << ys << " to " << xe << ", " << ye);
+            planResult.path_exists = false;
+            roadmap_mutex_.unlock();
+            return planResult;
+        }
+        // LOG_INFO("Plan size: %d", plan.size());
+        // rclcpp::sleep_for(std::chrono::seconds(1));
+        roadmap_mutex_.unlock();
+        LOG_TRACE("Path information:");
+        for (auto &fullPoint : planResult.path)
+        {
+            LOG_TRACE(fullPoint->frontier << " , ");
+        }
+        LOG_TRACE("Path length in m: " << planResult.path_length_m);
+        return planResult;
+    };
+
+    RoadmapPlanResult FrontierRoadMap::getPlan(Frontier &startNode, bool useClosestToStart, Frontier &endNode, bool useClosestToEnd)
+    {
+        return getPlan(startNode.getGoalPoint().x, startNode.getGoalPoint().y, useClosestToStart, endNode.getGoalPoint().x, endNode.getGoalPoint().y, useClosestToEnd);
+        // Frontier start;
+        // Frontier goal;
+        // start.setGoalPoint(xs, ys);
+        // goal.setGoalPoint(xe, ye);
+
+        // Frontier start_closest;
+        // Frontier goal_closest;
+        // getClosestNodeInHashmap(start, start_closest);
+        // getClosestNodeInHashmap(goal, goal_closest);
+
+        // roadmap_mutex_.lock();
+        // auto plan = astar_planner_->getPlan(goal_closest, start_closest, roadmap_);
+        // LOG_INFO("Plan size: %d", plan.size());
+        // roadmap_mutex_.unlock();
+        // publishPlan(plan);
+    }
+
+    bool FrontierRoadMap::isConnectable(const Frontier &f1, const Frontier &f2)
+    {
+        // rclcpp::sleep_for(std::chrono::milliseconds(200));
+        std::vector<nav2_costmap_2d::MapLocation> traced_cells;
+        RayTracedCells cell_gatherer(costmap_, traced_cells, 253, 254, 0, 255);
+        unsigned int max_length = max_connection_length_ / costmap_->getResolution();
+        if (!getTracedCells(f1.getGoalPoint().x, f1.getGoalPoint().y, f2.getGoalPoint().x, f2.getGoalPoint().y, cell_gatherer, max_length, costmap_))
+        {
+            return false;
+        }
+        if (cell_gatherer.hasHitObstacle())
+        {
+            return false;
+        }
+        // RosVisualizer::getInstance()observableCellsViz(cell_gatherer.getCells());
+        // LOG_INFO("ray trace cell size" << cell_gatherer.getCells().size());
+
+        return true;
     }
 
     void FrontierRoadMap::publishRoadMap()
@@ -433,21 +559,26 @@ namespace frontier_exploration
         edge_marker.action = visualization_msgs::msg::Marker::ADD;
         edge_marker.pose.orientation.w = 1.0;
         edge_marker.scale.x = 0.02; // Thickness of the lines
-        edge_marker.color.a = 0.18;  // 1.0 - Fully opaque
+        edge_marker.color.a = 0.18; // 1.0 - Fully opaque
         edge_marker.color.r = 0.3;  // Red channel
         edge_marker.color.g = 0.7;  // Green channel
         edge_marker.color.b = 1.0;  // Blue channel
 
+        LOG_TRACE("Roadmap points: ")
         // Populate the markers
         for (const auto &pair : roadmap_)
         {
+            LOG_TRACE("parent:")
             Frontier parent = pair.first;
+            LOG_TRACE(parent);
             geometry_msgs::msg::Point parent_point = parent.getGoalPoint();
             parent_point.z = 0.15;
             node_marker.points.push_back(parent_point);
 
             for (const auto &child : pair.second)
             {
+                LOG_TRACE("Children:")
+                LOG_TRACE(child);
                 geometry_msgs::msg::Point child_point = child.getGoalPoint();
                 child_point.z = 0.15;
                 node_marker.points.push_back(child_point);
@@ -455,7 +586,9 @@ namespace frontier_exploration
                 edge_marker.points.push_back(parent_point);
                 edge_marker.points.push_back(child_point);
             }
+            LOG_TRACE("=======")
         }
+        LOG_TRACE("***********Roadmap points end: ")
 
         // Add the markers to the marker array
         marker_pub_roadmap_vertices_->publish(node_marker);
@@ -500,9 +633,9 @@ namespace frontier_exploration
         edge_marker.pose.orientation.w = 1.0;
         edge_marker.scale.x = 0.15; // Thickness of the lines
         edge_marker.color.a = 1.0;  // Fully opaque
-        edge_marker.color.r = 0.0;
-        edge_marker.color.g = 0.0;
-        edge_marker.color.b = 1.0;
+        edge_marker.color.r = r;
+        edge_marker.color.g = g;
+        edge_marker.color.b = b;
 
         // Populate the markers
         for (const auto &node : plan)
@@ -513,8 +646,8 @@ namespace frontier_exploration
 
         for (size_t i = 0; i < plan.size() - 1; ++i)
         {
-            std::cout << "New start point in plan: " << plan[i]->frontier.getGoalPoint().x << ", " << plan[i]->frontier.getGoalPoint().y << std::endl;
-            std::cout << "New end point in plan: " << plan[i + 1]->frontier.getGoalPoint().x << ", " << plan[i + 1]->frontier.getGoalPoint().y << std::endl;
+            // LOG_TRACE("New start point in plan: " << plan[i]->frontier.getGoalPoint().x << ", " << plan[i]->frontier.getGoalPoint().y);
+            // LOG_TRACE("New end point in plan: " << plan[i + 1]->frontier.getGoalPoint().x << ", " << plan[i + 1]->frontier.getGoalPoint().y);
             geometry_msgs::msg::Point start_point = plan[i]->frontier.getGoalPoint();
             geometry_msgs::msg::Point end_point = plan[i + 1]->frontier.getGoalPoint();
 

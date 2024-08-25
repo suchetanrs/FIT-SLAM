@@ -1,49 +1,3 @@
-kill -9 %1
-clear
-ros2 run exploration_sim explore_sim 
-kk
-cd dev_ws/
-colcon build --symlink-install --packages-select frontier_exploration
-colcon build --symlink-install --packages-select exploration_sim
-ros2 run exploration_sim explore_sim 
-bash
-colcon build --symlink-install --packages-select frontier_exploration
-bash
-cd dev_ws/
-sl
-ls
-rviz2
-colcon build --symlink-install
-rviz2
-colcon build --symlink-install
-rviz2
-colcon build --symlink-install
-colcon build --symlink-install --packages-select frontier_msgs
-rm -rf build/ install/ log/
-colcon build --symlink-install
-\
-colcon build --symlink-install
-rviz2
-colcon build --symlink-install
-rviz2
-colcon build --symlink-install
-rviz2
-colcon build --symlink-install
-rviz2
-bash
-cd dev_ws/src/frontier_exploration/frontier_multirobot_allocator/
-cd
-cd dev_ws/src/frontier_exploration/frontier_multirobot_allocator/
-ls
-cd build/
-cmake ..
-make
-make install
-pidof explore_server
-kill -9 1265 1264
-kill -9 1265 1264
-pidof explore_server
-pidof explore_server
 pidof explore_server
 pidof explore_server
 pidof explore_server
@@ -1998,3 +1952,49 @@ cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ &&
 cd dev_ws && vsc
 ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
 rviz2
+cd dev_ws/
+colcon build --symlink-install
+clear
+nano ~/.tmux.conf 
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd dev_ws && vsc
+colcon build --symlink-install
+vsc
+pidof code
+kill -9 $(pidof code)
+vsc
+colcon build --symlink-install
+vsc
+colcon build --symlink-install
+vsc
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+pidof code
+kill -9 $(pidof code)
+vsc
+colcon build --symlink-install
+cd build/
+ls
+cd frontier_
+cd frontier_exploration/
+ls
+./logger_test 
+clear
+./logger_test 
+clear
+./logger_test 
+clear
+./logger_test 
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+apt-get install gdb*
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+kill -9 %1
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ls
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ls
+cd de
+cd dev_ws/
+colcon build --symlink-install

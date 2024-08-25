@@ -17,7 +17,7 @@ bt_exploration_node:
     frontier_match_yaw_threshold: 0.40
     process_other_robots: true
 
-bounded_explore_layer:
+CostAssigner:
   ros__parameters:
     counter: 031150
     exploration_mode: ours

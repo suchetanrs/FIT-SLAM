@@ -93,107 +93,111 @@ controller_server:
 
     # DWB parameters
     FollowPath:
-      plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 56
-      model_dt: 0.05
-      batch_size: 2000
-      vx_std: 1.0
-      vy_std: 0.2
-      wz_std: 1.0
-      vx_max: 1.2
-      vx_min: -1.2
-      vy_max: 0.5
-      wz_max: 1.2
-      # vx_std: 0.5
-      # vy_std: 0.2
-      # wz_std: 0.5
-      # vx_max: 0.5
-      # vx_min: -0.5
-      # vy_max: 0.5
-      # wz_max: 0.5
-      iteration_count: 1
-      prune_distance: 1.7
-      transform_tolerance: 0.1
-      temperature: 0.3
-      gamma: 0.015
-      motion_model: "DiffDrive"
-      visualize: false
-      TrajectoryVisualizer:
-        trajectory_step: 5
-        time_step: 3
-      AckermannConstraints:
-        min_turning_r: 0.2
-      critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic"]
-      ConstraintCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 4.0
-      GoalCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 5.0
-        threshold_to_consider: 1.4
-      GoalAngleCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 3.0
-        threshold_to_consider: 0.5
-      PreferForwardCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 5.0
-        threshold_to_consider: 0.5
-      # Option to replace Cost and use Obstacles instead
-      # ObstaclesCritic:
-      #   enabled: true
-      #   cost_power: 1
-      #   repulsion_weight: 1.5
-      #   critical_weight: 20.0
-      #   consider_footprint: false
-      #   collision_cost: 10000.0
-      #   collision_margin_distance: 0.1
-      #   near_goal_distance: 0.5
-      CostCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 3.81
-        critical_cost: 300.0
-        consider_footprint: true
-        collision_cost: 1000000.0
-        near_goal_distance: 1.0
-        trajectory_point_step: 2
-      PathAlignCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 14.0
-        max_path_occupancy_ratio: 0.05
-        trajectory_point_step: 4
-        threshold_to_consider: 0.5
-        offset_from_furthest: 20
-        use_path_orientations: false
-      PathFollowCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 5.0
-        offset_from_furthest: 5
-        threshold_to_consider: 1.4
-      PathAngleCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 2.0
-        offset_from_furthest: 4
-        threshold_to_consider: 0.5
-        max_angle_to_furthest: 1.0
-        forward_preference: true
-      # VelocityDeadbandCritic:
-      #   enabled: true
-      #   cost_power: 1
-      #   cost_weight: 35.0
-      #   deadband_velocities: [0.05, 0.05, 0.05]
-      # TwirlingCritic:
-      #   enabled: true
-      #   twirling_cost_power: 1
-      #   twirling_cost_weight: 10.0
+      plugin: "teb_local_planner::TebLocalPlannerROS"
+
+      teb_autosize: 1.0
+      dt_ref: 0.3
+      dt_hysteresis: 0.05
+      max_samples: 500
+      global_plan_overwrite_orientation: False
+      allow_init_with_backwards_motion: False
+      max_global_plan_lookahead_dist: 5.0
+      global_plan_viapoint_sep: 0.0
+      global_plan_prune_distance: 3.0
+      exact_arc_length: False
+      feasibility_check_no_poses: 2
+      publish_feedback: True
+
+      # Robot
+      max_vel_x: 5.0
+      max_vel_theta: 5.6
+      acc_lim_x: 2.5
+      acc_lim_theta: 3.4
+
+      footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
+        type: "circular" #"circular"
+        # front_offset: 0.05 
+        # front_radius: 0.23 
+        # rear_offset: 0.065 
+        # rear_radius: 0.22 
+        radius: 0.60 # for type "circular"
+
+      # GoalTolerance
+
+      free_goal_vel: False
+
+      # Obstacles
+
+      min_obstacle_dist: 0.1
+      inflation_dist: 0.4
+      include_costmap_obstacles: True
+      costmap_obstacles_behind_robot_dist: 1.0
+      obstacle_poses_affected: 5
+
+      dynamic_obstacle_inflation_dist: 0.6
+      include_dynamic_obstacles: True
+
+      # costmap_converter_plugin: "costmap_converter::CostmapToPolygonsDBSMCCH"
+      costmap_converter_plugin: ""
+      costmap_converter_spin_thread: True
+      costmap_converter_rate: 5
+
+      # Optimization
+
+      no_inner_iterations: 5
+      no_outer_iterations: 4
+      optimization_activate: True
+      optimization_verbose: False
+      penalty_epsilon: 0.1
+      obstacle_cost_exponent: 4.0
+      weight_max_vel_x: 0.5
+      weight_max_vel_theta: 0.5
+      weight_acc_lim_x: 0.5
+      weight_acc_lim_theta: 10.5
+      weight_kinematics_nh: 1000.0
+      weight_kinematics_forward_drive: 3000.0
+      weight_kinematics_turning_radius: 1.0
+      weight_optimaltime: 1.0 # must be > 0
+      weight_shortest_path: 10.0
+      weight_obstacle: 500.0
+      weight_inflation: 0.2
+      weight_dynamic_obstacle: 10.0 # not in use yet
+      weight_dynamic_obstacle_inflation: 0.2
+      weight_viapoint: 50.0
+      weight_adapt_factor: 2.0
+
+      # Homotopy Class Planner
+
+      enable_homotopy_class_planning: False #True
+      enable_multithreading: True
+      max_number_classes: 2
+      selection_cost_hysteresis: 5.0
+      selection_prefer_initial_plan: 1.0
+      selection_obst_cost_scale: 1.0
+      selection_alternative_time_cost: True
+
+      roadmap_graph_no_samples: 15
+      roadmap_graph_area_width: 5.0
+      roadmap_graph_area_length_scale: 1.0
+      h_signature_prescaler: 0.5
+      h_signature_threshold: 0.1
+      obstacle_heading_threshold: 0.45
+      switching_blocking_period: 0.0
+      viapoints_all_candidates: True
+      delete_detours_backwards: True
+      max_ratio_detours_duration_best_duration: 3.0
+      visualize_hc_graph: False
+      visualize_with_time_as_z_axis_scale: 0.0
+
+      # Recovery
+
+      shrink_horizon_backup: True
+      shrink_horizon_min_duration: 10.0
+      oscillation_recovery: True
+      oscillation_v_eps: 0.1
+      oscillation_omega_eps: 0.1
+      oscillation_recovery_min_duration: 10.0
+      oscillation_filter_duration: 10.0
 
 local_costmap:
   local_costmap:

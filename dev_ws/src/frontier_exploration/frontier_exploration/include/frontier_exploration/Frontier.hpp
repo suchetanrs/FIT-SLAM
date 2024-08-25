@@ -11,6 +11,8 @@
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <nav2_util/geometry_utils.hpp>
 
+#include "frontier_exploration/util/logger.hpp"
+
 // Constants for weights
 #define ALPHA 0.5
 #define BETA 0.5 
@@ -119,7 +121,7 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Frontier& obj) {
         // Customize the output format here
         os << "Frontier(x: " << obj.getGoalPoint().x << ", y: " << obj.getGoalPoint().y << ")";
-        os << "Frontier Path Length(PL: " << obj.getPathLength() << ", PLm: " << obj.getPathLength() << ")";
+        // os << "Frontier Path Length(PL: " << obj.getPathLength() << ", PLm: " << obj.getPathLength() << ")";
         return os;
     }
 };
@@ -147,5 +149,24 @@ inline size_t generateUID(const Frontier& output)
 
     // return hash1 ^ (hash2 << 1);
     return hash1 ^ (hash2 << 1);
+};
+
+struct FrontierHash
+{
+    size_t operator()(const Frontier &key) const
+    {
+        // Calculate hash based on some combination of member variables
+        size_t hash = 0;
+        // hash =     std::hash<uint32_t>()(key.size) ^
+        //         std::hash<double>()(key.min_distance) ^
+        //         std::hash<double>()(key.unique_id);
+
+        hash = std::hash<double>()(key.getGoalPoint().x) ^
+                (std::hash<double>()(key.getGoalPoint().y) << 1);
+                // std::hash<uint32_t>()(key.size) ^
+                // std::hash<double>()(key.min_distance) ^
+                // std::hash<double>()(key.unique_id);
+        return hash;
+    }
 };
 #endif

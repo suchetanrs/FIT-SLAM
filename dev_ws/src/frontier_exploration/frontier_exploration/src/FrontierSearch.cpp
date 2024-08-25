@@ -13,8 +13,8 @@ namespace frontier_exploration
           max_frontier_distance_(max_frontier_distance),
           original_search_distance_(max_frontier_distance)
     {
-        RCLCPP_DEBUG(rclcpp::get_logger("frontier_search"), "FrontierSearch::FrontierSearch");
-        RCLCPP_ERROR_STREAM(rclcpp::get_logger("frontier_search"), "MAX SEARCH DISTANCE: " << max_frontier_distance_);
+        LOG_DEBUG("FrontierSearch::FrontierSearch");
+        LOG_INFO("MAX SEARCH DISTANCE: " << max_frontier_distance_);
     }
 
     std::vector<Frontier> FrontierSearch::searchFrom(geometry_msgs::msg::Point position)
@@ -26,7 +26,7 @@ namespace frontier_exploration
         unsigned int mx, my;
         if (!costmap_.worldToMap(position.x, position.y, mx, my))
         {
-            RCLCPP_ERROR(rclcpp::get_logger("frontier_search"), "Robot out of costmap bounds, cannot search for frontiers");
+            LOG_CRITICAL("Robot out of costmap bounds, cannot search for frontiers");
             return frontier_list;
         }
 
@@ -50,11 +50,11 @@ namespace frontier_exploration
         else
         {
             bfs.push(pos);
-            RCLCPP_WARN(rclcpp::get_logger("frontier_search"), "Could not find nearby clear cell to start search, pushing current position of robot to start search");
+            LOG_WARN("Could not find nearby clear cell to start search, pushing current position of robot to start search");
         }
         visited_flag[bfs.front()] = true;
 
-        while (!bfs.empty())
+        while (rclcpp::ok() && !bfs.empty())
         {
             unsigned int idx = bfs.front();
             bfs.pop();
@@ -62,7 +62,6 @@ namespace frontier_exploration
             // iterate over 4-connected neighbourhood
             for (unsigned nbr : nhood4(idx, costmap_))
             {
-                // RCLCPP_INFO(rclcpp::get_logger("frontier_search"), "New nhood4");
                 // add to queue all free, unvisited cells, use descending search in case initialized on non-free cell
                 if (map_[nbr] <= map_[idx] && !visited_flag[nbr])
                 {
@@ -84,16 +83,14 @@ namespace frontier_exploration
                         if (curr_frontier.getSize() > min_frontier_cluster_size_)
                         {
                             frontier_list.push_back(curr_frontier);
-                            // std::cout << "PUSHING NEW FRONTIER TO LIST: UID: " << curr_frontier.unique_id << std::endl;
-                            // std::cout << "Size: " << curr_frontier.size << std::endl;
-                            // std::cout << "Minimum Distance: " << curr_frontier.min_distance << std::endl;
-                            // std::cout << "Goal Point: (" << curr_frontier.goal_point.x << ", " << curr_frontier.goal_point.y << ")" << std::endl;
+                            LOG_TRACE("PUSHING NEW FRONTIER TO LIST: UID: " << curr_frontier.getUID());
+                            LOG_TRACE("Size: " << curr_frontier.getSize());
+                            LOG_TRACE("Goal Point: (" << curr_frontier.getGoalPoint().x << ", " << curr_frontier.getGoalPoint().y << ")");
                         }
                     }
                 }
             }
         }
-
         return frontier_list;
     }
 
@@ -122,7 +119,7 @@ namespace frontier_exploration
         costmap_.mapToWorld(rx, ry, reference_x, reference_y);
         int current_cluster_size = 0;
 
-        while (!bfs.empty())
+        while (rclcpp::ok() && !bfs.empty())
         {
             unsigned int idx = bfs.front();
             bfs.pop();
@@ -158,27 +155,27 @@ namespace frontier_exploration
                     {
                         Frontier output;
                         #ifdef FRONTIER_POINT_MEDIAN
-                        std::cout << "Getting centroid" << std::endl;
+                        LOG_DEBUG("*************");
+                        LOG_DEBUG("Getting centroid")
                         auto cluster_centroid = getCentroidOfCells(frontier_cell_indices, (costmap_.getResolution() * 1.414 * 2));
                         SortByMedianFunctor sortFunctor(cluster_centroid);
                         std::sort(frontier_cell_indices.begin(), frontier_cell_indices.end(), sortFunctor);
                         auto goal_point = frontier_cell_indices[static_cast<int>(frontier_cell_indices.size() / 2)];
                         output.setGoalPoint(goal_point.first, goal_point.second);
                         output.setSize(currentFrontierSize);
-                        std::cout << "Cluster size: " << frontier_cell_indices.size() << std::endl;
-                        std::cout << "x, y goal: " << goal_point.first << " , " << goal_point.second << std::endl;
-                        std::cout << "Cluster components: ";
+                        LOG_DEBUG("Cluster size: " << frontier_cell_indices.size())
+                        LOG_DEBUG("x, y goal: " << goal_point.first << " , " << goal_point.second)
+                        LOG_DEBUG("Cluster components: ");
                         for(auto i : frontier_cell_indices)
-                            std::cout << ", x: " << i.first << " y: " << i.second << " atan: " << atan2(i.second - cluster_centroid.second, i.first - cluster_centroid.first);
-                        std::cout << std::endl;
+                            LOG_DEBUG_N("x: " << i.first << " y: " << i.second << " atan: " << atan2(i.second - cluster_centroid.second, i.first - cluster_centroid.first) << " ");
+                        LOG_DEBUG("");
                         frontier_cell_indices.clear();
                         #endif
                         output.setUID(generateUID(output));
-                        // std::cout << "1PUSHING NEW FRONTIER TO LIST: UID: " << output.unique_id << std::endl;
-                        // std::cout << "1Size: " << output.size << std::endl;
-                        // std::cout << "1Minimum Distance: " << output.min_distance << std::endl;
-                        // std::cout << "1Initial Point: (" << output.goal_point.x << ", " << output.goal_point.y << ", " << output.goal_point.z << ")" << std::endl;
-                        // std::cout << "**************" << std::endl;
+                        LOG_TRACE("1PUSHING NEW FRONTIER TO LIST: UID: " << output.getUID());
+                        LOG_TRACE("1Size: " << output.getSize());
+                        LOG_TRACE("1Initial Point: (" << output.getGoalPoint().x << ", " << output.getGoalPoint().y << ", " << output.getGoalPoint().z << ")");
+                        LOG_TRACE("**************");
                         calculated_frontiers.push_back(output);
 
                         // reset variables
@@ -199,22 +196,21 @@ namespace frontier_exploration
             auto goal_point = frontier_cell_indices[static_cast<int>(frontier_cell_indices.size() / 2)];
             output.setGoalPoint(goal_point.first, goal_point.second);
             output.setSize(currentFrontierSize);
-            std::cout << "Cluster size: " << frontier_cell_indices.size() << std::endl;
-            std::cout << "x, y goal: " << goal_point.first << " , " << goal_point.second << std::endl;
-            std::cout << "Cluster components: ";
+            LOG_DEBUG("Cluster size: " << frontier_cell_indices.size())
+            LOG_DEBUG("x, y goal: " << goal_point.first << " , " << goal_point.second)
+            LOG_DEBUG("Cluster components: ");
             for(auto i : frontier_cell_indices)
-                std::cout << ", x: " << i.first << " y: " << i.second << " atan: " << atan2(i.second - cluster_centroid.second, i.first - cluster_centroid.first);
-            std::cout << std::endl;
+                LOG_DEBUG_N(", x: " << i.first << " y: " << i.second << " atan: " << atan2(i.second - cluster_centroid.second, i.first - cluster_centroid.first));
+            LOG_DEBUG("");
             frontier_cell_indices.clear();
             #endif
             output.setUID(generateUID(output));
+            LOG_TRACE("2PUSHING NEW FRONTIER TO LIST: UID: " << output.getUID());
+            LOG_TRACE("2Size: " << output.getSize());
+            LOG_TRACE("2Initial Point: (" << output.getGoalPoint().x << ", " << output.getGoalPoint().y << ", " << output.getGoalPoint().z << ")");
+            LOG_TRACE("2*************====================")
             calculated_frontiers.push_back(output);
         }
-        // std::cout << "1PUSHING NEW FRONTIER TO LIST: UID: " << output.unique_id << std::endl;
-        // std::cout << "1Size: " << output.size << std::endl;
-        // std::cout << "1Minimum Distance: " << output.min_distance << std::endl;
-        // std::cout << "1Initial Point: (" << output.goal_point.x << ", " << output.goal_point.y << ", " << output.goal_point.z << ")" << std::endl;
-        // std::cout << "**************====================" << std::endl;
         return calculated_frontiers;
     }
 

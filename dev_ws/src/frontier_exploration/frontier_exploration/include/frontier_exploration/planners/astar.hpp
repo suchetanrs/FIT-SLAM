@@ -6,7 +6,7 @@
 #include <cmath>
 #include <functional>
 #include "frontier_exploration/Frontier.hpp"
-#include "frontier_exploration/colorize.hpp"
+#include "frontier_exploration/util/logger.hpp"
 #include "frontier_exploration/Helpers.hpp"
 
 // Define a Node structure

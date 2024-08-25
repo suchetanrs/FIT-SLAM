@@ -136,7 +136,10 @@ bool Frontier::operator==(const Frontier &other) const
 size_t Frontier::getUID() const
 {
     if (unique_id == nullptr)
+    {
+        LOG_CRITICAL("is null for: " << getGoalPoint().x << ", " << getGoalPoint().y);
         throw std::runtime_error("Goal uid frontier property is null");
+    }
     return *unique_id;
 }
 

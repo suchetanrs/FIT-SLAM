@@ -1,5 +1,5 @@
 #include "frontier_exploration/CostCalculator.hpp"
-#include <frontier_exploration/util.hpp>
+#include <frontier_exploration/util/util.hpp>
 
 namespace frontier_exploration
 {
@@ -8,14 +8,14 @@ namespace frontier_exploration
         node_ = node;
         exploration_costmap_ = explore_costmap_ros->getCostmap();
         logger_ = node_->get_logger();
-        rosVisualizer_ = std::make_shared<RosVisualizer>(node, exploration_costmap_);
+        // rosVisualizerInstance = std::make_shared<RosVisualizer>(node, exploration_costmap_);
         min_traversable_distance = std::numeric_limits<double>::max();
         max_traversable_distance = 0.0;
         min_arrival_info_per_frontier = std::numeric_limits<double>::max();
         max_arrival_info_per_frontier = 0.0;
 
         // TODO: Check these two.
-        roadmap_ptr_ = std::make_shared<FrontierRoadMap>(explore_costmap_ros);
+        // roadmap_ptr_ = std::make_shared<FrontierRoadMap>(explore_costmap_ros);
         // fisherInfoManager_ptr_ = std::make_shared<FisherInformationManager>(node, roadmap_ptr_);
 
         fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
@@ -23,7 +23,7 @@ namespace frontier_exploration
         max_arrival_info_gt_ = setMaxArrivalInformation();
         // wait for costmap to be current before computing the above. Hence hardcoded.
         max_arrival_info_gt_ = 81.0;
-        RCLCPP_WARN_STREAM(logger_, "Max arrival cost GT: " << max_arrival_info_gt_);
+        LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
     }
 
     void FrontierCostCalculator::setArrivalInformationForFrontier(Frontier &frontier, std::vector<double> &polygon_xy_min_max)
@@ -92,9 +92,7 @@ namespace frontier_exploration
 
         std::vector<int> kernel(static_cast<int>(CAMERA_FOV / DELTA_THETA), 1); // initialize a kernal vector of size 6 and all elements = 1
         int n = information_along_ray.size();                                   // number of rays computed in 2PI
-        RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("n is: " + std::to_string(n), logger_.get_name()));
         int k = kernel.size();
-        RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("k is: " + std::to_string(k), logger_.get_name()));
         std::vector<int> result(n - k + 1, 0);
         for (int i = 0; i < n - k + 1; ++i)
         {
@@ -113,10 +111,10 @@ namespace frontier_exploration
                 maxIndex = i;
             }
         }
-        // RCLCPP_INFO_STREAM(logger_, COLOR_STR("Total unknown cells is: " + std::to_string(std::accumulate(information_along_ray.begin(), information_along_ray.end(), 0)), logger_.get_name()));
+        LOG_DEBUG("Total unknown cells is: " + std::to_string(std::accumulate(information_along_ray.begin(), information_along_ray.end(), 0)));
 
         // visualize raytraced points
-        rosVisualizer_->observableCellsViz(vizpoints);
+        // RosVisualizer::getInstance()observableCellsViz(vizpoints);
         frontier.setArrivalInformation(maxValue);
         frontier.setGoalOrientation((maxIndex * DELTA_THETA) + (CAMERA_FOV / 2));
         return;
@@ -165,9 +163,7 @@ namespace frontier_exploration
 
         std::vector<int> kernel(static_cast<int>(CAMERA_FOV / DELTA_THETA), 1); // initialize a kernal vector of size 6 and all elements = 1
         int n = information_along_ray.size();                                   // number of rays computed in 2PI
-        RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("n is: " + std::to_string(n), logger_.get_name()));
         int k = kernel.size();
-        RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("k is: " + std::to_string(k), logger_.get_name()));
         std::vector<int> result(n - k + 1, 0);
         for (int i = 0; i < n - k + 1; ++i)
         {
@@ -186,8 +182,6 @@ namespace frontier_exploration
                 maxIndex = i;
             }
         }
-        rosVisualizer_->observableCellsViz(vizpoints);
-        // RCLCPP_INFO_STREAM(logger_, COLOR_STR("Total unknown cells is: " + std::to_string(std::accumulate(information_along_ray.begin(), information_along_ray.end(), 0)), logger_.get_name()));
         return maxValue;
     }
 
@@ -239,7 +233,7 @@ namespace frontier_exploration
         unsigned int mx, my;
         if (!exploration_costmap_->worldToMap(start_point_w.x, start_point_w.y, mx, my))
         {
-            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Cannot create a plan: the robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?", logger_.get_name()));
+            LOG_ERROR("Cannot create a plan: the robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?");
             goal_point_w.setAchievability(false);
             goal_point_w.setPathLength(std::numeric_limits<double>::max());
             goal_point_w.setPathLengthInM(std::numeric_limits<double>::max());
@@ -254,7 +248,7 @@ namespace frontier_exploration
         // goal point
         if (!exploration_costmap_->worldToMap(goal_point_w.getGoalPoint().x, goal_point_w.getGoalPoint().y, mx, my))
         {
-            RCLCPP_WARN_STREAM(logger_, COLOR_STR("The goal sent to the planner is off the global costmap Planning will always fail to this goal.", logger_.get_name()));
+            LOG_ERROR("The goal sent to the planner is off the global costmap Planning will always fail to this goal.");
             goal_point_w.setAchievability(false);
             goal_point_w.setPathLength(std::numeric_limits<double>::max());
             goal_point_w.setPathLengthInM(std::numeric_limits<double>::max());
@@ -273,7 +267,7 @@ namespace frontier_exploration
 
         if (!planner_->calcNavFnAstar())
         {
-            RCLCPP_ERROR_STREAM(logger_, "Plan not Found for frontier at x: " << goal_point_w.getGoalPoint().x << " y: " << goal_point_w.getGoalPoint().y);
+            LOG_WARN("Plan not Found for frontier at x: " << goal_point_w.getGoalPoint().x << " y: " << goal_point_w.getGoalPoint().y);
             goal_point_w.setAchievability(false);
             goal_point_w.setPathLength(std::numeric_limits<double>::max());
             goal_point_w.setPathLengthInM(std::numeric_limits<double>::max());
@@ -286,7 +280,6 @@ namespace frontier_exploration
         int path_len = planner_->calcPath(max_cycles);
         if (path_len == 0)
         {
-            RCLCPP_WARN_STREAM(logger_, COLOR_STR("Path length is zero x: " + std::to_string(goal_point_w.getGoalPoint().x) + " y: " + std::to_string(goal_point_w.getGoalPoint().y), logger_.get_name()));
             goal_point_w.setAchievability(false);
             goal_point_w.setPathLength(std::numeric_limits<double>::max());
             goal_point_w.setPathLengthInM(std::numeric_limits<double>::max());
@@ -304,7 +297,7 @@ namespace frontier_exploration
         double number_of_wayp = 0;
         double path_length_m = 0;
         std::shared_ptr<geometry_msgs::msg::PoseStamped> previous_pose = nullptr;
-        RCLCPP_DEBUG_STREAM(logger_, "Compute information? << " << compute_information);
+        LOG_TRACE("Compute information? << " << compute_information);
         for (int i = len - 1; i >= 0; --i)
         {
             // convert the plan to world coordinates
@@ -356,7 +349,7 @@ namespace frontier_exploration
                                                                                                    nodes_in_radius.first, nodes_in_radius.second, map_data->data, 2.0, 1.089, 0.5, Q, true, logger_, exploration_costmap_, true);
                 if (info_pcl.first > 0)
                 {
-                    rosVisualizer_->landmarkViz(info_pcl.second);
+                    // RosVisualizer::getInstance()landmarkViz(info_pcl.second);
                     information_for_path += info_pcl.first;
                 }
             }
@@ -384,7 +377,7 @@ namespace frontier_exploration
             // This is done so as to normalize the information on the path.
             goal_point_w.setFisherInformation(information_for_path / number_of_wayp);
         }
-        rosVisualizer_->frontierPlanViz(plan);
+        // RosVisualizer::getInstance()frontierPlanViz(plan);
         return;
     }
 
@@ -402,7 +395,7 @@ namespace frontier_exploration
             goal_point_w.setFisherInformation(0);
             return;
         }
-        auto path_length = roadmap_ptr_->getPlan(start_pose_w.position.x, start_pose_w.position.y, true, goal_point_w.getGoalPoint().x, goal_point_w.getGoalPoint().y, true);
+        auto path_length = FrontierRoadMap::getInstance().getPlan(start_pose_w.position.x, start_pose_w.position.y, true, goal_point_w.getGoalPoint().x, goal_point_w.getGoalPoint().y, true);
         // TODO: Set correct f_info
         if (path_length.path_exists == false)
         {
@@ -435,10 +428,7 @@ namespace frontier_exploration
 
     void FrontierCostCalculator::updateRoadmapData(geometry_msgs::msg::Pose &start_pose_w, std::vector<Frontier> &frontiers)
     {
-        PROFILE_FUNCTION;
-        roadmap_ptr_->addNodes(frontiers, true);
-        roadmap_ptr_->addRobotPoseAsNode(start_pose_w);
-        roadmap_ptr_->reConstructGraph();
+        // PROFILE_FUNCTION;
     }
 
     void FrontierCostCalculator::setPlanForFrontierEuclidean(geometry_msgs::msg::Point start_point_w, Frontier &goal_point_w,

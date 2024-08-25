@@ -32,12 +32,12 @@
 #include <geometry_msgs/msg/pose_array.hpp>
 
 #include <slam_msgs/srv/get_map.hpp>
-#include <frontier_exploration/colorize.hpp>
-#include <frontier_exploration/rosVisualizer.hpp>
+#include <frontier_exploration/util/logger.hpp>
+#include <frontier_exploration/util/rosVisualizer.hpp>
 #include <frontier_exploration/Helpers.hpp>
 #include <frontier_exploration/planners/FrontierRoadmap.hpp>
 #include <frontier_exploration/FisherInfoManager.hpp>
-#include <frontier_exploration/GeometryUtils.hpp>
+#include <frontier_exploration/util/GeometryUtils.hpp>
 
 // ARRIVAL INFORMATION RELATED
 const double MAX_CAMERA_DEPTH = 2.0;
@@ -111,11 +111,6 @@ namespace frontier_exploration
             return max_arrival_info_gt_;
         };
 
-        std::shared_ptr<FrontierRoadMap> getRoadmapPtr()
-        {
-            return roadmap_ptr_;
-        };
-
         void reset()
         {
             min_traversable_distance = std::numeric_limits<double>::max();
@@ -129,15 +124,14 @@ namespace frontier_exploration
         rclcpp::Node::SharedPtr node_;
         nav2_costmap_2d::Costmap2D *exploration_costmap_;
         rclcpp::Logger logger_ = rclcpp::get_logger("cost_calculator");
-        std::shared_ptr<RosVisualizer> rosVisualizer_;
+        // std::shared_ptr<RosVisualizer> rosVisualizer_;
         double min_traversable_distance = std::numeric_limits<double>::max();
         double max_traversable_distance = 0.0;
         double min_arrival_info_per_frontier = std::numeric_limits<double>::max();
         double max_arrival_info_per_frontier = 0.0;
         double robot_radius_;
         double max_arrival_info_gt_ = 0.0;
-        
-        std::shared_ptr<FrontierRoadMap> roadmap_ptr_;
+
         std::shared_ptr<FisherInformationManager> fisherInfoManager_ptr_;
 
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)

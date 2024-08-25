@@ -14,7 +14,6 @@
 #include <geometry_msgs/msg/point.hpp>
 
 #include <frontier_exploration/Frontier.hpp>
-#include <frontier_exploration/colorize.hpp>
 
 namespace frontier_exploration
 {

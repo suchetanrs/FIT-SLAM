@@ -15,8 +15,7 @@
 
 #include "frontier_msgs/srv/send_current_goal.hpp"
 #include "frontier_multirobot_allocator/taskAllocator.hpp"
-#include "frontier_exploration/colorize.hpp"
-#include "frontier_exploration/bounded_explore_layer.hpp"
+#include "frontier_exploration/CostAssigner.hpp"
 #include "frontier_exploration/FrontierSearchAllCells.hpp"
 #include "frontier_exploration/FrontierSearch.hpp"
 
@@ -107,7 +106,7 @@ namespace frontier_exploration
         std::vector<std::string> config_;
         int min_frontier_cluster_size_;          ///< Minimum size of a frontier cluster.
         int max_frontier_cluster_size_;
-        std::shared_ptr<BoundedExploreLayer> bel_ptr_;
+        std::shared_ptr<CostAssigner> bel_ptr_;
         bool process_other_robots_;
     };
 }

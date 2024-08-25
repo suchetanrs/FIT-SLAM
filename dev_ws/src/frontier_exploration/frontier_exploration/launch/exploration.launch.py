@@ -60,9 +60,18 @@ def generate_launch_description():
             # emulate_tty=True,
             namespace=context.launch_configurations['robot_namespace'],
             parameters=[configured_params])
-        
 
-        return [declare_params_file_cmd, explore_server]
+# Comparision scripts
+
+        exploration_path_followed = Node(
+            package='frontier_exploration',
+            executable='exploration_path_followed',
+            output='screen',
+            # prefix=['gdbserver localhost:3000'],
+            # emulate_tty=True,
+            parameters=[configured_params])
+
+        return [declare_params_file_cmd, explore_server, exploration_path_followed]
 
     opaque_function = OpaqueFunction(function=all_nodes_launch)
 #---------------------------------------------

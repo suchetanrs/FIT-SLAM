@@ -12,16 +12,19 @@
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 
+#include "behaviortree_cpp/bt_factory.h"
+
+#include "frontier_exploration/util/rosVisualizer.hpp"
+#include "frontier_exploration/util/logger.hpp"
+#include "frontier_exploration/util/event_logger.hpp"
 #include "frontier_msgs/srv/send_current_goal.hpp"
 #include "frontier_multirobot_allocator/taskAllocator.hpp"
-#include "frontier_exploration/colorize.hpp"
-#include "frontier_exploration/bounded_explore_layer.hpp"
+#include "frontier_exploration/CostAssigner.hpp"
 #include "frontier_exploration/FrontierSearchAllCells.hpp"
 #include "frontier_exploration/FrontierSearch.hpp"
 #include "frontier_exploration/Nav2Interface.hpp"
 #include "frontier_exploration/Helpers.hpp"
 #include "frontier_exploration/FullPathOptimizer.hpp"
-#include "behaviortree_cpp/bt_factory.h"
 
 namespace frontier_exploration
 {
@@ -50,6 +53,7 @@ namespace frontier_exploration
 
     private:
         // ROS Internal
+        rclcpp::Node::SharedPtr bt_node_;
         std::shared_ptr<tf2_ros::Buffer> tf_listener_;
         rclcpp::CallbackGroup::SharedPtr explore_server_callback_group_;
         rclcpp::CallbackGroup::SharedPtr multirobot_service_callback_group_;
@@ -65,31 +69,28 @@ namespace frontier_exploration
         // Exploration related
         geometry_msgs::msg::PolygonStamped explore_boundary_;
         geometry_msgs::msg::PointStamped explore_center_;
-        Frontier nextRoadMapParent_;
-
-        std::shared_ptr<FrontierSearch> frontierSearchPtr_;
-        std::shared_ptr<FullPathOptimizer> full_path_optimizer_;
-
-        std::mutex moving_lock_;
-        bool moving_;
-        int retry_;
-
-        rclcpp::Service<frontier_msgs::srv::SendCurrentGoal>::SharedPtr service_send_current_goal_;
-        std::vector<std::string> robot_namespaces_;
-        bool use_custom_sim_;
-        std::vector<Frontier> blacklisted_frontiers_; // these are the frontiers traversed by this robot.
         std::vector<std::string> config_;
-        int min_frontier_cluster_size_; ///< Minimum size of a frontier cluster.
-        int max_frontier_cluster_size_;
-        double max_frontier_distance_;
-        std::shared_ptr<BoundedExploreLayer> bel_ptr_;
-        bool process_other_robots_;
-        RobotActiveGoals robot_active_goals_;
-        std::shared_ptr<TaskAllocator> task_allocator_ptr_;
-        rclcpp::Node::SharedPtr bt_node_;
+
+        // BT related
         BT::BehaviorTreeFactory factory;
         BT::Blackboard::Ptr blackboard;
         BT::Tree behaviour_tree;
+
+        std::shared_ptr<FrontierSearch> frontierSearchPtr_;
+        int min_frontier_cluster_size_; ///< Minimum size of a frontier cluster.
+        int max_frontier_cluster_size_;
+        double max_frontier_distance_;
+        std::shared_ptr<CostAssigner> bel_ptr_;
+        std::shared_ptr<FullPathOptimizer> full_path_optimizer_;
+        std::shared_ptr<TaskAllocator> task_allocator_ptr_;
+        
+        int retry_;
+        rclcpp::Service<frontier_msgs::srv::SendCurrentGoal>::SharedPtr service_send_current_goal_;
+        std::vector<std::string> robot_namespaces_;
+        bool use_custom_sim_;
+        bool process_other_robots_;
+        std::vector<Frontier> blacklisted_frontiers_; // these are the frontiers traversed by this robot.
+        RobotActiveGoals robot_active_goals_;
     };
 }
 

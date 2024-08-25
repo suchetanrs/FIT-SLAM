@@ -6,10 +6,9 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
-#include "frontier_exploration/colorize.hpp"
 #include "slam_msgs/srv/get_map.hpp"
 #include "frontier_exploration/planners/FrontierRoadmap.hpp"
-#include "frontier_exploration/rosVisualizer.hpp"
+#include "frontier_exploration/util/rosVisualizer.hpp"
 
 const double DISTANCE3D_THRESHOLD_KF_CHANGE = 0.1; // in m
 const double ANGLESUM_THRESHOLD_KF_CHANGE = 0.6; // in rad
@@ -46,7 +45,7 @@ namespace frontier_exploration
         std::unordered_map<int32_t, geometry_msgs::msg::PoseStamped> keyframe_poses_cache_;
         std::shared_ptr<FrontierRoadMap> roadmap_ptr_;
         std::unordered_map<std::pair<Frontier, Frontier>, float, frontierPairHash> fisher_information_map_;
-        std::shared_ptr<RosVisualizer> rosVisualizer_;
+        // std::shared_ptr<RosVisualizer> rosVisualizer_;
     };
 }
 

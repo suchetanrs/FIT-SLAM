@@ -14,7 +14,11 @@ int main() {
     LOG_ERROR("This is an ERROR message.");
     LOG_CRITICAL("This is a CRITICAL message.");
     LOG_FATAL("This is a FATAL message.");
-    LOG_HIGHLIGHT("This is a FATAL message.");
+    LOG_HIGHLIGHT("This is a HIGHLIGHT message.");
+
+    LOG_MODULE_TIME("This is LOG_MODULE_TIME message", 5);
+    LOG_SUBMODULE_TIME("This is LOG_SUBMODULE_TIME message", 5);
+    LOG_EVENT_TIME("This is LOG_EVENT_TIME message", 5);
 
     return 0;
 }

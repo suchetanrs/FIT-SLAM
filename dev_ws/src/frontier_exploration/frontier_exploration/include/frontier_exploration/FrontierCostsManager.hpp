@@ -31,9 +31,9 @@
 #include <geometry_msgs/msg/pose_array.hpp>
 
 #include <slam_msgs/srv/get_map.hpp>
-#include <frontier_exploration/colorize.hpp>
-#include <frontier_exploration/rosVisualizer.hpp>
+#include <frontier_exploration/util/rosVisualizer.hpp>
 #include <frontier_exploration/CostCalculator.hpp>
+#include "frontier_exploration/util/general_utils.hpp"
 
 namespace frontier_exploration
 {
@@ -65,7 +65,7 @@ namespace frontier_exploration
     private:
         nav2_costmap_2d::Costmap2D *costmap_;
         rclcpp::Node::SharedPtr frontier_costs_manager_node_;
-        std::shared_ptr<RosVisualizer> rosVisualizer_;
+        // std::shared_ptr<RosVisualizer> rosVisualizer_;
         std::shared_ptr<FrontierCostCalculator> costCalculator_;
         std::unordered_map<Frontier, bool, FrontierHash, FrontierGoalPointEquality> frontier_blacklist_; ///< Stores the blacklisted frontiers.                                      ///< Variable used to give a unique value for each run. This is used as a prefix for the csv files.
         rclcpp::Logger logger_ = rclcpp::get_logger("frontier_costs_manager");

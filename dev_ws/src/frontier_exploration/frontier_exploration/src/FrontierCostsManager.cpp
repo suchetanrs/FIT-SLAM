@@ -61,29 +61,28 @@ namespace frontier_exploration
                                            geometry_msgs::msg::Pose start_pose_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
                                            std::vector<std::vector<std::string>> &costTypes)
     {
-        costCalculator_->updateRoadmapData(start_pose_w, frontier_list);
         costCalculator_->reset();
-        RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("FrontierCostsManager::assignCosts", logger_.get_name()));
+        LOG_DEBUG("FrontierCostsManager::assignCosts");
         // sanity checks
         if (frontier_list.size() == 0)
         {
-            RCLCPP_ERROR(logger_, "No frontiers found from frontier search.");
+            LOG_ERROR("No frontiers found from frontier search.");
             return false;
         }
 
         if (polygon_xy_min_max.size() <= 0)
         {
-            RCLCPP_ERROR(logger_, "Frontier cannot be selected, no polygon.");
+            LOG_ERROR("Frontier cannot be selected, no polygon.");
             return false;
         }
 
         // Iterate through each frontier
-        RCLCPP_WARN_STREAM(logger_, COLOR_STR("Frontier list size is (loop): " + std::to_string(frontier_list.size()), logger_.get_name()));
+        LOG_DEBUG("Frontier list size is (loop): " + std::to_string(frontier_list.size()));
         if (findDuplicates(frontier_list).size() > 0)
         {
             throw std::runtime_error("Duplicate frontiers found.");
         }
-        RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("Blacklist size is: " + std::to_string(frontier_blacklist_.size()), logger_.get_name()));
+        LOG_DEBUG("Blacklist size is: " << frontier_blacklist_.size());
         for (int frontier_idx = 0; frontier_idx < frontier_list.size(); frontier_idx++)
         {
             // rclcpp::sleep_for(std::chrono::milliseconds(2000));
@@ -133,14 +132,14 @@ namespace frontier_exploration
         } // frontier end
         // rclcpp::sleep_for(std::chrono::milliseconds(1000));
 
-        RCLCPP_WARN_STREAM(logger_, "Utility U1 max info:" << costCalculator_->getMaxArrivalInformation());
-        RCLCPP_WARN_STREAM(logger_, "Utility U1 max distance:" << costCalculator_->getMaxPlanDistance());
-        RCLCPP_WARN_STREAM(logger_, "Utility U1 min info:" << costCalculator_->getMinArrivalInformation());
-        RCLCPP_WARN_STREAM(logger_, "Utility U1 min distance:" << costCalculator_->getMinPlanDistance());
+        LOG_DEBUG("utility U1 max info:" << costCalculator_->getMaxArrivalInformation());
+        LOG_DEBUG("utility U1 max distance:" << costCalculator_->getMaxPlanDistance());
+        LOG_DEBUG("utility U1 min info:" << costCalculator_->getMinArrivalInformation());
+        LOG_DEBUG("utility U1 min distance:" << costCalculator_->getMinPlanDistance());
         // U1 Utility
         for (auto &frontier_with_properties : frontier_list)
         {
-            std::cout << "================" << std::endl;
+            LOG_DEBUG("================");
             if (!frontier_with_properties.isAchievable())
             {
                 frontier_with_properties.setWeightedCost(std::numeric_limits<double>::max());
@@ -174,16 +173,16 @@ namespace frontier_exploration
                                         static_cast<double>(costCalculator_->getMaxPlanDistance() / max_vx_ + M_PI / max_wx_);
             frontier_plan_utility = 1.0 - frontier_plan_utility;
 
-            std::cout << "Path length : " << frontier_with_properties.getPathLength() << std::endl;
-            std::cout << "Min Path length : " << costCalculator_->getMinPlanDistance() << std::endl;
-            std::cout << "Max Path length : " << costCalculator_->getMaxPlanDistance() << std::endl;
-            std::cout << "Path Utility:" << frontier_plan_utility << std::endl;
+            LOG_DEBUG("Path length : " << frontier_with_properties.getPathLength());
+            LOG_DEBUG("Min Path length : " << costCalculator_->getMinPlanDistance());
+            LOG_DEBUG("Max Path length : " << costCalculator_->getMaxPlanDistance());
+            LOG_DEBUG("Path Utility:" << frontier_plan_utility);
 
-            std::cout << "****************************" << std::endl;
-            std::cout << "Current info : " << frontier_with_properties.getArrivalInformation() << std::endl;
-            std::cout << "Min Info: " << costCalculator_->getMinArrivalInformation() << std::endl;
-            std::cout << "Max Info : " << costCalculator_->getMaxArrivalInformation() << std::endl;
-            std::cout << "Info Utility:" << arrival_info_utility << std::endl;
+            LOG_DEBUG("****************************");
+            LOG_DEBUG("Current info : " << frontier_with_properties.getArrivalInformation());
+            LOG_DEBUG("Min Info: " << costCalculator_->getMinArrivalInformation());
+            LOG_DEBUG("Max Info : " << costCalculator_->getMaxArrivalInformation());
+            LOG_DEBUG("Info Utility:" << arrival_info_utility);
 
             if (arrival_info_utility > 1.0 || arrival_info_utility < 0.0 || frontier_plan_utility > 1.0 || frontier_plan_utility < 0.0)
                 throw std::runtime_error("Cost out of bounds");
@@ -196,7 +195,7 @@ namespace frontier_exploration
                 utility = 1e-16;
             }
 
-            // std::cout << "Weighted utility: " << utility << std::endl;
+            // LOG_DEBUG("Weighted utility: " << utility);
 
             // RCLCPP_INFO_STREAM(logger_, "Utility U1 information:" << frontier_with_properties.getArrivalInformation());
             // RCLCPP_INFO_STREAM(logger_, "Utility U1 distance:" << costCalculator_->getMinPlanDistance());
@@ -213,13 +212,11 @@ namespace frontier_exploration
             frontier_with_properties.setWeightedCost(1 / (beta_ * utility));
             frontier_with_properties.setCost("arrival_gain_utility", arrival_info_utility);
             frontier_with_properties.setCost("distance_utility", frontier_plan_utility);
-            std::cout << "Weighted cost: " << 1 / (beta_ * utility) << std::endl;
+            LOG_DEBUG("Weighted cost: " << 1 / (beta_ * utility));
             // RCLCPP_INFO_STREAM(logger_, "Utility U1 cost after fix:" << 1 / (beta_ * utility));
             // RCLCPP_INFO_STREAM(logger_, "MAX info:" << costCalculator_->getMaxArrivalInformation());
             // RCLCPP_INFO_STREAM(logger_, "Currnt path length" << frontier_with_properties.getPathLength());
         }
-        RCLCPP_DEBUG_STREAM(logger_, "Alpha_: " << alpha_);
-        RCLCPP_DEBUG_STREAM(logger_, "Beta_: " << beta_);
         // FrontierU1ComparatorCost frontier_u1_comp;
         // // sort the frontier list based on the utility value
         // std::sort(frontier_with_u1_utility.begin(), frontier_with_u1_utility.end(), frontier_u1_comp);
@@ -232,14 +229,14 @@ namespace frontier_exploration
 
         // if (static_cast<int>(frontier_with_u1_utility.size()) > 0)
         // {
-        //     RCLCPP_DEBUG_STREAM(logger_, "The value of N_best_for_u2 is: " << N_best_for_u2_);
+        //     LOG_DEBUG(value of N_best_for_u2 i_;
         //     double max_u2_utility = 0;
         //     double maximum_path_information = 0;
         //     if (N_best_for_u2_ == -1)
         //     { // if -1 then the path information for all the frontiers is computed.
         //         N_best_for_u2_ = static_cast<int>(frontier_with_u1_utility.size());
         //     }
-        //     RCLCPP_DEBUG_STREAM(logger_, "The value of loop min is: " << static_cast<int>(frontier_with_u1_utility.size()) - N_best_for_u2_);
+        //     LOG_DEBUG(value of loop min is: " << static_cast<int>(frontier_with_u1_utility._;
         //     for (int m = static_cast<int>(frontier_with_u1_utility.size()) - 1; m >= static_cast<int>(frontier_with_u1_utility.size()) - N_best_for_u2_; m--)
         //     {
         //         if (m == 0)
@@ -263,8 +260,8 @@ namespace frontier_exploration
         //         frontier_costs[frontier_with_u1_utility[m].first] = current_utility;
         //         if (current_utility > max_u2_utility)
         //         {
-        //             RCLCPP_DEBUG_STREAM(logger_, "Current U2 utility: " << current_utility);
-        //             RCLCPP_DEBUG_STREAM(logger_, "U1 utility for current one: " << frontier_with_u1_utility[m].second);
+        //             LOG_DEBUG(U2 uy;
+        //             LOG_DEBUG(utility for current one: " << fd;
         //             max_u2_utility = current_utility;
         //             theta_s_star_post_u2 = frontier_with_u1_utility[m].first.theta_s_star_;
         //             frontier_selected_post_u2 = std::make_shared<Frontier>(frontier_with_u1_utility[m].first.frontier_);
@@ -273,7 +270,7 @@ namespace frontier_exploration
         // }
         // else
         // {
-        //     RCLCPP_WARN_STREAM(logger_, COLOR_STR("The number of frontiers after U1 compute is zero.", logger_.get_name()));
+        //     LOG_DEBUG("The number of frontiers after U1 compute is zero.", logger_.get_name());
         //     SelectionResult selection_result;
         //     selection_result.frontier = selected_frontier;
         //     selection_result.orientation = selected_orientation;
@@ -282,8 +279,8 @@ namespace frontier_exploration
         //     return selection_result;
         // }
 
-        RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("The selected frontier was not updated after U2 computation.", logger_.get_name()));
-        RCLCPP_DEBUG_STREAM(logger_, COLOR_STR("Returning for input list size: " + std::to_string(frontier_list.size()), logger_.get_name()));
+        LOG_DEBUG("The selected frontier was not updated after U2 computation.");
+        LOG_DEBUG("Returning for input list size: " << frontier_list.size());
         return true;
     }
 

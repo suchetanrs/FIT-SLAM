@@ -13,10 +13,11 @@
 
 #include <geometry_msgs/msg/point.hpp>
 
-#include <frontier_exploration/Frontier.hpp>
-#include <frontier_exploration/colorize.hpp>
+#include "frontier_exploration/util/logger.hpp"
+#include "frontier_exploration/util/event_logger.hpp"
+#include "frontier_exploration/Frontier.hpp"
 #include "frontier_exploration/Helpers.hpp"
-#include "frontier_exploration/GeometryUtils.hpp"
+#include "frontier_exploration/util/GeometryUtils.hpp"
 
 namespace frontier_exploration
 {
@@ -104,10 +105,9 @@ namespace frontier_exploration
                 varX += abs(point.first - centerX);
                 varY += abs(point.second - centerY);
             }
-            std::cout << "*************" << std::endl;
-            std::cout << "Centroid before: " << centerX << " , " << centerY << std::endl;
-            std::cout << "VarX: " << varX << std::endl;
-            std::cout << "VarY: " << varY << std::endl;
+            LOG_DEBUG("Centroid before: " << centerX << " , " << centerY);
+            LOG_DEBUG("VarX: " << varX);
+            LOG_DEBUG("VarY: " << varY);
 
             if(varX > varY && offset_centroid)
             {
@@ -118,7 +118,7 @@ namespace frontier_exploration
                 centerX -= distance_to_offset;
             }
 
-            std::cout << "Centroid: " << centerX << " , " << centerY << std::endl;
+            LOG_DEBUG("Centroid: " << centerX << " , " << centerY);
 
             return std::make_pair(centerX, centerY);
         }

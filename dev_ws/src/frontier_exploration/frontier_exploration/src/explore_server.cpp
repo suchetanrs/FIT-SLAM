@@ -1,5 +1,5 @@
 #include <frontier_exploration/explore_server.hpp>
-#include <frontier_exploration/geometry_tools.hpp>
+#include <frontier_exploration/util/geometry_tools.hpp>
 
 #if defined(FRONTIER_POINT_CENTROID) + defined(FRONTIER_POINT_INITIAL) > 1
     #error "Only one of FRONTIER_POINT_CENTROID, or FRONTIER_POINT_INITIAL can be defined at a time."
@@ -58,7 +58,7 @@ namespace frontier_exploration
         explore_costmap_ros_->activate();
 
         //------------------------------------------BOUNDED EXPLORE LAYER RELATED------------------------
-        bel_ptr_ = std::make_shared<BoundedExploreLayer>(explore_costmap_ros_->getLayeredCostmap());
+        bel_ptr_ = std::make_shared<CostAssigner>(explore_costmap_ros_->getLayeredCostmap());
 
         multirobot_service_callback_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
         service_send_current_goal_ = this->create_service<frontier_msgs::srv::SendCurrentGoal>(

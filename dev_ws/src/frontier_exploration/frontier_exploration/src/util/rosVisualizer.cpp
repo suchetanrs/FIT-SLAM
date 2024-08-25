@@ -1,4 +1,6 @@
-#include "frontier_exploration/rosVisualizer.hpp"
+#include "frontier_exploration/util/rosVisualizer.hpp"
+std::unique_ptr<RosVisualizer> RosVisualizer::rosVisualizerPtr = nullptr;
+std::mutex RosVisualizer::instanceMutex_;
 
 RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node)
 {
@@ -9,6 +11,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node)
     frontier_cloud_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("frontiers", custom_qos);
 
     all_frontier_cloud_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("all_frontiers", custom_qos);
+    spatial_hashmap_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("spatial_hashmap_points", custom_qos);
 
     landmark_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("landmark_marker", 10);
     frontier_marker_array_publisher_ = node->create_publisher<visualization_msgs::msg::MarkerArray>("frontier_cell_markers", 10);
@@ -17,6 +20,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node)
     connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
     fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
+    pcl::PointXYZI spatial_hashmap_viz(5000);
     costmap_ = nullptr;
 }
 
@@ -27,6 +31,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Cost
     // Creating publishers with custom QoS settings
     auto custom_qos = rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
     frontier_cloud_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("frontiers", custom_qos);
+    spatial_hashmap_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("spatial_hashmap_points", custom_qos);
 
     all_frontier_cloud_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("all_frontiers", custom_qos);
 
@@ -37,6 +42,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Cost
     connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
     fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
+    pcl::PointXYZI spatial_hashmap_viz(5000);
     costmap_ = costmap;
 }
 
@@ -182,6 +188,25 @@ void RosVisualizer::landmarkViz(std::vector<frontier_exploration::Point2D> &poin
     fov_marker_publisher_->publish(marker);
 }
 
+void RosVisualizer::visualizeSpatialHashMap(const std::vector<Frontier> &frontier_list, std::string globalFrameID)
+{
+    pcl::PointXYZI frontier_point_viz(50);
+    for (const auto &frontier : frontier_list)
+    {
+        // load frontier into visualization poitncloud
+        frontier_point_viz.x = frontier.getGoalPoint().x;
+        frontier_point_viz.y = frontier.getGoalPoint().y;
+        spatial_hashmap_viz.push_back(frontier_point_viz);
+    }
+
+    // publish visualization point cloud
+    sensor_msgs::msg::PointCloud2 frontier_viz_output;
+    pcl::toROSMsg(spatial_hashmap_viz, frontier_viz_output);
+    frontier_viz_output.header.frame_id = globalFrameID;
+    frontier_viz_output.header.stamp = rclcpp::Clock().now();
+    spatial_hashmap_pub_->publish(frontier_viz_output);
+}
+
 void RosVisualizer::visualizeFrontier(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID)
 {
     // pointcloud for visualization purposes
@@ -190,7 +215,7 @@ void RosVisualizer::visualizeFrontier(const std::vector<Frontier> &frontier_list
 
     // pointcloud for visualization purposes
     pcl::PointCloud<pcl::PointXYZI> all_frontier_cloud_viz;
-    pcl::PointXYZI all_frontier_point_viz(50);
+    pcl::PointXYZI all_frontier_point_viz(500);
 
     for (const auto &frontier : frontier_list)
     {
@@ -302,19 +327,19 @@ void RosVisualizer::exportMapCoverage(std::vector<double> polygon_xy_min_max, in
     {
         throw std::runtime_error("You called the wrong constructor. Costmap is a nullptr");
     }
-    RCLCPP_INFO_STREAM(logger_, "Point2: " << polygon_xy_min_max[2]);
-    RCLCPP_INFO_STREAM(logger_, "Point0: " << polygon_xy_min_max[0]);
+    LOG_TRACE("Point2: " << polygon_xy_min_max[2]);
+    LOG_TRACE("Point0: " << polygon_xy_min_max[0]);
 
-    RCLCPP_INFO_STREAM(logger_, "Point1: " << polygon_xy_min_max[1]);
-    RCLCPP_INFO_STREAM(logger_, "Point3: " << polygon_xy_min_max[3]);
+    LOG_TRACE("Point1: " << polygon_xy_min_max[1]);
+    LOG_TRACE("Point3: " << polygon_xy_min_max[3]);
 
-    RCLCPP_INFO_STREAM(logger_, "Point0: " << polygon_xy_min_max[0]);
-    RCLCPP_INFO_STREAM(logger_, "Point2: " << polygon_xy_min_max[2]);
-    RCLCPP_INFO_STREAM(logger_, "Costmap is " << costmap_);
+    LOG_TRACE("Point0: " << polygon_xy_min_max[0]);
+    LOG_TRACE("Point2: " << polygon_xy_min_max[2]);
+    LOG_TRACE("Costmap is " << costmap_);
     int x_unknown = abs(polygon_xy_min_max[2] - polygon_xy_min_max[0]) / costmap_->getResolution();
     int y_unknown = abs(polygon_xy_min_max[3] - polygon_xy_min_max[1]) / costmap_->getResolution();
     int unknown = x_unknown * y_unknown;
-    RCLCPP_INFO_STREAM(logger_, "Total unknown cells is: " << unknown);
+    LOG_TRACE("Total unknown cells is: " << unknown);
     int cell_count = 0;
     // int unknown = std::pow((polygon_xy_min_max[2] - polygon_xy_min_max[0]) / costmap_->getResolution(), 2);
     for (double y = polygon_xy_min_max[1]; y < polygon_xy_min_max[3]; y += costmap_->getResolution())
@@ -335,13 +360,13 @@ void RosVisualizer::exportMapCoverage(std::vector<double> polygon_xy_min_max, in
             }
         }
     }
-    RCLCPP_INFO_STREAM(logger_, "Cell count is: " << cell_count);
-    RCLCPP_INFO_STREAM(logger_, "Total unknown post red cells is: " << unknown);
+    LOG_TRACE("Cell count is: " << cell_count);
+    LOG_TRACE("Total unknown post red cells is: " << unknown);
     std::ofstream file;
     file.open(static_cast<std::string>(logger_.get_name()).substr(0, 7) + "_" + std::to_string(counter_value_) + "_" + mode_ + "_frontier_map_data_coverage.csv", std::ios::app);
     if (!file.is_open())
     {
-        RCLCPP_ERROR(logger_, "Failed to open the CSV file for writing.");
+        LOG_FATAL("Failed to open the CSV file for writing.");
         return;
     }
     file << std::fixed;

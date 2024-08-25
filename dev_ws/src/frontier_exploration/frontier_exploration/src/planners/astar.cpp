@@ -1,5 +1,5 @@
 #include "frontier_exploration/planners/astar.hpp"
-#include "frontier_exploration/GeometryUtils.hpp"
+#include "frontier_exploration/util/GeometryUtils.hpp"
 
 FrontierRoadmapAStar::FrontierRoadmapAStar()
 {
@@ -24,6 +24,7 @@ std::vector<std::shared_ptr<Node>> FrontierRoadmapAStar::getSuccessors(std::shar
     // std::cout << "Successor size: " << roadmap_[current->frontier].size() << std::endl;
     std::vector<std::shared_ptr<Node>> successors;
     if(roadmap_.count(current->frontier) == 0) {
+        LOG_FATAL(current->frontier << " not present.");
         throw std::runtime_error("This should never happen. Frontier not found in roadmap.");
     }
 
@@ -39,7 +40,7 @@ std::vector<std::shared_ptr<Node>> FrontierRoadmapAStar::getSuccessors(std::shar
 
 // A* Algorithm function
 std::pair<std::vector<std::shared_ptr<Node>>, double> FrontierRoadmapAStar::getPlan(const Frontier& start, const Frontier& goal, std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash>& roadmap_) {
-    PROFILE_FUNCTION;
+    // PROFILE_FUNCTION;
     auto start_ = std::make_shared<Node>(start, 0, 0);
     auto goal_ = std::make_shared<Node>(goal, 0, 0);
     std::priority_queue<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, fCostNodeCompare> openList; // Min-heap priority queue

@@ -7,7 +7,7 @@
 #include <iostream>
 #include "nav2_costmap_2d/costmap_2d.hpp"
 #include "frontier_exploration/Frontier.hpp"
-#include "frontier_exploration/GeometryUtils.hpp"
+#include "frontier_exploration/util/GeometryUtils.hpp"
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 

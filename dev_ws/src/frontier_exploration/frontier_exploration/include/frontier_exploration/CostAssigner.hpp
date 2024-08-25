@@ -1,5 +1,5 @@
-#ifndef BOUNDED_EXPLORE_LAYER_HPP_
-#define BOUNDED_EXPLORE_LAYER_HPP_
+#ifndef COST_ASSIGNER_HPP_
+#define COST_ASSIGNER_HPP_
 
 #include <utility>
 
@@ -28,10 +28,11 @@
 #include <tf2_ros/buffer.h>
 #include <tf2/LinearMath/Quaternion.h>
 
+#include "frontier_exploration/util/logger.hpp"
+#include "frontier_exploration/util/rosVisualizer.hpp"
+#include "frontier_exploration/util/event_logger.hpp"
 #include "frontier_exploration/Frontier.hpp"
 #include "frontier_exploration/FrontierCostsManager.hpp"
-#include "frontier_exploration/colorize.hpp"
-#include "frontier_exploration/rosVisualizer.hpp"
 #include "slam_msgs/srv/get_map.hpp"
 
 namespace frontier_exploration
@@ -49,18 +50,18 @@ namespace frontier_exploration
     {
         bool success;
         std::vector<Frontier> frontier_list;
-        std::vector<double> frontier_costs;                     
-        std::vector<double> frontier_distances;                 
-        std::vector<double> frontier_arrival_information;       
-        std::vector<double> frontier_path_information;          
+        std::vector<double> frontier_costs;
+        std::vector<double> frontier_distances;
+        std::vector<double> frontier_arrival_information;
+        std::vector<double> frontier_path_information;
     };
 
-    class BoundedExploreLayer
+    class CostAssigner
     {
     public:
-        BoundedExploreLayer(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros);
+        CostAssigner(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros);
         
-        ~BoundedExploreLayer();
+        ~CostAssigner();
 
         bool updateBoundaryPolygon(geometry_msgs::msg::PolygonStamped& explore_boundary);
 
@@ -70,7 +71,7 @@ namespace frontier_exploration
 
         std::shared_ptr<frontier_exploration::FrontierCostsManager> getCostManagerPtr()
         {
-            return frontierSelect_;
+            return frontierCostsManager_;
         };
 
     protected:
@@ -84,7 +85,7 @@ namespace frontier_exploration
         std::vector<double> polygon_xy_min_max_;
         std::string exploration_mode_;
 
-        std::shared_ptr<frontier_exploration::FrontierCostsManager> frontierSelect_;
+        std::shared_ptr<frontier_exploration::FrontierCostsManager> frontierCostsManager_;
 
         std::string current_robot_namespace_;
         rclcpp_lifecycle::LifecycleNode::SharedPtr node;
@@ -96,7 +97,6 @@ namespace frontier_exploration
         std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> internal_executor_;
         nav2_costmap_2d::LayeredCostmap* layered_costmap_;
         int counter_;
-        std::shared_ptr<RosVisualizer> rosViz_;
     };
 
 }
