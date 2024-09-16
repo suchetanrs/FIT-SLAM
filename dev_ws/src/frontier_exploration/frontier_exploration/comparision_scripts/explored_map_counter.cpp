@@ -18,11 +18,11 @@ public:
         timer_ = this->create_wall_timer(
             std::chrono::seconds(1), std::bind(&OccupancyGridCounter::logData, this));
 
-            std::ostringstream filename_stream;
-            auto now = std::chrono::system_clock::now();
-            auto now_time_t = std::chrono::system_clock::to_time_t(now);
-            filename_stream << "occupancy_grid_count_" << std::put_time(std::localtime(&now_time_t), "%Y%m%d_%H%M%S") << ".csv";
-            fileName_ = filename_stream.str();
+        std::ostringstream filename_stream;
+        auto now = std::chrono::system_clock::now();
+        auto now_time_t = std::chrono::system_clock::to_time_t(now);
+        filename_stream << "occupancy_grid_count_" << std::put_time(std::localtime(&now_time_t), "%Y%m%d_%H%M%S") << ".csv";
+        fileName_ = filename_stream.str();
     }
 
 private:

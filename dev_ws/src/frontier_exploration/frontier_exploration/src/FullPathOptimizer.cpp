@@ -10,6 +10,7 @@ namespace frontier_exploration
         explore_costmap_ros_ = explore_costmap_ros;
         marker_publisher_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("top_frontiers", 10);
         local_search_area_publisher_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("local_search_area", 10);
+        fisher_information_manager_ = std::make_shared<FisherInformationManager>(node);
     }
 
     // seperates global and local frontiers.
@@ -142,6 +143,40 @@ namespace frontier_exploration
         marker_array.markers.push_back(marker);
     }
 
+    bool FullPathOptimizer::isPathSafe(RoadmapPlanResult &current_length, double& totalLength)
+    {
+        return true;
+        // bool safety_value = false;
+        // for(size_t path_idx = 0; path_idx < current_length.path.size() - 1; path_idx++)
+        // {
+        //     if (pair_path_safe_.count(FrontierPair(current_length.path[path_idx]->frontier, current_length.path[path_idx + 1]->frontier)) == 0)
+        //     {
+        //         safety_value = fisher_information_manager_->isPoseSafe(current_length.path[0]->frontier.getGoalPoint(), current_length.path[1]->frontier.getGoalPoint());
+        //         pair_path_safe_[FrontierPair(current_length.path[path_idx]->frontier, current_length.path[path_idx + 1]->frontier)] = safety_value;
+        //     }
+        //     else
+        //         safety_value = pair_path_safe_[FrontierPair(current_length.path[path_idx]->frontier, current_length.path[path_idx + 1]->frontier)];
+        //     if (safety_value == false)
+        //     {
+        //         totalLength += LOCAL_FRONTIER_SEARCH_RADIUS * 10000;
+        //         frontier_pair_distances_[FrontierPair(path[i], path[i + 1])].path_length_m = LOCAL_FRONTIER_SEARCH_RADIUS * 10000;
+        //         break;
+        //     }
+        // }
+
+        bool safety_value = false;
+        for (size_t path_idx = 0; path_idx < current_length.path.size() - 1; path_idx++)
+        {
+            safety_value = fisher_information_manager_->isPoseSafe(current_length.path[0]->frontier.getGoalPoint(), current_length.path[1]->frontier.getGoalPoint());
+            if (safety_value == false)
+            {
+                totalLength += LOCAL_FRONTIER_SEARCH_RADIUS * 10000;
+                break;
+            }
+        }
+        return safety_value;
+    }
+
     double FullPathOptimizer::calculatePathLength(std::vector<Frontier> &path)
     {
         // std::cout << "Frontier pairs distances cached:" << std::endl;
@@ -161,6 +196,8 @@ namespace frontier_exploration
             {
                 LOG_TRACE("Using cache value bw " << path[i] << " to " << path[i + 1] << ". The value is: " << it->second.path_length_m);
                 totalLength += it->second.path_length_m;
+                if (i == 0)
+                    isPathSafe(it->second, totalLength);
                 continue;
             }
             auto it2 = frontier_pair_distances_.find(FrontierPair(path[i + 1], path[i]));
@@ -168,6 +205,8 @@ namespace frontier_exploration
             {
                 LOG_TRACE("Using cache value bw " << path[i + 1] << " to " << path[i] << ". The value is: " << it->second.path_length_m);
                 totalLength += it2->second.path_length_m;
+                if (i == 0)
+                    isPathSafe(it->second, totalLength);
                 continue;
             }
             LOG_TRACE("Could not find path in cache. Computing bw " << path[i] << " to " << path[i + 1]);
@@ -179,11 +218,15 @@ namespace frontier_exploration
                 frontier_pair_distances_[FrontierPair(path[i], path[i + 1])] = current_length;
                 std::reverse(current_length.path.begin(), current_length.path.end());
                 frontier_pair_distances_[FrontierPair(path[i + 1], path[i])] = current_length;
+                // before computing path lengths, check if the first frontier from the robot has a good amount of fisher information.
+                // This is done to prevent the robot from being lost.
+                if (i == 0)
+                    isPathSafe(current_length, totalLength);
             }
             else if (current_length.path_exists == false)
             {
                 // set it to a large value since path could not be found.
-                totalLength += LOCAL_FRONTIER_SEARCH_RADIUS * 100;
+                totalLength += LOCAL_FRONTIER_SEARCH_RADIUS * 10000;
                 frontier_pair_distances_[FrontierPair(path[i], path[i + 1])] = current_length;
                 std::reverse(current_length.path.begin(), current_length.path.end());
                 frontier_pair_distances_[FrontierPair(path[i + 1], path[i])] = current_length;
@@ -192,13 +235,8 @@ namespace frontier_exploration
         return totalLength;
     }
 
-    Frontier FullPathOptimizer::getNextGoal(std::vector<Frontier> &frontier_list, size_t n, geometry_msgs::msg::PoseStamped &robotP)
+    bool FullPathOptimizer::getBestFullPath(SortedFrontiers& sortedFrontiers, std::vector<Frontier>& bestPath, geometry_msgs::msg::PoseStamped &robotP)
     {
-        SortedFrontiers sortedFrontiers;
-        getFilteredFrontiers(frontier_list, NUM_FRONTIERS_IN_LOCAL_AREA, sortedFrontiers);
-        LOG_INFO("Local frontier list size: " << sortedFrontiers.local_frontiers.size());
-        LOG_INFO("Global frontier list size: " << sortedFrontiers.global_frontiers.size());
-
         // Create a MarkerArray
         visualization_msgs::msg::MarkerArray marker_array;
         geometry_msgs::msg::PoseStamped robotPose;
@@ -216,10 +254,6 @@ namespace frontier_exploration
         local_search_area_publisher_->publish(marker_array);
 
         double minLength = std::numeric_limits<double>::max();
-        Frontier zeroFrontier;
-        if (sortedFrontiers.local_frontiers.size() == 0)
-            return zeroFrontier;
-        std::vector<Frontier> bestPath;
         Frontier robotPoseFrontier;
         robotPoseFrontier.setGoalPoint(robotP.pose.position.x, robotP.pose.position.y);
         robotPoseFrontier.setUID(generateUID(robotPoseFrontier));
@@ -253,7 +287,7 @@ namespace frontier_exploration
             double path_heading = abs(robot_yaw - goal_yaw);
             if (path_heading > M_PI)
                 path_heading = (2 * M_PI) - path_heading;
-            
+
             currentLength += path_heading;
 
             LOG_DEBUG("Path length:" << currentLength);
@@ -265,11 +299,52 @@ namespace frontier_exploration
             // erase the first element (robot position) to prepare for next permutation
             sortedFrontiers.local_frontiers.erase(sortedFrontiers.local_frontiers.begin());
 
+            // erase the global frontier at the end of vector to prepare for next permutation
             if (sortedFrontiers.global_frontiers.size() > 0)
                 sortedFrontiers.local_frontiers.pop_back();
             LOG_DEBUG("====permutation ended====")
 
         } while (std::next_permutation(sortedFrontiers.local_frontiers.begin(), sortedFrontiers.local_frontiers.end()));
+        if (minLength == LOCAL_FRONTIER_SEARCH_RADIUS * 10000)
+        {
+            LOG_ERROR("Zero frontiers were reasonable pose FI check...returning zero frontier.");
+            return false;
+        }
+        return true;
+    }
+
+    bool FullPathOptimizer::getNextGoal(std::vector<Frontier> &frontier_list, Frontier &nextFrontier, size_t n, geometry_msgs::msg::PoseStamped &robotP, bool use_fi)
+    {
+        SortedFrontiers sortedFrontiers;
+        getFilteredFrontiers(frontier_list, NUM_FRONTIERS_IN_LOCAL_AREA, sortedFrontiers);
+        LOG_INFO("Local frontier list size: " << sortedFrontiers.local_frontiers.size());
+        LOG_INFO("Global frontier list size: " << sortedFrontiers.global_frontiers.size());
+
+        Frontier zeroFrontier;
+        if (sortedFrontiers.local_frontiers.size() == 0)
+        {
+            // LOG_ERROR("Could not find local frontiers. Returning a zero frontiers. The program may crash if goal point is checked...");
+            LOG_WARN("Could not find local frontiers. Returning the best global frontier.");
+            if (sortedFrontiers.global_frontiers.size() > 0)
+            {
+                nextFrontier = sortedFrontiers.closest_global_frontier;
+                return true;
+            }
+            else
+            {
+                LOG_ERROR("Could not find local or global frontiers. Returning a zero frontier. The program may crash if goal point is checked...");
+                nextFrontier = zeroFrontier;
+                return false;
+            }
+        }
+
+        std::vector<Frontier> bestPath;
+        if(!getBestFullPath(sortedFrontiers, bestPath, robotP))
+        {
+            nextFrontier = zeroFrontier;
+            return false;
+        }
+
         LOG_INFO("Best full path points: " << bestPath);
         std::vector<std::shared_ptr<Node>> bestPathViz;
         // LOG_INFO("Best full path to follow: ");
@@ -285,7 +360,9 @@ namespace frontier_exploration
         FrontierRoadMap::getInstance().publishPlan(bestPathViz, 1.0, 0.0, 0.0);
         eventLoggerInstance.endEvent("publishPlan", 2);
         // 0 is robot pose. Return the first frontier in the path.
-        return bestPath[1];
+        nextFrontier = bestPath[1];
+        return true;
+
         // FrontierRoadMap::getInstance().publishPlan(bestPathViz, 1.0, 0.0, 0.0);
         // // GLOBAL SEARCH
         // while (sortedFrontiers.global_frontiers.size() > 0)

@@ -132,8 +132,6 @@ namespace frontier_exploration
         double robot_radius_;
         double max_arrival_info_gt_ = 0.0;
 
-        std::shared_ptr<FisherInformationManager> fisherInfoManager_ptr_;
-
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)
     };
 };

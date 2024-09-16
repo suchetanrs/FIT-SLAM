@@ -14,10 +14,6 @@ namespace frontier_exploration
         min_arrival_info_per_frontier = std::numeric_limits<double>::max();
         max_arrival_info_per_frontier = 0.0;
 
-        // TODO: Check these two.
-        // roadmap_ptr_ = std::make_shared<FrontierRoadMap>(explore_costmap_ros);
-        // fisherInfoManager_ptr_ = std::make_shared<FisherInformationManager>(node, roadmap_ptr_);
-
         fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
         robot_radius_ = explore_costmap_ros->getRobotRadius();
         max_arrival_info_gt_ = setMaxArrivalInformation();
@@ -327,7 +323,7 @@ namespace frontier_exploration
                 pose_to.pose.position.z = 0.0;
                 // Calculate orientation of the pose and generate frustum vertices
                 geometry_msgs::msg::Pose oriented_pose;
-                frontier_exploration_planning::getRelativePoseGivenTwoPoints(pose_from.pose.position, pose_to.pose.position, oriented_pose);
+                frontier_exploration::getRelativePoseGivenTwoPoints(pose_from.pose.position, pose_to.pose.position, oriented_pose);
                 auto vertices = frontier_exploration_utils::getVerticesOfFrustum2D(oriented_pose, 2.0, 1.089);
                 // Add frustum vertices to the marker message
                 marker_msg_.points.push_back(frontier_exploration_utils::getPointFromVector(vertices[0]));

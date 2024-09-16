@@ -17,7 +17,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 "msg/MapGraph.msg"
 "msg/MapData.msg"
 "msg/KeyFrame.msg"
+"msg/MapPoint.msg"
+"msg/MapPoints.msg"
 "srv/GetMap.srv"
+"srv/GetLandmarksInView.srv"
+"srv/GetLandmarksInViews.srv"
 DEPENDENCIES builtin_interfaces geometry_msgs sensor_msgs std_msgs
 )
 

@@ -124,7 +124,7 @@ def generate_launch_description():
                     respawn_delay=2.0,
                     parameters=[configured_params],
                     arguments=['--ros-args', '--log-level', log_level],
-                    remappings=remappings + [('cmd_vel', '/smb_velocity_controller/cmd_vel')]),
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
                 Node(
                     package='nav2_planner',
                     executable='planner_server',
@@ -135,7 +135,7 @@ def generate_launch_description():
                     respawn_delay=2.0,
                     parameters=[configured_params],
                     arguments=['--ros-args', '--log-level', log_level],
-                    remappings=remappings + [('cmd_vel', '/smb_velocity_controller/cmd_vel')]),
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
                 Node(
                     package='nav2_behaviors',
                     executable='behavior_server',
@@ -146,7 +146,7 @@ def generate_launch_description():
                     respawn_delay=2.0,
                     parameters=[configured_params],
                     arguments=['--ros-args', '--log-level', log_level],
-                    remappings=remappings + [('cmd_vel', '/smb_velocity_controller/cmd_vel')]),
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
                 Node(
                     package='nav2_bt_navigator',
                     executable='bt_navigator',
@@ -157,7 +157,7 @@ def generate_launch_description():
                     respawn_delay=2.0,
                     parameters=[configured_params],
                     arguments=['--ros-args', '--log-level', log_level],
-                    remappings=remappings + [('cmd_vel', '/smb_velocity_controller/cmd_vel')]),
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
                 # Node(
                 #     package='nav2_velocity_smoother',
                 #     executable='velocity_smoother',
@@ -168,7 +168,7 @@ def generate_launch_description():
                 #     parameters=[configured_params],
                 #     arguments=['--ros-args', '--log-level', log_level],
                 #     remappings=remappings +
-                #             [('cmd_vel', '/smb_velocity_controller/cmd_vel'), ('cmd_vel_smoothed', '/smb_velocity_controller/cmd_vel')]),
+                #             [('cmd_vel', 'cmd_vel_nav'), ('cmd_vel_smoothed', 'cmd_vel_nav')]),
                 Node(
                     package='nav2_lifecycle_manager',
                     executable='lifecycle_manager',
@@ -191,7 +191,7 @@ def generate_launch_description():
                     plugin='nav2_controller::ControllerServer',
                     name='controller_server',
                     parameters=[configured_params],
-                    remappings=remappings + [('cmd_vel', '/smb_velocity_controller/cmd_vel')]),
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
                 # ComposableNode(
                 #     package='nav2_smoother',
                 #     plugin='nav2_smoother::SmootherServer',
@@ -209,7 +209,7 @@ def generate_launch_description():
                     plugin='behavior_server::BehaviorServer',
                     name='behavior_server',
                     parameters=[configured_params],
-                    remappings=remappings + [('cmd_vel', '/smb_velocity_controller/cmd_vel')]),
+                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
                 ComposableNode(
                     package='nav2_bt_navigator',
                     plugin='nav2_bt_navigator::BtNavigator',
@@ -222,7 +222,7 @@ def generate_launch_description():
                 #     name='velocity_smoother',
                 #     parameters=[configured_params],
                 #     remappings=remappings +
-                #             [('cmd_vel', '/smb_velocity_controller/cmd_vel'), ('cmd_vel_smoothed', '/smb_velocity_controller/cmd_vel')]),
+                #             [('cmd_vel', 'cmd_vel_nav'), ('cmd_vel_smoothed', 'cmd_vel_nav')]),
                 ComposableNode(
                     package='nav2_lifecycle_manager',
                     plugin='nav2_lifecycle_manager::LifecycleManager',

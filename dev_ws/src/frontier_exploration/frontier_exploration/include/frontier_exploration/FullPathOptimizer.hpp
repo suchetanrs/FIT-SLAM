@@ -1,6 +1,7 @@
 #include <vector>
 #include <algorithm>
 #include <limits>
+#include "frontier_exploration/FisherInfoManager.hpp"
 #include "frontier_exploration/Frontier.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include <nav2_costmap_2d/costmap_2d_ros.hpp>
@@ -74,15 +75,20 @@ namespace frontier_exploration
 
         void addToMarkerArraySolidPolygon(visualization_msgs::msg::MarkerArray &marker_array, geometry_msgs::msg::Point center, double radius, std::string ns, float r, float g, float b, int id);
 
+        bool isPathSafe(RoadmapPlanResult& current_length, double& totalLength);
+
         double calculatePathLength(std::vector<Frontier> &path);
+
+        bool getBestFullPath(SortedFrontiers& sortedFrontiers, std::vector<Frontier>& bestPath, geometry_msgs::msg::PoseStamped &robotP);
 
         void getFilteredFrontiers(std::vector<Frontier> &frontier_list, size_t n, SortedFrontiers &sortedFrontiers);
 
-        Frontier getNextGoal(std::vector<Frontier> &frontier_list, size_t n, geometry_msgs::msg::PoseStamped &robotP);
+        bool getNextGoal(std::vector<Frontier> &frontier_list, Frontier& nextFrontier, size_t n, geometry_msgs::msg::PoseStamped &robotP, bool use_fi);
 
         void clearPlanCache()
         {
             frontier_pair_distances_.clear();
+            pair_path_safe_.clear();
         };
 
     private:
@@ -90,6 +96,8 @@ namespace frontier_exploration
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_publisher_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr local_search_area_publisher_;
         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
+        std::shared_ptr<FisherInformationManager> fisher_information_manager_;
         std::unordered_map<FrontierPair, RoadmapPlanResult, FrontierPairHash> frontier_pair_distances_;
+        std::unordered_map<FrontierPair, bool, FrontierPairHash> pair_path_safe_;
     };
 }

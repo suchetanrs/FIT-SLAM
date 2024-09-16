@@ -351,7 +351,7 @@ namespace frontier_exploration
         return transform;
     }
 
-    Eigen::Matrix<float, 3, 6> computeJacobianForPoint(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig, Eigen::Affine3f &T_w_c_est)
+    Eigen::Matrix<float, 3, 6> computeJacobianForPointGlobal(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig, Eigen::Affine3f &T_w_c_est)
     {
         // convert the world coordinates to camera coordinates of the pose used for estimation.
         Eigen::Vector3f p3d_c_eig_est = T_w_c_est.inverse() * p3d_w_eig;
@@ -373,15 +373,69 @@ namespace frontier_exploration
         return jacobian;
     }
 
+    Eigen::Matrix<float, 3, 6> computeJacobianForPointLocal(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig, Eigen::Affine3f &T_w_c_est)
+    {
+        // convert the world coordinates to camera coordinates of the pose used for estimation.
+        Eigen::Vector3f p3d_c_eig_est = T_w_c_est.inverse() * p3d_w_eig;
+
+        // df_dp
+        const float n = p3d_c_eig_est.norm();
+        Eigen::Matrix3f df_dpc = (1 / n) * Eigen::Matrix3f::Identity() -
+                                 (1 / (n * n * n)) * p3d_c_eig_est * p3d_c_eig_est.transpose();
+
+        // dp_dTwc
+        Eigen::Matrix<float, 3, 6> rightMat;
+        rightMat.block<3, 3>(0, 0) = Eigen::Matrix3f::Identity();
+        rightMat.block<3, 3>(0, 3) = (-1.0) * getSkewMatrix(p3d_c_eig_est);
+        Eigen::Matrix<float, 3, 6> dpc_dtwc = rightMat;
+
+        Eigen::Matrix<float, 3, 6> jacobian = df_dpc * -1.0 * dpc_dtwc;
+        // std::cout << std::endl << "Jacobian is: " << jacobian << std::endl;
+        return jacobian;
+    }
+
+    Eigen::Matrix<float, 3, 6> computeJacobianForPointLocal(Eigen::Vector3f &p3d_c_eig)
+    {
+        // df_dp
+        const float n = p3d_c_eig.norm();
+        Eigen::Matrix3f df_dpc = (1 / n) * Eigen::Matrix3f::Identity() -
+                                 (1 / (n * n * n)) * p3d_c_eig * p3d_c_eig.transpose();
+
+        // dp_dTwc
+        Eigen::Matrix<float, 3, 6> rightMat;
+        rightMat.block<3, 3>(0, 0) = Eigen::Matrix3f::Identity();
+        rightMat.block<3, 3>(0, 3) = (-1.0) * getSkewMatrix(p3d_c_eig);
+        Eigen::Matrix<float, 3, 6> dpc_dtwc = rightMat;
+
+        Eigen::Matrix<float, 3, 6> jacobian = df_dpc * -1.0 * dpc_dtwc;
+        // std::cout << std::endl << "Jacobian is: " << jacobian << std::endl;
+        return jacobian;
+    }
+
     Eigen::Matrix<float, 6, 6> computeFIM(Eigen::Matrix<float, 3, 6> &jacobian, Eigen::Matrix3f &Q)
     {
         return jacobian.transpose() * Q.inverse() * jacobian;
     }
 
-    float computeInformationOfPoint(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig,
-                                    Eigen::Affine3f &T_w_c_est, Eigen::Matrix3f Q)
+    float computeInformationOfPointGlobal(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig,
+                                          Eigen::Affine3f &T_w_c_est, Eigen::Matrix3f Q)
     {
-        auto jac = computeJacobianForPoint(p3d_c_eig, p3d_w_eig, T_w_c_est);
+        auto jac = computeJacobianForPointGlobal(p3d_c_eig, p3d_w_eig, T_w_c_est);
+        auto fim = computeFIM(jac, Q);
+        return fim.trace();
+    }
+
+    float computeInformationOfPointLocal(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig,
+                                          Eigen::Affine3f &T_w_c_est, Eigen::Matrix3f Q)
+    {
+        auto jac = computeJacobianForPointLocal(p3d_c_eig, p3d_w_eig, T_w_c_est);
+        auto fim = computeFIM(jac, Q);
+        return fim.trace();
+    }
+
+    float computeInformationOfPointLocal(Eigen::Vector3f &p3d_c_eig, Eigen::Matrix3f Q)
+    {
+        auto jac = computeJacobianForPointLocal(p3d_c_eig);
         auto fim = computeFIM(jac, Q);
         return fim.trace();
     }
@@ -400,7 +454,7 @@ namespace frontier_exploration
             {
                 auto p3d_c_eig = T_w_c.inverse() * p3d_w_eig;
                 auto Q = Eigen::Matrix3f::Identity();
-                pair_information += computeInformationOfPoint(p3d_c_eig, p3d_w_eig, T_w_c_est, Q);
+                pair_information += computeInformationOfPointLocal(p3d_c_eig, p3d_w_eig, T_w_c_est, Q);
             }
         }
         return pair_information;

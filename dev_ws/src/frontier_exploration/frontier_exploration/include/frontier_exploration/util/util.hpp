@@ -602,20 +602,6 @@ namespace frontier_exploration_planning
         return distance;
     }
 
-    void getRelativePoseGivenTwoPoints(geometry_msgs::msg::Point& point_from, geometry_msgs::msg::Point& point_to, geometry_msgs::msg::Pose& oriented_pose)
-    {
-        // size_t plan_size = plan.poses.size();
-        // if (plan_size == 1) {
-        //   plan.poses.back().pose.orientation = start.orientation;
-        // } else if (plan_size > 1) {
-        double dx, dy, theta;
-        dx = point_to.x - point_from.x;
-        dy = point_to.y - point_from.y;
-        theta = atan2(dy, dx);
-        oriented_pose.position = point_from;
-        oriented_pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(theta);
-    }
-
     std::pair<std::vector<geometry_msgs::msg::Pose>, std::vector<int>> getNodesInRadius(std::vector<geometry_msgs::msg::PoseStamped> &poses, std::vector<int> &poses_id, double radius, geometry_msgs::msg::Pose &start_pose, rclcpp::Logger logger_)
     {
         std::vector<geometry_msgs::msg::Pose> neighbouring_poses;

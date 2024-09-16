@@ -65,6 +65,20 @@ namespace frontier_exploration
         return pow(f1.getGoalPoint().x - f2.getGoalPoint().x, 2) + pow(f1.getGoalPoint().y - f2.getGoalPoint().y, 2);
     };
 
+    inline void getRelativePoseGivenTwoPoints(geometry_msgs::msg::Point& point_from, geometry_msgs::msg::Point& point_to, geometry_msgs::msg::Pose& oriented_pose)
+    {
+        // size_t plan_size = plan.poses.size();
+        // if (plan_size == 1) {
+        //   plan.poses.back().pose.orientation = start.orientation;
+        // } else if (plan_size > 1) {
+        double dx, dy, theta;
+        dx = point_to.x - point_from.x;
+        dy = point_to.y - point_from.y;
+        theta = atan2(dy, dx);
+        oriented_pose.position = point_from;
+        oriented_pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(theta);
+    }
+
     inline void getFOVKeyframe(geometry_msgs::msg::Pose &pose, double max_depth, double hfov, std::vector<Point2D> &FOV)
     {
         auto alpha = quatToEuler(pose.orientation);

@@ -29,8 +29,8 @@ namespace frontier_exploration
             int obstacle_min, int obstacle_max,
             int trace_min, int trace_max)
             : costmap_(costmap), cells_(cells),
-            obstacle_min_(obstacle_min), obstacle_max_(obstacle_max),
-            trace_min_(trace_min), trace_max_(trace_max)
+              obstacle_min_(obstacle_min), obstacle_max_(obstacle_max),
+              trace_min_(trace_min), trace_max_(trace_max)
         {
             hit_obstacle = false;
         };
@@ -106,7 +106,7 @@ namespace frontier_exploration
     bool isRobotFootprintInLethal(const nav2_costmap_2d::Costmap2D *costmap, unsigned int center_x, unsigned int center_y, double radius_in_cells);
 
     bool verifyFrontierList(std::vector<Frontier>& frontier_list, const nav2_costmap_2d::Costmap2D *costmap);
-// -------------------------- COSTMAP TOOLS ---------------------------------------------------------
+    // -------------------------- COSTMAP TOOLS ---------------------------------------------------------
 
     std::vector<unsigned int> nhood4(unsigned int idx, const nav2_costmap_2d::Costmap2D &costmap);
 
@@ -116,20 +116,29 @@ namespace frontier_exploration
 
     bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, const nav2_costmap_2d::Costmap2D &costmap);
 
-// -------------------------- FISHER INFORMATION COMPUTATION RELATED --------------------------------
+    // -------------------------- FISHER INFORMATION COMPUTATION RELATED --------------------------------
     Eigen::Matrix3f getSkewMatrix(const Eigen::Vector3f &v);
 
     Eigen::Affine3f getTransformFromPose(geometry_msgs::msg::Pose &pose);
 
-    Eigen::Matrix<float, 3, 6> computeJacobianForPoint(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig, Eigen::Affine3f &T_w_c_est);
+    Eigen::Matrix<float, 3, 6> computeJacobianForPointGlobal(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig, Eigen::Affine3f &T_w_c_est);
+
+    Eigen::Matrix<float, 3, 6> computeJacobianForPointLocal(Eigen::Vector3f &p3d_c_eig);
+
+    Eigen::Matrix<float, 3, 6> computeJacobianForPointLocal(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig, Eigen::Affine3f &T_w_c_est);
 
     Eigen::Matrix<float, 6, 6> computeFIM(Eigen::Matrix<float, 3, 6> &jacobian, Eigen::Matrix3f &Q);
 
-    float computeInformationOfPoint(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig,
-                                     Eigen::Affine3f &T_w_c_est, Eigen::Matrix3f &Q);
+    float computeInformationOfPointGlobal(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig,
+                                          Eigen::Affine3f &T_w_c_est, Eigen::Matrix3f Q);
 
-    float computeInformationFrontierPair(std::vector<geometry_msgs::msg::Point>& lndmrk_w, 
-                                         geometry_msgs::msg::Pose& kf_pose_w, geometry_msgs::msg::Pose& est_pose_w, std::vector<Point2D>& FOVFrontierPair);
+    float computeInformationOfPointLocal(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig,
+                                          Eigen::Affine3f &T_w_c_est, Eigen::Matrix3f Q);
+
+    float computeInformationOfPointLocal(Eigen::Vector3f &p3d_c_eig, Eigen::Matrix3f Q);
+
+    float computeInformationFrontierPair(std::vector<geometry_msgs::msg::Point> &lndmrk_w,
+                                         geometry_msgs::msg::Pose &kf_pose_w, geometry_msgs::msg::Pose &est_pose_w, std::vector<Point2D> &FOVFrontierPair);
 }
 
 #endif // HELPERS_HPP

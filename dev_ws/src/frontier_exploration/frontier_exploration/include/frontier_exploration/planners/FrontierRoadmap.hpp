@@ -29,7 +29,7 @@
 const double GRID_CELL_SIZE = 1.0;                           // Assuming each cell is 1x1 in size
 const double RADIUS_TO_DECIDE_EDGES = 5.1;                   // a node within this radius of another node is considered a child of the other node.
 const double MIN_DISTANCE_BETWEEN_TWO_FRONTIER_NODES = 0.5;  // minimum distance between any node in the graph and the frontier node that will be added.
-const double MIN_DISTANCE_BETWEEN_ROBOT_POSE_AND_NODE = 0.2; // minimum distance between any nodes in the graph and the robot pose that is going to be added.
+const double MIN_DISTANCE_BETWEEN_ROBOT_POSE_AND_NODE = 0.5; // minimum distance between any nodes in the graph and the robot pose that is going to be added.
 
 namespace frontier_exploration
 {

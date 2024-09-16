@@ -72,7 +72,7 @@ include_directories(
 # src/FrontierSearch.cpp
 add_executable(explore_server src/ExplorationBT.cpp src/Nav2Interface.cpp src/CostAssigner.cpp src/FrontierSearch.cpp src/FrontierCostsManager.cpp 
                src/FullPathOptimizer.cpp src/planners/planner.cpp src/planners/rrt.cpp src/util/rosVisualizer.cpp src/CostCalculator.cpp src/main.cpp
-               src/util/event_logger.cpp src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/planners/astar.cpp src/FisherInfoManager.cpp)
+               src/util/event_logger.cpp src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/planners/astar.cpp src/fisher_information/FisherInfoManager.cpp)
 ament_target_dependencies(explore_server ${dependencies})
 target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES})
 
@@ -92,6 +92,24 @@ ament_target_dependencies(logger_test ${dependencies})
 add_executable(frontier_class tests/frontier_class.cpp src/Frontier.cpp)
 ament_target_dependencies(frontier_class ${dependencies})
 # target_link_libraries(frontier_class taskAllocator_lib ${PCL_LIBRARIES})
+
+add_executable(main_fim_computation tests/main_fim_computation.cpp src/Helpers.cpp src/Frontier.cpp src/util/event_logger.cpp)
+ament_target_dependencies(main_fim_computation ${dependencies})
+# target_link_libraries(main_fim_computation taskAllocator_lib ${PCL_LIBRARIES})
+
+add_executable(fim_viz tests/fim_viz.cpp src/Helpers.cpp src/Frontier.cpp src/util/event_logger.cpp)
+ament_target_dependencies(fim_viz ${dependencies})
+# target_link_libraries(fim_viz taskAllocator_lib ${PCL_LIBRARIES})
+
+add_executable(load_fi_lookup src/fisher_information/FisherInfoManager.cpp src/fisher_information/LoadLookupMain.cpp 
+                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp)
+ament_target_dependencies(load_fi_lookup ${dependencies})
+# target_link_libraries(fim_viz taskAllocator_lib ${PCL_LIBRARIES})
+
+add_executable(gen_fi_lookup src/fisher_information/FisherInfoManager.cpp src/fisher_information/GenerateLookupMain.cpp 
+                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp)
+ament_target_dependencies(gen_fi_lookup ${dependencies})
+
 # -------------------------- Comparision files ---------------------
 add_executable(explored_map_counter comparision_scripts/explored_map_counter.cpp)
 ament_target_dependencies(explored_map_counter ${dependencies})
@@ -106,7 +124,7 @@ DESTINATION lib/${PROJECT_NAME}
 # ------------------------------------------------------------------
 
 
-install(TARGETS explore_server
+install(TARGETS explore_server fim_viz load_fi_lookup gen_fi_lookup
 DESTINATION lib/${PROJECT_NAME}
 )
 

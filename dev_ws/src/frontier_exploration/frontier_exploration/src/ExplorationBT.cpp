@@ -443,7 +443,14 @@ namespace frontier_exploration
             getInput<std::vector<Frontier>>("frontier_costs_result", globalFrontierList);
             geometry_msgs::msg::PoseStamped robotP;
             config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP);
-            auto allocatedFrontier = full_path_optimizer_->getNextGoal(globalFrontierList, 3, robotP);
+            Frontier allocatedFrontier;
+            bool return_state_with_fi = full_path_optimizer_->getNextGoal(globalFrontierList, allocatedFrontier, 3, robotP, true);
+            if(return_state_with_fi == false)
+            {
+                return BT::NodeStatus::FAILURE;
+                // bool return_state_without_fi = full_path_optimizer_->getNextGoal(globalFrontierList, allocatedFrontier, 3, robotP, false);
+                // if(return_state_without_fi == false)
+            }
             LOG_WARN("The next goal that will be sent to Nav2 is:" << allocatedFrontier);
             eventLoggerInstance.endEvent("OptimizeFullPath", 0);
             setOutput<Frontier>("allocated_frontier", allocatedFrontier);
@@ -700,7 +707,7 @@ namespace frontier_exploration
         {
             explore_costmap_ros_ = explore_costmap_ros;
             ros_node_ptr_ = ros_node_ptr;
-            cmd_vel_publisher_ = ros_node_ptr->create_publisher<geometry_msgs::msg::Twist>("/smb_velocity_controller/cmd_vel", 10);
+            cmd_vel_publisher_ = ros_node_ptr->create_publisher<geometry_msgs::msg::Twist>("/robot_0/cmd_vel_nav", 10);
             LOG_INFO("RecoveryMoveBack Constructor");
         }
 

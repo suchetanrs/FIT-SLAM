@@ -71,7 +71,18 @@ def generate_launch_description():
             # emulate_tty=True,
             parameters=[configured_params])
 
-        return [declare_params_file_cmd, explore_server, exploration_path_followed]
+        explored_map_counter = Node(
+            package='frontier_exploration',
+            executable='explored_map_counter',
+            output='screen',
+            # prefix=['gdbserver localhost:3000'],
+            # emulate_tty=True,
+            parameters=[configured_params])
+
+        return [declare_params_file_cmd, 
+                explore_server, 
+                exploration_path_followed, 
+                explored_map_counter]
 
     opaque_function = OpaqueFunction(function=all_nodes_launch)
 #---------------------------------------------

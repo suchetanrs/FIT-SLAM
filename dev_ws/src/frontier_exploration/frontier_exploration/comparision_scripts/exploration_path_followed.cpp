@@ -9,7 +9,7 @@ public:
     PathVisualizer() : Node("path_visualizer"), marker_id_(0), point_count_(0)
     {
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-            "/ground_truth/state", 10, std::bind(&PathVisualizer::odom_callback, this, std::placeholders::_1));
+            "/robot_0/ground_truth_pose", 10, std::bind(&PathVisualizer::odom_callback, this, std::placeholders::_1));
 
         marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("/exploration_path_followed", 10);
 
@@ -17,6 +17,9 @@ public:
             std::chrono::milliseconds(500), std::bind(&PathVisualizer::timer_callback, this));
 
         latest_odometry_msg_ = nullptr;
+        start_time_ = std::chrono::high_resolution_clock::now();
+        total_distance_ = 0;
+        once_ = false;
     }
 
 private:
@@ -24,6 +27,30 @@ private:
     {
         std::lock_guard<std::mutex> lock(odom_lock);
         latest_odometry_msg_ = msg;
+        if(!once_)
+        {
+            previous_odometry_msg_for_dist_ = latest_odometry_msg_;
+            once_ = true;
+        }
+        if(previous_odometry_msg_for_dist_ != nullptr)
+        {
+            double calc_dist = sqrt(pow(previous_odometry_msg_for_dist_->pose.pose.position.y - latest_odometry_msg_->pose.pose.position.y, 2) + pow(previous_odometry_msg_for_dist_->pose.pose.position.x - latest_odometry_msg_->pose.pose.position.x, 2));
+            if(calc_dist > 0.30)
+            {
+                previous_odometry_msg_for_dist_ = latest_odometry_msg_;
+                total_distance_ += calc_dist;
+            }
+        }
+        auto current_time = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_time = current_time - start_time_;
+        if (elapsed_time.count() > 0)
+        {
+            double average_speed = total_distance_ / elapsed_time.count();
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "Total distance travelled: %f m", total_distance_);
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "Total time taken: %f m", elapsed_time);
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "Average Speed: %f m/s", average_speed);
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "=======================");
+        }
     }
 
     void timer_callback()
@@ -37,7 +64,7 @@ private:
         point.z = latest_odometry_msg_->pose.pose.position.z;
         if (previous_odometry_msg_ != nullptr)
         {
-            if (sqrt(pow(previous_odometry_msg_->pose.pose.position.y - latest_odometry_msg_->pose.pose.position.y, 2) + pow(previous_odometry_msg_->pose.pose.position.x - latest_odometry_msg_->pose.pose.position.x, 2)) < 0.20)
+            if (sqrt(pow(previous_odometry_msg_->pose.pose.position.y - latest_odometry_msg_->pose.pose.position.y, 2) + pow(previous_odometry_msg_->pose.pose.position.x - latest_odometry_msg_->pose.pose.position.x, 2)) < 0.30)
             {
                 return;
             }
@@ -69,6 +96,7 @@ private:
 
         marker_array.markers.push_back(line_strip);
         marker_pub_->publish(marker_array);
+        // Calculate and log average speed
     }
 
     std_msgs::msg::ColorRGBA compute_color(size_t index)
@@ -136,10 +164,14 @@ private:
 
     std::vector<geometry_msgs::msg::Point> points_;
     std::vector<std_msgs::msg::ColorRGBA> colors_;
+    std::chrono::_V2::system_clock::time_point start_time_;
+    double total_distance_;
+    bool once_;
     size_t marker_id_;
     size_t point_count_;
     nav_msgs::msg::Odometry::SharedPtr latest_odometry_msg_;
     nav_msgs::msg::Odometry::SharedPtr previous_odometry_msg_;
+    nav_msgs::msg::Odometry::SharedPtr previous_odometry_msg_for_dist_;
     std::mutex odom_lock;
 };
 
