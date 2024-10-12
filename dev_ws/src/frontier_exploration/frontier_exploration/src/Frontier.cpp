@@ -15,6 +15,7 @@ Frontier::Frontier()
     path_heading = nullptr;
     fisher_information_in_path = nullptr;
     is_achievable = std::make_shared<bool>(true);
+    is_blacklisted  = std::make_shared<bool>(false);
     costs = nullptr;
     weighted_cost = nullptr;
 }
@@ -100,6 +101,11 @@ void Frontier::setAchievability(bool value)
 {
     setValue(is_achievable, value);
     // is_achievable = value;
+}
+
+void Frontier::setBlacklisted(bool value)
+{
+    setValue(is_blacklisted, value);
 }
 
 // Equality operator definition
@@ -223,6 +229,20 @@ bool Frontier::isAchievable() const
     if (is_achievable == nullptr)
         throw std::runtime_error("Is achievable property is null");
     return *is_achievable;
+}
+
+bool Frontier::isBlacklisted() const
+{
+    if (is_blacklisted == nullptr)
+        throw std::runtime_error("Is blacklisted property is null");
+    return *is_blacklisted;
+}
+
+bool Frontier::isFrontierNull() const
+{
+    if(goal_point == nullptr)
+        return true;
+    return false;
 }
 
 // double Frontier::getWeightedCost() {

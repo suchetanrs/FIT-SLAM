@@ -124,11 +124,11 @@ namespace frontier_exploration
             // std::cout << "Cost is: " << static_cast<int>(cost) << std::endl;
             if (static_cast<int>(cost) == 255)
             {
-                std::cout << "Surrounding cells mapped Returning false " << std::endl;
+                // std::cout << "Surrounding cells mapped Returning false " << std::endl;
                 return false;
             }
         }
-        std::cout << "Surrounding cells mapped Returning true " << std::endl;
+        // std::cout << "Surrounding cells mapped Returning true " << std::endl;
         return true;
     }
 

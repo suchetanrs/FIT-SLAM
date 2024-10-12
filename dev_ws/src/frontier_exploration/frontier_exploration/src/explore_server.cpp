@@ -497,6 +497,11 @@ namespace frontier_exploration
             setMoving(true);
         }
         setMoving(true);
+        auto recovery_controller_ = std::make_shared<RecoveryController>(explore_costmap_ros_, shared_from_this());
+        recovery_controller_->computeVelocityCommand();
+        setMoving(false);
+        return;
+        setMoving(true);
         // Create a publisher to publish messages on cmd_vel_nav topic
         auto publisher = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_nav", 10);
         geometry_msgs::msg::Twist twist_msg;

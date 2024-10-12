@@ -1,85 +1,58 @@
 #include <rclcpp/rclcpp.hpp>
-#include <nav_msgs/msg/odometry.hpp>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <geometry_msgs/msg/point.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <std_msgs/msg/color_rgba.hpp>
 
 class PathVisualizer : public rclcpp::Node
 {
 public:
     PathVisualizer() : Node("path_visualizer"), marker_id_(0), point_count_(0)
     {
-        odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-            "/robot_0/ground_truth_pose", 10, std::bind(&PathVisualizer::odom_callback, this, std::placeholders::_1));
+        tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+        tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
         marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("/exploration_path_followed", 10);
 
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(500), std::bind(&PathVisualizer::timer_callback, this));
 
-        latest_odometry_msg_ = nullptr;
         start_time_ = std::chrono::high_resolution_clock::now();
         total_distance_ = 0;
         once_ = false;
     }
 
 private:
-    void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
-    {
-        std::lock_guard<std::mutex> lock(odom_lock);
-        latest_odometry_msg_ = msg;
-        if(!once_)
-        {
-            previous_odometry_msg_for_dist_ = latest_odometry_msg_;
-            once_ = true;
-        }
-        if(previous_odometry_msg_for_dist_ != nullptr)
-        {
-            double calc_dist = sqrt(pow(previous_odometry_msg_for_dist_->pose.pose.position.y - latest_odometry_msg_->pose.pose.position.y, 2) + pow(previous_odometry_msg_for_dist_->pose.pose.position.x - latest_odometry_msg_->pose.pose.position.x, 2));
-            if(calc_dist > 0.30)
-            {
-                previous_odometry_msg_for_dist_ = latest_odometry_msg_;
-                total_distance_ += calc_dist;
-            }
-        }
-        auto current_time = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed_time = current_time - start_time_;
-        if (elapsed_time.count() > 0)
-        {
-            double average_speed = total_distance_ / elapsed_time.count();
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "Total distance travelled: %f m", total_distance_);
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "Total time taken: %f m", elapsed_time);
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "Average Speed: %f m/s", average_speed);
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "=======================");
-        }
-    }
-
     void timer_callback()
     {
-        if (latest_odometry_msg_ == nullptr)
-            return;
-        std::lock_guard<std::mutex> lock(odom_lock);
-        geometry_msgs::msg::Point point;
-        point.x = latest_odometry_msg_->pose.pose.position.x;
-        point.y = latest_odometry_msg_->pose.pose.position.y;
-        point.z = latest_odometry_msg_->pose.pose.position.z + 1.0;
-        if (previous_odometry_msg_ != nullptr)
+        geometry_msgs::msg::TransformStamped transform_stamped;
+        try
         {
-            if (sqrt(pow(previous_odometry_msg_->pose.pose.position.y - latest_odometry_msg_->pose.pose.position.y, 2) + pow(previous_odometry_msg_->pose.pose.position.x - latest_odometry_msg_->pose.pose.position.x, 2)) < 0.30)
-            {
-                return;
-            }
+            // Look for the transformation between "map" and "base_link"
+            transform_stamped = tf_buffer_->lookupTransform("map", "robot_0/base_link", tf2::TimePointZero);
         }
+        catch (tf2::TransformException &ex)
+        {
+            RCLCPP_WARN(this->get_logger(), "Could not transform map to base_link: %s", ex.what());
+            return;
+        }
+
+        geometry_msgs::msg::Point point;
+        point.x = transform_stamped.transform.translation.x;
+        point.y = transform_stamped.transform.translation.y;
+        point.z = transform_stamped.transform.translation.z;
 
         points_.push_back(point);
         colors_.push_back(compute_color(point_count_));
-
         point_count_++;
 
         visualization_msgs::msg::MarkerArray marker_array;
         visualization_msgs::msg::Marker line_strip;
 
         line_strip.header.frame_id = "map";
-        line_strip.header.stamp = this->now();
+        line_strip.header.stamp = transform_stamped.header.stamp;
         line_strip.ns = "path";
         line_strip.action = visualization_msgs::msg::Marker::ADD;
         line_strip.pose.orientation.w = 1.0;
@@ -92,11 +65,21 @@ private:
             line_strip.points.push_back(points_[i]);
             line_strip.colors.push_back(compute_color(i));
         }
-        previous_odometry_msg_ = latest_odometry_msg_;
 
         marker_array.markers.push_back(line_strip);
         marker_pub_->publish(marker_array);
-        // Calculate and log average speed
+
+        // Log information
+        auto current_time = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_time = current_time - start_time_;
+        if (elapsed_time.count() > 0)
+        {
+            double average_speed = total_distance_ / elapsed_time.count();
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "Total distance travelled: %f m", total_distance_);
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "Total time taken: %f s", elapsed_time.count());
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "Average Speed: %f m/s", average_speed);
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, "=======================");
+        }
     }
 
     std_msgs::msg::ColorRGBA compute_color(size_t index)
@@ -158,9 +141,10 @@ private:
         return color;
     }
 
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
+    std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+    std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
     std::vector<geometry_msgs::msg::Point> points_;
     std::vector<std_msgs::msg::ColorRGBA> colors_;
@@ -169,10 +153,6 @@ private:
     bool once_;
     size_t marker_id_;
     size_t point_count_;
-    nav_msgs::msg::Odometry::SharedPtr latest_odometry_msg_;
-    nav_msgs::msg::Odometry::SharedPtr previous_odometry_msg_;
-    nav_msgs::msg::Odometry::SharedPtr previous_odometry_msg_for_dist_;
-    std::mutex odom_lock;
 };
 
 int main(int argc, char **argv)

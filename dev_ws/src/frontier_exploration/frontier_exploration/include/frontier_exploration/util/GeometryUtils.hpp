@@ -31,6 +31,33 @@ namespace frontier_exploration
         return rpy;
     };
 
+    inline std::vector<double> quatToEuler0To2MPI(geometry_msgs::msg::Quaternion &quat)
+    {
+        tf2::Quaternion tf2_quaternion(
+            quat.x, quat.y, quat.z, quat.w);
+
+        // Convert tf2 quaternion to Euler angles
+        tf2::Matrix3x3 matrix(tf2_quaternion);
+        std::vector<double> rpy = {0, 0, 0};
+        matrix.getRPY(rpy[0], rpy[1], rpy[2]);
+        if(rpy[0] < 0) rpy[0] = rpy[0] + 2 * M_PI;
+        if(rpy[1] < 0) rpy[1] = rpy[1] + 2 * M_PI;
+        if(rpy[2] < 0) rpy[2] = rpy[2] + 2 * M_PI;
+        return rpy;
+    };
+
+    inline std::vector<double> getDifferenceInRPY(std::vector<double> rpy1, std::vector<double> rpy2)
+    {
+        std::vector<double> rpy = {0, 0, 0};
+        rpy[0] = abs(rpy1[0] - rpy2[0]);
+        rpy[1] = abs(rpy1[1] - rpy2[1]);
+        rpy[2] = abs(rpy1[2] - rpy2[2]);
+        if(rpy[0] > M_PI) rpy[0] = 2 * M_PI - rpy[0];
+        if(rpy[1] > M_PI) rpy[1] = 2 * M_PI - rpy[1];
+        if(rpy[2] > M_PI) rpy[2] = 2 * M_PI - rpy[2];
+        return rpy;
+    }
+
     inline geometry_msgs::msg::Quaternion yawToQuat(double yaw)
     {
         tf2::Quaternion quaternion;
@@ -65,7 +92,7 @@ namespace frontier_exploration
         return pow(f1.getGoalPoint().x - f2.getGoalPoint().x, 2) + pow(f1.getGoalPoint().y - f2.getGoalPoint().y, 2);
     };
 
-    inline void getRelativePoseGivenTwoPoints(geometry_msgs::msg::Point& point_from, geometry_msgs::msg::Point& point_to, geometry_msgs::msg::Pose& oriented_pose)
+    inline void getRelativePoseGivenTwoPoints(const geometry_msgs::msg::Point& point_from, const geometry_msgs::msg::Point& point_to, geometry_msgs::msg::Pose& oriented_pose)
     {
         // size_t plan_size = plan.poses.size();
         // if (plan_size == 1) {

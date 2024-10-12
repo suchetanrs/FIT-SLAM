@@ -5,39 +5,30 @@
 -->
 <root main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
-    <RecoveryNode number_of_retries="1" name="NavigateRecovery">
-      <PipelineSequence name="NavigateWithReplanning">
-        <RateController hz="1.0">
-          <RecoveryNode number_of_retries="1" name="ComputePathToPose">
-            <ReactiveSequence>
-              <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
-              <GoalUpdater input_goal="{goal}" output_goal="{updated_goal}">
-		            <ComputePathToPose goal="{updated_goal}" path="{path}" planner_id="{selected_planner}"/>
-	            </GoalUpdater>
-            </ReactiveSequence>
-            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-          </RecoveryNode>
-        </RateController>
-        <RecoveryNode number_of_retries="1" name="FollowPath">
+    <PipelineSequence name="NavigateWithReplanning">
+      <!-- Please make sure that this frequency is not close to the bt loop duration. It can result in an undetermined number of retries-->
+      <!-- For example, if this is 1 Hz, loop duration must be much less than 100ms. (Possibly 60-70ms)-->
+      <RateController hz="10.0">
+        <RecoveryNode number_of_retries="1" name="ComputePathToPose">
           <ReactiveSequence>
-            <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
-            <FollowPath path="{path}" controller_id="{selected_controller}"/>
+            <PlannerSelector selected_planner="{selected_planner}" default_planner="RoadmapPlanner" topic_name="planner_selector"/>
+            <GoalUpdater input_goal="{goal}" output_goal="{updated_goal}">
+              <Sequence name="ComputeAndSmoothPath">
+                <ComputePathToPose goal="{updated_goal}" path="{path}" planner_id="{selected_planner}"/>
+                <SmoothPath unsmoothed_path="{path}" smoothed_path="{path}"/>
+              </Sequence>
+            </GoalUpdater>
           </ReactiveSequence>
-          <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+          <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
         </RecoveryNode>
-      </PipelineSequence>
-      <ReactiveFallback name="RecoveryFallback">
-        <GoalUpdated/>
-        <RoundRobin name="RecoveryActions">
-          <Sequence name="ClearingActions">
-            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
-            <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
-          </Sequence>
-          <!-- <Spin spin_dist="1.0"/>
-          <Wait wait_duration="2"/>
-          <BackUp backup_dist="0.30" backup_speed="0.3"/> -->
-        </RoundRobin>
-      </ReactiveFallback>
-    </RecoveryNode>
+      </RateController>
+      <RecoveryNode number_of_retries="5" name="FollowPath">
+        <ReactiveSequence>
+          <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
+          <FollowPath path="{path}" controller_id="{selected_controller}"/>
+        </ReactiveSequence>
+        <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+      </RecoveryNode>
+    </PipelineSequence>
   </BehaviorTree>
 </root>

@@ -1,155 +1,3 @@
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-kill -9 19309
-kill -9 19309
-pidof explore_server
-pidof explore_server
-pidof explore_server
-kill -9 25182
-kill -9 25181
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-kill -9 32871
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-kill -9 46745 46744
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-pidof explore_server
-cmake ..
-make
-make install
-pidof explore_server
-kill -9 59283 59281
-pidof explore_server
-pidof explore_server
-kill -9 60630 60629
-kill -9 60630 60629
-pidof explore_server
-cd dev_ws/src/frontier_exploration/frontier_exploration/
-ls
-vsc
-bash
-cd dev_ws/
-vsc
-tmux
-cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/
-ls
-g++ hash_test -o hash_test.cpp 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/src/minPos/
-ls
-g++ minPos_test.cpp -o minPos_test
-./minPos_test 
-g++ minPos_test.cpp -o minPos_test
-cd ..
-ls
-cd hungarian/
-ls
-g++ testMain.cpp -o testMain
-cd ..
-ls
-cd ..
-ls
-cd build/
-cmake ..
-make install
-cd ..
-ls
-cd src/
-ls
-cd hungarian/
-ls
-g++ testMain.cpp -o testMain.cpp 
-g++ testMain.cpp -o testMain
-ls
-g++ -c Hungarian.cpp -o Hungarian
-ls
-l
-rm -rf Hungarian
-ls
-cd ..
-ls
-cd minPos/
-ls
-cd ..
-ls
-cd ..
-ls
-cd build/
-cmake ..
-mkae
-make 
-make install
-ls
-cd ..
-ls
-cd build/
-ls
-./minPosExec 
-cmake ..
-make
-make install
-./minPosExec 
-cmake ..
-mkae
 make
 make install
 ./minPosExec 
@@ -1998,3 +1846,155 @@ ls
 cd de
 cd dev_ws/
 colcon build --symlink-install
+ls
+cd dev_ws/
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ls
+cd
+cd de
+cd dev_ws/
+colcon build --symlink-install
+ls
+colcon build --symlink-install
+cd dev_ws/
+vsc
+cd dev_ws && vsc
+rviz2
+apt-get install ros-humble-grid-map-rviz-plugins
+apt-get install ros-humble-grid-map-rviz*
+apt-get update --fix-missing
+rviz2
+apt-get install ros-humble-grid-map-rviz*
+rviz2
+rviz2
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0k
+./launch_exploration.sh 
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ls
+cat defaultFilename_20240923_114456_853.csv | grep fukk
+cat defaultFilename_20240923_114456_853.csv | grep full
+cat defaultFilename_20240923_114456_853.csv | grep construction
+cat defaultFilename_20240923_114456_853.csv
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ros2 topic echo /exploration_path_followed 
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+apt-get install ros-humble-grid-map
+apt-get install ros-humble-octomap
+apt-get install ros-humble-octomap-rv*
+apt-get update --fix-missing
+apt-get install ros-humble-octomap-rv*
+apt-get install ros-humble-octomap
+apt-get install ros-humble-octomap*
+rviz2 -d dev_ws/frontier_exploration.rviz 
+rviz2
+rviz2 -d dev_ws/frontier_exploration.rviz 
+bash
+cd dev_ws && vsc
+ros2 topic echo /robot_0/cmd_vel_nav 
+colcon build --symlink-install
+ros2 topic info /robot_0/cmd_vel_nav 
+colcon build --symlink-install
+ros2 topic echo /robot_0/connecting_cells
+colcon build --symlink-install
+ros2 topic echo /robot_0/connecting_cells
+colcon build --symlink-install
+ros2 topic hz /robot_0/lidar
+ros2 topic hz /robot_0/lidar/points 
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+apt-get install gdb
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+apt-get install gdbserver
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+apt-get install gdbserver
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ls
+rm -rf occupancy_grid_count_202409*
+ls
+rm -rf defaultFilename_202409*
+ls
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+./launch_exploration.sh 
+rviz2
+cd dev_ws && vsc
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd dev_ws/
+svc
+vsc
+colcon build --symlink-install
+cd
+./launch_exploration.sh 
+/bin/python3 /root/comparisions/compnbvp/cave_world/compare.py
+/bin/python3 /root/comparisions/compgbp2/cave_world/compare.py
+/bin/python3 /root/comparisions/compfslam1/cave_world/compare.py
+/bin/python3 /root/comparisions/compnbvp/cave_world/compare.py
+/bin/python3 /root/comparisions/compgbp2/cave_world/compare.py
+/bin/python3 /root/comparisions/compfslam1/cave_world/compare.py
+/bin/python3 /root/comparisions/compare_cave.py
+/bin/python3 /root/comparisions/compfslam2/cave_world/compare.py
+/bin/python3 /root/comparisions/compare_cave.py
+/bin/python3 /root/comparisions/compgbp2/cave_world/compare.py
+/bin/python3 /root/comparisions/compgbp2/cave_world/cleanup.py
+ls
+rm -rf rt_cave_gbp2.csv 
+pwd
+cd /root/comparisions/compgbp2/cave_world/cleanup.py
+cd /root/comparisions/compgbp2/cave_world/
+ls
+python3 cleanup.py 
+/bin/python3 /root/comparisions/compgbp2/marsyard/compare.py
+cd ..
+ls
+cd marsyard/
+python3 cleanup.py 
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+cd dev_ws && vsc
+colcon build --symlink-install
+clear
+cleaR
+CLEAR
+clear
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+pidof code
+kill -9 $(pidof code)
+vsc
+colcon build --symlink-install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+colcon build --symlink-install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+colcon build --symlink-install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+colcon build --symlink-install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+colcon build --symlink-install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ros2 node list
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ros2 node list
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ros2 node list
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ros2 topic echo /robot_0/cmd_vel_nav
+ros2 topic echo /robot_0/cmd_vel
+rviz2
+cd dev_ws/
+vsc
+ls
+cd
+ls
+./launch_exploration.sh 

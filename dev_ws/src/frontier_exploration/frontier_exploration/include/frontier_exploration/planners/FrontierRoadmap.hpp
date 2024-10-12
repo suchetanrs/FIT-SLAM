@@ -27,7 +27,7 @@
 #include "frontier_exploration/util/rosVisualizer.hpp"
 
 const double GRID_CELL_SIZE = 1.0;                           // Assuming each cell is 1x1 in size
-const double RADIUS_TO_DECIDE_EDGES = 5.1;                   // a node within this radius of another node is considered a child of the other node.
+const double RADIUS_TO_DECIDE_EDGES = 6.1;                   // a node within this radius of another node is considered a child of the other node.
 const double MIN_DISTANCE_BETWEEN_TWO_FRONTIER_NODES = 0.5;  // minimum distance between any node in the graph and the frontier node that will be added.
 const double MIN_DISTANCE_BETWEEN_ROBOT_POSE_AND_NODE = 0.5; // minimum distance between any nodes in the graph and the robot pose that is going to be added.
 
@@ -110,15 +110,24 @@ namespace frontier_exploration
 
         void getClosestNodeInRoadMap(const Frontier &interestNode, Frontier &closestNode);
 
-        RoadmapPlanResult getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd);
+        RoadmapPlanResult getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd, bool publish_plan);
 
         RoadmapPlanResult getPlan(Frontier &startNode, bool useClosestToStart, Frontier &endNode, bool useClosestToEnd);
+
+        std::vector<Frontier> refinePath(RoadmapPlanResult& planResult);
 
         void publishRoadMap();
 
         void publishPlan(const std::vector<std::shared_ptr<Node>> &plan, float r, float g, float b);
 
-        void publishPlan(const std::vector<Frontier> &plan);
+        void publishPlan(const std::vector<Frontier> &plan, std::string planType);
+
+        bool isPointBlacklisted(const Frontier& point);
+
+        void addFrontierToBlacklist(Frontier& frontier)
+        {
+            blacklisted_frontiers_.push_back(frontier);
+        }
 
         std::mutex &getRoadmapMutex()
         {
@@ -128,6 +137,11 @@ namespace frontier_exploration
         std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash> &getRoadMap()
         {
             return roadmap_;
+        };
+
+        std::deque<geometry_msgs::msg::Pose> getTrailingRobotPoses()
+        {
+            return trailing_robot_poses_;
         };
 
     private:
@@ -153,9 +167,12 @@ namespace frontier_exploration
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_roadmap_edges_;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_roadmap_vertices_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_plan_;
+        rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_nav2_plan_;
         std::shared_ptr<FrontierRoadmapAStar> astar_planner_;
         rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr clicked_point_sub_;
         std::vector<geometry_msgs::msg::Point> clicked_points_;
+        std::deque<geometry_msgs::msg::Pose> trailing_robot_poses_;
+        std::vector<Frontier> blacklisted_frontiers_;
     };
 }
 

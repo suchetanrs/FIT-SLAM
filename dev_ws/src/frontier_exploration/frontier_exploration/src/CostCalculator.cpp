@@ -17,9 +17,12 @@ namespace frontier_exploration
         fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
         robot_radius_ = explore_costmap_ros->getRobotRadius();
         max_arrival_info_gt_ = setMaxArrivalInformation();
-        // wait for costmap to be current before computing the above. Hence hardcoded.
-        max_arrival_info_gt_ = 81.0;
         LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
+        // wait for costmap to be current before computing the above. Hence hardcoded.
+        max_arrival_info_gt_ = 85.0;
+        LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
+        min_arrival_info_gt_ = 0.70 * max_arrival_info_gt_;
+
     }
 
     void FrontierCostCalculator::setArrivalInformationForFrontier(Frontier &frontier, std::vector<double> &polygon_xy_min_max)
@@ -78,7 +81,7 @@ namespace frontier_exploration
         unsigned int sxm, sym;
         exploration_costmap_->worldToMap(sx, sy, sxm, sym);
         double footprintInLethalPenalty = isRobotFootprintInLethal(exploration_costmap_, sxm, sym, std::ceil(robot_radius_ / exploration_costmap_->getResolution()));
-        if (1.0 - footprintInLethalPenalty == 0.0)
+        if (1.0 - footprintInLethalPenalty == 0.0 && frontier.getSize() < 10.0)
         {
             frontier.setAchievability(false);
         }
@@ -112,6 +115,11 @@ namespace frontier_exploration
         // visualize raytraced points
         // RosVisualizer::getInstance()observableCellsViz(vizpoints);
         frontier.setArrivalInformation(maxValue);
+        LOG_DEBUG("Arrival information is: " << frontier.getArrivalInformation());
+        if(frontier.getArrivalInformation() < min_arrival_info_gt_)
+        {
+            frontier.setAchievability(false);
+        }
         frontier.setGoalOrientation((maxIndex * DELTA_THETA) + (CAMERA_FOV / 2));
         return;
     }
@@ -391,7 +399,7 @@ namespace frontier_exploration
             goal_point_w.setFisherInformation(0);
             return;
         }
-        auto path_length = FrontierRoadMap::getInstance().getPlan(start_pose_w.position.x, start_pose_w.position.y, true, goal_point_w.getGoalPoint().x, goal_point_w.getGoalPoint().y, true);
+        auto path_length = FrontierRoadMap::getInstance().getPlan(start_pose_w.position.x, start_pose_w.position.y, true, goal_point_w.getGoalPoint().x, goal_point_w.getGoalPoint().y, true, false);
         // TODO: Set correct f_info
         if (path_length.path_exists == false)
         {

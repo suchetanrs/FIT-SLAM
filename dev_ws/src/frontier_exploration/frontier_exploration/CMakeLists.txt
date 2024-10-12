@@ -72,9 +72,15 @@ include_directories(
 # src/FrontierSearch.cpp
 add_executable(explore_server src/ExplorationBT.cpp src/Nav2Interface.cpp src/CostAssigner.cpp src/FrontierSearch.cpp src/FrontierCostsManager.cpp 
                src/FullPathOptimizer.cpp src/planners/planner.cpp src/planners/rrt.cpp src/util/rosVisualizer.cpp src/CostCalculator.cpp src/main.cpp
-               src/util/event_logger.cpp src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/planners/astar.cpp src/fisher_information/FisherInfoManager.cpp)
+               src/controllers/recovery_controller.cpp src/controllers/initialization_controller.cpp src/util/event_logger.cpp src/Frontier.cpp 
+               src/Helpers.cpp src/planners/FrontierRoadmap.cpp 
+               src/planners/astar.cpp src/fisher_information/FisherInfoManager.cpp src/nav2_plugins/lethal_marker.cpp)
 ament_target_dependencies(explore_server ${dependencies})
 target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES})
+
+#Add libraries
+add_library(lethal_marker_core SHARED src/nav2_plugins/lethal_marker.cpp)
+ament_target_dependencies(lethal_marker_core SYSTEM ${dependencies})
 
 # -------------------------- Test files ----------------------------
 # add_executable(main_fisher_information_manager src/FisherInfoManager.cpp src/rosVisualizer.cpp src/Frontier.cpp tests/main_fisher_information_manager.cpp)
@@ -102,12 +108,12 @@ ament_target_dependencies(fim_viz ${dependencies})
 # target_link_libraries(fim_viz taskAllocator_lib ${PCL_LIBRARIES})
 
 add_executable(load_fi_lookup src/fisher_information/FisherInfoManager.cpp src/fisher_information/LoadLookupMain.cpp 
-                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp)
+                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp)
 ament_target_dependencies(load_fi_lookup ${dependencies})
 # target_link_libraries(fim_viz taskAllocator_lib ${PCL_LIBRARIES})
 
 add_executable(gen_fi_lookup src/fisher_information/FisherInfoManager.cpp src/fisher_information/GenerateLookupMain.cpp 
-                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp)
+                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp)
 ament_target_dependencies(gen_fi_lookup ${dependencies})
 
 # -------------------------- Comparision files ---------------------
@@ -117,8 +123,11 @@ ament_target_dependencies(explored_map_counter ${dependencies})
 add_executable(exploration_path_followed comparision_scripts/exploration_path_followed.cpp)
 ament_target_dependencies(exploration_path_followed ${dependencies})
 
+add_executable(exploration_path_followed_tf comparision_scripts/exploration_path_followed_tf.cpp)
+ament_target_dependencies(exploration_path_followed_tf ${dependencies})
+
 # main_fisher_information_manager
-install(TARGETS nav2_interface_main explored_map_counter exploration_path_followed
+install(TARGETS nav2_interface_main lethal_marker_core explored_map_counter exploration_path_followed exploration_path_followed_tf
 DESTINATION lib/${PROJECT_NAME}
 )
 # ------------------------------------------------------------------
@@ -134,4 +143,5 @@ DESTINATION share/${PROJECT_NAME}
 
 ament_export_dependencies(rosidl_default_runtime)
 ament_export_include_directories(include ${EIGEN3_INCLUDE_DIR})
+pluginlib_export_plugin_description_file(nav2_costmap_2d xml/lethal_marker.xml)
 ament_package()

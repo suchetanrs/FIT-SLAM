@@ -10,17 +10,17 @@ EventLogger::EventLogger(const std::string &baseFilename) : serialNumber(0)
     auto nowTime = std::chrono::system_clock::to_time_t(now);
     auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 
-    std::ostringstream oss;
-    oss << baseFilename << "_" << std::put_time(std::localtime(&nowTime), "%Y%m%d_%H%M%S") << "_" << nowMs.count() << ".csv";
-    csvFilename = oss.str();
+    // std::ostringstream oss;
+    // oss << baseFilename << "_" << std::put_time(std::localtime(&nowTime), "%Y%m%d_%H%M%S") << "_" << nowMs.count() << ".csv";
+    // csvFilename = oss.str();
 
-    // Open the new CSV file and write the header
-    std::ofstream outFile(csvFilename, std::ios::out | std::ios::app);
-    if (!outFile)
-    {
-        throw std::runtime_error("Unable to open file: " + csvFilename);
-    }
-    outFile << "SerialNumber,Event,Duration(seconds)\n";
+    // // Open the new CSV file and write the header
+    // std::ofstream outFile(csvFilename, std::ios::out | std::ios::app);
+    // if (!outFile)
+    // {
+    //     throw std::runtime_error("Unable to open file: " + csvFilename);
+    // }
+    // outFile << "SerialNumber,Event,Duration(seconds)\n";
 }
 
 // Function to start an event

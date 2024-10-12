@@ -1,0 +1,7 @@
+<library path="lethal_marker_core">
+  <class name="frontier_exploration/LethalMarker"
+    type="frontier_exploration::LethalMarker" 
+    base_class_type="nav2_costmap_2d::Layer">
+    <description>Layer that adds the lethal cells to the costmap.</description>
+  </class>
+</library>

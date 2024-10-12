@@ -20,6 +20,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node)
     connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
     fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
+    trailing_robot_poses_publisher_ = node->create_publisher<geometry_msgs::msg::PoseArray>("trailing_robot_poses", 10);
     pcl::PointXYZI spatial_hashmap_viz(5000);
     costmap_ = nullptr;
 }
@@ -42,6 +43,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Cost
     connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
     fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
+    trailing_robot_poses_publisher_ = node->create_publisher<geometry_msgs::msg::PoseArray>("trailing_robot_poses", 10);
     pcl::PointXYZI spatial_hashmap_viz(5000);
     costmap_ = costmap;
 }
@@ -378,4 +380,19 @@ void RosVisualizer::exportMapCoverage(std::vector<double> polygon_xy_min_max, in
 void RosVisualizer::frontierPlanViz(nav_msgs::msg::Path &path)
 {
     frontier_plan_pub_->publish(path);
+}
+
+void RosVisualizer::visualizeTrailingPoses(std::deque<geometry_msgs::msg::Pose> robot_queue)
+{
+    geometry_msgs::msg::PoseArray pose_array_msg;
+    pose_array_msg.header.stamp = node_->get_clock()->now();
+    pose_array_msg.header.frame_id = "map";  // Use the appropriate frame ID for your setup
+
+    // Add poses from deque to PoseArray
+    for (const auto &pose : robot_queue) {
+        pose_array_msg.poses.push_back(pose);
+    }
+
+    // Publish PoseArray
+    trailing_robot_poses_publisher_->publish(pose_array_msg);
 }

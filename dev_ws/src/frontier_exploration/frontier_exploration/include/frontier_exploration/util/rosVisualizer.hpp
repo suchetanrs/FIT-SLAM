@@ -13,6 +13,7 @@
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <geometry_msgs/msg/pose.hpp>
+#include <geometry_msgs/msg/pose_array.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -64,6 +65,7 @@ public:
     void visualizeFrontierMarker(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
     void exportMapCoverage(std::vector<double> polygon_xy_min_max, int counter_value_, std::string mode_);
     void frontierPlanViz(nav_msgs::msg::Path &path);
+    void visualizeTrailingPoses(std::deque<geometry_msgs::msg::Pose> robot_queue);
 
 private:
     // Delete copy constructor and assignment operator to prevent copying
@@ -85,8 +87,8 @@ private:
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_plan_pub_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr frontier_marker_array_publisher_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr trailing_robot_poses_publisher_;
     nav2_costmap_2d::Costmap2D *costmap_;
-
 
     // pointcloud for visualization purposes
     pcl::PointCloud<pcl::PointXYZI> spatial_hashmap_viz;

@@ -131,6 +131,7 @@ namespace frontier_exploration
         double max_arrival_info_per_frontier = 0.0;
         double robot_radius_;
         double max_arrival_info_gt_ = 0.0;
+        double min_arrival_info_gt_ = 0.0;
 
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)
     };

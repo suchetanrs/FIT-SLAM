@@ -52,6 +52,7 @@ private:
     std::shared_ptr<double> path_heading;
     std::shared_ptr<double> fisher_information_in_path;
     std::shared_ptr<bool> is_achievable;
+    std::shared_ptr<bool> is_blacklisted;
 
     // Individual costs
     std::shared_ptr<std::map<std::string, double>> costs;
@@ -88,6 +89,8 @@ public:
 
     void setAchievability(bool value);
 
+    void setBlacklisted(bool value);
+
     bool operator==(const Frontier& other) const;
 
     size_t getUID() const;
@@ -113,6 +116,10 @@ public:
     double getWeightedCost() const;
 
     bool isAchievable() const;
+
+    bool isBlacklisted() const;
+
+    bool isFrontierNull() const;
 
     bool operator<(const Frontier& other) const {
         return getUID() < other.getUID();

@@ -190,6 +190,8 @@ namespace frontier_exploration
         auto request = std::make_shared<slam_msgs::srv::GetLandmarksInView::Request>();
         auto response = std::make_shared<slam_msgs::srv::GetLandmarksInView::Response>();
         request->pose = relative_pose;
+        request->max_angle_pose_observation = 4.0; // greater than pi to disregard angle of observation.
+        request->max_dist_pose_observation = 14.0;
 
         auto result = client_->async_send_request(request);
         // if (result.wait_for(std::chrono::seconds(20)) == std::future_status::ready)
@@ -210,7 +212,7 @@ namespace frontier_exploration
 
     void FisherInformationManager::generateLookupTable(float minX, float maxX, float minY, float maxY, float minZ, float maxZ, float step)
     {
-        const std::string lookupFile = "fisher_information_lookup_table.dat";
+        const std::string lookupFile = "/root/dev_ws/lookup_table_fi/fisher_information_lookup_table.dat";
 
         std::ofstream outfile(lookupFile, std::ios::binary);
         if (!outfile) {

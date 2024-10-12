@@ -1,32 +1,13 @@
-<root BTCPP_format="4">
+<root main_tree_to_execute = "MainTree" BTCPP_format="4">
+    <include path="./exploration_with_fi.xml" />
+    <include path="./exploration_without_fi.xml" />
+    <include path="./debug/recovery.xml" />
+
     <BehaviorTree ID="MainTree">
         <Sequence name="root">
-            <WaitForCurrent/>
-            <UpdateBoundaryPolygon />
-            <SearchForFrontiers frontier_list="{the_frontier_list}" every_frontier="{the_every_frontier}" increment_search_distance_by="10.0"/>
-            <UpdateFrontierRoadmap frontier_list="{the_frontier_list}"/>
-            <Inverter>
-                <CleanupRoadmap frontier_list="{the_frontier_list}"/>
-            </Inverter>
-            <ProcessFrontierCosts frontier_list="{the_frontier_list}" every_frontier="{the_every_frontier}" robot_name="/robot_0" frontier_costs_result="{the_frontier_costs}"/>
-            
-            <!-- You can choose to either optimize the full 
-            path of send the immediete next goal to nav2 -->
-            <OptimizeFullPath frontier_costs_result="{the_frontier_costs}" allocated_frontier="{the_allocated_frontier}"/>
-            <!-- <GetAllocatedGoal frontier_costs_result="{the_frontier_costs}" allocated_frontier="{the_allocated_frontier}"/> -->
-            
-            <ReactiveSequence>
-                <Inverter>
-                    <CheckIfGoalMapped allocated_frontier="{the_allocated_frontier}"/>
-                </Inverter>
-                <Inverter>
-                    <ReplanTimeoutComplete allocated_frontier="{the_allocated_frontier}"/>
-                </Inverter>
-                <Fallback>
-                    <SendNav2Goal allocated_frontier="{the_allocated_frontier}"/>
-                    <RecoveryMoveBack move_back_duration="2.0"/>
-                </Fallback>
-            </ReactiveSequence>
+            <SubTree ID="ExplorationWithFI"/>
+            <!-- <SubTree ID="ExplorationWithoutFI"/> -->
+            <!-- <SubTree ID="RecoveryDebug"/> -->
         </Sequence>
     </BehaviorTree>
 </root>

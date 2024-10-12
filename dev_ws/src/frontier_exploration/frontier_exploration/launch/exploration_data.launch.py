@@ -29,7 +29,7 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock if true')
 
     robot_namespace =  LaunchConfiguration('robot_namespace')
-    robot_namespace_arg = DeclareLaunchArgument('robot_namespace', default_value=TextSubstitution(text="robot_0"),
+    robot_namespace_arg = DeclareLaunchArgument('robot_namespace', default_value=TextSubstitution(text="robot_ns_exploration"),
         description='The namespace of the robot')
     
 #---------------------------------------------
@@ -79,8 +79,7 @@ def generate_launch_description():
             # emulate_tty=True,
             parameters=[configured_params])
 
-        return [declare_params_file_cmd, 
-                explore_server, 
+        return [declare_params_file_cmd,
                 exploration_path_followed, 
                 explored_map_counter]
 
