@@ -14,6 +14,11 @@ def remove_git_folders(directory):
             subprocess.run(['rm', '-rf', github_folder])
             print(f"Removed {github_folder}")
 
+        if '.gitmodules' in dirs:
+            github_folder = os.path.join(root, '.gitmodules')
+            subprocess.run(['rm', '-rf', github_folder])
+            print(f"Removed {github_folder}")
+
 if __name__ == "__main__":
     current_directory = os.getcwd()
     remove_git_folders(current_directory)
