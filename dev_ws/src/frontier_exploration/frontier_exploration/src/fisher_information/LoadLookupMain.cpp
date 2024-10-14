@@ -96,7 +96,7 @@ private:
                     if(abs(acos(p3d_c_eig.normalized().dot(cam_pose.normalized()))) > 1.0)
                         continue;
                     // Compute the information of the point
-                    float information = fim_manager.getInformationFromLookup(p3d_c_eig, 0.1);
+                    float information = fim_manager.getInformationFromLookup(p3d_c_eig, 0.1, 0);
                     info_sum += information;
                     pcl::PointXYZI pclPoint;
                     pclPoint.x = landmark_x;

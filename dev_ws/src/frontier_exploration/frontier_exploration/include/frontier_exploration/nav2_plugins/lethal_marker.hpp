@@ -21,6 +21,7 @@
 #include <tf2_sensor_msgs/tf2_sensor_msgs.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <frontier_exploration/util/logger.hpp>
+#include "frontier_msgs/srv/mark_lethal.hpp"
 
 namespace frontier_exploration
 {
@@ -54,11 +55,18 @@ namespace frontier_exploration
             current_ = false;
         }
 
+        void threadFunction(std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> ptr)
+        {
+            ptr->spin();
+        }
+
         virtual void onFootprintChanged();
 
         void addNewMarkedArea(double center_wx, double center_wy, double radius);
 
     private:
+        void editLethalZoneService(const std::shared_ptr<frontier_msgs::srv::MarkLethal::Request> req,
+                                          const std::shared_ptr<frontier_msgs::srv::MarkLethal::Response> res);
         // --------------------MEMBER FUNCTIONS-----------------------------------------
         void populateCellsToMark(
             nav2_costmap_2d::Costmap2D &master_grid, uint8_t keepout_config);
@@ -90,6 +98,10 @@ namespace frontier_exploration
         double last_min_x_, last_min_y_, last_max_x_, last_max_y_; ///< Variables holding the last bounds of the costmap layer.
         bool need_recalculation_;                                  ///< Indicates that the entire costmap should be reinflated next time around.
         int numAdditions_;
+        rclcpp::Node::SharedPtr layer_node_;
+        std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> layer_executor_;
+        rclcpp::Service<frontier_msgs::srv::MarkLethal>::SharedPtr edit_lethal_zone_server_;
+        rclcpp::CallbackGroup::SharedPtr service_callback_group_;
     };
 
 } // namespace frontier_exploration

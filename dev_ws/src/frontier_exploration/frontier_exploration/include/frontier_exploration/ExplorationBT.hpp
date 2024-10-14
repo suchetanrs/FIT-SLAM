@@ -28,6 +28,7 @@
 #include "frontier_exploration/controllers/recovery_controller.hpp"
 #include "frontier_exploration/controllers/initialization_controller.hpp"
 #include "frontier_exploration/nav2_plugins/lethal_marker.hpp"
+#include "frontier_msgs/srv/mark_lethal.hpp"
 
 namespace frontier_exploration
 {

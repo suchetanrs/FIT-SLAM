@@ -17,6 +17,7 @@ namespace frontier_exploration
         fisher_information_manager_ = std::make_shared<FisherInformationManager>(node);
         blacklistNextGoal_ = false;
         angle_for_fov_overlap_ = 6.6;
+        exhaustiveLandmarkSearch_ = false;
     }
 
     void FullPathOptimizer::blacklistTestCb(const geometry_msgs::msg::PointStamped::SharedPtr msg)
@@ -296,7 +297,7 @@ namespace frontier_exploration
                 // LOG_INFO("------000000000000-------------");
                 if(abs(diff_rpy[0]) < angle_for_fov_overlap_ && abs(diff_rpy[1]) < angle_for_fov_overlap_ && abs(diff_rpy[2]) < angle_for_fov_overlap_)
                 {
-                    safety_value = fisher_information_manager_->isPoseSafe(pathToFollow[0].getGoalPoint(), pathToFollow[1].getGoalPoint());        
+                    safety_value = fisher_information_manager_->isPoseSafe(pathToFollow[0].getGoalPoint(), pathToFollow[1].getGoalPoint(), exhaustiveLandmarkSearch_);        
                     if(!safety_value)
                         return_value = UNSAFE;
                     else
@@ -307,6 +308,17 @@ namespace frontier_exploration
             if (return_value == UNSAFE)
                 break;
         }
+        return return_value;
+    }
+
+    PathSafetyStatus FullPathOptimizer::isRobotPoseSafe(geometry_msgs::msg::Pose& robotPose)
+    {
+        PathSafetyStatus return_value;
+        bool safety_value = fisher_information_manager_->isPoseSafe(robotPose, exhaustiveLandmarkSearch_);        
+        if(!safety_value)
+            return_value = UNSAFE;
+        else
+            return_value = SAFE;
         return return_value;
     }
 
@@ -323,7 +335,8 @@ namespace frontier_exploration
         if (path_heading > M_PI)
             path_heading = path_heading - (2 * M_PI);
 
-        return calculatePathLength(path) + (abs(path_heading) * 2.3);
+        // return calculatePathLength(path) + (abs(path_heading));
+        return calculatePathLength(path);
     }
 
     double FullPathOptimizer::calculatePathLength(std::vector<Frontier> &path)
@@ -567,7 +580,8 @@ namespace frontier_exploration
             if(refinedPath.size() == 0)
                 return PathSafetyStatus::UNDETERMINED;
             // auto pathSafetyValue = isPathSafe(frontier_pair_distances_[FrontierPair(bestPath[0], bestPath[1])]);
-            auto pathSafetyValue = isPathSafe(refinedPath);
+            // auto pathSafetyValue = isPathSafe(refinedPath);
+            auto pathSafetyValue = isRobotPoseSafe(robotP.pose);
             if(pathSafetyValue == UNSAFE)
             {
                 LOG_CRITICAL("Dead reckoning?");

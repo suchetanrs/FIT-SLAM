@@ -124,7 +124,23 @@ namespace frontier_exploration
                       this, std::placeholders::_1));
         matchSize();
 
+        layer_node_ = rclcpp::Node::make_shared("lethal_marker_internal_node");
+        layer_executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+        layer_executor_->add_node(layer_node_);
+        service_callback_group_ = layer_node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+        edit_lethal_zone_server_ = layer_node_->create_service<frontier_msgs::srv::MarkLethal>(
+            name_ + "/mark_lethal_zone", std::bind(&LethalMarker::editLethalZoneService, this, std::placeholders::_1, std::placeholders::_2),
+            rmw_qos_profile_default, service_callback_group_);
+        std::thread t1(&LethalMarker::threadFunction, this, layer_executor_);
+        t1.detach();
+
         LOG_INFO("LethalMarker onInitialize complete.");
+    }
+
+    void LethalMarker::editLethalZoneService(const std::shared_ptr<frontier_msgs::srv::MarkLethal::Request> req,
+                                          const std::shared_ptr<frontier_msgs::srv::MarkLethal::Response> res)
+    {
+        addNewMarkedArea(req->lethal_point.x, req->lethal_point.y, req->radius);
     }
 
     void LethalMarker::onFootprintChanged()

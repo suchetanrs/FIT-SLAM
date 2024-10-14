@@ -88,7 +88,7 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 1.30 #0.30
+      xy_goal_tolerance: 0.20 #0.30
       yaw_goal_tolerance: 1.5 #0.4
 
     # FollowPath:
@@ -108,8 +108,8 @@ controller_server:
     #   publish_feedback: True
 
     #   # Robot
-    #   max_vel_x: 5.0
-    #   max_vel_theta: 5.6
+    #   max_vel_x: 0.5
+    #   max_vel_theta: 0.4
     #   acc_lim_x: 2.5
     #   acc_lim_theta: 3.4
 
@@ -260,7 +260,7 @@ global_costmap:
       use_sim_time: True
       resolution: 0.05 #0.05
       track_unknown_space: true
-      plugins: ["static_layer", "inflation_layer"]
+      plugins: ["static_layer", "inflation_layer", "lethal_marker_global_costmap", "lethal_inflation_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_topic: /robot_0/traversability_thresholded # for scout use /traversability_thresholded
@@ -269,51 +269,59 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 0.6
         inflation_radius: 5.0
+      lethal_marker_global_costmap:
+        plugin: "frontier_exploration/LethalMarker"
+        enabled: True
+      lethal_inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 0.6
+        inflation_radius: 0.3
+        enabled: True
       always_send_full_costmap: True
 
 planner_server:
   ros__parameters:
     expected_planner_frequency: 1.0
     use_sim_time: true
-    planner_plugins: ["RoadmapPlanner", "GridBased", "NBVP"]
+    planner_plugins: ["RoadmapPlanner"]
     RoadmapPlanner:
       plugin: "frontier_roadmap_planner/FrontierRoadmapPlanner"
-    GridBased:
-      plugin: "nav2_navfn_planner/NavfnPlanner"
-      tolerance: 0.5
-      use_astar: false
-      allow_unknown: true
-    NBVP:
-      plugin: "nbvp_global_planner/NBVPGlobalPlanner"
-      visualize_tree: true
-      path_resolution: 0.15
-      # The below parameters have been moved to ~/.ros/robot_config.yaml as a global parameter and will be loaded from there.
-      # exploration_radius: 10.0
-      # min_exploration_radius: 0.13
-      goal_distance_threshold: 0.25
-      gain:
-        free: 0.0
-        occupied: 0.0
-        unmapped: 110.0
-        range: 4.5
-        zero: 0.0
-        degressive_coeff: 0.25
-      tree:
-        max_best_edges: 10000
-        min_extension_range: 0.0
-        max_extension_range: 3.5
-        max_loop_iterations: 10000
-        initial_iterations: 2000
-        min_node_cost: 0
-        max_node_cost: 254
-        min_raytrace_cost: 253
-        max_raytrace_cost: 255
-      bbx:
-        minX: -106.0
-        minY: -106.0
-        maxX: 106.0
-        maxY: 106.0
-        explore_by_radius: true
+    # GridBased:
+    #   plugin: "nav2_navfn_planner/NavfnPlanner"
+    #   tolerance: 0.5
+    #   use_astar: false
+    #   allow_unknown: true
+    # NBVP:
+    #   plugin: "nbvp_global_planner/NBVPGlobalPlanner"
+    #   visualize_tree: true
+    #   path_resolution: 0.15
+    #   # The below parameters have been moved to ~/.ros/robot_config.yaml as a global parameter and will be loaded from there.
+    #   # exploration_radius: 10.0
+    #   # min_exploration_radius: 0.13
+    #   goal_distance_threshold: 0.25
+    #   gain:
+    #     free: 0.0
+    #     occupied: 0.0
+    #     unmapped: 110.0
+    #     range: 4.5
+    #     zero: 0.0
+    #     degressive_coeff: 0.25
+    #   tree:
+    #     max_best_edges: 10000
+    #     min_extension_range: 0.0
+    #     max_extension_range: 3.5
+    #     max_loop_iterations: 10000
+    #     initial_iterations: 2000
+    #     min_node_cost: 0
+    #     max_node_cost: 254
+    #     min_raytrace_cost: 253
+    #     max_raytrace_cost: 255
+    #   bbx:
+    #     minX: -106.0
+    #     minY: -106.0
+    #     maxX: 106.0
+    #     maxY: 106.0
+    #     explore_by_radius: true
 
 smoother_server:
   ros__parameters:

@@ -46,7 +46,7 @@ Attributes	        Foreground color	   Background color
                                            106 = turquoise
 **/
 
-#define LOG_LEVEL 3
+#define LOG_LEVEL 2
 #define TIME_LEVEL 5
 
 ////////////////////////////////////////////////////////////////////////////////////////

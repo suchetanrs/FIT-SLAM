@@ -1,4 +1,4 @@
-FROM osrf/ros:humble-desktop-full-jammy
+FROM orb-slam3-humble:22.04
 
 #setup
 ENV DEBIAN_FRONTEND="noninteractive"

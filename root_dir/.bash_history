@@ -1,244 +1,3 @@
-make
-make install
-./minPosExec 
-cmake ..
-make 
-make install
-./minPosExec 
-make install
-./minPosExec 
-make install
-cmake ..
-make
-make install
-./minPosExec 
-make install
-./minPosExec 
-make install
-./minPosExec 
-cmake ..
-make
-make install
-cmake ..
-make
-cmake ..
-make
-cmake ..
-make
-make install
-./minPosExec ]
-cmake ..
-mkae
-make install
-cmake ..
-make
-make install
-make
-make install
-cd ..
-ls
-rm -rf build/
-mkdir bui
-mkdir build
-ls
-rm -rf bui
-cd build/
-cmake ..
-make
-make install
-cmake ..
-make
-make install
-cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/src/minPos/
-ls
-./minPos_test 
-g++ minPos_test.cpp -o minPos_test
-./minPos_test 
-cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/src/minPos/
-g++ minPos_test.cpp -o minPos_test
-./minPos_test 
-clear
-g++ minPos_test.cpp -o minPos_test
-clear
-./minPos_test 
-g++ minPos_test.cpp -o minPos_test
-./minPos_test 
-g++ minPos_test.cpp -o minPos_test
-./minPos_test 
-g++ minPos_test.cpp -o minPos_test
-./minPos_test 
-g++ minPos_test.cpp -o minPos_test
-./minPos_test 
-g++ minPos_test.cpp -o minPos_test
-./minPos_test 
-g++ minPos_test.cpp -o minPos_test
-./minPos_test 
-g++ minPos_test.cpp -o minPos_test
-./minPos_test 
-g++ minPos_test.cpp -o minPos_test
-./minPos_test 
-cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/
-ls
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/
-lls
-ls
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-g++ hash_test.cpp -o hash_test
-./hash_test 
-./shell_scripts/scout_1_exploration.sh 
-./shell_scripts/only_exploration.sh 
-./shell_scripts/scout_1_exploration.sh 
-./shell_scripts/only_exploration.sh 
-clear
-./shell_scripts/only_exploration.sh 
-./shell_scripts/scout_1_exploration.sh 
-bash
-./shell_scripts/scout_2_exploration.sh 
-kk
-\
-./shell_scripts/scout_2_exploration.sh 
-bash
-cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/
-cd ../.
-cd ..
-cd frontier_multirobot_allocator/
-ls
-cd build/
-cmake ..
-make
-make install
-cd
-cd dev_ws/
-colcon build --symlink-install
-bash
-pidof explore_server
-kill -9 4041
-pidof explore_server
-kill -9 5110
-pidof explore_server
-bash
-cd dev_ws/
-vsc
-cd
-ros2 run exploration_sim explore_sim 
-kk
-kkk
-kk
-k
-kk
-kkk
-kk
-ros2 run exploration_sim explore_sim 
-bash
-rviz2
-bash
-tmux
-cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
-cmake ..
-make
-make install
-cd
-cd dev_ws/
-colcon build --symlink-install
-bash
-bash
-bash
-vsc
-bash
-bash
-bash
-nano ~/.tmux.conf
-bash
-bash
-ls
-cd dev_ws/
-vsc
-bash
-nano compute.py
-python3 compute.py 
-python3 compute.py 
-nano compute.py
-python3 compute.py 
-cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/viz/
-s
-ls
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-g++ hash_double.cpp -o hash_double
-./hash_double 
-cd /root/dev_ws/src/frontier_exploration/frontier_exploration/src/viz/
-g++ duplicate.cpp -o duplicate
-./duplicate 
-g++ duplicate.cpp -o duplicate
-./duplicate 
-g++ duplicate.cpp -o duplicate
-./duplicate 
-g++ kdtree.cpp -o kdtree
-./duplicate 
-g++ kdtree.cpp -o kdtree
-./kdtree 
-rviz2
-cd dev_ws/
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kk
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kill -9 %1
-ros2 run exploration_sim explore_sim 
-kk
-ros2 run exploration_sim explore_sim 
-kk
-ros2 run exploration_sim explore_sim 
-kk
-ros2 run exploration_sim explore_sim 
-kk
-ros2 run exploration_sim explore_sim 
-kk
-k
-kkk
-ros2 run exploration_sim explore_sim 
-kk
-ros2 run exploration_sim explore_sim 
-kk
-k
-kk
-ros2 run exploration_sim explore_sim 
-kk
-ros2 run exploration_sim explore_sim 
 kk
 kkk
 kk
@@ -1997,4 +1756,245 @@ vsc
 ls
 cd
 ls
+./launch_exploration.sh 
+rviz2
+cd dev_ws && vsc
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd dev_ws && vsc
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+ls
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+rviz2 -d dev_ws/frontier_exploration.rviz
+cd dev_ws && vsc
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+clEAR
+clear
+ls
+./launch_exploration.sh 
+ls
+cd dev_ws/
+ls
+cd
+./launch_exploration.sh 
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+rviz2 -d dev_ws/frontier_exploration.rviz
+cd dev_ws && vsc
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+./launch_
+./launch_exploration.sh 
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+rviz2 -d dev_ws/frontier_exploration.rviz
+cd dev_ws && vsc
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+cd dev_ws && vsc
+source /root/trav_ws/setup.bash
+cd
+source /root/trav_ws/setup.bash
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+source trav_ws/install/setup.bash
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+rviz2 -d dev_ws/frontier_exploration.rviz
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ls
+./launch_
+./launch_exploration.sh 
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+./launch_exploration.sh 
+rviz2 -d dev_ws/frontier_exploration.rviz
+cd dev_ws && vsc
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd dev_ws && vsc
+cd
+cd colcon_ws/
+vsc
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+rviz2 -d dev_ws/frontier_exploration.rviz
+rviz2
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+cd
+cd colcon_ws/
+vsc
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+rm -rf /home/orb/ORB_SLAM3/build
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+ros2 node list
+./launch_exploration.sh 
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+apt-get install ros-humble-navigation2*
+apt-get install ros-humble-nav2*
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+cd
+python3 colcon_ws/src/orb_slam3_ros2_wrapper/scripts/get_landmarks_for_pose.py 
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+python3 colcon_ws/src/orb_slam3_ros2_wrapper/scripts/get_landmarks_for_pose.py 
+cd
+python3 colcon_ws/src/orb_slam3_ros2_wrapper/scripts/get_landmarks_for_pose.py 
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+rviz2 -d dev_ws/frontier_exploration.rviz
+rviz2
+rviz2 -d dev_ws/frontier_exploration.rviz
+ros2 topic list | grep smoother
+ros2 node info smoother
+ros2 node list | grep smoother
+clear
+ros2 node list | grep smoother
+ros2 node info /robot_0/smoother_server 
+ros2 topic echo /robot_0/global_costmap/costmap
+ros2 topic echo /robot_0/global_costmap/costmap_raw
+clear
+cd dev_ws && vsc
+vsc
+bash
+ros2 topic list 
+cd dev_ws/
+colcon build --symlink-install
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ros2 topic list | grep global_costmap
+bash
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+clear
+ls
+./launch_
+./launch_exploration.sh 
+rviz2 -d dev_ws/frontier_exploration.rviz
+cd dev_ws && vsc
+vsc
+ros2 topic info /robot_0/global_costmap/costmap_raw
+ros2 topic info -v /robot_0/global_costmap/costmap_raw
+ros2 topic info -v /robot_0/traversability_thresholded 
+clear
+ros2 topic info -v /robot_0/traversability_thresholded 
+clear
+ros2 topic info -v /robot_0/traversability_thresholded 
+ros2 topic echo /robot_0/traversability_thresholded
+ros2 topic echo /robot_0/traversability_thresholded --field header
+ros2 topic echo /robot_0/global_traversability_map --field header
+ros2 topic echo /robot_0/odom
+ros2 topic echo /robot_0/depth_camera
+ros2 topic echo /robot_0/ground_truth_pose --field header
+ros2 topic echo /robot_0/global_traversability_map --field header
+ros2 topic echo /robot_0/traversability_thresholded --field header
+ros2 topic info -v /robot_0/traversability_thresholded
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ros2 topic echo /robot_0/traversability_thresholded 
+nano ~/.bashrc 
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cclear
+clear
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+ros2 topic echo /explore_costmap
+ros2 topic echo /robot_0/explore_costmap/costmap
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+ls
+clear
+s
+ls
+./launch_
+./launch_exploration.sh 
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+cd dev_ws && vsc
+rviz2 -d dev_ws/frontier_exploration.rviz
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+clear
+ls
+./launch_exploration.sh 
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd dev_ws && vsc
+rviz2 -d dev_ws/frontier_exploration.rviz
+ls
+./launch_exploration.sh 
+ls
+cd dev_ws && vsc
+rviz2 -d dev_ws/frontier_exploration.rviz
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+./launch_exploration.sh 
+cd dev_ws && vsc
+ros2 topic echo /robot_0/explore_costmap/costmap
+ros2 topic echo /robot_0/explore_costmap/costmap_raw
+apt remove ros-humble-nav*
+git clone -b humble https://github.com/ros-navigation/navigation2
+colcon build --symlink-install
+apt-get install ros-humble-nav-msgs
+git clone -b humble https://github.com/ros-navigation/navigation2
+colcon build --symlink-install
+apt-get install ros-humble-test-msgs
+colcon build --symlink-install
+apt-get install ros-humble-rviz*
+apt-get install ros-humble-rviz-de*
+cd navigation2/
+ls
+git branch
+mv nav2_costmap_2d/ ../
+ls
+cd ..
+sl
+ls
+rm -rf navigation2/
+ls
+apt-get install ros-humble-navigaion2
+apt-get install ros-humble-navigat*
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+rviz2 -d dev_ws/frontier_exploration.rviz
+clear
+ls
+cd dev_ws/
+rviz2 -d dev_ws/frontier_exploration.rviz
+apt remove ros-humble-nav2*
+apt remove ros-humble-navigation2
+apt get install -y ros-humble-navigation2
+apt-get install -y ros-humble-navigation2
+cd
+ls
+./launch_exploration.sh 
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+cd dev_ws && vsc
+colcon build --symlink-install
+rviz2 -d dev_ws/frontier_exploration.rviz
+clear
+ls
+apt-get install ros-humble-nav2*
+clear
+ls
+cd dev_ws/
+ls
+colcon build --symlink-install
+rm -rf build/ install/ lo
+rm -rf build/ install/ log/
+colcon build --symlink-install
+cd
 ./launch_exploration.sh 

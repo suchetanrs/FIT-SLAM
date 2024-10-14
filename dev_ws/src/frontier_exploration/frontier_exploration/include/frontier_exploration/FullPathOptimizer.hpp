@@ -17,7 +17,7 @@ const double LOCAL_FRONTIER_SEARCH_RADIUS = 12.0; // 6.0 in m
 const bool ADD_YAW_TO_TSP = false;
 const bool ADD_DISTANCE_TO_ROBOT_TO_TSP = false;
 
-const double BLACKLISTING_CIRCLE_RADIUS = 3.0; // in m
+const double BLACKLISTING_CIRCLE_RADIUS = 1.7; // in m
 namespace frontier_exploration
 {
     enum PathSafetyStatus {
@@ -88,6 +88,8 @@ namespace frontier_exploration
 
         PathSafetyStatus isPathSafe(std::vector<Frontier>& pathToFollow);
 
+        PathSafetyStatus isRobotPoseSafe(geometry_msgs::msg::Pose& robotPose);
+
         double calculateLengthRobotToGoal(const Frontier& robot, const Frontier& goal, geometry_msgs::msg::PoseStamped& robotP);
 
         double calculatePathLength(std::vector<Frontier> &path);
@@ -127,6 +129,11 @@ namespace frontier_exploration
             circularBlacklistCenters_.push_back(frontier);
         }
 
+        void setExhaustiveSearch(bool value)
+        {
+            exhaustiveLandmarkSearch_ = value;
+        }
+
         void blacklistTestCb(const geometry_msgs::msg::PointStamped::SharedPtr msg);
 
     private:
@@ -142,5 +149,6 @@ namespace frontier_exploration
         std::vector<Frontier> circularBlacklistCenters_;
         bool blacklistNextGoal_;
         double angle_for_fov_overlap_;
+        bool exhaustiveLandmarkSearch_;
     };
 }

@@ -1,5 +1,6 @@
 bt_exploration_node:
   ros__parameters:
+    use_sim_time: True
     retry_count: 20
     nav2_goal_timeout_sec: 30 #secs
     # config: ["48.0", "60.0", "48.0", "1.25", "1.25", "1.25", "1.25", "60.0"]

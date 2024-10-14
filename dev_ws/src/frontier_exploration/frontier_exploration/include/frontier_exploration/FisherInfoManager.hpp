@@ -11,6 +11,12 @@
 #include "frontier_exploration/util/rosVisualizer.hpp"
 #include "frontier_exploration/util/GeometryUtils.hpp"
 
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <sensor_msgs/msg/point_field.hpp>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl_conversions/pcl_conversions.h>
+
 const double DISTANCE3D_THRESHOLD_KF_CHANGE = 0.1; // in m
 const double ANGLESUM_THRESHOLD_KF_CHANGE = 0.6; // in rad
 
@@ -20,6 +26,14 @@ struct LookupKey {
     bool operator==(const LookupKey& other) const {
         return components == other.components;
     }
+};
+
+struct LookupValue {
+    double information;
+    int pointCount;
+    int version;  // Tracks the last query this voxel was updated
+
+    LookupValue() : information(0.0), pointCount(0), version(0) {}
 };
 
 namespace std {
@@ -72,9 +86,18 @@ namespace frontier_exploration
 
         void loadLookupTable();
 
-        float getInformationFromLookup(Eigen::Vector3f& landmark_camera_frame, float step);
+        float getInformationFromLookup(Eigen::Vector3f& landmark_camera_frame, float step, unsigned int latest_version);
 
-        bool isPoseSafe(geometry_msgs::msg::Point point_from,  geometry_msgs::msg::Point point_to);
+        float getInformationFromLookup(tf2::Vector3& landmark_camera_frame, float step, unsigned int latest_version);
+
+        inline float getFactorFromNum(int num, float z)
+        {
+            return std::exp(1 - std::pow(num, std::min(z / 10, 1.0f)));
+        };
+
+        bool isPoseSafe(geometry_msgs::msg::Pose& given_pose, bool exhaustiveSearch);
+
+        bool isPoseSafe(geometry_msgs::msg::Point point_from,  geometry_msgs::msg::Point point_to, bool exhaustiveSearch);
     private:
         // void callServices();
         // void checkKeyframeChanges(const slam_msgs::msg::MapGraph& keyframes, std::vector<int>& changedKFIds);
@@ -86,7 +109,10 @@ namespace frontier_exploration
         rclcpp::Client<slam_msgs::srv::GetLandmarksInView>::SharedPtr client_;
         std::unordered_map<int32_t, geometry_msgs::msg::PoseStamped> keyframe_poses_cache_;
         std::unordered_map<std::pair<Frontier, Frontier>, float, frontierPairHash> fisher_information_map_;
-        std::unordered_map<LookupKey, float> lookup_table_fi_;
+        std::unordered_map<LookupKey, LookupValue> lookup_table_fi_;
+        unsigned int latest_version_;
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr fim_pointcloud_pub_;
+        pcl::PointCloud<pcl::PointXYZI> fi_pointcloud_pcl_;
         // std::shared_ptr<RosVisualizer> rosVisualizer_;
     };
 }

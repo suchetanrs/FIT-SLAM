@@ -1,0 +1,4 @@
+[submodule "ORB-SLAM3-ROS2-Docker"]
+	path = ORB-SLAM3-ROS2-Docker
+	url = https://github.com/suchetanrs/ORB-SLAM3-ROS2-Docker
+	branch = active_slam_integration
