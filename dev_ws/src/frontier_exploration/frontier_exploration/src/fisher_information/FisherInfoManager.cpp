@@ -297,13 +297,13 @@ namespace frontier_exploration
     void FisherInformationManager::loadLookupTable()
     {
         lookup_table_fi_.clear();
-        const std::string lookupFile = "/root/dev_ws/lookup_table_fi/fisher_information_lookup_table.dat";
+        const std::string lookupFile = "/root/dev_ws/src/lookup_table_fi/fisher_information_lookup_table.dat";
 
         // Load the lookup table from the file
         std::ifstream infile(lookupFile, std::ios::binary);
         if (!infile) {
             std::cerr << "Error opening file for reading" << std::endl;
-            return;
+            throw std::runtime_error("Cannot load lookup table. Does it exist in the path?");
         }
 
         auto start = std::chrono::high_resolution_clock::now();
