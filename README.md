@@ -24,10 +24,10 @@ This can take quite a while! You might need a ☕. You may get a few warnings fr
 1. ```cd``` into the simulation git repository that you previously setup.
 2. ```sudo docker compose run vehicle_simulator_gz_sim```
 3. ```./launch_simulation.sh```
-In a new terminal: 
-```cd``` into the ```FIT-SLAM``` repository.
-```sudo docker compose run fit-slam```
-Launch the exploration using:
+In a new terminal: <br>
+```cd``` into the ```FIT-SLAM``` repository. <br>
+```sudo docker compose run fit-slam``` <br>
+Launch the exploration using: <br>
 ```./launch_exploration.sh```
 
 # To run Active SLAM
@@ -36,7 +36,7 @@ Launch the exploration using:
 2. ```sudo docker compose run vehicle_simulator_gz_sim```
 3. ```./launch_simulation.sh```
 In a new terminal: 
-```cd``` into the ```FIT-SLAM``` repository.
-```sudo docker compose run fit-slam```
-Launch the exploration using:
+```cd``` into the ```FIT-SLAM``` repository. <br>
+```sudo docker compose run fit-slam``` <br>
+Launch the exploration using: <br>
 ```./launch_active_slam.sh```
