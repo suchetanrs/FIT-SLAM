@@ -243,7 +243,7 @@ namespace frontier_exploration
         // if(response->map_points.size() > 150)
         //     return true;
         // return false;  
-        if(total_information > 301.5)
+        if(total_information > 419.5)
             return true;
         return false;  
     }

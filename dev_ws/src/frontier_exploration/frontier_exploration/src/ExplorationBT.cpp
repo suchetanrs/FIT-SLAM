@@ -1106,6 +1106,7 @@ namespace frontier_exploration
         bt_node_->declare_parameter("max_frontier_cluster_size", rclcpp::ParameterValue(20));
         bt_node_->declare_parameter("max_frontier_distance", rclcpp::ParameterValue(0.5));
         bt_node_->declare_parameter("process_other_robots", rclcpp::ParameterValue(false));
+        bt_node_->declare_parameter("bt_xml_path", "/root/dev_ws/src/frontier_exploration/frontier_exploration/xml/exploration.xml");
 
         bt_node_->get_parameter("retry_count", retry_);
         bt_node_->get_parameter("nav2_goal_timeout_sec", nav2WaitTime_);
@@ -1116,6 +1117,7 @@ namespace frontier_exploration
         bt_node_->get_parameter("max_frontier_cluster_size", max_frontier_cluster_size_);
         bt_node_->get_parameter("max_frontier_distance", max_frontier_distance_);
         bt_node_->get_parameter("process_other_robots", process_other_robots_);
+        bt_node_->get_parameter("bt_xml_path", bt_xml_path_);
         LOG_TRACE("Declared BT params");
         //--------------------------------------------NAV2 CLIENT RELATED-------------------------------
         nav2_interface_ = std::make_shared<Nav2Interface>(bt_node_);
@@ -1277,7 +1279,7 @@ namespace frontier_exploration
         };
         factory.registerBuilder<ExecuteRecoveryMove>("ExecuteRecoveryMove", execute_recovery_move);
 
-        behaviour_tree = factory.createTreeFromFile("/root/dev_ws/src/frontier_exploration/frontier_exploration/xml/exploration.xml", blackboard);
+        behaviour_tree = factory.createTreeFromFile(bt_xml_path_, blackboard);
         while (rclcpp::ok())
         {
             behaviour_tree.tickOnce();

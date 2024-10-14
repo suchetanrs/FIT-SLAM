@@ -1,112 +1,3 @@
-kk
-kkk
-kk
-k
-ros2 run exploration_sim explore_sim 
-kk
-ros2 run exploration_sim explore_sim 
-kk
-ros2 run exploration_sim explore_sim 
-kk
-ros2 run exploration_sim explore_sim 
-k
-kk
-ros2 run exploration_sim explore_sim 
-kk
-ros2 run exploration_sim explore_sim 
-kk
-kkk
-kk
-ros2 run exploration_sim explore_sim 
-kk
-k
-kk
-cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
-cmake ..
-make
-make install
-cd
-./shell_scripts/3_exploration.sh 
-kill -9 %1
-kill -9 %1kk
-kk
-k
-kk
-cd dev_ws/src/frontier_exploration/frontier_exploration/
-vsc
-cd
-cd dev_ws/
-cd
-./shell_scripts/3_exploration.sh 
-kill -9 %1
-./shell_scripts/3_exploration.sh 
-kk
-k
-kk
-top
-./shell_scripts/3_exploration.sh 
-ls
-cd dev_ws/src/frontier_exploration/
-vsc
-cd
-./shell_scripts/3_exploration.sh 
-
-./shell_scripts/3_exploration.sh 
-clear
-./shell_scripts/3_exploration.sh 
-c
-./shell_scripts/3_exploration.sh 
-cd dev_ws/
-colcon build --symlink-install
-ls
-cd src/frontier_exploration/
-vsc
-cd
-cd dev_ws/
-colcon build --symlink-install
-rm -rf build/ install/ log/
-colcon build --symlink-install
-ros2 topic hz /scout_2/explore_costmap/costmap
-ros2 topic lis
-ros2 topic hz /scout_2/explore_costmap/costmap_raw
-ros2 topic info -v /simulation_costmap
-ros2 topic hz /scout_2/explore_costmap/costmap_raw
-ros2 topic echo /simulation_costmap
-ros2 param set /explore_costmap inflation_layer.inflation_radius 0.35
-ros2 param set explore_costmap inflation_layer.inflation_radius 0.35
-ros2 param set /explore_costmap/explore_costmap inflation_layer.inflation_radius 0.35
-ros2 param lsit
-ros2 param list
-ros2 param set /scout_2/explore_costmap/explore_costmap inflation_layer.inflation_radius 0.35
-ros2 param set /scout_2/explore_costmap/explore_costmap inflation_layer.inflation_radius 0.50
-colcon build --symlink-install
-python3 src/frontier_exploration/frontier_exploration/src/py/republish_cmd_vel.py 
-colcon build --symlink-install
-rm -rf build/frontier_msgs/
-ls
-rm -rf install/frontier_msgs/
-colcon build --symlink-install
-rm -rf build/ install/ log/
-colcon build --symlink-install --packages-select frontier_msgs
-colcon build --symlink-install --packages-select frontier_msgs slam_msgs
-colcon build --symlink-install
-vsc
-rm -rf build/ install/ log/
-colcon build --symlink-install --packages-select frontier_msgs slam_msgs
-colcon build --symlink-install
-clear
-colcon build --symlink-install
-clear
-colcon build --symlink-install
-vsc
-colcon build --symlink-install
-colcon build --symlink-install --packages-select frontier_msgs
-colcon build --symlink-install
-clear
-colcon build --symlink-install
-pidof explore_server
-ros2 service lsit
-ros2 service list
 ros2 service list | grep frontier
 pidof explore_server
 ros2 service list | grep frontier
@@ -1997,4 +1888,113 @@ rm -rf build/ install/ lo
 rm -rf build/ install/ log/
 colcon build --symlink-install
 cd
+./launch_exploration.sh 
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+rviz2 -d dev_ws/frontier_exploration.rviz
+cd dev_ws && vsc
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+clear
+ls
+rm -rf occupancy_grid_count_20241014_1*
+ls
+rm -rf core.278813 
+git status
+clear
+ls
+clear
+ls
+./launch_exploration.sh 
+vsc
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+ros2 launch frontier_exploration active_slam.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd dev_ws && vsc
+colcon build --symlink-install
+rviz2 -d dev_ws/frontier_exploration.rviz
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+cd dev_ws/
+vsc
+clear
+ls
+cd
+clear
+ls
+./launch_
+./launch_exploration.sh 
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+rviz2 -d dev_ws/frontier_exploration.rviz
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+ros2 launch frontier_exploration active_slam.launch.py robot_namespace:=robot_0
+rviz2 -d dev_ws/frontier_exploration.rviz
+ros2 launch robot_navigation2 navigation_slow.launch.py robot_namespace:=robot_0
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+ros2 launch frontier_exploration active_slam.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation_slow.launch.py robot_namespace:=robot_0
+rviz2 -d dev_ws/frontier_exploration.rviz
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+ros2 launch robot_navigation2 navigation_slow.launch.py robot_namespace:=robot_0
+ros2 launch frontier_exploration active_slam.launch.py robot_namespace:=robot_0
+rviz2 -d dev_ws/frontier_exploration.rviz
+clear
+vsc
+sudo chmod +x launch_*
+ls
+./launch_active_slam.sh 
+ls
+rm -rf dev_ws/install/ dev_ws/build/ dev_ws/log/
+./launch_active_slam.sh 
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+ros2 launch frontier_exploration active_slam.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation_slow.launch.py robot_namespace:=robot_0
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+rviz2 -d dev_ws/frontier_exploration.rviz
+rviz2
+ls
+./launch_active_slam.sh 
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+rviz2 -d /root/frontier_exploration.rviz
+ros2 launch robot_navigation2 navigation_slow.launch.py robot_namespace:=robot_0
+ros2 launch frontier_exploration active_slam.launch.py robot_namespace:=robot_0
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+vsc
+./launch_active_slam.sh 
+ros2 launch frontier_exploration active_slam.launch.py robot_namespace:=robot_0
+ros2 launch robot_navigation2 navigation_slow.launch.py robot_namespace:=robot_0
+cd dev_ws/
+vsc
+rviz2 -d /root/frontier_exploration.rviz
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+ros2 launch robot_navigation2 navigation_slow.launch.py robot_namespace:=robot_0
+ros2 launch frontier_exploration active_slam.launch.py robot_namespace:=robot_0
+rviz2 -d /root/frontier_exploration.rviz
+cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+ros2 node list
+cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+ros2 launch robot_navigation2 navigation.launch.py robot_namespace:=robot_0
+ros2 launch traversability_mapping_ros global_traversability_mapping.launch.py 
+rviz2 -d dev_ws/frontier_exploration.rviz
+cd && source colcon_ws/install/setup.bash && ros2 launch traversability_mapping_ros global_traversability_mapping.launch.py
+rviz2 -d /root/frontier_exploration.rviz
+ros2 launch robot_navigation2 navigation_fast.launch.py robot_namespace:=robot_0
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+ls
+./launch_active_slam.sh 
+./launch_exploration.sh 
+cd && source colcon_ws/install/setup.bash && ros2 launch traversability_mapping_ros global_traversability_mapping.launch.py
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+ros2 launch robot_navigation2 navigation_fast.launch.py robot_namespace:=robot_0
+rviz2 -d /root/frontier_exploration.rviz
+clear
+ls
 ./launch_exploration.sh 

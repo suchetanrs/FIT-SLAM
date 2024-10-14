@@ -98,6 +98,7 @@ namespace frontier_exploration
         std::shared_ptr<std::vector<Frontier>> active_hysterisis_candidates_;
         std::shared_ptr<RecoveryController> recovery_controller_;
         std::shared_ptr<InitCommandVelNode> initialization_controller_;
+        std::string bt_xml_path_;
     };
 }
 

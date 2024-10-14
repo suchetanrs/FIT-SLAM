@@ -43,7 +43,8 @@ def generate_launch_description():
 
         param_substitutions = {
             'robot_base_frame': context.launch_configurations['robot_namespace'] + '/base_footprint',
-            'use_sim_time': context.launch_configurations['use_sim_time']
+            'use_sim_time': context.launch_configurations['use_sim_time'],
+            'bt_xml_path': "/root/dev_ws/src/frontier_exploration/frontier_exploration/xml/exploration_without_fi.xml"
             }
 
         configured_params = RewrittenYaml(

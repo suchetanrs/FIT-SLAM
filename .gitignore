@@ -7,6 +7,9 @@ root_dir/.*
 !root_dir/.tmux.conf
 root_dir/.bash_history
 !root_dir/.rangerdir
+!root_dir/launch_exploration.sh
+!root_dir/launch_active_slam.sh
+!root_dir/.bash_profile
 dev_ws/src/frontier_exploration/Doxyfile
 dev_ws/src/frontier_exploration/doc/
 orb_slam3_docker_20_foxy/
