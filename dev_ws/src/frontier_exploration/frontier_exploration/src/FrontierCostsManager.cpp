@@ -221,64 +221,6 @@ namespace frontier_exploration
         // // sort the frontier list based on the utility value
         // std::sort(frontier_with_u1_utility.begin(), frontier_with_u1_utility.end(), frontier_u1_comp);
 
-        // // U2 UTILITY processed for N best.
-        // Frontier::SharedPtr frontier_selected_post_u2;
-        // double theta_s_star_post_u2;
-        // // std::map of frontier information mapped to the new utility
-        // std::map<frontier_exploration::FrontierWithMetaData, double> frontier_with_path_information;
-
-        // if (static_cast<int>(frontier_with_u1_utility.size()) > 0)
-        // {
-        //     LOG_DEBUG(value of N_best_for_u2 i_;
-        //     double max_u2_utility = 0;
-        //     double maximum_path_information = 0;
-        //     if (N_best_for_u2_ == -1)
-        //     { // if -1 then the path information for all the frontiers is computed.
-        //         N_best_for_u2_ = static_cast<int>(frontier_with_u1_utility.size());
-        //     }
-        //     LOG_DEBUG(value of loop min is: " << static_cast<int>(frontier_with_u1_utility._;
-        //     for (int m = static_cast<int>(frontier_with_u1_utility.size()) - 1; m >= static_cast<int>(frontier_with_u1_utility.size()) - N_best_for_u2_; m--)
-        //     {
-        //         if (m == 0)
-        //         {
-        //             break;
-        //         }
-        //         auto plan_result = getPlanForFrontier(start_pose_w.position, frontier_with_u1_utility[m].first.frontier_, map_data, true);
-        //         if (plan_result.first.information_total > maximum_path_information)
-        //         {
-        //             maximum_path_information = plan_result.first.information_total;
-        //         }
-        //         frontier_with_path_information[frontier_with_u1_utility[m].first] = plan_result.first.information_total;
-        //     }
-        //     for (int m = static_cast<int>(frontier_with_u1_utility.size()) - 1; m >= static_cast<int>(frontier_with_u1_utility.size()) - N_best_for_u2_; m--)
-        //     {
-        //         if (m == 0)
-        //         {
-        //             break;
-        //         }
-        //         double current_utility = ((beta_ * frontier_with_u1_utility[m].second) + ((1 - beta_) * (frontier_with_path_information[frontier_with_u1_utility[m].first] / maximum_path_information)));
-        //         frontier_costs[frontier_with_u1_utility[m].first] = current_utility;
-        //         if (current_utility > max_u2_utility)
-        //         {
-        //             LOG_DEBUG(U2 uy;
-        //             LOG_DEBUG(utility for current one: " << fd;
-        //             max_u2_utility = current_utility;
-        //             theta_s_star_post_u2 = frontier_with_u1_utility[m].first.theta_s_star_;
-        //             frontier_selected_post_u2 = std::make_shared<Frontier>(frontier_with_u1_utility[m].first.frontier_);
-        //         }
-        //     }
-        // }
-        // else
-        // {
-        //     LOG_DEBUG("The number of frontiers after U1 compute is zero.", logger_.get_name());
-        //     SelectionResult selection_result;
-        //     selection_result.frontier = selected_frontier;
-        //     selection_result.orientation = selected_orientation;
-        //     selection_result.success = false;
-        //     selection_result.frontier_costs = frontier_costs;
-        //     return selection_result;
-        // }
-
         LOG_DEBUG("The selected frontier was not updated after U2 computation.");
         LOG_DEBUG("Returning for input list size: " << frontier_list.size());
         return true;

@@ -70,11 +70,27 @@ include_directories(
 
 # Add executable 2
 # src/FrontierSearch.cpp
-add_executable(explore_server src/ExplorationBT.cpp src/Nav2Interface.cpp src/CostAssigner.cpp src/FrontierSearch.cpp src/FrontierCostsManager.cpp 
-               src/FullPathOptimizer.cpp src/planners/planner.cpp src/planners/rrt.cpp src/util/rosVisualizer.cpp src/CostCalculator.cpp src/main.cpp
-               src/controllers/recovery_controller.cpp src/controllers/initialization_controller.cpp src/util/event_logger.cpp src/Frontier.cpp 
-               src/Helpers.cpp src/planners/FrontierRoadmap.cpp 
-               src/planners/astar.cpp src/fisher_information/FisherInfoManager.cpp src/nav2_plugins/lethal_marker.cpp)
+add_executable(explore_server 
+src/Frontier.cpp 
+src/main.cpp
+src/ExplorationBT.cpp 
+src/Nav2Interface.cpp 
+src/FrontierSearch.cpp 
+src/FrontierCostsManager.cpp 
+src/CostAssigner.cpp 
+src/planners/planner.cpp 
+src/planners/FrontierRoadmap.cpp 
+src/planners/astar.cpp 
+src/FullPathOptimizer.cpp 
+src/CostCalculator.cpp 
+src/fisher_information/FisherInfoManager.cpp 
+src/controllers/recovery_controller.cpp 
+src/controllers/initialization_controller.cpp 
+src/util/event_logger.cpp 
+src/Helpers.cpp 
+src/util/rosVisualizer.cpp 
+src/nav2_plugins/lethal_marker.cpp
+)
 ament_target_dependencies(explore_server ${dependencies})
 target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES})
 
