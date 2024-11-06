@@ -4,8 +4,8 @@
   <version>0.1.0</version>
   <description>Frontier exploration package</description>
 
-  <maintainer email="paul@bovbel.com">Paul Bovbel</maintainer>
-  <license>GPLv3</license>
+  <maintainer email="rssuchetan@gmail.com">Suchetan R S</maintainer>
+  <license>MIT</license>
 
   <depend>rosidl_default_generators</depend>
 

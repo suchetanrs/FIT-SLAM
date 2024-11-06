@@ -21,7 +21,6 @@ public:
 
         start_time_ = std::chrono::high_resolution_clock::now();
         total_distance_ = 0;
-        once_ = false;
     }
 
 private:
@@ -150,7 +149,6 @@ private:
     std::vector<std_msgs::msg::ColorRGBA> colors_;
     std::chrono::_V2::system_clock::time_point start_time_;
     double total_distance_;
-    bool once_;
     size_t marker_id_;
     size_t point_count_;
 };

@@ -9,7 +9,7 @@ public:
     PathVisualizer() : Node("path_visualizer"), marker_id_(0), point_count_(0)
     {
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-            "/robot_0/ground_truth_pose", 10, std::bind(&PathVisualizer::odom_callback, this, std::placeholders::_1));
+            "ground_truth_pose", 10, std::bind(&PathVisualizer::odom_callback, this, std::placeholders::_1));
 
         marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("/exploration_path_followed", 10);
 

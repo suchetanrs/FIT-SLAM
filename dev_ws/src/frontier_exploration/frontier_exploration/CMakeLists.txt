@@ -132,6 +132,9 @@ add_executable(gen_fi_lookup src/fisher_information/FisherInfoManager.cpp src/fi
                                   src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp)
 ament_target_dependencies(gen_fi_lookup ${dependencies})
 
+add_executable(roadmap_vertices_saver tests/frontier_roadmap_tests/roadmap_vertices_saver.cpp)
+ament_target_dependencies(roadmap_vertices_saver ${dependencies})
+
 # -------------------------- Comparision files ---------------------
 add_executable(explored_map_counter comparision_scripts/explored_map_counter.cpp)
 ament_target_dependencies(explored_map_counter ${dependencies})
@@ -149,7 +152,7 @@ DESTINATION lib/${PROJECT_NAME}
 # ------------------------------------------------------------------
 
 
-install(TARGETS explore_server fim_viz load_fi_lookup gen_fi_lookup
+install(TARGETS explore_server fim_viz load_fi_lookup gen_fi_lookup roadmap_vertices_saver
 DESTINATION lib/${PROJECT_NAME}
 )
 

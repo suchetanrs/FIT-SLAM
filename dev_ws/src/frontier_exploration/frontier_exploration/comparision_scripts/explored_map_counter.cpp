@@ -12,7 +12,7 @@ public:
     {
         start_time_ = std::chrono::steady_clock::now();
         subscription_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
-            "/robot_0/traversability_thresholded", 10, std::bind(&OccupancyGridCounter::occupancyGridCallback, this, std::placeholders::_1));
+            "traversability_thresholded", 10, std::bind(&OccupancyGridCounter::occupancyGridCallback, this, std::placeholders::_1));
         
         // Timer to call logData every 1 second
         timer_ = this->create_wall_timer(

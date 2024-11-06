@@ -70,6 +70,7 @@ def generate_launch_description():
             output='screen',
             # prefix=['gdbserver localhost:3000'],
             # emulate_tty=True,
+            namespace=context.launch_configurations['robot_namespace'],
             parameters=[configured_params])
 
         explored_map_counter = Node(
@@ -78,6 +79,7 @@ def generate_launch_description():
             output='screen',
             # prefix=['gdbserver localhost:3000'],
             # emulate_tty=True,
+            namespace=context.launch_configurations['robot_namespace'],
             parameters=[configured_params])
 
         return [declare_params_file_cmd, 
