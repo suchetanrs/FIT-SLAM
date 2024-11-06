@@ -285,7 +285,7 @@ planner_server:
     use_sim_time: true
     planner_plugins: ["RoadmapPlanner"]
     RoadmapPlanner:
-      plugin: "frontier_roadmap_planner/FrontierRoadmapPlanner"
+      plugin: "frontier_exploration/FrontierRoadmapPlanner"
     # GridBased:
     #   plugin: "nav2_navfn_planner/NavfnPlanner"
     #   tolerance: 0.5

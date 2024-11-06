@@ -1,5 +1,4 @@
 #include "frontier_exploration/nav2_plugins/lethal_marker.hpp"
-#define TEN_TO_THE_NINTH 1e9
 
 namespace frontier_exploration
 {

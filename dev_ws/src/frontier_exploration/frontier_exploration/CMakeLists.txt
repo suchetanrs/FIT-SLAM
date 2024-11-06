@@ -98,6 +98,12 @@ target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES})
 add_library(lethal_marker_core SHARED src/nav2_plugins/lethal_marker.cpp)
 ament_target_dependencies(lethal_marker_core SYSTEM ${dependencies})
 
+add_library(frontier_roadmap_planner_core SHARED
+  src/nav2_plugins/roadmap_planner_plugin.cpp
+)
+ament_target_dependencies(frontier_roadmap_planner_core ${dependencies})
+target_compile_definitions(frontier_roadmap_planner_core PUBLIC "PLUGINLIB_DISABLE_BOOST_FUNCTIONS")
+
 # -------------------------- Test files ----------------------------
 # add_executable(main_fisher_information_manager src/FisherInfoManager.cpp src/rosVisualizer.cpp src/Frontier.cpp tests/main_fisher_information_manager.cpp)
 # ament_target_dependencies(main_fisher_information_manager ${dependencies})
@@ -146,7 +152,7 @@ add_executable(exploration_path_followed_tf comparision_scripts/exploration_path
 ament_target_dependencies(exploration_path_followed_tf ${dependencies})
 
 # main_fisher_information_manager
-install(TARGETS nav2_interface_main lethal_marker_core explored_map_counter exploration_path_followed exploration_path_followed_tf
+install(TARGETS nav2_interface_main lethal_marker_core frontier_roadmap_planner_core explored_map_counter exploration_path_followed exploration_path_followed_tf
 DESTINATION lib/${PROJECT_NAME}
 )
 # ------------------------------------------------------------------
@@ -163,4 +169,5 @@ DESTINATION share/${PROJECT_NAME}
 ament_export_dependencies(rosidl_default_runtime)
 ament_export_include_directories(include ${EIGEN3_INCLUDE_DIR})
 pluginlib_export_plugin_description_file(nav2_costmap_2d xml/lethal_marker.xml)
+pluginlib_export_plugin_description_file(nav2_core xml/roadmap_planner.xml)
 ament_package()

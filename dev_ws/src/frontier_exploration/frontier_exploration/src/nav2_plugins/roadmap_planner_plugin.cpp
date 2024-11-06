@@ -1,6 +1,6 @@
-#include "frontier_roadmap_planner/roadmap_planner_plugin.hpp"
+#include "frontier_exploration/nav2_plugins/roadmap_planner_plugin.hpp"
 
-namespace frontier_roadmap_planner
+namespace frontier_exploration
 {
 void FrontierRoadmapPlanner::configure(
   const rclcpp_lifecycle::LifecycleNode::WeakPtr & parent,
@@ -28,17 +28,17 @@ void FrontierRoadmapPlanner::planCallback(const nav_msgs::msg::Path::SharedPtr m
 
 void FrontierRoadmapPlanner::cleanup()
 {
-  RCLCPP_INFO(logger_, "CleaningUp plugin %s of type frontier_roadmap_planner_planner", name_.c_str());
+  RCLCPP_INFO(logger_, "CleaningUp plugin %s of type frontier_exploration_planner", name_.c_str());
 }
 
 void FrontierRoadmapPlanner::activate()
 {
-  RCLCPP_INFO(logger_, "Activating plugin %s of type frontier_roadmap_planner_planner", name_.c_str());
+  RCLCPP_INFO(logger_, "Activating plugin %s of type frontier_exploration_planner", name_.c_str());
 }
 
 void FrontierRoadmapPlanner::deactivate()
 {
-  RCLCPP_INFO(logger_, "Deactivating plugin %s of type frontier_roadmap_planner_planner", name_.c_str());
+  RCLCPP_INFO(logger_, "Deactivating plugin %s of type frontier_exploration_planner", name_.c_str());
 }
 
 nav_msgs::msg::Path FrontierRoadmapPlanner::createPlan(
@@ -86,7 +86,7 @@ nav_msgs::msg::Path FrontierRoadmapPlanner::linearInterpolation(
   return pa;
 }
 
-}  // namespace frontier_roadmap_planner
+}  // namespace frontier_exploration
 
 #include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(frontier_roadmap_planner::FrontierRoadmapPlanner, nav2_core::GlobalPlanner)
+PLUGINLIB_EXPORT_CLASS(frontier_exploration::FrontierRoadmapPlanner, nav2_core::GlobalPlanner)

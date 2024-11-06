@@ -1,7 +1,0 @@
-<library path="frontier_roadmap_planner">
-    <class name="frontier_roadmap_planner/FrontierRoadmapPlanner" 
-           type="frontier_roadmap_planner::FrontierRoadmapPlanner" 
-           base_class_type="nav2_core::GlobalPlanner">
-        <description>An implementation of the frontier roadmap algorithm</description>
-    </class>
-</library>

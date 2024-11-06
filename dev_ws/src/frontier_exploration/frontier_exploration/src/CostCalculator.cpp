@@ -1,5 +1,5 @@
 #include "frontier_exploration/CostCalculator.hpp"
-#include <frontier_exploration/util/util.hpp>
+// #include <frontier_exploration/util/util.hpp>
 
 namespace frontier_exploration
 {
@@ -320,6 +320,9 @@ namespace frontier_exploration
             previous_pose = std::make_shared<geometry_msgs::msg::PoseStamped>(pose_from);
             // If the path_cut_count variable is above a certain metric. The following block is executed.
             // This is done so as to prevent excessive information computation.
+
+            /** The following code is uncommited because fisher information computation has been moved to FRM.
+             * 
             if (path_cut_count > static_cast<int>(1.5 / exploration_costmap_->getResolution()) && compute_information == true)
             {
                 number_of_wayp++;
@@ -357,6 +360,7 @@ namespace frontier_exploration
                     information_for_path += info_pcl.first;
                 }
             }
+            */
         }
         fov_marker_publisher_->publish(marker_msg_);
         if (plan.poses.size() == 0)

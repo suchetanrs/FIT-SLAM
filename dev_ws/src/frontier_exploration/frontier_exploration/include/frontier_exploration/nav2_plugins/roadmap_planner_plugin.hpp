@@ -19,7 +19,7 @@
 #include "nav2_util/node_utils.hpp"
 #include "nav2_util/geometry_utils.hpp"
 
-namespace frontier_roadmap_planner
+namespace frontier_exploration
 {
 
 class FrontierRoadmapPlanner : public nav2_core::GlobalPlanner
@@ -66,6 +66,6 @@ protected:
     const nav_msgs::msg::Path& raw_path,
     const double & dist_bw_points);
 };
-}   //  namespace nav2_frontier_roadmap_planner
+}   //  namespace nav2_frontier_exploration
 
 #endif  //  ROADMAP_PLANNER_PLUGIN_
