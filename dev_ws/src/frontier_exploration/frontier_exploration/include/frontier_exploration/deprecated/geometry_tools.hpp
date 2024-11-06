@@ -1,3 +1,15 @@
+// ==================================================================================================
+//
+// This file (geometry_tools.hpp) is DEPRECATED and is NO LONGER USED anywhere in the codebase. 
+//
+// DO NOT USE THIS FILE. It is being kept for reference only and may be removed in the future.
+//
+// If you need any of the functionality previously provided here, you'll need to reimplement it 
+// or find alternative solutions.
+//
+// ==================================================================================================
+
+
 #ifndef GEOMETRY_TOOLS_HPP_
 #define GEOMETRY_TOOLS_HPP_
 

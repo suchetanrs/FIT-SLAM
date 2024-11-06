@@ -1,7 +1,7 @@
 #include <vector>
 #include <algorithm>
 #include <limits>
-#include "frontier_exploration/FisherInfoManager.hpp"
+#include "frontier_exploration/fisher_information/FisherInfoManager.hpp"
 #include "frontier_exploration/Frontier.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include <nav2_costmap_2d/costmap_2d_ros.hpp>

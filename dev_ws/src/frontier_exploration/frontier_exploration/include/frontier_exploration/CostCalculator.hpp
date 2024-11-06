@@ -36,7 +36,7 @@
 #include <frontier_exploration/util/rosVisualizer.hpp>
 #include <frontier_exploration/Helpers.hpp>
 #include <frontier_exploration/planners/FrontierRoadmap.hpp>
-#include <frontier_exploration/FisherInfoManager.hpp>
+#include <frontier_exploration/fisher_information/FisherInfoManager.hpp>
 #include <frontier_exploration/util/GeometryUtils.hpp>
 
 // ARRIVAL INFORMATION RELATED

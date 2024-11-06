@@ -72,9 +72,10 @@ include_directories(
 # src/FrontierSearch.cpp
 add_executable(explore_server 
 src/Frontier.cpp 
+src/Nav2Interface.cpp 
+src/Helpers.cpp 
 src/main.cpp
 src/ExplorationBT.cpp 
-src/Nav2Interface.cpp 
 src/FrontierSearch.cpp 
 src/FrontierCostsManager.cpp 
 src/CostAssigner.cpp 
@@ -87,7 +88,6 @@ src/fisher_information/FisherInfoManager.cpp
 src/controllers/recovery_controller.cpp 
 src/controllers/initialization_controller.cpp 
 src/util/event_logger.cpp 
-src/Helpers.cpp 
 src/util/rosVisualizer.cpp 
 src/nav2_plugins/lethal_marker.cpp
 )

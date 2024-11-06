@@ -1,5 +1,4 @@
 #include <frontier_exploration/ExplorationBT.hpp>
-#include <frontier_exploration/util/geometry_tools.hpp>
 
 #if defined(FRONTIER_POINT_MEDIAN) + defined(FRONTIER_POINT_INITIAL) > 1
 #error "Only one of FRONTIER_POINT_MEDIAN, or FRONTIER_POINT_INITIAL can be defined at a time."

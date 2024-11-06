@@ -1,5 +1,4 @@
 #include "frontier_exploration/CostCalculator.hpp"
-// #include <frontier_exploration/util/util.hpp>
 
 namespace frontier_exploration
 {

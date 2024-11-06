@@ -1,4 +1,4 @@
-#include "frontier_exploration/FisherInfoManager.hpp"
+#include "frontier_exploration/fisher_information/FisherInfoManager.hpp"
 #include "frontier_exploration/util/GeometryUtils.hpp"
 
 namespace frontier_exploration

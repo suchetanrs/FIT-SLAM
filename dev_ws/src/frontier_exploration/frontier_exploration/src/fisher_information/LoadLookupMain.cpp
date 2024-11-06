@@ -7,7 +7,7 @@
 #include <vector>
 #include "frontier_exploration/Helpers.hpp"
 #include "frontier_exploration/util/event_logger.hpp"
-#include "frontier_exploration/FisherInfoManager.hpp"
+#include "frontier_exploration/fisher_information/FisherInfoManager.hpp"
 
 class PointCloudPublisher : public rclcpp::Node
 {
