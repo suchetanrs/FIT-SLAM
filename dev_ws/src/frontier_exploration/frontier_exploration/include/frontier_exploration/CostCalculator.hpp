@@ -37,18 +37,14 @@
 #include <frontier_exploration/planners/FrontierRoadmap.hpp>
 #include <frontier_exploration/fisher_information/FisherInfoManager.hpp>
 #include <frontier_exploration/util/GeometryUtils.hpp>
-
-// ARRIVAL INFORMATION RELATED
-const double MAX_CAMERA_DEPTH = 2.0;
-const double DELTA_THETA = 0.10;
-const double CAMERA_FOV = 1.04;
+#include <frontier_exploration/Parameters.hpp>
 
 
 namespace frontier_exploration
 {
     class FrontierCostCalculator {
     public:
-        FrontierCostCalculator(rclcpp::Node::SharedPtr node, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros);
+        FrontierCostCalculator(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros);
 
         // ----------------Arrival information related--------------------
         /**
@@ -120,9 +116,7 @@ namespace frontier_exploration
 
     private:
         // Add private methods or member variables if needed
-        rclcpp::Node::SharedPtr node_;
         nav2_costmap_2d::Costmap2D *exploration_costmap_;
-        rclcpp::Logger logger_ = rclcpp::get_logger("cost_calculator");
         // std::shared_ptr<RosVisualizer> rosVisualizer_;
         double min_traversable_distance = std::numeric_limits<double>::max();
         double max_traversable_distance = 0.0;
@@ -131,6 +125,10 @@ namespace frontier_exploration
         double robot_radius_;
         double max_arrival_info_gt_ = 0.0;
         double min_arrival_info_gt_ = 0.0;
+
+        double MAX_CAMERA_DEPTH;
+        double DELTA_THETA;
+        double CAMERA_FOV;
 
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_; ///< Publisher for markers (path FOVs)
     };

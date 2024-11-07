@@ -11,8 +11,21 @@ ParameterHandler::ParameterHandler()
     parameter_map_["frontierSearch/min_frontier_cluster_size"] = loaded_node["frontierSearch"]["min_frontier_cluster_size"].as<double>();
     parameter_map_["frontierSearch/max_frontier_cluster_size"] = loaded_node["frontierSearch"]["max_frontier_cluster_size"].as<double>();
     parameter_map_["frontierSearch/max_frontier_distance"] = loaded_node["frontierSearch"]["max_frontier_distance"].as<double>();
-    
-    // parameter_map_["SLAM_System"] = loaded_node["SLAM_System"].as<std::string>();
+
+    parameter_map_["costCalculator/max_camera_depth"] = loaded_node["costCalculator"]["max_camera_depth"].as<double>();
+    parameter_map_["costCalculator/delta_theta"] = loaded_node["costCalculator"]["delta_theta"].as<double>();
+    parameter_map_["costCalculator/camera_fov"] = loaded_node["costCalculator"]["camera_fov"].as<double>();
+
+    parameter_map_["frontierCostsManager/alpha"] = loaded_node["frontierCostsManager"]["alpha"].as<double>();
+    parameter_map_["frontierCostsManager/beta"] = loaded_node["frontierCostsManager"]["beta"].as<double>();
+    parameter_map_["frontierCostsManager/planner_allow_unknown"] = loaded_node["frontierCostsManager"]["planner_allow_unknown"].as<bool>();
+    parameter_map_["frontierCostsManager/N_best_for_u2"] = loaded_node["frontierCostsManager"]["N_best_for_u2"].as<int>();
+    parameter_map_["frontierCostsManager/add_heading_cost"] = loaded_node["frontierCostsManager"]["add_heading_cost"].as<bool>();
+    parameter_map_["frontierCostsManager/vx_max"] = loaded_node["frontierCostsManager"]["vx_max"].as<double>();
+    parameter_map_["frontierCostsManager/wz_max"] = loaded_node["frontierCostsManager"]["wz_max"].as<double>();
+
+    parameter_map_["frontierRoadmap/max_frontier_distance"] = loaded_node["frontierRoadmap"]["max_frontier_distance"].as<double>();
+// parameter_map_["SLAM_System"] = loaded_node["SLAM_System"].as<std::string>();
     
     // parameter_map_["half_size_local_map"] = loaded_node["half_size_local_map"].as<double>();
     // parameter_map_["grid_center_x"] = loaded_node["grid_center_x"].as<double>();

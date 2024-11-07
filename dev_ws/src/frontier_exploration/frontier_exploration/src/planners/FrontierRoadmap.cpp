@@ -21,8 +21,7 @@ namespace frontier_exploration
         frontier_nav2_plan_ = node_->create_publisher<nav_msgs::msg::Path>("frontier_roadmap_nav2_plan", 10);
         astar_planner_ = std::make_shared<FrontierRoadmapAStar>();
 
-        node_->declare_parameter("max_frontier_distance", rclcpp::ParameterValue(5.12));
-        node_->get_parameter("max_frontier_distance", max_frontier_distance_);
+        max_frontier_distance_ = parameterInstance.getValue<double>("max_frontier_distance");
         LOG_INFO("Max frontier distance: " << max_frontier_distance_);
 
         // Subscriber to handle clicked points

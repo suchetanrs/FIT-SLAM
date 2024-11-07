@@ -10,23 +10,13 @@ namespace frontier_exploration
     CostAssigner::CostAssigner(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros) 
     {
         layered_costmap_ = explore_costmap_ros->getLayeredCostmap();
-        internal_node_ = rclcpp::Node::make_shared("CostAssigner");
-        internal_executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-        internal_executor_->add_node(internal_node_);
-
-        std::thread t1([this]() {
-            internal_executor_->spin();
-        });
-        t1.detach();
-
-        internal_node_->declare_parameter("exploration_mode", rclcpp::ParameterValue(std::string("ours")));
-        internal_node_->get_parameter("exploration_mode", exploration_mode_);
+        exploration_mode_ = "ours";
 
         LOG_INFO("CostAssigner::onInitialize");
 
-        client_get_map_data2_ = internal_node_->create_client<slam_msgs::srv::GetMap>("orb_slam3_get_map_data");
+        // client_get_map_data2_ = internal_node_->create_client<slam_msgs::srv::GetMap>("orb_slam3_get_map_data");
         // rosVisualizerInstance = std::make_shared<RosVisualizer>(internal_node_, layered_costmap_->getCostmap());
-        frontierCostsManager_ = std::make_shared<frontier_exploration::FrontierCostsManager>(internal_node_, explore_costmap_ros);
+        frontierCostsManager_ = std::make_shared<frontier_exploration::FrontierCostsManager>(explore_costmap_ros);
     }
 
     CostAssigner::~CostAssigner()

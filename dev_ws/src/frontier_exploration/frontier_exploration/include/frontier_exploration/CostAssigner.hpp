@@ -94,8 +94,6 @@ namespace frontier_exploration
         // ROS Clients
         rclcpp::Client<slam_msgs::srv::GetMap>::SharedPtr client_get_map_data2_;
 
-        rclcpp::Node::SharedPtr internal_node_;
-        std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> internal_executor_;
         nav2_costmap_2d::LayeredCostmap* layered_costmap_;
         int counter_;
     };

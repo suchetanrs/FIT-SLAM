@@ -3,36 +3,20 @@
 namespace frontier_exploration
 {
 
-    FrontierCostsManager::FrontierCostsManager(rclcpp::Node::SharedPtr node, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros)
+    FrontierCostsManager::FrontierCostsManager(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros)
     {
-        logger_ = rclcpp::get_logger(static_cast<std::string>(node->get_namespace()) + ".frontier_costs_manager");
-
         // Creating a client node for internal use
-        frontier_costs_manager_node_ = rclcpp::Node::make_shared("frontier_costs_manager_node");
 
-        frontier_costs_manager_node_->declare_parameter("alpha", 0.35);
-        frontier_costs_manager_node_->get_parameter("alpha", alpha_);
-
-        frontier_costs_manager_node_->declare_parameter("beta", 0.50);
-        frontier_costs_manager_node_->get_parameter("beta", beta_);
-
-        frontier_costs_manager_node_->declare_parameter("planner_allow_unknown", false);
-        frontier_costs_manager_node_->get_parameter("planner_allow_unknown", planner_allow_unknown_);
-
-        frontier_costs_manager_node_->declare_parameter("N_best_for_u2", 6);
-        frontier_costs_manager_node_->get_parameter("N_best_for_u2", N_best_for_u2_);
-
-        frontier_costs_manager_node_->declare_parameter("add_heading_cost", true);
-        frontier_costs_manager_node_->get_parameter("add_heading_cost", add_heading_cost_);
-
-        frontier_costs_manager_node_->declare_parameter("vx_max", 0.5);
-        frontier_costs_manager_node_->get_parameter("vx_max", max_vx_);
-
-        frontier_costs_manager_node_->declare_parameter("wz_max", 0.5);
-        frontier_costs_manager_node_->get_parameter("wz_max", max_wx_);
-
+        alpha_ = parameterInstance.getValue<double>("frontierCostsManager/alpha");
+        beta_ = parameterInstance.getValue<double>("frontierCostsManager/beta");
+        planner_allow_unknown_ = parameterInstance.getValue<bool>("frontierCostsManager/planner_allow_unknown");
+        N_best_for_u2_ = parameterInstance.getValue<int>("frontierCostsManager/N_best_for_u2");
+        add_heading_cost_ = parameterInstance.getValue<bool>("frontierCostsManager/add_heading_cost");
+        max_vx_ = parameterInstance.getValue<double>("frontierCostsManager/vx_max");
+        max_wx_ = parameterInstance.getValue<double>("frontierCostsManager/wz_max");
+        
         costmap_ = explore_costmap_ros->getCostmap();
-        costCalculator_ = std::make_shared<FrontierCostCalculator>(node, explore_costmap_ros);
+        costCalculator_ = std::make_shared<FrontierCostCalculator>(explore_costmap_ros);
     }
 
     std::vector<Frontier> findDuplicates(const std::vector<Frontier> &vec)

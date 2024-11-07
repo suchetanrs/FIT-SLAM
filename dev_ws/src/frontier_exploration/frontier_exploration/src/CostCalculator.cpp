@@ -2,18 +2,16 @@
 
 namespace frontier_exploration
 {
-    FrontierCostCalculator::FrontierCostCalculator(rclcpp::Node::SharedPtr node, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros)
+    FrontierCostCalculator::FrontierCostCalculator(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros)
     {
-        node_ = node;
         exploration_costmap_ = explore_costmap_ros->getCostmap();
-        logger_ = node_->get_logger();
         // rosVisualizerInstance = std::make_shared<RosVisualizer>(node, exploration_costmap_);
         min_traversable_distance = std::numeric_limits<double>::max();
         max_traversable_distance = 0.0;
         min_arrival_info_per_frontier = std::numeric_limits<double>::max();
         max_arrival_info_per_frontier = 0.0;
 
-        fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
+        // fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
         robot_radius_ = explore_costmap_ros->getRobotRadius();
         max_arrival_info_gt_ = setMaxArrivalInformation();
         LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
@@ -22,6 +20,9 @@ namespace frontier_exploration
         LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
         min_arrival_info_gt_ = 0.70 * max_arrival_info_gt_;
 
+        MAX_CAMERA_DEPTH = parameterInstance.getValue<double>("costCalculator/max_camera_depth");
+        DELTA_THETA = parameterInstance.getValue<double>("costCalculator/delta_theta");
+        CAMERA_FOV = parameterInstance.getValue<double>("costCalculator/camera_fov");
     }
 
     void FrontierCostCalculator::setArrivalInformationForFrontier(Frontier &frontier, std::vector<double> &polygon_xy_min_max)
@@ -202,7 +203,7 @@ namespace frontier_exploration
         }
         auto start_point_w = start_pose_w.position;
         double information_for_path = 0;
-        visualization_msgs::msg::Marker marker_msg_;
+        // visualization_msgs::msg::Marker marker_msg_;
 
         // calculate heading difference
         auto robot_yaw = quatToEuler(start_pose_w.orientation)[2];
@@ -216,14 +217,14 @@ namespace frontier_exploration
             path_heading = (2 * M_PI) - path_heading;
 
         // Initialize the Marker message
-        marker_msg_.header.frame_id = "map"; // Set the frame ID
-        marker_msg_.ns = "two_triangles_namespace";
-        marker_msg_.id = 0;
-        marker_msg_.type = visualization_msgs::msg::Marker::LINE_LIST;
-        marker_msg_.action = visualization_msgs::msg::Marker::ADD;
-        marker_msg_.scale.x = 0.02; // Line width
-        marker_msg_.color.r = 1.0;  // Red
-        marker_msg_.color.a = 1.0;  // Fully opaque
+        // marker_msg_.header.frame_id = "map"; // Set the frame ID
+        // marker_msg_.ns = "two_triangles_namespace";
+        // marker_msg_.id = 0;
+        // marker_msg_.type = visualization_msgs::msg::Marker::LINE_LIST;
+        // marker_msg_.action = visualization_msgs::msg::Marker::ADD;
+        // marker_msg_.scale.x = 0.02; // Line width
+        // marker_msg_.color.r = 1.0;  // Red
+        // marker_msg_.color.a = 1.0;  // Fully opaque
 
         nav_msgs::msg::Path plan;
         plan.header.frame_id = "map";
@@ -361,7 +362,7 @@ namespace frontier_exploration
             }
             */
         }
-        fov_marker_publisher_->publish(marker_msg_);
+        // fov_marker_publisher_->publish(marker_msg_);
         if (plan.poses.size() == 0)
         {
             goal_point_w.setAchievability(false);

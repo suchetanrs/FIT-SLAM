@@ -34,13 +34,14 @@
 #include <frontier_exploration/util/rosVisualizer.hpp>
 #include <frontier_exploration/CostCalculator.hpp>
 #include "frontier_exploration/util/general_utils.hpp"
+#include "frontier_exploration/Parameters.hpp"
 
 namespace frontier_exploration
 {
     class FrontierCostsManager
     {
     public:
-        FrontierCostsManager(rclcpp::Node::SharedPtr node, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros);
+        FrontierCostsManager(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros);
 
         /**
          * @param costTypes can take the values
@@ -64,7 +65,6 @@ namespace frontier_exploration
 
     private:
         nav2_costmap_2d::Costmap2D *costmap_;
-        rclcpp::Node::SharedPtr frontier_costs_manager_node_;
         // std::shared_ptr<RosVisualizer> rosVisualizer_;
         std::shared_ptr<FrontierCostCalculator> costCalculator_;
         std::unordered_map<Frontier, bool, FrontierHash, FrontierGoalPointEquality> frontier_blacklist_; ///< Stores the blacklisted frontiers.                                      ///< Variable used to give a unique value for each run. This is used as a prefix for the csv files.

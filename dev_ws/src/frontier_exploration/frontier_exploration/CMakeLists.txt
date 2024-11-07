@@ -75,18 +75,13 @@ include_directories(
 add_executable(explore_server 
 src/controllers/recovery_controller.cpp 
 src/controllers/initialization_controller.cpp 
-
 src/planners/planner.cpp 
 src/planners/FrontierRoadmap.cpp 
 src/planners/astar.cpp 
-
 src/util/event_logger.cpp 
 src/util/rosVisualizer.cpp 
-
 src/nav2_plugins/lethal_marker.cpp
-
 src/fisher_information/FisherInfoManager.cpp 
-
 src/Parameters.cpp
 src/Frontier.cpp 
 src/Nav2Interface.cpp 
@@ -139,13 +134,15 @@ ament_target_dependencies(fim_viz ${dependencies})
 # target_link_libraries(fim_viz taskAllocator_lib ${PCL_LIBRARIES})
 
 add_executable(load_fi_lookup src/fisher_information/FisherInfoManager.cpp src/fisher_information/LoadLookupMain.cpp 
-                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp)
+                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
 ament_target_dependencies(load_fi_lookup ${dependencies})
+target_link_libraries(load_fi_lookup taskAllocator_lib ${PCL_LIBRARIES} ${YAML_CPP_LIBRARIES})
 # target_link_libraries(fim_viz taskAllocator_lib ${PCL_LIBRARIES})
 
 add_executable(gen_fi_lookup src/fisher_information/FisherInfoManager.cpp src/fisher_information/GenerateLookupMain.cpp 
-                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp)
+                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
 ament_target_dependencies(gen_fi_lookup ${dependencies})
+target_link_libraries(gen_fi_lookup taskAllocator_lib ${PCL_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 add_executable(roadmap_vertices_saver tests/frontier_roadmap_tests/roadmap_vertices_saver.cpp)
 ament_target_dependencies(roadmap_vertices_saver ${dependencies})

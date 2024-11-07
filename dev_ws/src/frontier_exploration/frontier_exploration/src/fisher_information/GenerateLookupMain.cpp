@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include "frontier_exploration/fisher_information/FisherInfoManager.hpp"
+#include "frontier_exploration/Parameters.hpp"
 
 int main(int argc, char** argv) {
     frontier_exploration::FisherInformationManager fim_manager;

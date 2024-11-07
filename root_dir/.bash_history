@@ -1,24 +1,3 @@
-rm -rf build/ install/ log/
-colcon build --symlink-install
-ls
-rm -rf build/ install/ log/
-ls
-colcon build --symlink-install
-vsc
-cd shell_scripts/
-./3_exploration.sh 
-ls
-cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
-cmake ..
-mkae
-make install
-rviz2
-cd dev_ws/
-colcon build --symlink-install
-clear
-colcon build --symlink-install
-ros2 run exploration_sim explore_sim 
-kk
 cd dev_ws/
 vsc
 tmux
@@ -1998,3 +1977,24 @@ rviz2 -d /root/frontier_exploration.rviz
 cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py
 ./build_packages.sh 
 ./launch_active_slam.sh 
+cd dev_ws/
+colcon build --symlink-install
+cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
+cd
+cd dev_ws/
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+clear
+cledar
+clear
+colcon build --symlink-install
+clear
+colcon build --symlink-install
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+ls
+cd dev_ws/
+vsc
+cd src/frontier_exploration/
+ls
+vsc

@@ -1094,8 +1094,6 @@ namespace frontier_exploration
         blackboard->set<bool>("hysterisis_enabled", false);
         active_hysterisis_candidates_ = std::make_shared<std::vector<Frontier>>();
 
-        bt_node_->declare_parameter("retry_count", 30);
-        bt_node_->declare_parameter("nav2_goal_timeout_sec", 35);
         bt_node_->declare_parameter("use_custom_sim", false);
         robot_namespaces_ = {};
         bt_node_->declare_parameter("robot_namespaces", rclcpp::ParameterValue(robot_namespaces_));
@@ -1104,8 +1102,6 @@ namespace frontier_exploration
         bt_node_->declare_parameter("process_other_robots", rclcpp::ParameterValue(false));
         bt_node_->declare_parameter("bt_xml_path", "/root/dev_ws/src/frontier_exploration/frontier_exploration/xml/exploration.xml");
 
-        bt_node_->get_parameter("retry_count", retry_);
-        bt_node_->get_parameter("nav2_goal_timeout_sec", nav2WaitTime_);
         bt_node_->get_parameter("use_custom_sim", use_custom_sim_);
         bt_node_->get_parameter("robot_namespaces", robot_namespaces_);
         bt_node_->get_parameter("config", config_);

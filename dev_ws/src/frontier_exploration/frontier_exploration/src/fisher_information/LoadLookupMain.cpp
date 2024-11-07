@@ -8,6 +8,7 @@
 #include "frontier_exploration/Helpers.hpp"
 #include "frontier_exploration/util/event_logger.hpp"
 #include "frontier_exploration/fisher_information/FisherInfoManager.hpp"
+#include "frontier_exploration/Parameters.hpp"
 
 class PointCloudPublisher : public rclcpp::Node
 {

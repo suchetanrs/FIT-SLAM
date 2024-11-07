@@ -25,6 +25,7 @@
 #include "frontier_exploration/util/event_logger.hpp"
 #include "frontier_exploration/util/logger.hpp"
 #include "frontier_exploration/util/rosVisualizer.hpp"
+#include "frontier_exploration/Parameters.hpp"
 
 const double GRID_CELL_SIZE = 1.0;                           // Assuming each cell is 1x1 in size
 const double RADIUS_TO_DECIDE_EDGES = 6.1;                   // a node within this radius of another node is considered a child of the other node.
