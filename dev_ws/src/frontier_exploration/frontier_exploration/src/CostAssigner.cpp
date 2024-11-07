@@ -1,5 +1,4 @@
 #include <frontier_exploration/CostAssigner.hpp>
-#include <frontier_exploration/FrontierSearch.hpp>
 
 namespace frontier_exploration
 {

@@ -6,13 +6,13 @@ namespace frontier_exploration
     using nav2_costmap_2d::LETHAL_OBSTACLE;
     using nav2_costmap_2d::NO_INFORMATION;
 
-    FrontierSearch::FrontierSearch(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size, int max_frontier_cluster_size, double max_frontier_distance)
-        : costmap_(costmap),
-          min_frontier_cluster_size_(min_frontier_cluster_size),
-          max_frontier_cluster_size_(max_frontier_cluster_size),
-          max_frontier_distance_(max_frontier_distance),
-          original_search_distance_(max_frontier_distance)
+    FrontierSearch::FrontierSearch(nav2_costmap_2d::Costmap2D &costmap)
+        : costmap_(costmap)
     {
+        min_frontier_cluster_size_ = parameterInstance.getValue<double>("frontierSearch/min_frontier_cluster_size");
+        max_frontier_cluster_size_ = parameterInstance.getValue<double>("frontierSearch/max_frontier_cluster_size");
+        max_frontier_distance_ = parameterInstance.getValue<double>("frontierSearch/max_frontier_distance");
+        original_search_distance_ = parameterInstance.getValue<double>("frontierSearch/max_frontier_distance");
         LOG_DEBUG("FrontierSearch::FrontierSearch");
         LOG_INFO("MAX SEARCH DISTANCE: " << max_frontier_distance_);
     }

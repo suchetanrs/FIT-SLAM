@@ -25,6 +25,7 @@ find_package(PCL REQUIRED)
 find_package(example_interfaces REQUIRED)
 find_package(frontier_multirobot_allocator REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -53,6 +54,7 @@ nav2_util
 example_interfaces
 frontier_multirobot_allocator
 behaviortree_cpp
+yaml-cpp
 )
 
 # Add compile definitions for visualization flags
@@ -66,33 +68,40 @@ include_directories(
   SYSTEM
   ${PCL_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
+  ${YAML_CPP_INCLUDE_DIRS}
 )
 
 # Add executable 2
-# src/FrontierSearch.cpp
 add_executable(explore_server 
-src/Frontier.cpp 
-src/Nav2Interface.cpp 
-src/Helpers.cpp 
-src/main.cpp
-src/ExplorationBT.cpp 
-src/FrontierSearch.cpp 
-src/FrontierCostsManager.cpp 
-src/CostAssigner.cpp 
+src/controllers/recovery_controller.cpp 
+src/controllers/initialization_controller.cpp 
+
 src/planners/planner.cpp 
 src/planners/FrontierRoadmap.cpp 
 src/planners/astar.cpp 
-src/FullPathOptimizer.cpp 
-src/CostCalculator.cpp 
-src/fisher_information/FisherInfoManager.cpp 
-src/controllers/recovery_controller.cpp 
-src/controllers/initialization_controller.cpp 
+
 src/util/event_logger.cpp 
 src/util/rosVisualizer.cpp 
+
 src/nav2_plugins/lethal_marker.cpp
+
+src/fisher_information/FisherInfoManager.cpp 
+
+src/Parameters.cpp
+src/Frontier.cpp 
+src/Nav2Interface.cpp 
+src/Helpers.cpp 
+src/FrontierSearch.cpp 
+# src/FrontierSearchAllCells.cpp
+src/CostCalculator.cpp
+src/main.cpp
+src/ExplorationBT.cpp 
+src/FrontierCostsManager.cpp 
+src/CostAssigner.cpp 
+src/FullPathOptimizer.cpp 
 )
 ament_target_dependencies(explore_server ${dependencies})
-target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES})
+target_link_libraries(explore_server taskAllocator_lib ${PCL_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 #Add libraries
 add_library(lethal_marker_core SHARED src/nav2_plugins/lethal_marker.cpp)

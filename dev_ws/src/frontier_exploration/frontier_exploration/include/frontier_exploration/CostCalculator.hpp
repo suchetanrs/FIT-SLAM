@@ -17,7 +17,6 @@
 #include <frontier_exploration/Frontier.hpp>
 
 #include <frontier_exploration/planners/planner.hpp>
-// #include <frontier_exploration/planners/rrt.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>

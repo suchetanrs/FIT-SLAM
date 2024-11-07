@@ -11,9 +11,6 @@ bt_exploration_node:
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4', '/scout_5']
-    min_frontier_cluster_size: 1
-    max_frontier_cluster_size: 20
-    max_frontier_distance: 50.0 # This should be equal to the parameter max_frontier_distance in frontier_roadmap_node
     frontier_match_xy_threshold: 1.0
     frontier_match_yaw_threshold: 0.40
     process_other_robots: true
@@ -33,11 +30,6 @@ frontier_costs_manager_node:
     add_heading_cost: true
     vx_max: 0.5 # max linear speed of the robot. m/s (required if heading cost is added)
     wz_max: 0.5 # max angular speed of the robot. rad/s (required if heading cost is added)
-
-localization_pose_sub_node:
-  ros__parameters:
-    exploration_mode: ours
-    counter: 031150
 
 frontier_roadmap_node:
   ros__parameters:
@@ -73,8 +65,3 @@ explore_costmap:
         plugin: "frontier_exploration/LethalMarker"
         enabled: True
       always_send_full_costmap: True
-
-# goal_allocation_server:
-#   ros__parameters:
-    # robot_namespaces: ['/scout_1', '/scout_2']
-    # robot_namespaces: ['']

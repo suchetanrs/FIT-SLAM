@@ -81,9 +81,6 @@ namespace frontier_exploration
         BT::Tree behaviour_tree;
 
         std::shared_ptr<FrontierSearch> frontierSearchPtr_;
-        int min_frontier_cluster_size_; ///< Minimum size of a frontier cluster.
-        int max_frontier_cluster_size_;
-        double max_frontier_distance_;
         std::shared_ptr<CostAssigner> bel_ptr_;
         std::shared_ptr<FullPathOptimizer> full_path_optimizer_;
         std::shared_ptr<TaskAllocator> task_allocator_ptr_;

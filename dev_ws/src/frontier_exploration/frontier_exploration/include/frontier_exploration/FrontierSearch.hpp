@@ -18,6 +18,7 @@
 #include "frontier_exploration/Frontier.hpp"
 #include "frontier_exploration/Helpers.hpp"
 #include "frontier_exploration/util/GeometryUtils.hpp"
+#include "frontier_exploration/Parameters.hpp"
 
 namespace frontier_exploration
 {
@@ -32,7 +33,7 @@ namespace frontier_exploration
          * @brief Constructor for search task
          * @param costmap Reference to costmap data to search.
          */
-        FrontierSearch(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size, int max_frontier_cluster_size, double max_frontier_distance);
+        FrontierSearch(nav2_costmap_2d::Costmap2D &costmap);
 
         void reset()
         {

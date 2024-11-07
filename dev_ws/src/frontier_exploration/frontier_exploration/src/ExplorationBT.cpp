@@ -1101,9 +1101,6 @@ namespace frontier_exploration
         bt_node_->declare_parameter("robot_namespaces", rclcpp::ParameterValue(robot_namespaces_));
         config_ = {"100.0", "100.0", "100.0", "-100.0", "-100.0", "-100.0", "-100.0", "100.0"};
         bt_node_->declare_parameter("config", rclcpp::ParameterValue(config_));
-        bt_node_->declare_parameter("min_frontier_cluster_size", rclcpp::ParameterValue(1));
-        bt_node_->declare_parameter("max_frontier_cluster_size", rclcpp::ParameterValue(20));
-        bt_node_->declare_parameter("max_frontier_distance", rclcpp::ParameterValue(0.5));
         bt_node_->declare_parameter("process_other_robots", rclcpp::ParameterValue(false));
         bt_node_->declare_parameter("bt_xml_path", "/root/dev_ws/src/frontier_exploration/frontier_exploration/xml/exploration.xml");
 
@@ -1112,9 +1109,6 @@ namespace frontier_exploration
         bt_node_->get_parameter("use_custom_sim", use_custom_sim_);
         bt_node_->get_parameter("robot_namespaces", robot_namespaces_);
         bt_node_->get_parameter("config", config_);
-        bt_node_->get_parameter("min_frontier_cluster_size", min_frontier_cluster_size_);
-        bt_node_->get_parameter("max_frontier_cluster_size", max_frontier_cluster_size_);
-        bt_node_->get_parameter("max_frontier_distance", max_frontier_distance_);
         bt_node_->get_parameter("process_other_robots", process_other_robots_);
         bt_node_->get_parameter("bt_xml_path", bt_xml_path_);
         LOG_TRACE("Declared BT params");
@@ -1146,7 +1140,7 @@ namespace frontier_exploration
             "multirobot_send_current_goal", std::bind(&FrontierExplorationServer::handle_multirobot_current_goal_request, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
             rmw_qos_profile_default, multirobot_service_callback_group_);
 
-        frontierSearchPtr_ = std::make_shared<FrontierSearch>(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()), min_frontier_cluster_size_, max_frontier_cluster_size_, max_frontier_distance_);
+        frontierSearchPtr_ = std::make_shared<FrontierSearch>(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()));
         full_path_optimizer_ = std::make_shared<FullPathOptimizer>(bt_node_, explore_costmap_ros_);
         //---------------------------------------------ROS RELATED------------------------------------------
         tf_listener_ = std::make_shared<tf2_ros::Buffer>(bt_node_->get_clock());

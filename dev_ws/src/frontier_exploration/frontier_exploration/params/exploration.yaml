@@ -1,0 +1,4 @@
+frontierSearch:
+  min_frontier_cluster_size: 1
+  max_frontier_cluster_size: 20
+  max_frontier_distance: 50.0 # This should be equal to the parameter max_frontier_distance in frontier_roadmap_node

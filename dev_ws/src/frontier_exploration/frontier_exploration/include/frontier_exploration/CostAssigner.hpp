@@ -33,6 +33,7 @@
 #include "frontier_exploration/util/event_logger.hpp"
 #include "frontier_exploration/Frontier.hpp"
 #include "frontier_exploration/FrontierCostsManager.hpp"
+#include "frontier_exploration/FrontierSearch.hpp"
 #include "slam_msgs/srv/get_map.hpp"
 
 namespace frontier_exploration
