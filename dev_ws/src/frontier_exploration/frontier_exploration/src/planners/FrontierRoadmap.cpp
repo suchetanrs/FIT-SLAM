@@ -12,6 +12,12 @@ namespace frontier_exploration
         : costmap_(explore_costmap_ros->getCostmap()),
           explore_costmap_ros_(explore_costmap_ros)
     {
+        max_frontier_distance_ = parameterInstance.getValue<double>("frontierRoadmap/max_frontier_distance");
+        GRID_CELL_SIZE = parameterInstance.getValue<double>("frontierRoadmap/grid_cell_size");
+        RADIUS_TO_DECIDE_EDGES = parameterInstance.getValue<double>("frontierRoadmap/radius_to_decide_edges");
+        MIN_DISTANCE_BETWEEN_TWO_FRONTIER_NODES = parameterInstance.getValue<double>("frontierRoadmap/min_distance_between_two_frontier_nodes");
+        MIN_DISTANCE_BETWEEN_ROBOT_POSE_AND_NODE = parameterInstance.getValue<double>("frontierRoadmap/min_distance_between_robot_pose_and_node");
+
         max_connection_length_ = RADIUS_TO_DECIDE_EDGES * 1.5;
         node_ = rclcpp::Node::make_shared("frontier_roadmap_node");
         marker_pub_roadmap_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("frontier_roadmap", 10);
@@ -21,7 +27,6 @@ namespace frontier_exploration
         frontier_nav2_plan_ = node_->create_publisher<nav_msgs::msg::Path>("frontier_roadmap_nav2_plan", 10);
         astar_planner_ = std::make_shared<FrontierRoadmapAStar>();
 
-        max_frontier_distance_ = parameterInstance.getValue<double>("max_frontier_distance");
         LOG_INFO("Max frontier distance: " << max_frontier_distance_);
 
         // Subscriber to handle clicked points

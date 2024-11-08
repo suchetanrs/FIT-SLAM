@@ -1094,7 +1094,6 @@ namespace frontier_exploration
         blackboard->set<bool>("hysterisis_enabled", false);
         active_hysterisis_candidates_ = std::make_shared<std::vector<Frontier>>();
 
-        bt_node_->declare_parameter("use_custom_sim", false);
         robot_namespaces_ = {};
         bt_node_->declare_parameter("robot_namespaces", rclcpp::ParameterValue(robot_namespaces_));
         config_ = {"100.0", "100.0", "100.0", "-100.0", "-100.0", "-100.0", "-100.0", "100.0"};
@@ -1102,7 +1101,6 @@ namespace frontier_exploration
         bt_node_->declare_parameter("process_other_robots", rclcpp::ParameterValue(false));
         bt_node_->declare_parameter("bt_xml_path", "/root/dev_ws/src/frontier_exploration/frontier_exploration/xml/exploration.xml");
 
-        bt_node_->get_parameter("use_custom_sim", use_custom_sim_);
         bt_node_->get_parameter("robot_namespaces", robot_namespaces_);
         bt_node_->get_parameter("config", config_);
         bt_node_->get_parameter("process_other_robots", process_other_robots_);

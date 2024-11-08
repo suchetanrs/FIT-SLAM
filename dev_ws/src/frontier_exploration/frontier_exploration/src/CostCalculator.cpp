@@ -4,25 +4,26 @@ namespace frontier_exploration
 {
     FrontierCostCalculator::FrontierCostCalculator(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros)
     {
+        MAX_CAMERA_DEPTH = parameterInstance.getValue<double>("costCalculator/max_camera_depth");
+        DELTA_THETA = parameterInstance.getValue<double>("costCalculator/delta_theta");
+        CAMERA_FOV = parameterInstance.getValue<double>("costCalculator/camera_fov");
         exploration_costmap_ = explore_costmap_ros->getCostmap();
         // rosVisualizerInstance = std::make_shared<RosVisualizer>(node, exploration_costmap_);
         min_traversable_distance = std::numeric_limits<double>::max();
         max_traversable_distance = 0.0;
         min_arrival_info_per_frontier = std::numeric_limits<double>::max();
         max_arrival_info_per_frontier = 0.0;
+        LOG_DEBUG("Set defaults.");
 
         // fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
         robot_radius_ = explore_costmap_ros->getRobotRadius();
+        LOG_DEBUG("Got robot radius from costmap.");
         max_arrival_info_gt_ = setMaxArrivalInformation();
         LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
         // wait for costmap to be current before computing the above. Hence hardcoded.
         max_arrival_info_gt_ = 85.0;
         LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
         min_arrival_info_gt_ = 0.70 * max_arrival_info_gt_;
-
-        MAX_CAMERA_DEPTH = parameterInstance.getValue<double>("costCalculator/max_camera_depth");
-        DELTA_THETA = parameterInstance.getValue<double>("costCalculator/delta_theta");
-        CAMERA_FOV = parameterInstance.getValue<double>("costCalculator/camera_fov");
     }
 
     void FrontierCostCalculator::setArrivalInformationForFrontier(Frontier &frontier, std::vector<double> &polygon_xy_min_max)

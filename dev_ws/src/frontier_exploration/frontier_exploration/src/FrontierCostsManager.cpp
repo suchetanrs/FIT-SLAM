@@ -14,9 +14,12 @@ namespace frontier_exploration
         add_heading_cost_ = parameterInstance.getValue<bool>("frontierCostsManager/add_heading_cost");
         max_vx_ = parameterInstance.getValue<double>("frontierCostsManager/vx_max");
         max_wx_ = parameterInstance.getValue<double>("frontierCostsManager/wz_max");
+        LOG_DEBUG("Cost manager recieved parameters");
         
         costmap_ = explore_costmap_ros->getCostmap();
+        LOG_DEBUG("Got costmap pointer");
         costCalculator_ = std::make_shared<FrontierCostCalculator>(explore_costmap_ros);
+        LOG_DEBUG("Making cost calculator instance");
     }
 
     std::vector<Frontier> findDuplicates(const std::vector<Frontier> &vec)

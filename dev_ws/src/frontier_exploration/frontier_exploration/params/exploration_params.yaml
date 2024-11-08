@@ -3,7 +3,6 @@ bt_exploration_node:
     use_sim_time: True
     # config: ["48.0", "60.0", "48.0", "1.25", "1.25", "1.25", "1.25", "60.0"]
     config: ["310.0", "260.0", "310.0", "-120.0", "-70.0", "-120.0", "-70.0", "260.0"]
-    use_custom_sim: false
     # robot_namespaces: ['/scout_1', '/scout_2']
     robot_namespaces: ['/robot_0']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']

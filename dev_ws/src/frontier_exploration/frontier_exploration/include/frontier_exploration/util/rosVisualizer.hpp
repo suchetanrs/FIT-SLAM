@@ -41,7 +41,7 @@ public:
 
     static void createInstance(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Costmap2D *costmap)
     {
-        std::cout << "Creating instance" << std::endl;
+        std::cout << "Creating ros visualizer instance" << std::endl;
         std::lock_guard<std::mutex> lock(instanceMutex_);
         if (rosVisualizerPtr == nullptr)
             rosVisualizerPtr.reset(new RosVisualizer(node, costmap));

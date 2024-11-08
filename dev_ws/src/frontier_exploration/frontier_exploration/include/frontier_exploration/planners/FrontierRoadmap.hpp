@@ -27,11 +27,6 @@
 #include "frontier_exploration/util/rosVisualizer.hpp"
 #include "frontier_exploration/Parameters.hpp"
 
-const double GRID_CELL_SIZE = 1.0;                           // Assuming each cell is 1x1 in size
-const double RADIUS_TO_DECIDE_EDGES = 6.1;                   // a node within this radius of another node is considered a child of the other node.
-const double MIN_DISTANCE_BETWEEN_TWO_FRONTIER_NODES = 0.5;  // minimum distance between any node in the graph and the frontier node that will be added.
-const double MIN_DISTANCE_BETWEEN_ROBOT_POSE_AND_NODE = 0.5; // minimum distance between any nodes in the graph and the robot pose that is going to be added.
-
 namespace frontier_exploration
 {
     struct RoadmapPlanResult
@@ -54,7 +49,7 @@ namespace frontier_exploration
 
         static void createInstance(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros)
         {
-            std::cout << "Creating instance" << std::endl;
+            std::cout << "Creating roadmap instance" << std::endl;
             std::lock_guard<std::mutex> lock(instanceMutex_);
             if (frontierRoadmapPtr == nullptr)
                 frontierRoadmapPtr.reset(new FrontierRoadMap(explore_costmap_ros));
@@ -174,6 +169,11 @@ namespace frontier_exploration
         std::vector<geometry_msgs::msg::Point> clicked_points_;
         std::deque<geometry_msgs::msg::Pose> trailing_robot_poses_;
         std::vector<Frontier> blacklisted_frontiers_;
+
+        double GRID_CELL_SIZE;
+        double RADIUS_TO_DECIDE_EDGES;
+        double MIN_DISTANCE_BETWEEN_TWO_FRONTIER_NODES;
+        double MIN_DISTANCE_BETWEEN_ROBOT_POSE_AND_NODE;
     };
 }
 
