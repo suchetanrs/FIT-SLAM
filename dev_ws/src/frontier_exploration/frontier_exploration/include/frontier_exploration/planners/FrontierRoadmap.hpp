@@ -96,7 +96,7 @@ namespace frontier_exploration
 
         void constructNewEdgeRobotPose(const geometry_msgs::msg::Pose &rPose);
 
-        void reConstructGraph();
+        void reConstructGraph(bool entireGraph);
 
         void getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, const double radius);
 

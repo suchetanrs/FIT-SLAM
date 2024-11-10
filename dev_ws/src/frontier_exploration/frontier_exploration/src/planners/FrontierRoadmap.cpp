@@ -141,9 +141,9 @@ namespace frontier_exploration
 
     void FrontierRoadMap::addNodes(const std::vector<Frontier> &frontiers, bool populateClosest)
     {
-        eventLoggerInstance.startEvent("addNodes", 2);
+        eventLoggerInstance.startEvent("addNodes");
         LOG_INFO("Going to add these many frontiers to the spatial hash map:" << frontiers.size());
-        eventLoggerInstance.startEvent("populateNodes", 2);
+        eventLoggerInstance.startEvent("populateNodes");
         populateNodes(frontiers, populateClosest, MIN_DISTANCE_BETWEEN_TWO_FRONTIER_NODES);
         eventLoggerInstance.endEvent("populateNodes", 2);
         eventLoggerInstance.endEvent("addNodes", 2);
@@ -151,7 +151,7 @@ namespace frontier_exploration
 
     void FrontierRoadMap::addRobotPoseAsNode(geometry_msgs::msg::Pose &start_pose_w, bool populateClosest)
     {
-        LOG_HIGHLIGHT("ADDING ROBOT POSE ...");
+        LOG_INFO("ADDING ROBOT POSE TO ROADMAP ...");
         Frontier start;
         start.setGoalPoint(start_pose_w.position.x, start_pose_w.position.y);
         start.setUID(generateUID(start));
@@ -225,20 +225,25 @@ namespace frontier_exploration
         constructNewEdges(toAdd);
     }
 
-    void FrontierRoadMap::reConstructGraph()
+    void FrontierRoadMap::reConstructGraph(bool entireGraph)
     {
         LOG_INFO("Reconstructing entire graph within radius: " << max_frontier_distance_);
+        LOG_DEBUG("Reconstruct graph!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         geometry_msgs::msg::PoseStamped robotPose;
         explore_costmap_ros_->getRobotPose(robotPose);
         // Add each point as a child of the parent if no obstacle is present
         spatial_hash_map_mutex_.lock();
-        roadmap_.clear();
+        if(entireGraph)
+            roadmap_.clear();
         for (const auto &pair : spatial_hash_map_)
         {
-            if (sqrt(pow(robotPose.pose.position.x - pair.first.first, 2) + pow(robotPose.pose.position.y - pair.first.second, 2)) > max_frontier_distance_)
+            if(!entireGraph)
             {
-                LOG_DEBUG("Skipping x: " << pair.first.first << ", y: " << pair.first.second << " from roadmap");
-                continue;
+                if (sqrt(pow(robotPose.pose.position.x - pair.first.first, 2) + pow(robotPose.pose.position.y - pair.first.second, 2)) > max_frontier_distance_)
+                {
+                    LOG_DEBUG("Skipping x: " << pair.first.first << ", y: " << pair.first.second << " from roadmap");
+                    continue;
+                }
             }
             for (const auto &point : pair.second)
             {
@@ -528,7 +533,7 @@ namespace frontier_exploration
         std::vector<Frontier> resultingPath;
 
         // Debug: Check the size of the path
-        std::cout << "Starting path refinement. PlanResult path size: " << planResult.path.size() << std::endl;
+        LOG_TRACE("Starting path refinement. PlanResult path size: " << planResult.path.size());
         
         if (planResult.path.empty()) {
             std::cerr << "Error: planResult.path is empty!" << std::endl;
@@ -536,27 +541,27 @@ namespace frontier_exploration
         }
 
         resultingPath.push_back(planResult.path[0]->frontier);
-        std::cout << "Added first frontier to resultingPath." << std::endl;
+        LOG_TRACE("Added first frontier to resultingPath.");
 
         for (int kk = 0; kk < planResult.path.size() - 1;)
         {
             Frontier latestFrontier = planResult.path[kk]->frontier;
-            std::cout << "Processing frontier at index " << kk << std::endl;
+            LOG_TRACE("Processing frontier at index " << kk);
 
             int next = kk + 1;
             
             while (next < planResult.path.size())
             {
-                std::cout << "Checking connection from index " << kk << " to " << next << std::endl;
+                LOG_TRACE("Checking connection from index " << kk << " to " << next);
                 if (isConnectable(planResult.path[kk]->frontier, planResult.path[next]->frontier))
                 {
-                    std::cout << "Frontiers at index " << kk << " and " << next << " are connectable." << std::endl;
+                    LOG_TRACE("Frontiers at index " << kk << " and " << next << " are connectable.");
                     latestFrontier = planResult.path[next]->frontier;
                     next++;
                 }
                 else
                 {
-                    std::cout << "Frontiers at index " << kk << " and " << next << " are not connectable. Breaking out of the loop." << std::endl;
+                    LOG_TRACE("Frontiers at index " << kk << " and " << next << " are not connectable. Breaking out of the loop.");
                     break;
                 }
             }
@@ -564,20 +569,20 @@ namespace frontier_exploration
             // Debug: Check if the frontier changed after connection checks
             if (!(latestFrontier == planResult.path[kk]->frontier))
             {
-                std::cout << "Adding frontier from index " << next - 1 << " to resultingPath." << std::endl;
+                LOG_TRACE("Adding frontier from index " << next - 1 << " to resultingPath.");
                 resultingPath.push_back(latestFrontier);
             }
             else
             {
-                std::cout << "No connectable frontier found from index " << kk << std::endl;
+                LOG_TRACE("No connectable frontier found from index " << kk);
                 return resultingPath;
             }
 
             kk = next - 1;  // Move to the last connected index
-            std::cout << "Moving kk to " << kk << std::endl;
+            LOG_TRACE("Moving kk to " << kk);
         }
 
-        std::cout << "Path refinement complete. Resulting path size: " << resultingPath.size() << std::endl;
+        LOG_TRACE("Path refinement complete. Resulting path size: " << resultingPath.size());
         return resultingPath;
     }
 

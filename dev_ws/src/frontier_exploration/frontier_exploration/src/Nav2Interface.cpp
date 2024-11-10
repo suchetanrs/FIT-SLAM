@@ -68,13 +68,13 @@ namespace frontier_exploration
         goal_pose.header.stamp = node_->get_clock()->now();
         if (nav2_goal_state_ == 0)
         {
-            std::cout << "SendGoal but updating goal since a goal is active." << std::endl;
+            LOG_INFO("SendGoal but updating goal since a goal is active.");
             updated_goal_publisher_->publish(goal_pose);
         }
         else
         {
             nav2_goal_state_ = 0;
-            std::cout << "SendGoal but new goal" << std::endl;
+            LOG_INFO("SendGoal but new goal");
             std::unique_lock<std::mutex> lock(nav2Clientlock_);
             auto nav2_goal_ = std::make_shared<NavigateToPose::Goal>();
             nav2_goal_->pose = goal_pose;

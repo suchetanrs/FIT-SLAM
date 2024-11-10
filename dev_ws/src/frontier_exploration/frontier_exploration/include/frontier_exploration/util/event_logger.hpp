@@ -27,7 +27,7 @@ public:
         return *eventLoggerPtr_;
     }
 
-    void startEvent(const std::string& key, int eventLevel);
+    void startEvent(const std::string& key);
 
     /**
      * eventLevel:
@@ -40,7 +40,7 @@ public:
     /**
      * Returns in seconds
      */
-    double getTimeSinceStart(const std::string& key, int eventLevel);
+    double getTimeSinceStart(const std::string& key);
 
 private:
     // Delete copy constructor and assignment operator to prevent copying
@@ -63,7 +63,7 @@ class Profiler
   public:
     Profiler(const std::string & functionName) : functionName(functionName)
     {
-        eventLoggerInstance.startEvent(functionName + "_profiler", 2);
+        eventLoggerInstance.startEvent(functionName + "_profiler");
     }
 
     ~Profiler()

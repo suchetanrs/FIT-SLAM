@@ -28,7 +28,7 @@ bool RecoveryController::computeVelocityCommand(bool backward_only)
     {
         auto value = evaluateFreeSpaceInDirection(direction);
         free_space_in_directions.push_back(value);
-        std::cout << "Got " << value << " for " << direction << std::endl;
+        LOG_TRACE("Got " << value << " for " << direction);
     }
 
     // Find the index of the direction with the most free space
@@ -68,7 +68,7 @@ bool RecoveryController::alignWithPose(geometry_msgs::msg::Pose& poseToAlignWith
         auto pose_yaw = frontier_exploration::quatToEuler(poseToAlignWith.orientation)[2];
         auto robot_yaw = frontier_exploration::quatToEuler(robot_pose_.pose.orientation)[2];
         double deltaYaw = normalizeAngle(pose_yaw - robot_yaw);
-        LOG_HIGHLIGHT("DeltaYaw: " << deltaYaw);
+        LOG_TRACE("DeltaYaw: " << deltaYaw);
         if(deltaYaw > 0 && fabs(deltaYaw) > 0.2)
         {
             geometry_msgs::msg::Twist cmd_vel;
@@ -110,7 +110,7 @@ bool RecoveryController::alignWithPose(geometry_msgs::msg::Pose& poseToAlignWith
     auto pose_yaw = frontier_exploration::quatToEuler(poseToAlignWith.orientation)[2];
     auto robot_yaw = frontier_exploration::quatToEuler(robot_pose_.pose.orientation)[2];
     double deltaYaw = normalizeAngle(pose_yaw - robot_yaw);
-    LOG_HIGHLIGHT("DeltaYaw2: " << deltaYaw);
+    LOG_TRACE("DeltaYaw2: " << deltaYaw);
     if(fabs(deltaYaw) > 0.2)
         return false;
     return true;

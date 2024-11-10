@@ -11,6 +11,7 @@
 
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <geometry_msgs/msg/twist.hpp>
+#include <std_msgs/msg/int32.hpp>
 
 #include "behaviortree_cpp/bt_factory.h"
 
@@ -38,6 +39,12 @@ namespace frontier_exploration
         std::map<std::string, std::shared_ptr<geometry_msgs::msg::PoseStamped>> goals;
     };
 
+    enum class CurrentGoalStatus
+    {
+        RUNNING,
+        COMPLETE
+    };
+
     class FrontierExplorationServer
     {
     public:
@@ -49,6 +56,8 @@ namespace frontier_exploration
         void buildBoundaryAndCenter();
 
         void makeBTNodes();
+
+        void rvizControl(std_msgs::msg::Int32 rvizControlValue);
 
         void handle_multirobot_current_goal_request(
             std::shared_ptr<rmw_request_id_t> request_header,
@@ -64,6 +73,8 @@ namespace frontier_exploration
 
         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
         std::unique_ptr<nav2_util::NodeThread> explore_costmap_thread_;
+
+        rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr exploration_rviz_sub_;
 
         // Nav2 related
         int nav2WaitTime_;
@@ -90,6 +101,7 @@ namespace frontier_exploration
         std::vector<std::string> robot_namespaces_;
         bool use_custom_sim_;
         bool process_other_robots_;
+        bool exploration_active_;
         std::vector<Frontier> blacklisted_frontiers_; // these are the frontiers traversed by this robot.
         RobotActiveGoals robot_active_goals_;
         std::shared_ptr<std::vector<Frontier>> active_hysterisis_candidates_;

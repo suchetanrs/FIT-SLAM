@@ -29,7 +29,7 @@ namespace frontier_exploration
     bool CostAssigner::processOurApproach(std::vector<Frontier> &frontier_list, geometry_msgs::msg::Pose& start_pose_w)
     {
         LOG_DEBUG("CostAssigner::processOurApproach");
-        eventLoggerInstance.startEvent("processOurApproach", 1);
+        eventLoggerInstance.startEvent("processOurApproach");
 
         // Getting map data
         // Create a service request
@@ -77,7 +77,7 @@ namespace frontier_exploration
         if (exploration_mode_ == "ours")
         {
             bool costsResult = CostAssigner::processOurApproach(requestData->frontier_list, requestData->start_pose.pose);
-            eventLoggerInstance.startEvent("outside_processOurApproach", 1);
+            eventLoggerInstance.startEvent("outside_processOurApproach");
             if (costsResult == false)
             {
                 resultData->success = false;

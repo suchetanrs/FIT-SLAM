@@ -8,6 +8,7 @@
 #include <tf2_ros/buffer.h>
 #include <memory>
 #include <string>
+#include "frontier_exploration/util/logger.hpp"
 
 // 0  - processing
 // 1  - succeeded, no goal active

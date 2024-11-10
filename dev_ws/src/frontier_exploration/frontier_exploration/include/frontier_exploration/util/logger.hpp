@@ -46,8 +46,9 @@ Attributes	        Foreground color	   Background color
                                            106 = turquoise
 **/
 
-#define LOG_LEVEL 5
-#define TIME_LEVEL 5
+#define LOG_LEVEL 1
+#define TIME_LEVEL -1
+#define USE_MODULE_FLOW false
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -114,7 +115,11 @@ std::ostream& operator<<(std::ostream& os, const std::unordered_map<K, V>& map)
         std::cout << "\e[1;37;41m" << "[FATAL " << std::chrono::system_clock::to_time_t(std::chrono::high_resolution_clock::now()) << "]  " << X << "\e[m" << std::endl;
 
 #define LOG_HIGHLIGHT(X) \
-    std::cout << "\e[1;37;103m" << "[HIGHLIGHT " << std::chrono::system_clock::to_time_t(std::chrono::high_resolution_clock::now()) << "]  " << X << "\e[m" << std::endl;
+    std::cout << "\e[1;37;102m" << "[HIGHLIGHT " << std::chrono::system_clock::to_time_t(std::chrono::high_resolution_clock::now()) << "]  " << X << "\e[m" << std::endl;
+
+#define LOG_FLOW(X) \
+    if (USE_MODULE_FLOW) \
+        std::cout << "\e[1;37;103m" << "[FLOW " << std::chrono::system_clock::to_time_t(std::chrono::high_resolution_clock::now()) << "]  " << X << "\e[m" << std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////////////
 

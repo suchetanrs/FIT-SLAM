@@ -15,6 +15,7 @@ int main() {
     LOG_CRITICAL("This is a CRITICAL message.");
     LOG_FATAL("This is a FATAL message.");
     LOG_HIGHLIGHT("This is a HIGHLIGHT message.");
+    LOG_FLOW("This is a FLOW message");
 
     LOG_MODULE_TIME("This is LOG_MODULE_TIME message", 5);
     LOG_SUBMODULE_TIME("This is LOG_SUBMODULE_TIME message", 5);

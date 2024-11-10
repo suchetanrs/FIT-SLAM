@@ -24,91 +24,68 @@ EventLogger::EventLogger(const std::string &baseFilename) : serialNumber(0)
 }
 
 // Function to start an event
-void EventLogger::startEvent(const std::string &key, int eventLevel)
+void EventLogger::startEvent(const std::string &key)
 {
-    if (eventLevel <= TIME_LEVEL)
-    {
-        std::lock_guard<std::mutex> lock(mapMutex);
-        auto startTime = std::chrono::high_resolution_clock::now();
-        startTimes[key] = startTime;
-    }
+    std::lock_guard<std::mutex> lock(mapMutex);
+    auto startTime = std::chrono::high_resolution_clock::now();
+    startTimes[key] = startTime;
 }
 
 // Function to end an event and log the total time taken
 void EventLogger::endEvent(const std::string &key, int eventLevel)
 {
-    if (eventLevel <= TIME_LEVEL)
+    auto endTime = std::chrono::high_resolution_clock::now();
+    std::lock_guard<std::mutex> lock(mapMutex);
+    if (startTimes.find(key) != startTimes.end())
     {
-        auto endTime = std::chrono::high_resolution_clock::now();
-        std::lock_guard<std::mutex> lock(mapMutex);
-        if (startTimes.find(key) != startTimes.end())
+        auto startTime = startTimes[key];
+        std::chrono::duration<double> duration = endTime - startTime;
+        if (eventLevel == 0)
         {
-            auto startTime = startTimes[key];
-            std::chrono::duration<double> duration = endTime - startTime;
-            if (eventLevel == 0)
-            {
-                LOG_MODULE_TIME(key, duration.count());
-            }
-            else if (eventLevel == 1)
-            {
-                LOG_SUBMODULE_TIME(key, duration.count());
-            }
-            else if (eventLevel == 2)
-            {
-                LOG_EVENT_TIME(key, duration.count());
-            }
-            else
-            {
-                LOG_CRITICAL("eventLevel undefined for " << key);
-            }
-
-            // // Write to CSV file
-            // std::ofstream outFile(csvFilename, std::ios::out | std::ios::app);
-            // outFile << ++serialNumber << "," << key << "," << duration.count() << "\n";
-
-            startTimes.erase(key);
+            LOG_MODULE_TIME(key, duration.count());
+        }
+        else if (eventLevel == 1)
+        {
+            LOG_SUBMODULE_TIME(key, duration.count());
+        }
+        else if (eventLevel == 2)
+        {
+            LOG_EVENT_TIME(key, duration.count());
         }
         else
         {
-            LOG_CRITICAL("Event " << key << " is not started");
+            LOG_CRITICAL("eventLevel undefined for " << key);
         }
+
+        // // Write to CSV file
+        // std::ofstream outFile(csvFilename, std::ios::out | std::ios::app);
+        // outFile << ++serialNumber << "," << key << "," << duration.count() << "\n";
+
+        startTimes.erase(key);
+    }
+    else
+    {
+        LOG_CRITICAL("Event " << key << " is not started");
     }
 }
 
-double EventLogger::getTimeSinceStart(const std::string& key, int eventLevel)
+double EventLogger::getTimeSinceStart(const std::string& key)
 {
-    if (eventLevel <= TIME_LEVEL)
+    auto endTime = std::chrono::high_resolution_clock::now();
+    std::lock_guard<std::mutex> lock(mapMutex);
+    if (startTimes.find(key) != startTimes.end())
     {
-        auto endTime = std::chrono::high_resolution_clock::now();
-        std::lock_guard<std::mutex> lock(mapMutex);
-        if (startTimes.find(key) != startTimes.end())
-        {
-            auto startTime = startTimes[key];
-            std::chrono::duration<double> duration = endTime - startTime;
-            if (eventLevel == 0)
-            {
-                return duration.count();
-            }
-            else if (eventLevel == 1)
-            {
-                return duration.count();
-            }
-            else if (eventLevel == 2)
-            {
-                return duration.count();
-            }
-            else
-            {
-                LOG_CRITICAL("eventLevel undefined for " << key);
-            }
+        auto startTime = startTimes[key];
+        std::chrono::duration<double> duration = endTime - startTime;
+        return duration.count();
 
-            // // Write to CSV file
-            // std::ofstream outFile(csvFilename, std::ios::out | std::ios::app);
-            // outFile << ++serialNumber << "," << key << "," << duration.count() << "\n";
-        }
-        else
-        {
-            LOG_CRITICAL("Event " << key << " is not started");
-        }
+        // // Write to CSV file
+        // std::ofstream outFile(csvFilename, std::ios::out | std::ios::app);
+        // outFile << ++serialNumber << "," << key << "," << duration.count() << "\n";
     }
+    else
+    {
+        LOG_CRITICAL("Event " << key << " is not started");
+    }
+    return 0.0;
 }

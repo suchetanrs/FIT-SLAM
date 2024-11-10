@@ -604,7 +604,7 @@ namespace frontier_exploration
             if(refinedPath.size() == 0)
                 return PathSafetyStatus::UNDETERMINED;
         }
-        eventLoggerInstance.startEvent("publishPlan", 2);
+        eventLoggerInstance.startEvent("publishPlan");
         FrontierRoadMap::getInstance().publishPlan(bestPathViz, 1.0, 0.0, 0.0);
         eventLoggerInstance.endEvent("publishPlan", 2);
         // 0 is robot pose. Return the first frontier in the path.

@@ -19,7 +19,7 @@ namespace frontier_exploration
 
         BT::NodeStatus onStart() override
         {
-            LOG_HIGHLIGHT("MODULE InitializationSequence");
+            LOG_FLOW("MODULE InitializationSequence");
             if (initialization_controller_->send_velocity_commands())
             {
                 return BT::NodeStatus::FAILURE;
@@ -32,6 +32,7 @@ namespace frontier_exploration
 
         BT::NodeStatus onRunning() override
         {
+            return BT::NodeStatus::RUNNING;
         }
 
         void onHalted()
@@ -55,7 +56,7 @@ namespace frontier_exploration
 
         BT::NodeStatus onStart() override
         {
-            LOG_HIGHLIGHT("MODULE WaitForCurrent");
+            LOG_FLOW("MODULE WaitForCurrent");
             return BT::NodeStatus::RUNNING;
         }
 
@@ -94,7 +95,7 @@ namespace frontier_exploration
 
         BT::NodeStatus onStart() override
         {
-            LOG_HIGHLIGHT("MODULE UpdateBoundaryPolygonBT");
+            LOG_FLOW("MODULE UpdateBoundaryPolygonBT");
             geometry_msgs::msg::PolygonStamped explore_boundary_;
             geometry_msgs::msg::PointStamped explore_center_;
             explore_boundary_.header.frame_id = "map";
@@ -161,8 +162,8 @@ namespace frontier_exploration
 
         BT::NodeStatus onStart() override
         {
-            LOG_HIGHLIGHT("MODULE SearchForFrontiersBT");
-            eventLoggerInstance.startEvent("SearchForF rontiers", 0);
+            LOG_FLOW("MODULE SearchForFrontiersBT");
+            eventLoggerInstance.startEvent("SearchForFrontiers");
             frontierSearchPtr_->reset();
             explore_costmap_ros_->getCostmap()->getMutex()->lock();
             LOG_DEBUG("SearchForFrontiersBT OnStart called ");
@@ -228,27 +229,31 @@ namespace frontier_exploration
 
         BT::NodeStatus onStart() override
         {
-            eventLoggerInstance.startEvent("UpdateRoadmapBT", 0);
-            LOG_HIGHLIGHT("MODULE UpdateRoadmapBT");
+            eventLoggerInstance.startEvent("UpdateRoadmapBT");
+            LOG_FLOW("MODULE UpdateRoadmapBT");
             std::vector<Frontier> frontier_list;
             getInput<std::vector<Frontier>>("frontier_list", frontier_list);
             geometry_msgs::msg::PoseStamped robotP;
-            config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP);
+            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP)) {
+                // Handle the case when "latest_robot_pose" is not found
+                LOG_FATAL("Failed to retrieve latest_robot_pose from blackboard.");
+                throw std::runtime_error("Failed to retrieve latest_robot_pose from blackboard.");
+            }
             FrontierRoadMap::getInstance().addNodes(frontier_list, true);
             bool addPose;
             getInput("add_robot_pose_to_roadmap", addPose);
             if (addPose)
             {
-                LOG_HIGHLIGHT("Adding robot pose as frontier node.");
+                LOG_FLOW("Adding robot pose as frontier node.");
                 FrontierRoadMap::getInstance().addRobotPoseAsNode(robotP.pose, false);
             }
-            eventLoggerInstance.startEvent("roadmapReconstruction", 1);
+            eventLoggerInstance.startEvent("roadmapReconstruction");
             FrontierRoadMap::getInstance().constructNewEdges(frontier_list);
             FrontierRoadMap::getInstance().constructNewEdgeRobotPose(robotP.pose);
             // FrontierRoadMap::getInstance().reConstructGraph();
             eventLoggerInstance.endEvent("roadmapReconstruction", 1);
 
-            eventLoggerInstance.startEvent("publishRoadmap", 2);
+            eventLoggerInstance.startEvent("publishRoadmap");
             FrontierRoadMap::getInstance().publishRoadMap();
             eventLoggerInstance.endEvent("publishRoadmap", 2);
             // TODO: make sure to add a thing such that the entire roadmap within a certain distance (max frontier search distance) is reconstructed periodically
@@ -293,18 +298,18 @@ namespace frontier_exploration
 
         BT::NodeStatus onStart() override
         {
-            LOG_HIGHLIGHT("MODULE CleanupRoadMapBT");
-            LOG_INFO("Time since last clearance: " << eventLoggerInstance.getTimeSinceStart("clearRoadmap", 0));
+            LOG_FLOW("MODULE CleanupRoadMapBT");
+            LOG_DEBUG("Time since last clearance: " << eventLoggerInstance.getTimeSinceStart("clearRoadmap"));
             double time_between_cleanup;
             getInput("time_between_cleanup", time_between_cleanup);
-            if (eventLoggerInstance.getTimeSinceStart("clearRoadmap", 0) < time_between_cleanup)
+            if (eventLoggerInstance.getTimeSinceStart("clearRoadmap") < time_between_cleanup)
             {
                 return BT::NodeStatus::FAILURE;
             }
-            eventLoggerInstance.startEvent("clearRoadmap", 0);
-            eventLoggerInstance.startEvent("CleanupRoadMapBT", 0);
-            eventLoggerInstance.startEvent("roadmapReconstructionFull", 1);
-            FrontierRoadMap::getInstance().reConstructGraph();
+            eventLoggerInstance.startEvent("clearRoadmap");
+            eventLoggerInstance.startEvent("CleanupRoadMapBT");
+            eventLoggerInstance.startEvent("roadmapReconstructionFull");
+            FrontierRoadMap::getInstance().reConstructGraph(false);
             eventLoggerInstance.endEvent("roadmapReconstructionFull", 1);
             full_path_optimizer_->clearPlanCache();
             // TODO: make sure to add a thing such that the entire roadmap within a certain distance (max frontier search distance) is reconstructed periodically
@@ -335,49 +340,6 @@ namespace frontier_exploration
         std::shared_ptr<FullPathOptimizer> full_path_optimizer_;
     };
 
-    class VerifyFrontierSearchBT : public BT::StatefulActionNode
-    {
-    public:
-        VerifyFrontierSearchBT(const std::string &name, const BT::NodeConfig &config,
-                               std::shared_ptr<FrontierSearch> frontierSearchPtr, std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros,
-                               rclcpp::Node::SharedPtr ros_node_ptr) : BT::StatefulActionNode(name, config)
-        {
-            explore_costmap_ros_ = explore_costmap_ros;
-            ros_node_ptr_ = ros_node_ptr;
-            LOG_INFO("VerifyFrontierSearchBT Constructor");
-        }
-
-        BT::NodeStatus onStart() override
-        {
-            LOG_INFO("VerifyFrontierSearchBT OnStart called ");
-            std::vector<Frontier> frontier_list;
-            getInput<std::vector<Frontier>>("frontier_list", frontier_list);
-            if (verifyFrontierList(frontier_list, explore_costmap_ros_->getCostmap()))
-                return BT::NodeStatus::SUCCESS;
-            return BT::NodeStatus::FAILURE;
-        }
-
-        BT::NodeStatus onRunning()
-        {
-            LOG_INFO("VerifyFrontierSearchBT On running called ");
-            return BT::NodeStatus::SUCCESS;
-        }
-
-        void onHalted()
-        {
-            return;
-        }
-
-        static BT::PortsList providedPorts()
-        {
-            return {
-                BT::InputPort<std::vector<Frontier>>("frontier_list")};
-        }
-
-        std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
-        rclcpp::Node::SharedPtr ros_node_ptr_;
-    };
-
     class ProcessFrontierCostsBT : public BT::StatefulActionNode
     {
     public:
@@ -399,8 +361,8 @@ namespace frontier_exploration
 
         BT::NodeStatus onStart() override
         {
-            eventLoggerInstance.startEvent("ProcessFrontierCosts", 0);
-            LOG_HIGHLIGHT("MODULE ProcessFrontierCostsBT");
+            eventLoggerInstance.startEvent("ProcessFrontierCosts");
+            LOG_FLOW("MODULE ProcessFrontierCostsBT");
             taskAllocator_->reset();
             auto frontierCostsRequestPtr = std::make_shared<GetFrontierCostsRequest>();
             auto frontierCostsResultPtr = std::make_shared<GetFrontierCostsResponse>();
@@ -418,9 +380,16 @@ namespace frontier_exploration
             {
                 BT::RuntimeError("No correct input recieved for every_frontier");
             }
-
-            config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", frontierCostsRequestPtr->start_pose);
-            config().blackboard->get<std::vector<Frontier>>("frontier_blacklist", frontierCostsRequestPtr->prohibited_frontiers);
+            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", frontierCostsRequestPtr->start_pose)) {
+                // Handle the case when "latest_robot_pose" is not found
+                LOG_FATAL("Failed to retrieve latest_robot_pose from blackboard.");
+                throw std::runtime_error("Failed to retrieve latest_robot_pose from blackboard.");
+            }
+            // if (!config().blackboard->get<std::vector<Frontier>>("frontier_blacklist", frontierCostsRequestPtr->prohibited_frontiers))
+            // {
+            //     LOG_FATAL("Failed to retrieve frontier_blacklist from blackboard.");
+            //     throw std::runtime_error("Failed to retrieve frontier_blacklist from blackboard.");
+            // }
             LOG_INFO("Request to get frontier costs sent");
             bool frontierCostsSuccess = bel_ptr_->getFrontierCosts(frontierCostsRequestPtr, frontierCostsResultPtr);
             if (frontierCostsSuccess == false)
@@ -528,8 +497,8 @@ namespace frontier_exploration
 
         BT::NodeStatus onStart() override
         {
-            eventLoggerInstance.startEvent("OptimizeFullPath", 0);
-            LOG_HIGHLIGHT("MODULE OptimizeFullPath");
+            eventLoggerInstance.startEvent("OptimizeFullPath");
+            LOG_FLOW("MODULE OptimizeFullPath");
             double numberRetriesFI;
             getInput("number_retries_fi", numberRetriesFI);
             std::vector<Frontier> globalFrontierList;
@@ -537,7 +506,11 @@ namespace frontier_exploration
             bool use_fi;
             getInput<bool>("use_fisher_information", use_fi);
             geometry_msgs::msg::PoseStamped robotP;
-            config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP);
+            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP)) {
+                // Handle the case when "latest_robot_pose" is not found
+                LOG_FATAL("Failed to retrieve latest_robot_pose from blackboard.");
+                throw std::runtime_error("Failed to retrieve latest_robot_pose from blackboard.");
+            }
             Frontier allocatedFrontier;
             if(currentFIRetries == numberRetriesFI - 1 && use_fi)
                 full_path_optimizer_->setExhaustiveSearch(true);
@@ -547,7 +520,6 @@ namespace frontier_exploration
                 currentFIRetries = 0;
                 frontierSearchPtr_->resetSearchDistance();
                 LOG_WARN("The next goal that will be sent to Nav2 is:" << allocatedFrontier);
-                eventLoggerInstance.endEvent("OptimizeFullPath", 0);
                 setOutput<Frontier>("allocated_frontier", allocatedFrontier);
             }
             else if (return_state_with_fi == PathSafetyStatus::UNDETERMINED)
@@ -558,6 +530,7 @@ namespace frontier_exploration
                 frontierSearchPtr_->incrementSearchDistance(increment_value);
                 recovery_controller_->computeVelocityCommand(false);
                 full_path_optimizer_->setExhaustiveSearch(false);
+                eventLoggerInstance.endEvent("OptimizeFullPath", 0);
                 return BT::NodeStatus::FAILURE;
             }
             else if (return_state_with_fi == PathSafetyStatus::UNSAFE)
@@ -594,6 +567,7 @@ namespace frontier_exploration
                     }
                 }
                 full_path_optimizer_->setExhaustiveSearch(false);
+                eventLoggerInstance.endEvent("OptimizeFullPath", 0);
                 return BT::NodeStatus::FAILURE;
             }
             frontierSearchPtr_->resetSearchDistance();
@@ -641,24 +615,33 @@ namespace frontier_exploration
             hysterisis_candidates_ = active_hysterisis_candidates;
             LOG_INFO("HysterisisControl Constructor");
             minDistance = std::numeric_limits<double>::max();
-            eventLoggerInstance.startEvent("startHysterisis", 1);
+            eventLoggerInstance.startEvent("startHysterisis");
         }
 
         BT::NodeStatus onStart() override
         {
-            eventLoggerInstance.startEvent("HysterisisControl", 0);
-            if (eventLoggerInstance.getTimeSinceStart("startHysterisis", 1) > 60.0)
+            eventLoggerInstance.startEvent("HysterisisControl");
+            if (eventLoggerInstance.getTimeSinceStart("startHysterisis") > 10.0)
             {
                 eventLoggerInstance.endEvent("startHysterisis", 1);
-                eventLoggerInstance.startEvent("startHysterisis", 1);
+                eventLoggerInstance.startEvent("startHysterisis");
                 hysterisis_candidates_->clear();
                 minDistance = std::numeric_limits<double>::max();
             }
-            LOG_HIGHLIGHT("MODULE HysterisisControl");
-            LOG_HIGHLIGHT("MODULE HysterisisControl Elements in picture: " << hysterisis_candidates_->size());
-            bool enabled_;
-            config().blackboard->get<bool>("hysterisis_enabled", enabled_);
-            if (enabled_)
+            LOG_FLOW("MODULE HysterisisControl");
+            geometry_msgs::msg::PoseStamped robotP;
+            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP)) {
+                // Handle the case when "latest_robot_pose" is not found
+                LOG_FATAL("Failed to retrieve latest_robot_pose from blackboard.");
+                throw std::runtime_error("Failed to retrieve latest_robot_pose from blackboard.");
+            }
+            CurrentGoalStatus status;
+            if (!config().blackboard->get<CurrentGoalStatus>("current_goal_status", status)) {
+                LOG_FATAL( "Failed to retrieve hysteresis_enabled from blackboard.");
+                throw std::runtime_error("Failed to retrieve hysteresis_enabled from blackboard.");
+            }
+            LOG_FLOW("MODULE HysterisisControl Elements in picture: " << hysterisis_candidates_->size());
+            if (status == CurrentGoalStatus::RUNNING)
             {
                 Frontier allocatedFrontier;
                 getInput<Frontier>("allocated_frontier", allocatedFrontier);
@@ -694,14 +677,13 @@ namespace frontier_exploration
                 //         maxCount = count;
                 //     }
                 // }
-
-                geometry_msgs::msg::PoseStamped robotP;
-                config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP);
-                if (distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position) < minDistance - 2.0)
+                LOG_DEBUG("Value of min Distance " << minDistance);
+                LOG_DEBUG("Reference of min Distance " << &minDistance);
+                if (distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position) < minDistance - 1.0)
                 {
-                    LOG_WARN("Found a closer one: " << minDistance);
                     minDistance = distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position);
                     mostFrequentFrontier = allocatedFrontier;
+                    LOG_DEBUG("Found a closer one: " << minDistance);
                 }
 
                 // Set the most frequent frontier as the output
@@ -710,11 +692,12 @@ namespace frontier_exploration
             else
             {
                 hysterisis_candidates_->clear();
-                minDistance = std::numeric_limits<double>::max();
                 Frontier allocatedFrontier;
                 getInput<Frontier>("allocated_frontier", allocatedFrontier);
                 hysterisis_candidates_->push_back(allocatedFrontier);
                 setOutput<Frontier>("allocated_frontier_after_hysterisis", allocatedFrontier);
+                minDistance = distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position);
+                LOG_DEBUG("Found completed goal, resetting with new min distance " << minDistance);
             }
             eventLoggerInstance.endEvent("HysterisisControl", 0);
             return BT::NodeStatus::SUCCESS;
@@ -752,8 +735,8 @@ namespace frontier_exploration
 
         BT::NodeStatus onStart() override
         {
-            eventLoggerInstance.startEvent("ExecuteRecoveryMove", 0);
-            LOG_HIGHLIGHT("MODULE ExecuteRecoveryMove");
+            eventLoggerInstance.startEvent("ExecuteRecoveryMove");
+            LOG_FLOW("MODULE ExecuteRecoveryMove");
             if (!recovery_controller_bt_)
                 throw std::runtime_error("recovery ptr is null.");
             bool backwardOnly;
@@ -944,7 +927,7 @@ namespace frontier_exploration
             goalPose.pose.position = allocatedFrontier.getGoalPoint();
             if (surroundingCellsMapped(goalPose.pose.position, *explore_costmap_ros_->getCostmap()))
             {
-                config().blackboard->set<bool>("hysterisis_enabled", false);
+                config().blackboard->set<CurrentGoalStatus>("current_goal_status", CurrentGoalStatus::COMPLETE);
                 return BT::NodeStatus::SUCCESS;
             }
             return BT::NodeStatus::FAILURE;
@@ -960,7 +943,7 @@ namespace frontier_exploration
             goalPose.pose.position = allocatedFrontier.getGoalPoint();
             if (surroundingCellsMapped(goalPose.pose.position, *explore_costmap_ros_->getCostmap()))
             {
-                config().blackboard->set<bool>("hysterisis_enabled", false);
+                config().blackboard->set<CurrentGoalStatus>("current_goal_status", CurrentGoalStatus::COMPLETE);
                 return BT::NodeStatus::SUCCESS;
             }
             return BT::NodeStatus::RUNNING;
@@ -997,11 +980,11 @@ namespace frontier_exploration
             double timeoutValue;
             getInput("timeout_value", timeoutValue);
             LOG_INFO("ReplanTimeoutCompleteBT onStart");
-            if (eventLoggerInstance.getTimeSinceStart("replanTimeout", 0) > timeoutValue)
+            if (eventLoggerInstance.getTimeSinceStart("replanTimeout") > timeoutValue)
             {
                 LOG_WARN("Replanning timed out. Restarting the frontier computation");
-                eventLoggerInstance.startEvent("replanTimeout", 0);
-                config().blackboard->set<bool>("hysterisis_enabled", true);
+                eventLoggerInstance.startEvent("replanTimeout");
+                config().blackboard->set<CurrentGoalStatus>("current_goal_status", CurrentGoalStatus::RUNNING);
                 return BT::NodeStatus::SUCCESS;
             }
             return BT::NodeStatus::FAILURE;
@@ -1090,8 +1073,9 @@ namespace frontier_exploration
     {
         LOG_TRACE("First BT constructor");
         bt_node_ = node;
+        exploration_active_ = true;
         blackboard = BT::Blackboard::create();
-        blackboard->set<bool>("hysterisis_enabled", false);
+        blackboard->set<CurrentGoalStatus>("current_goal_status", CurrentGoalStatus::RUNNING);
         active_hysterisis_candidates_ = std::make_shared<std::vector<Frontier>>();
 
         robot_namespaces_ = {};
@@ -1137,6 +1121,7 @@ namespace frontier_exploration
         frontierSearchPtr_ = std::make_shared<FrontierSearch>(*(explore_costmap_ros_->getLayeredCostmap()->getCostmap()));
         full_path_optimizer_ = std::make_shared<FullPathOptimizer>(bt_node_, explore_costmap_ros_);
         //---------------------------------------------ROS RELATED------------------------------------------
+        exploration_rviz_sub_ = node->create_subscription<std_msgs::msg::Int32>("/exploration_state", 10, std::bind(&FrontierExplorationServer::rvizControl, this, std::placeholders::_1));
         tf_listener_ = std::make_shared<tf2_ros::Buffer>(bt_node_->get_clock());
         LOG_INFO("FrontierExplorationServer::FrontierExplorationServer()");
     }
@@ -1151,8 +1136,8 @@ namespace frontier_exploration
 
     void FrontierExplorationServer::makeBTNodes()
     {
-        eventLoggerInstance.startEvent("clearRoadmap", 0);
-        eventLoggerInstance.startEvent("replanTimeout", 0);
+        eventLoggerInstance.startEvent("clearRoadmap");
+        eventLoggerInstance.startEvent("replanTimeout");
 
         BT::NodeBuilder builder_initialization =
             [&](const std::string &name, const BT::NodeConfiguration &config)
@@ -1181,13 +1166,6 @@ namespace frontier_exploration
             return std::make_unique<SearchForFrontiersBT>(name, config, frontierSearchPtr_, explore_costmap_ros_, bt_node_);
         };
         factory.registerBuilder<SearchForFrontiersBT>("SearchForFrontiers", builder_frontier_search);
-
-        BT::NodeBuilder builder_frontier_search_verification =
-            [&](const std::string &name, const BT::NodeConfiguration &config)
-        {
-            return std::make_unique<VerifyFrontierSearchBT>(name, config, frontierSearchPtr_, explore_costmap_ros_, bt_node_);
-        };
-        factory.registerBuilder<VerifyFrontierSearchBT>("VerifyFrontierSearch", builder_frontier_search);
 
         BT::NodeBuilder builder_update_roadmap_data =
             [&](const std::string &name, const BT::NodeConfiguration &config)
@@ -1269,9 +1247,28 @@ namespace frontier_exploration
         behaviour_tree = factory.createTreeFromFile(bt_xml_path_, blackboard);
         while (rclcpp::ok())
         {
-            behaviour_tree.tickOnce();
+            if(exploration_active_)
+            {
+                behaviour_tree.tickOnce();
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                LOG_DEBUG("TICKED ONCE");
+            }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            LOG_DEBUG("TICKED ONCE");
+        }
+    }
+
+    void FrontierExplorationServer::rvizControl(std_msgs::msg::Int32 rvizControlValue)
+    {
+        if(rvizControlValue.data == 0)
+        {
+            LOG_WARN("Pausing exploration");
+            exploration_active_ = false;
+            nav2_interface_->cancelAllGoals();
+        }
+        else if(rvizControlValue.data == 1)
+        {
+            LOG_WARN("Playing exploration");
+            exploration_active_ = true;
         }
     }
 
