@@ -21,7 +21,6 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node)
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
     fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
     trailing_robot_poses_publisher_ = node->create_publisher<geometry_msgs::msg::PoseArray>("trailing_robot_poses", 10);
-    pcl::PointXYZI spatial_hashmap_viz(5000);
     costmap_ = nullptr;
 }
 
@@ -44,7 +43,6 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Cost
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
     fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
     trailing_robot_poses_publisher_ = node->create_publisher<geometry_msgs::msg::PoseArray>("trailing_robot_poses", 10);
-    pcl::PointXYZI spatial_hashmap_viz(5000);
     costmap_ = costmap;
 }
 
@@ -192,6 +190,7 @@ void RosVisualizer::landmarkViz(std::vector<frontier_exploration::Point2D> &poin
 
 void RosVisualizer::visualizeSpatialHashMap(const std::vector<Frontier> &frontier_list, std::string globalFrameID)
 {
+    pcl::PointCloud<pcl::PointXYZI> spatial_hashmap_viz;
     pcl::PointXYZI frontier_point_viz(50);
     for (const auto &frontier : frontier_list)
     {

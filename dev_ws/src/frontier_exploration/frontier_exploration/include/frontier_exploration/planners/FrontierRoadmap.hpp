@@ -26,6 +26,7 @@
 #include "frontier_exploration/util/logger.hpp"
 #include "frontier_exploration/util/rosVisualizer.hpp"
 #include "frontier_exploration/Parameters.hpp"
+#include "slam_msgs/msg/map_data.hpp"
 
 namespace frontier_exploration
 {
@@ -55,6 +56,58 @@ namespace frontier_exploration
                 frontierRoadmapPtr.reset(new FrontierRoadMap(explore_costmap_ros));
         }
 
+        void addNodes(const std::vector<Frontier> &frontiers, bool populateClosest);
+
+        void addRobotPoseAsNode(geometry_msgs::msg::Pose &start_pose_w, bool populateClosest);
+
+        void constructNewEdges(const std::vector<Frontier> &frontiers);
+
+        void constructNewEdgeRobotPose(const geometry_msgs::msg::Pose &rPose);
+
+        void publishRoadMap();
+
+        std::size_t countTotalItemsInSpatialMap()
+        {
+            std::lock_guard<std::mutex> lock(spatial_hash_map_mutex_);
+            std::size_t total_items = 0;
+            std::vector<Frontier> master_frontier_list;
+            for (const auto &cell : spatial_hash_map_)
+            {
+                master_frontier_list.insert(master_frontier_list.end(), cell.second.begin(), cell.second.end());
+                total_items += cell.second.size(); // Add the size of each grid's list to the total count
+            }
+            RosVisualizer::getInstance().visualizeSpatialHashMap(master_frontier_list, "map");
+            LOG_HIGHLIGHT("Total items in the spatial map is: " << total_items);
+            return total_items;
+        }
+
+        void reConstructGraph(bool entireGraph);
+
+        std::deque<geometry_msgs::msg::Pose> getTrailingRobotPoses()
+        {
+            return trailing_robot_poses_;
+        };
+
+        void addFrontierToBlacklist(Frontier& frontier)
+        {
+            blacklisted_frontiers_.push_back(frontier);
+        }
+
+        RoadmapPlanResult getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd, bool publish_plan);
+
+        RoadmapPlanResult getPlan(Frontier &startNode, bool useClosestToStart, Frontier &endNode, bool useClosestToEnd);
+
+        std::vector<Frontier> refinePath(RoadmapPlanResult& planResult);
+        
+        const void publishPlan(const std::vector<std::shared_ptr<Node>> &plan, float r, float g, float b) const;
+
+        const void publishPlan(const std::vector<Frontier> &plan, std::string planType) const;
+
+    private:
+        void mapDataCallback(slam_msgs::msg::MapData mapData);
+
+        void optimizeSHM();
+
         void clickedPointCallback(const geometry_msgs::msg::PointStamped::SharedPtr msg);
 
         // Custom hash function for std::pair<int, int>
@@ -73,31 +126,6 @@ namespace frontier_exploration
 
         void populateNodes(const std::vector<Frontier> &frontiers, bool populateClosest, double min_distance_between_to_add);
 
-        void addNodes(const std::vector<Frontier> &frontiers, bool populateClosest);
-
-        void addRobotPoseAsNode(geometry_msgs::msg::Pose &start_pose_w, bool populateClosest);
-
-        std::size_t countTotalItemsInSpatialMap()
-        {
-            std::size_t total_items = 0;
-            spatial_hash_map_mutex_.lock(); // Lock the mutex to ensure thread safety
-            for (const auto &cell : spatial_hash_map_)
-            {
-                // RosVisualizer::getInstance().visualizeSpatialHashMap(cell.second, "map");
-                total_items += cell.second.size(); // Add the size of each grid's list to the total count
-            }
-            spatial_hash_map_mutex_.unlock(); // Unlock the mutex after iteration
-            LOG_INFO("Total items in the map is: " << total_items);
-            // RosVisualizer::getInstance().resetSpatialHashMap();
-            return total_items;
-        }
-
-        void constructNewEdges(const std::vector<Frontier> &frontiers);
-
-        void constructNewEdgeRobotPose(const geometry_msgs::msg::Pose &rPose);
-
-        void reConstructGraph(bool entireGraph);
-
         void getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, const double radius);
 
         void getNodesWithinRadius(const geometry_msgs::msg::Point &interestPoint, std::vector<Frontier> &closestNodeVector, const double radius);
@@ -106,24 +134,7 @@ namespace frontier_exploration
 
         void getClosestNodeInRoadMap(const Frontier &interestNode, Frontier &closestNode);
 
-        RoadmapPlanResult getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd, bool publish_plan);
-
-        RoadmapPlanResult getPlan(Frontier &startNode, bool useClosestToStart, Frontier &endNode, bool useClosestToEnd);
-
-        std::vector<Frontier> refinePath(RoadmapPlanResult& planResult);
-
-        void publishRoadMap();
-
-        void publishPlan(const std::vector<std::shared_ptr<Node>> &plan, float r, float g, float b);
-
-        void publishPlan(const std::vector<Frontier> &plan, std::string planType);
-
         bool isPointBlacklisted(const Frontier& point);
-
-        void addFrontierToBlacklist(Frontier& frontier)
-        {
-            blacklisted_frontiers_.push_back(frontier);
-        }
 
         std::mutex &getRoadmapMutex()
         {
@@ -135,12 +146,6 @@ namespace frontier_exploration
             return roadmap_;
         };
 
-        std::deque<geometry_msgs::msg::Pose> getTrailingRobotPoses()
-        {
-            return trailing_robot_poses_;
-        };
-
-    private:
         FrontierRoadMap(const FrontierRoadMap &) = delete;
         FrontierRoadMap &operator=(const FrontierRoadMap &) = delete;
         FrontierRoadMap(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros);
@@ -152,7 +157,15 @@ namespace frontier_exploration
         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
 
         std::unordered_map<std::pair<int, int>, std::vector<Frontier>, spatialHash> spatial_hash_map_;
+
+        std::queue<Frontier> no_kf_parent_queue_;
+        std::unordered_map<int, geometry_msgs::msg::PoseStamped> init_keyframe_poses_;
+        std::unordered_map<int, geometry_msgs::msg::PoseStamped> latest_keyframe_poses_;
+        std::unordered_map<std::pair<int, int>, std::vector<int>, spatialHash> spatial_kf_map_;
+        std::unordered_map<int, std::vector<Eigen::Vector3f>> keyframe_mapping_;
+        
         std::mutex spatial_hash_map_mutex_;
+
 
         std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash> roadmap_;
         std::mutex roadmap_mutex_;
@@ -164,6 +177,7 @@ namespace frontier_exploration
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_roadmap_vertices_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_plan_;
         rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_nav2_plan_;
+        rclcpp::Subscription<slam_msgs::msg::MapData>::SharedPtr map_data_subscription_;
         std::shared_ptr<FrontierRoadmapAStar> astar_planner_;
         rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr clicked_point_sub_;
         std::vector<geometry_msgs::msg::Point> clicked_points_;

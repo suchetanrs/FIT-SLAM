@@ -55,11 +55,6 @@ public:
     void landmarkViz(std::vector<frontier_exploration::Point2D> &points, double r = 1.0, double g = 1.0, double b = 1.0);
     
     void visualizeSpatialHashMap(const std::vector<Frontier> &frontier_list, std::string globalFrameID);
-    void resetSpatialHashMap()
-    {
-        spatial_hashmap_viz.clear();
-        pcl::PointXYZI spatial_hashmap_viz(5000);
-    }
     
     void visualizeFrontier(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
     void visualizeFrontierMarker(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
@@ -89,9 +84,6 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr frontier_marker_array_publisher_;
     rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr trailing_robot_poses_publisher_;
     nav2_costmap_2d::Costmap2D *costmap_;
-
-    // pointcloud for visualization purposes
-    pcl::PointCloud<pcl::PointXYZI> spatial_hashmap_viz;
 };
 
 // using rosVisualizerInstance = RosVisualizer::getInstance;

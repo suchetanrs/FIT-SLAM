@@ -10,7 +10,7 @@
             </Fallback>
             <UpdateFrontierRoadmap frontier_list="{the_frontier_list}" add_robot_pose_to_roadmap="true"/>
             <Inverter>
-                <CleanupRoadmap frontier_list="{the_frontier_list}" time_between_cleanup="5.0"/>
+                <CleanupRoadmap frontier_list="{the_frontier_list}" time_between_cleanup="3.0"/>
             </Inverter>
             <ProcessFrontierCosts frontier_list="{the_frontier_list}" every_frontier="{the_every_frontier}" robot_name="/robot_0" frontier_costs_result="{the_frontier_costs}"/>
             <!-- You can choose to either optimize the full 

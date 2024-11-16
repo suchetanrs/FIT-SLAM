@@ -239,16 +239,16 @@ namespace frontier_exploration
                 LOG_FATAL("Failed to retrieve latest_robot_pose from blackboard.");
                 throw std::runtime_error("Failed to retrieve latest_robot_pose from blackboard.");
             }
-            FrontierRoadMap::getInstance().addNodes(frontier_list, true);
+            // FrontierRoadMap::getInstance().addNodes(frontier_list, true);
             bool addPose;
             getInput("add_robot_pose_to_roadmap", addPose);
             if (addPose)
             {
                 LOG_FLOW("Adding robot pose as frontier node.");
-                FrontierRoadMap::getInstance().addRobotPoseAsNode(robotP.pose, false);
+                FrontierRoadMap::getInstance().addRobotPoseAsNode(robotP.pose, true);
             }
             eventLoggerInstance.startEvent("roadmapReconstruction");
-            FrontierRoadMap::getInstance().constructNewEdges(frontier_list);
+            // FrontierRoadMap::getInstance().constructNewEdges(frontier_list);
             FrontierRoadMap::getInstance().constructNewEdgeRobotPose(robotP.pose);
             // FrontierRoadMap::getInstance().reConstructGraph();
             eventLoggerInstance.endEvent("roadmapReconstruction", 1);
@@ -258,7 +258,7 @@ namespace frontier_exploration
             eventLoggerInstance.endEvent("publishRoadmap", 2);
             // TODO: make sure to add a thing such that the entire roadmap within a certain distance (max frontier search distance) is reconstructed periodically
             eventLoggerInstance.endEvent("UpdateRoadmapBT", 0);
-            // FrontierRoadMap::getInstance().countTotalItemsInSpatialMap();
+            FrontierRoadMap::getInstance().countTotalItemsInSpatialMap();
             // TODO: remove below line
             return BT::NodeStatus::SUCCESS;
         }
@@ -299,7 +299,7 @@ namespace frontier_exploration
         BT::NodeStatus onStart() override
         {
             LOG_FLOW("MODULE CleanupRoadMapBT");
-            LOG_DEBUG("Time since last clearance: " << eventLoggerInstance.getTimeSinceStart("clearRoadmap"));
+            LOG_HIGHLIGHT("Time since last clearance: " << eventLoggerInstance.getTimeSinceStart("clearRoadmap"));
             double time_between_cleanup;
             getInput("time_between_cleanup", time_between_cleanup);
             if (eventLoggerInstance.getTimeSinceStart("clearRoadmap") < time_between_cleanup)
@@ -309,7 +309,7 @@ namespace frontier_exploration
             eventLoggerInstance.startEvent("clearRoadmap");
             eventLoggerInstance.startEvent("CleanupRoadMapBT");
             eventLoggerInstance.startEvent("roadmapReconstructionFull");
-            FrontierRoadMap::getInstance().reConstructGraph(false);
+            FrontierRoadMap::getInstance().reConstructGraph(true);
             eventLoggerInstance.endEvent("roadmapReconstructionFull", 1);
             full_path_optimizer_->clearPlanCache();
             // TODO: make sure to add a thing such that the entire roadmap within a certain distance (max frontier search distance) is reconstructed periodically
