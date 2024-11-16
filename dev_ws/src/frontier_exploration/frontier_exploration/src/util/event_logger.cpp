@@ -40,7 +40,11 @@ void EventLogger::endEvent(const std::string &key, int eventLevel)
     {
         auto startTime = startTimes[key];
         std::chrono::duration<double> duration = endTime - startTime;
-        if (eventLevel == 0)
+        if (eventLevel == -1)
+        {
+            LOG_ITERATION_TIME(key, duration.count());
+        }
+        else if (eventLevel == 0)
         {
             LOG_MODULE_TIME(key, duration.count());
         }

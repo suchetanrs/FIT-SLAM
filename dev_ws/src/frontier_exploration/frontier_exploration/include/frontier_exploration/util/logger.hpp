@@ -46,7 +46,7 @@ Attributes	        Foreground color	   Background color
                                            106 = turquoise
 **/
 
-#define LOG_LEVEL 1
+#define LOG_LEVEL 3
 #define TIME_LEVEL -1
 #define USE_MODULE_FLOW false
 
@@ -122,6 +122,9 @@ std::ostream& operator<<(std::ostream& os, const std::unordered_map<K, V>& map)
         std::cout << "\e[1;37;103m" << "[FLOW " << std::chrono::system_clock::to_time_t(std::chrono::high_resolution_clock::now()) << "]  " << X << "\e[m" << std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////////////
+
+#define LOG_ITERATION_TIME(eventName, seconds) \
+    std::cout << "\033[0;34m" << " ITERATION : " << eventName << ": Execution Time: " << seconds << " Seconds\033[0m" << std::endl;
 
 #define LOG_EVENT_TIME(eventName, seconds) \
     if (TIME_LEVEL >= 2)                   \

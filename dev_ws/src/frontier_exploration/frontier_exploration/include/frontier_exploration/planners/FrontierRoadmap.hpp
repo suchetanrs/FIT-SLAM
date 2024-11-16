@@ -8,7 +8,6 @@
 #include <functional>
 #include <iostream>
 #include <sstream>
-#include <chrono>
 #include <iomanip>
 
 #include <rclcpp/rclcpp.hpp>
@@ -77,11 +76,11 @@ namespace frontier_exploration
                 total_items += cell.second.size(); // Add the size of each grid's list to the total count
             }
             RosVisualizer::getInstance().visualizeSpatialHashMap(master_frontier_list, "map");
-            LOG_HIGHLIGHT("Total items in the spatial map is: " << total_items);
+            // LOG_INFO("Total items in the spatial map is: " << total_items);
             return total_items;
         }
 
-        void reConstructGraph(bool entireGraph);
+        void reConstructGraph(bool entireGraph, bool optimizeRoadmap);
 
         std::deque<geometry_msgs::msg::Pose> getTrailingRobotPoses()
         {
@@ -124,7 +123,7 @@ namespace frontier_exploration
 
         std::pair<int, int> getGridCell(double x, double y);
 
-        void populateNodes(const std::vector<Frontier> &frontiers, bool populateClosest, double min_distance_between_to_add);
+        void populateNodes(const std::vector<Frontier> &frontiers, bool populateClosest, double min_distance_between_to_add, bool addNewToQueue);
 
         void getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, const double radius);
 
@@ -159,7 +158,6 @@ namespace frontier_exploration
         std::unordered_map<std::pair<int, int>, std::vector<Frontier>, spatialHash> spatial_hash_map_;
 
         std::queue<Frontier> no_kf_parent_queue_;
-        std::unordered_map<int, geometry_msgs::msg::PoseStamped> init_keyframe_poses_;
         std::unordered_map<int, geometry_msgs::msg::PoseStamped> latest_keyframe_poses_;
         std::unordered_map<std::pair<int, int>, std::vector<int>, spatialHash> spatial_kf_map_;
         std::unordered_map<int, std::vector<Eigen::Vector3f>> keyframe_mapping_;

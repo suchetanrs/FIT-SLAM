@@ -256,7 +256,6 @@ namespace frontier_exploration
                 LethalMarker::markCells(master_array, getIndexCache().at(add));
             else
                 LOG_INFO("Cells cache is empty for " << add << ", call to add points to map.");
-            // rclcpp::sleep_for(std::chrono::seconds(5));
         }
     }
 

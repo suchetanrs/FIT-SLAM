@@ -351,7 +351,6 @@ namespace frontier_exploration
         for (size_t i = 0; i < path.size() - 1; ++i)
         {
             // LOG_DEBUG("Inside loop i =" << i << "limit " << path.size());
-            // rclcpp::sleep_for(std::chrono::milliseconds(400));
             LOG_TRACE("Need distance between: " << path[i] << " , " << path[i + 1]);
             auto it = frontier_pair_distances_.find(FrontierPair(path[i], path[i + 1]));
             if (it != frontier_pair_distances_.end())
@@ -461,7 +460,7 @@ namespace frontier_exploration
             LOG_DEBUG("Path length:" << currentLength);
             if (currentLength < minLength)
             {
-                LOG_INFO("Currently tracking min length: " << currentLength);
+                LOG_DEBUG("Currently tracking min length: " << currentLength);
                 minLength = currentLength;
                 LOG_DEBUG("Clearing best paths.");
                 bestPaths.clear(); // Clear the previous best paths
@@ -575,34 +574,21 @@ namespace frontier_exploration
 
         if(bestPath.size() >= 1 && use_fi)
         {
-            auto refinedPath = FrontierRoadMap::getInstance().refinePath(frontier_pair_distances_[FrontierPair(bestPath[0], bestPath[1])]);
-            FrontierRoadMap::getInstance().publishPlan(refinedPath, "refinedPath");
-            if(refinedPath.size() == 0)
-                return PathSafetyStatus::UNDETERMINED;
             // auto pathSafetyValue = isPathSafe(frontier_pair_distances_[FrontierPair(bestPath[0], bestPath[1])]);
             // auto pathSafetyValue = isPathSafe(refinedPath);
             auto pathSafetyValue = isRobotPoseSafe(robotP.pose);
             if(pathSafetyValue == UNSAFE)
             {
-                LOG_CRITICAL("Dead reckoning?");
-                // rclcpp::sleep_for(std::chrono::seconds(15));
+                LOG_WARN("Dead reckoning!!");
                 nextFrontier = bestPath[1];
                 return PathSafetyStatus::UNSAFE;
             }
             else if(pathSafetyValue == UNDETERMINED)
             {
                 LOG_WARN("Cannot determine frontier safety since it is out of FOV.");
-                // rclcpp::sleep_for(std::chrono::seconds(15));
                 nextFrontier = bestPath[1];
                 return PathSafetyStatus::UNDETERMINED;
             }
-        }
-        else if(bestPath.size() >= 1 && !use_fi)
-        {
-            auto refinedPath = FrontierRoadMap::getInstance().refinePath(frontier_pair_distances_[FrontierPair(bestPath[0], bestPath[1])]);
-            FrontierRoadMap::getInstance().publishPlan(refinedPath, "refinedPath");
-            if(refinedPath.size() == 0)
-                return PathSafetyStatus::UNDETERMINED;
         }
         eventLoggerInstance.startEvent("publishPlan");
         FrontierRoadMap::getInstance().publishPlan(bestPathViz, 1.0, 0.0, 0.0);
@@ -631,5 +617,37 @@ namespace frontier_exploration
         //     ++id;
         // }
         // Publish the MarkerArray
+    }
+
+    bool FullPathOptimizer::refineAndPublishPath(geometry_msgs::msg::PoseStamped& robotP, Frontier& goalFrontier)
+    {
+        Frontier robotPoseFrontier;
+        robotPoseFrontier.setGoalPoint(robotP.pose.position.x, robotP.pose.position.y);
+        robotPoseFrontier.setUID(generateUID(robotPoseFrontier));
+        robotPoseFrontier.setPathLength(0.0);
+        robotPoseFrontier.setPathLengthInM(0.0);
+        if(frontier_pair_distances_.find(FrontierPair(robotPoseFrontier, goalFrontier)) == frontier_pair_distances_.end())
+        {
+            LOG_INFO("Frontier path not found in frontier_pair_distances_. Recomputing path ...");
+            auto current_length = FrontierRoadMap::getInstance().getPlan(robotPoseFrontier, true, goalFrontier, true);
+            if (current_length.path_exists == true)
+            {
+                frontier_pair_distances_[FrontierPair(robotPoseFrontier, goalFrontier)] = current_length;
+            }
+            else
+            {
+                return false;
+            }   
+        }
+        auto bestRefinedPath = FrontierRoadMap::getInstance().refinePath(frontier_pair_distances_[FrontierPair(robotPoseFrontier, goalFrontier)]);
+        if(bestRefinedPath.size() == 0)
+        {
+            LOG_ERROR("Best path size is 0 after refinement.");
+            return false;
+        }
+        
+        FrontierRoadMap::getInstance().publishPlan(bestRefinedPath, "refinedPath");
+        
+        return true;
     }
 };

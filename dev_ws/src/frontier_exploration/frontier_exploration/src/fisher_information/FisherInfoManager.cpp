@@ -45,13 +45,13 @@ namespace frontier_exploration
         // get relative pose
         geometry_msgs::msg::Pose relative_pose = given_pose;
         // call service to get landmarks visible from pose.
-        RCLCPP_ERROR(client_node_->get_logger(), "Calling service");
+        // RCLCPP_ERROR(client_node_->get_logger(), "Calling service");
         if (!client_->wait_for_service(std::chrono::seconds(1)))
         {
-            RCLCPP_INFO(client_node_->get_logger(), "Waiting for the map data service...");
+            // RCLCPP_INFO(client_node_->get_logger(), "Waiting for the map data service...");
             return false;
         }
-        RCLCPP_WARN(client_node_->get_logger(), "Got service");
+        // RCLCPP_WARN(client_node_->get_logger(), "Got service");
 
         auto request = std::make_shared<slam_msgs::srv::GetLandmarksInView::Request>();
         auto response = std::make_shared<slam_msgs::srv::GetLandmarksInView::Response>();
@@ -68,10 +68,10 @@ namespace frontier_exploration
         }
         else
         {
-            RCLCPP_ERROR(client_node_->get_logger(), "Failed to call the map data service.");
+            // RCLCPP_ERROR(client_node_->get_logger(), "Failed to call the map data service.");
             return false;
         }   
-        RCLCPP_WARN_STREAM(client_node_->get_logger(), "Number of points is: " << response->map_points.size());
+        LOG_INFO("Number of visible landmarks is: " << response->map_points.size());
         // Convert map_points to the camera frame
         tf2::Transform world_to_camera;
         tf2::fromMsg(relative_pose, world_to_camera); // Convert Pose message to a tf2 Transform
@@ -85,7 +85,7 @@ namespace frontier_exploration
             total_information += info;
             LOG_TRACE("Point: x: " << point_in_camera.x() << " y: " << point_in_camera.y() << " z: " << point_in_camera.z() << " information: " << info);
         }
-        LOG_WARN("Total information: " << total_information);
+        LOG_INFO("Total information: " << total_information);
         // sensor_msgs::msg::PointCloud2 fi_pointcloud_;
         // pcl::toROSMsg(fi_pointcloud_pcl_, fi_pointcloud_);
 
@@ -103,7 +103,7 @@ namespace frontier_exploration
 
     void FisherInformationManager::generateLookupTable(float minX, float maxX, float minY, float maxY, float minZ, float maxZ, float step)
     {
-        const std::string lookupFile = "/root/dev_ws/lookup_table_fi/fisher_information_lookup_table.dat";
+        const std::string lookupFile = "/root/dev_ws/src/lookup_table_fi/fisher_information_lookup_table.dat";
 
         std::ofstream outfile(lookupFile, std::ios::binary);
         if (!outfile) {

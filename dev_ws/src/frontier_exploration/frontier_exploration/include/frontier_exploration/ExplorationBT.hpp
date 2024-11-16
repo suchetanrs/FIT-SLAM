@@ -104,7 +104,6 @@ namespace frontier_exploration
         bool exploration_active_;
         std::vector<Frontier> blacklisted_frontiers_; // these are the frontiers traversed by this robot.
         RobotActiveGoals robot_active_goals_;
-        std::shared_ptr<std::vector<Frontier>> active_hysterisis_candidates_;
         std::shared_ptr<RecoveryController> recovery_controller_;
         std::shared_ptr<InitCommandVelNode> initialization_controller_;
         std::string bt_xml_path_;

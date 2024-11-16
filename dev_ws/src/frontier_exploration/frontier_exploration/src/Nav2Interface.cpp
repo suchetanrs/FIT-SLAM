@@ -14,12 +14,12 @@ namespace frontier_exploration
 
         if (!nav2Client_->wait_for_action_server(std::chrono::seconds(50)))
         {
-            RCLCPP_ERROR(node_->get_logger(), "Nav2 Action server not available after waiting for %d seconds", 50);
+            LOG_ERROR("Nav2 Action server not available after waiting for " << 50 << " seconds");
             rclcpp::shutdown();
         }
         else
         {
-            RCLCPP_INFO(node_->get_logger(), "Nav2 action server available");
+            LOG_INFO("Nav2 action server available");
         }
 
 
@@ -45,7 +45,7 @@ namespace frontier_exploration
 
     void Nav2Interface::goalPoseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
     {
-        RCLCPP_INFO(node_->get_logger(), "Received goal pose from RViz2");
+        LOG_INFO("Received goal pose from RViz2");
         sendGoal(*msg);
     }
 
@@ -96,34 +96,34 @@ namespace frontier_exploration
         switch (result.code)
         {
         case rclcpp_action::ResultCode::SUCCEEDED:
-            RCLCPP_WARN(node_->get_logger(), "Goal succeeded");
+            LOG_WARN("Goal succeeded");
             nav2_goal_state_ = 1;
             break;
         case rclcpp_action::ResultCode::ABORTED:
-            RCLCPP_ERROR(node_->get_logger(), "Nav2 internal fault! Nav2 aborted the goal!");
+            LOG_ERROR("Nav2 internal fault! Nav2 aborted the goal!");
             nav2_goal_state_ = -1;
             break;
         case rclcpp_action::ResultCode::CANCELED:
-            RCLCPP_INFO(node_->get_logger(), "Nav2 goal canceled successfully");
+            LOG_INFO("Nav2 goal canceled successfully");
             nav2_goal_state_ = 1;
             break;
         default:
-            RCLCPP_ERROR(node_->get_logger(), "Unknown nav2 goal result code");
+            LOG_ERROR("Unknown nav2 goal result code");
         }
-        RCLCPP_INFO(node_->get_logger(), "Nav2 result callback executed");
+        LOG_INFO("Nav2 result callback executed");
     }
 
     void Nav2Interface::nav2GoalResponseCallback(const GoalHandleNav2::SharedPtr &goal_handle)
     {
         if (!goal_handle)
         {
-            RCLCPP_ERROR(node_->get_logger(), "Goal was rejected by Nav2 server");
+            LOG_ERROR("Goal was rejected by Nav2 server");
             std::lock_guard<std::mutex> lock(goal_active_mutex_);
             nav2_goal_state_ = -1;
         }
         else
         {
-            RCLCPP_INFO(node_->get_logger(), "Goal accepted by Nav2 server, waiting for result");
+            LOG_INFO("Goal accepted by Nav2 server, waiting for result");
             std::lock_guard<std::mutex> lock(goal_active_mutex_);
             nav2_goal_state_ = 0;
         }

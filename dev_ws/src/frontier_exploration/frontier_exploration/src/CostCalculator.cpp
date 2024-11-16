@@ -28,7 +28,6 @@ namespace frontier_exploration
 
     void FrontierCostCalculator::setArrivalInformationForFrontier(Frontier &frontier, std::vector<double> &polygon_xy_min_max)
     {
-        // rclcpp::sleep_for(std::chrono::milliseconds(1000));
 
         double sx, sy; // sensor x, sensor y, sensor orientation
         double wx, wy;
@@ -127,7 +126,6 @@ namespace frontier_exploration
 
     double FrontierCostCalculator::setMaxArrivalInformation()
     {
-        // rclcpp::sleep_for(std::chrono::milliseconds(1000));
 
         double sx, sy; // sensor x, sensor y, sensor orientation
         double wx, wy;
@@ -393,7 +391,6 @@ namespace frontier_exploration
     void FrontierCostCalculator::setPlanForFrontierRoadmap(geometry_msgs::msg::Pose start_pose_w, Frontier &goal_point_w,
                                                            std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_)
     {
-        // rclcpp::sleep_for(std::chrono::milliseconds(600));
         PROFILE_FUNCTION;
         if (goal_point_w.isAchievable() == false)
         {

@@ -1,1 +1,0 @@
-MapPoint[] map_points

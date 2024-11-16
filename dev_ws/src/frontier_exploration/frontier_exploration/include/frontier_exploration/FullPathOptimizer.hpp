@@ -104,6 +104,8 @@ namespace frontier_exploration
 
         PathSafetyStatus getNextGoal(std::vector<Frontier> &frontier_list, Frontier& nextFrontier, size_t n, geometry_msgs::msg::PoseStamped &robotP, bool use_fi);
 
+        bool refineAndPublishPath(geometry_msgs::msg::PoseStamped& robotP, Frontier& goalFrontier);
+
         void clearPlanCache()
         {
             frontier_pair_distances_.clear();
@@ -132,6 +134,11 @@ namespace frontier_exploration
         void setExhaustiveSearch(bool value)
         {
             exhaustiveLandmarkSearch_ = value;
+        }
+
+        bool getExhaustiveSearch()
+        {
+            return exhaustiveLandmarkSearch_;
         }
 
         void blacklistTestCb(const geometry_msgs::msg::PointStamped::SharedPtr msg);

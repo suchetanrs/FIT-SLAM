@@ -72,7 +72,6 @@ namespace frontier_exploration
         LOG_DEBUG("Blacklist size is: " << frontier_blacklist_.size());
         for (int frontier_idx = 0; frontier_idx < frontier_list.size(); frontier_idx++)
         {
-            // rclcpp::sleep_for(std::chrono::milliseconds(2000));
             auto &frontier = frontier_list[frontier_idx];
             if (frontier_blacklist_.count(frontier) > 0)
             {
@@ -117,7 +116,6 @@ namespace frontier_exploration
             }
             costCalculator_->recomputeNormalizationFactors(frontier);
         } // frontier end
-        // rclcpp::sleep_for(std::chrono::milliseconds(1000));
 
         LOG_DEBUG("utility U1 max info:" << costCalculator_->getMaxArrivalInformation());
         LOG_DEBUG("utility U1 max distance:" << costCalculator_->getMaxPlanDistance());
