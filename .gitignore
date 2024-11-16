@@ -23,3 +23,4 @@ ros2_ws_backup/**
 slam_ws_backup/**
 **fslam1**
 **rosbag2**
+root_dir/.bash_history

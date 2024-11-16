@@ -1,6 +1,0 @@
-/root/dev_ws/src/behaviour_test/build/CMakeFiles/btcpp_sample.dir
-/root/dev_ws/src/behaviour_test/build/CMakeFiles/uninstall.dir
-/root/dev_ws/src/behaviour_test/build/CMakeFiles/btcpp_sample_uninstall.dir
-/root/dev_ws/src/behaviour_test/build/CMakeFiles/test.dir
-/root/dev_ws/src/behaviour_test/build/CMakeFiles/edit_cache.dir
-/root/dev_ws/src/behaviour_test/build/CMakeFiles/rebuild_cache.dir

@@ -84,8 +84,8 @@ def generate_launch_description():
 
         return [declare_params_file_cmd, 
                 explore_server, 
-                # exploration_path_followed, 
-                # explored_map_counter
+                exploration_path_followed, 
+                explored_map_counter
                 ]
 
     opaque_function = OpaqueFunction(function=all_nodes_launch)
