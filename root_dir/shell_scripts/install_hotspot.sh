@@ -1,5 +1,5 @@
-apt-get install fuse -y
-apt-get update --fix-missing -y
-apt-get install linux-tools-common linux-tools-generic -y
-apt-get install linux-tools-6.8.0-40-generic -y
-apt-get install linux-cloud-tools-6.8.0-40-generic -y
+sudo apt-get install fuse -y
+sudo apt-get update --fix-missing -y
+sudo apt-get install linux-tools-common linux-tools-generic -y
+sudo apt-get install linux-tools-6.8.0-48-generic -y
+sudo apt-get install linux-cloud-tools-6.8.0-48-generic -y

@@ -26,6 +26,7 @@ find_package(example_interfaces REQUIRED)
 find_package(frontier_multirobot_allocator REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(traversability_msgs REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -55,6 +56,7 @@ example_interfaces
 frontier_multirobot_allocator
 behaviortree_cpp
 yaml-cpp
+traversability_msgs
 )
 
 # Add compile definitions for visualization flags
