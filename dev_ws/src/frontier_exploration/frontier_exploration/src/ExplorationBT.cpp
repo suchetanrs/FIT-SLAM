@@ -671,7 +671,7 @@ namespace frontier_exploration
                 
                 LOG_DEBUG("Value of min Distance " << minDistance);
                 LOG_DEBUG("Reference of min Distance " << &minDistance);
-                if (distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position) < minDistance - 2.0)
+                if (distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position) < minDistance - 3.0)
                 {
                     minDistance = distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position);
                     mostFrequentFrontier = allocatedFrontier;

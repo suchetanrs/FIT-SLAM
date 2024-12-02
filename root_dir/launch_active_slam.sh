@@ -5,10 +5,7 @@
 #wget https://pastebin.com/raw/pTpUXK9A
 #cat pTpUXK9A >> ~/.tmux.conf
 
-# source ~/.bashrc
-cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/ && cmake .. && make install
-# cd /root/dev_ws/ && colcon build --symlink-install
-# cd /home/traversability/traversability_mapping/ && ./build.sh && cd /home/orb/ORB_SLAM3/ && ./build.sh && cd /root/colcon_ws/ && colcon build --symlink-install && cd /root/trav_ws/ && colcon build --symlink-install
+cd && sudo chmod +x build_packages.sh && ./build_packages.sh && cd && source ~/.bashrc
 
 SESSION_NAME="dusty_dev_tmux"
 tmux new-session -d -s $SESSION_NAME
