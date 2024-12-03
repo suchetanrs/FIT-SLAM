@@ -586,7 +586,7 @@ namespace frontier_exploration
                     FrontierRoadMap::getInstance().addFrontierToBlacklist(blacklistedFrontier);
 
                     recovery_controller_->computeVelocityCommand(true);
-                    // updateLethalZone(blacklistedFrontier.getGoalPoint());
+                    updateLethalZone(blacklistedFrontier.getGoalPoint());
                     auto plugins = explore_costmap_ros_->getLayeredCostmap()->getPlugins();
                     for (auto plugin : *plugins)
                     {

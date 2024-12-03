@@ -140,6 +140,7 @@ namespace frontier_exploration
                                           const std::shared_ptr<frontier_msgs::srv::MarkLethal::Response> res)
     {
         addNewMarkedArea(req->lethal_point.x, req->lethal_point.y, req->radius);
+        res->success = true;
     }
 
     void LethalMarker::onFootprintChanged()
@@ -156,7 +157,7 @@ namespace frontier_exploration
         // This is done in case recomputing the cache upon bounds change takes longer than expected.
         current_ = false;
         std::lock_guard<std::mutex> lock(cacheMutex_);
-        convertWorldLocationToIndex(latest_cells_to_mark_world_, *layered_costmap_->getCostmap(), latest_cells_to_mark_index_);
+        // convertWorldLocationToIndex(latest_cells_to_mark_world_, *layered_costmap_->getCostmap(), latest_cells_to_mark_index_);
         current_ = true;    
     }
 
