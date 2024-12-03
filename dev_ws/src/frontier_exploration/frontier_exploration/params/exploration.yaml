@@ -24,3 +24,7 @@ frontierRoadmap:
   radius_to_decide_edges: 6.1                   # a node within this radius of another node is considered a child of the other node.
   min_distance_between_two_frontier_nodes: 0.15  # minimum distance between any node in the graph and the frontier node that will be added.
   min_distance_between_robot_pose_and_node: 0.15 # minimum distance between any nodes in the graph and the robot pose that is going to be added.
+
+goalHysteresis:
+  use_euclidean_distance: true
+  use_roadmap_planner_distance: false

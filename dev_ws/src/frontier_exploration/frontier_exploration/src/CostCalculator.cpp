@@ -83,6 +83,7 @@ namespace frontier_exploration
         double footprintInLethalPenalty = isRobotFootprintInLethal(exploration_costmap_, sxm, sym, std::ceil(robot_radius_ / exploration_costmap_->getResolution()));
         if (1.0 - footprintInLethalPenalty == 0.0 && frontier.getSize() < 10.0)
         {
+            LOG_INFO("Frontier " << frontier << " is not achievable. Very close to lethal obstacle.");
             frontier.setAchievability(false);
         }
         // std::cout << "maxHitObstacles" << maxHitObstacles << std::endl;
@@ -118,6 +119,7 @@ namespace frontier_exploration
         LOG_DEBUG("Arrival information is: " << frontier.getArrivalInformation());
         if(frontier.getArrivalInformation() < min_arrival_info_gt_)
         {
+            LOG_INFO("Frontier " << frontier << " is not achievable. Arrival information is too low.");
             frontier.setAchievability(false);
         }
         frontier.setGoalOrientation((maxIndex * DELTA_THETA) + (CAMERA_FOV / 2));
@@ -283,6 +285,7 @@ namespace frontier_exploration
         int path_len = planner_->calcPath(max_cycles);
         if (path_len == 0)
         {
+            LOG_INFO("Plan not found for " << goal_point_w << " path length is zero.");
             goal_point_w.setAchievability(false);
             goal_point_w.setPathLength(std::numeric_limits<double>::max());
             goal_point_w.setPathLengthInM(std::numeric_limits<double>::max());
@@ -364,6 +367,7 @@ namespace frontier_exploration
         // fov_marker_publisher_->publish(marker_msg_);
         if (plan.poses.size() == 0)
         {
+            LOG_INFO("Plan not found for " << goal_point_w << " path length is zero.");
             goal_point_w.setAchievability(false);
             goal_point_w.setPathLength(std::numeric_limits<double>::max());
             goal_point_w.setPathLengthInM(std::numeric_limits<double>::max());
@@ -405,6 +409,7 @@ namespace frontier_exploration
         // TODO: Set correct f_info
         if (path_length.path_exists == false)
         {
+            LOG_INFO("Plan not found for " << goal_point_w << " path does not exist.");
             goal_point_w.setAchievability(false);
             goal_point_w.setPathLength(std::numeric_limits<double>::max());
             goal_point_w.setPathLengthInM(std::numeric_limits<double>::max());

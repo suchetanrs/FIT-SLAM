@@ -29,4 +29,18 @@ ParameterHandler::ParameterHandler()
     parameter_map_["frontierRoadmap/radius_to_decide_edges"] = loaded_node["frontierRoadmap"]["radius_to_decide_edges"].as<double>();
     parameter_map_["frontierRoadmap/min_distance_between_two_frontier_nodes"] = loaded_node["frontierRoadmap"]["min_distance_between_two_frontier_nodes"].as<double>();
     parameter_map_["frontierRoadmap/min_distance_between_robot_pose_and_node"] = loaded_node["frontierRoadmap"]["min_distance_between_robot_pose_and_node"].as<double>();
+
+    parameter_map_["goalHysteresis/use_euclidean_distance"] = loaded_node["goalHysteresis"]["use_euclidean_distance"].as<bool>();
+    parameter_map_["goalHysteresis/use_roadmap_planner_distance"] = loaded_node["goalHysteresis"]["use_roadmap_planner_distance"].as<bool>();
+
+
+    // sanity checks.
+    if(loaded_node["goalHysteresis"]["use_euclidean_distance"].as<bool>() == true && loaded_node["goalHysteresis"]["use_roadmap_planner_distance"].as<bool>() == true)
+    {
+        throw std::runtime_error("Both use_euclidean_distance and use_roadmap_planner_distance are set to true. Please set only one of them to true.");
+    }
+    else if(loaded_node["goalHysteresis"]["use_euclidean_distance"].as<bool>() == false && loaded_node["goalHysteresis"]["use_roadmap_planner_distance"].as<bool>() == false)
+    {
+        throw std::runtime_error("Both use_euclidean_distance and use_roadmap_planner_distance are set to false. Please set only one of them to true.");
+    }
 }

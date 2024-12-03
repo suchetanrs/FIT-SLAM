@@ -641,11 +641,13 @@ namespace frontier_exploration
     class HysterisisControl : public BT::StatefulActionNode
     {
     public:
-        HysterisisControl(const std::string &name, const BT::NodeConfig &config) : BT::StatefulActionNode(name, config)
+        HysterisisControl(const std::string &name, const BT::NodeConfig &config,
+                          std::shared_ptr<FullPathOptimizer> full_path_optimizer) : BT::StatefulActionNode(name, config)
         {
             LOG_INFO("HysterisisControl Constructor");
             minDistance = std::numeric_limits<double>::max();
             eventLoggerInstance.startEvent("startHysterisis");
+            full_path_optimizer_ = full_path_optimizer;
         }
 
         BT::NodeStatus onStart() override
@@ -663,6 +665,10 @@ namespace frontier_exploration
                 LOG_FATAL( "Failed to retrieve hysteresis_enabled from blackboard.");
                 throw std::runtime_error("Failed to retrieve hysteresis_enabled from blackboard.");
             }
+            /**
+            * The status is set to RUNNING when when the robot is still replanning (typically at 1Hz) towards a goal.
+            * The status is set to SUCCESS when the robot has reached the goal / the goal is mapped.
+             */
             if (status == CurrentGoalStatus::RUNNING)
             {
                 Frontier allocatedFrontier;
@@ -671,11 +677,31 @@ namespace frontier_exploration
                 
                 LOG_DEBUG("Value of min Distance " << minDistance);
                 LOG_DEBUG("Reference of min Distance " << &minDistance);
-                if (distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position) < minDistance - 3.0)
+                if(parameterInstance.getValue<bool>("goalHysteresis/use_euclidean_distance") == true)
                 {
-                    minDistance = distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position);
-                    mostFrequentFrontier = allocatedFrontier;
-                    LOG_DEBUG("Found a closer one: " << minDistance);
+                    LOG_INFO("Using Euclidean Distance for hysteresis");
+                    if (distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position) < minDistance - 3.0)
+                    {
+                        minDistance = distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position);
+                        mostFrequentFrontier = allocatedFrontier;
+                        LOG_DEBUG("Found a closer one: " << minDistance);
+                    }
+                }
+                else if(parameterInstance.getValue<bool>("goalHysteresis/use_roadmap_planner_distance") == true)
+                {
+                    Frontier robotPoseFrontier;
+                    robotPoseFrontier.setGoalPoint(robotP.pose.position.x, robotP.pose.position.y);
+                    robotPoseFrontier.setUID(generateUID(robotPoseFrontier));
+                    robotPoseFrontier.setPathLength(0.0);
+                    robotPoseFrontier.setPathLengthInM(0.0);
+                    LOG_INFO("Using Roadmap Planner Distance for hysteresis");
+                    auto lengthToGoal = full_path_optimizer_->calculateLengthRobotToGoal(robotPoseFrontier, allocatedFrontier, robotP);
+                    if(lengthToGoal < minDistance - 3.0)
+                    {
+                        minDistance = lengthToGoal;
+                        mostFrequentFrontier = allocatedFrontier;
+                        LOG_DEBUG("Found a closer one: " << minDistance);
+                    }
                 }
 
                 // Set the most frequent frontier as the output
@@ -687,7 +713,18 @@ namespace frontier_exploration
                 getInput<Frontier>("allocated_frontier", allocatedFrontier);
                 LOG_INFO("Hysterisis prior: " << allocatedFrontier);
                 setOutput<Frontier>("allocated_frontier_after_hysterisis", allocatedFrontier);
-                minDistance = distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position);
+                if(parameterInstance.getValue<bool>("goalHysteresis/use_euclidean_distance") == true)
+                    minDistance = distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position);
+                else if(parameterInstance.getValue<bool>("goalHysteresis/use_roadmap_planner_distance") == true)
+                {
+                    Frontier robotPoseFrontier;
+                    robotPoseFrontier.setGoalPoint(robotP.pose.position.x, robotP.pose.position.y);
+                    robotPoseFrontier.setUID(generateUID(robotPoseFrontier));
+                    robotPoseFrontier.setPathLength(0.0);
+                    robotPoseFrontier.setPathLengthInM(0.0);
+                    minDistance = full_path_optimizer_->calculateLengthRobotToGoal(robotPoseFrontier, allocatedFrontier, robotP);
+                }
+                LOG_INFO("Current length to goal: " << minDistance);
                 mostFrequentFrontier = allocatedFrontier;
             }
             LOG_INFO("Hysterisis post: " << mostFrequentFrontier);
@@ -713,6 +750,7 @@ namespace frontier_exploration
 
         double minDistance;
         Frontier mostFrequentFrontier;
+        std::shared_ptr<FullPathOptimizer> full_path_optimizer_;
     };
 
     class ExecuteRecoveryMove : public BT::StatefulActionNode
@@ -1188,7 +1226,7 @@ namespace frontier_exploration
         BT::NodeBuilder builder_hystersis_control =
             [&](const std::string &name, const BT::NodeConfiguration &config)
         {
-            return std::make_unique<HysterisisControl>(name, config);
+            return std::make_unique<HysterisisControl>(name, config, full_path_optimizer_);
         };
         factory.registerBuilder<HysterisisControl>("HysterisisControl", builder_hystersis_control);
 
