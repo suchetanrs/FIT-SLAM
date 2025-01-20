@@ -40,11 +40,11 @@ This can take quite a while! You might need a ☕. You may get a few warnings fr
 
 In a new terminal: <br>
 ```cd``` into the ```FIT-SLAM``` repository. <br>
-If you used pre-built image from Method 1 (AMD): <br>
+- If you used pre-built image from Method 1 (AMD): <br>
 ```sudo docker compose run fit-slam-amd``` <br>
-If you used pre-built image from Method 1 (ARM): <br>
+- If you used pre-built image from Method 1 (ARM): <br>
 ```sudo docker compose run fit-slam-arm``` <br>
-If you built the image yourself Method 2: <br>
+- If you built the image yourself Method 2: <br>
 ```sudo docker compose run fit-slam-source-build``` <br>
 Launch the exploration using: <br>
 ```sudo chmod +x launch_exploration.sh && ./launch_exploration.sh```
@@ -57,10 +57,10 @@ Launch the exploration using: <br>
 
 In a new terminal: 
 ```cd``` into the ```FIT-SLAM``` repository. <br>
-If you used pre-built image from Method 1 (AMD): <br>
+- If you used pre-built image from Method 1 (AMD): <br>
 ```sudo docker compose run fit-slam-amd``` <br>
-If you used pre-built image from Method 1 (ARM): <br>
+- If you used pre-built image from Method 1 (ARM): <br>
 ```sudo docker compose run fit-slam-arm``` <br>
-If you built the image yourself Method 2: <br>
+- If you built the image yourself Method 2: <br>
 ```sudo docker compose run fit-slam-source-build``` <br>
 ```sudo chmod +x launch_active_slam.sh && ./launch_active_slam.sh```
