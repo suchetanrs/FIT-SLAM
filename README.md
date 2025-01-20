@@ -45,7 +45,7 @@ In a new terminal: <br>
 - If you used pre-built image from Method 1 (ARM): <br>
 ```sudo docker compose run fit-slam-arm``` <br>
 - If you built the image yourself Method 2: <br>
-```sudo docker compose run fit-slam-source-build``` <br>
+```sudo docker compose run fit-slam-source-build``` <br> <br>
 Launch the exploration using: <br>
 ```sudo chmod +x launch_exploration.sh && ./launch_exploration.sh```
 
@@ -62,5 +62,6 @@ In a new terminal:
 - If you used pre-built image from Method 1 (ARM): <br>
 ```sudo docker compose run fit-slam-arm``` <br>
 - If you built the image yourself Method 2: <br>
-```sudo docker compose run fit-slam-source-build``` <br>
+```sudo docker compose run fit-slam-source-build``` <br> <br>
+Launch active slam using: <br>
 ```sudo chmod +x launch_active_slam.sh && ./launch_active_slam.sh```
