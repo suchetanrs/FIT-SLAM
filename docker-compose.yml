@@ -1,33 +1,46 @@
 version: "3"
+
+x-fit-slam-common: &fit-slam-common
+  volumes:
+    #full dev
+    - /dev:/dev:rw
+    #full media
+    - /media:/media:rw
+    #Time
+    - /etc/timezone:/etc/timezone:rw
+    - /etc/localtime:/etc/localtime:rw
+    #ros-workspaces
+    - ./root_dir/:/root/:rw
+    - ../.ros/:/root/.ros
+    # orb slam3 workspaces
+    # - ./ORB-SLAM3-ROS2-Docker/container_root/:/root/
+    - ./ORB-SLAM3-ROS2-Docker/ORB_SLAM3/:/home/orb/ORB_SLAM3/
+    - ./ORB-SLAM3-ROS2-Docker/traversability_mapping/:/home/traversability/traversability_mapping/
+    - ./ORB-SLAM3-ROS2-Docker/orb_slam3_ros2_wrapper/:/root/colcon_ws/src/orb_slam3_ros2_wrapper/
+    - ./ORB-SLAM3-ROS2-Docker/slam_msgs/:/root/colcon_ws/src/slam_msgs/
+    - ./ORB-SLAM3-ROS2-Docker/traversability_mapping/traversability_ros_interface:/root/trav_ws/src/traversability_ros_interface
+    - ./dev_ws/:/root/dev_ws/
+  env_file:
+    - .env
+  privileged: true
+  network_mode: host
+  ipc: host
+  stdin_open: true
+  tty: true
+  environment:
+    - DISPLAY
+  entrypoint: /bin/bash
+  command: -c "source /opt/ros/humble/setup.bash && cd /root/ && sudo chmod +x build_packages.sh && ./build_packages.sh && exec /bin/bash"
+
 services:
-  fit-slam:
+  fit-slam-amd:
+    <<: *fit-slam-common
+    image: suchetanrs/fit-slam:amd-2.0
+
+  fit-slam-arm:
+    <<: *fit-slam-common
+    image: suchetanrs/fit-slam:arm-2.0
+  
+  fit-slam-source-build:
+    <<: *fit-slam-common
     image: fit-slam:22.04
-    volumes:
-      #full dev
-      - /dev:/dev:rw
-      #full media
-      - /media:/media:rw
-      #Time
-      - /etc/timezone:/etc/timezone:rw
-      - /etc/localtime:/etc/localtime:rw
-      #ros-workspaces
-      - ./root_dir/:/root/:rw
-      - ../.ros/:/root/.ros
-      # orb slam3 workspaces
-      # - ./ORB-SLAM3-ROS2-Docker/container_root/:/root/
-      - ./ORB-SLAM3-ROS2-Docker/ORB_SLAM3/:/home/orb/ORB_SLAM3/
-      - ./ORB-SLAM3-ROS2-Docker/traversability_mapping/:/home/traversability/traversability_mapping/
-      - ./ORB-SLAM3-ROS2-Docker/orb_slam3_ros2_wrapper/:/root/colcon_ws/src/orb_slam3_ros2_wrapper/
-      - ./ORB-SLAM3-ROS2-Docker/slam_msgs/:/root/colcon_ws/src/slam_msgs/
-      - ./ORB-SLAM3-ROS2-Docker/traversability_mapping/traversability_ros_interface:/root/trav_ws/src/traversability_ros_interface
-      - ./dev_ws/:/root/dev_ws/
-    env_file:
-      - .env
-    privileged: true
-    network_mode: host
-    ipc: host
-    stdin_open: true
-    tty: true
-    environment:
-      - DISPLAY
-    entrypoint: /bin/bash
