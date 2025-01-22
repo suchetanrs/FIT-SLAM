@@ -33,7 +33,7 @@ private:
             if(static_cast<std::string>(this->get_namespace()) == "/")
                 transform_stamped = tf_buffer_->lookupTransform("map", "base_link", tf2::TimePointZero);
             else
-                transform_stamped = tf_buffer_->lookupTransform("map", this->get_namespace() + "/base_link", tf2::TimePointZero);
+                transform_stamped = tf_buffer_->lookupTransform("map", static_cast<std::string>(this->get_namespace()) + "/base_link", tf2::TimePointZero);
         }
         catch (tf2::TransformException &ex)
         {

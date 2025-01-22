@@ -388,10 +388,11 @@ namespace frontier_exploration
             {
                 BT::RuntimeError("No correct input recieved for every_frontier");
             }
-            if(static_cast<std::string>(ros_node_ptr->get_namespace()) == "/")
+            if(static_cast<std::string>(ros_node_ptr_->get_namespace()) == "/")
             {
-                robot_name = static_cast<std::string>(ros_node_ptr->get_namespace());
-                robot_name.pop();
+                robot_name = static_cast<std::string>(ros_node_ptr_->get_namespace());
+                // robot_name.pop();
+                robot_name = robot_name.substr(0, robot_name.size() - 1);
             }
             if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", frontierCostsRequestPtr->start_pose)) {
                 // Handle the case when "latest_robot_pose" is not found
