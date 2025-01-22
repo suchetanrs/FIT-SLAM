@@ -388,6 +388,11 @@ namespace frontier_exploration
             {
                 BT::RuntimeError("No correct input recieved for every_frontier");
             }
+            if(static_cast<std::string>(ros_node_ptr->get_namespace()) == "/")
+            {
+                robot_name = static_cast<std::string>(ros_node_ptr->get_namespace());
+                robot_name.pop();
+            }
             if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", frontierCostsRequestPtr->start_pose)) {
                 // Handle the case when "latest_robot_pose" is not found
                 LOG_FATAL("Failed to retrieve latest_robot_pose from blackboard.");
@@ -1047,7 +1052,7 @@ namespace frontier_exploration
         {
             explore_costmap_ros_ = explore_costmap_ros;
             ros_node_ptr_ = ros_node_ptr;
-            cmd_vel_publisher_ = ros_node_ptr->create_publisher<geometry_msgs::msg::Twist>("/robot_0/cmd_vel_nav", 10);
+            cmd_vel_publisher_ = ros_node_ptr->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_nav", 10);
             LOG_INFO("RecoveryMoveBack Constructor");
         }
 

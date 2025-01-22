@@ -89,7 +89,7 @@ namespace frontier_exploration
         // sensor_msgs::msg::PointCloud2 fi_pointcloud_;
         // pcl::toROSMsg(fi_pointcloud_pcl_, fi_pointcloud_);
 
-        // fi_pointcloud_.header.frame_id = "robot_0/base_link";
+        // fi_pointcloud_.header.frame_id = "base_link";
         // fi_pointcloud_.header.stamp = node_->now();
 
         // fim_pointcloud_pub_->publish(fi_pointcloud_);

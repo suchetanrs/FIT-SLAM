@@ -82,7 +82,7 @@ def generate_launch_description():
 
     declare_namespace_cmd = DeclareLaunchArgument(
         'robot_namespace',
-        default_value=TextSubstitution(text="robot_ns_nav"),
+        default_value=TextSubstitution(text=""),
         description='Top-level namespace')
 
     container_name = LaunchConfiguration('container_name')
@@ -98,11 +98,17 @@ def generate_launch_description():
             default_value=os.path.join(robot_nav_dir, 'params', 'nav2_params.yaml'),
             description='Full path to the ROS2 parameters file to use for all launched nodes')
 
+        base_frame = ""
+        if(context.launch_configurations['robot_namespace'] == ""):
+            base_frame = ""
+        else:
+            base_frame = context.launch_configurations['robot_namespace'] + "/"
+
         # Create our own temporary YAML files that include substitutions
         param_substitutions = {
             'use_sim_time': use_sim_time,
             'autostart': autostart,
-            'robot_base_frame': context.launch_configurations['robot_namespace'] + '/base_footprint',
+            'robot_base_frame': base_frame + 'base_footprint',
             'desired_linear_vel': "0.5",
             'max_angular_accel': "11.0"
         }

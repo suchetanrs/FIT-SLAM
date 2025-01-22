@@ -4,7 +4,8 @@ bt_exploration_node:
     # config: ["48.0", "60.0", "48.0", "1.25", "1.25", "1.25", "1.25", "60.0"]
     config: ["310.0", "260.0", "310.0", "-120.0", "-70.0", "-120.0", "-70.0", "260.0"]
     # robot_namespaces: ['/scout_1', '/scout_2']
-    robot_namespaces: ['/robot_0']
+    # robot_namespaces: ['/robot_0']
+    robot_namespaces: ['']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4']
     # robot_namespaces: ['/scout_1', '/scout_2', '/scout_3', '/scout_4', '/scout_5']
@@ -26,8 +27,9 @@ explore_costmap:
       # plugins: ["static_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: /robot_0/traversability_thresholded
+        # map_topic: /robot_0/traversability_thresholded
         # map_topic: /simulation_costmap
+        map_topic: /traversability_thresholded
         map_subscribe_transient_local: True
         enabled: True
       inflation_layer:

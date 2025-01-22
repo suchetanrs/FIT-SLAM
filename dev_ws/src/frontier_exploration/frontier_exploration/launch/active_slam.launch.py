@@ -29,7 +29,7 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock if true')
 
     robot_namespace =  LaunchConfiguration('robot_namespace')
-    robot_namespace_arg = DeclareLaunchArgument('robot_namespace', default_value=TextSubstitution(text="robot_0"),
+    robot_namespace_arg = DeclareLaunchArgument('robot_namespace', default_value=TextSubstitution(text=""),
         description='The namespace of the robot')
     
 #---------------------------------------------
@@ -41,8 +41,14 @@ def generate_launch_description():
             default_value=os.path.join(explore_pkg, 'params', 'exploration_params.yaml'),
             description='Full path to the ROS2 parameters file to use for all launched nodes')
 
+        base_frame = ""
+        if(context.launch_configurations['robot_namespace'] == ""):
+            base_frame = ""
+        else:
+            base_frame = context.launch_configurations['robot_namespace'] + "/"
+
         param_substitutions = {
-            'robot_base_frame': context.launch_configurations['robot_namespace'] + '/base_footprint',
+            'robot_base_frame': base_frame + 'base_footprint',
             'use_sim_time': context.launch_configurations['use_sim_time'],
             'bt_xml_path': "/root/dev_ws/src/frontier_exploration/frontier_exploration/xml/exploration_with_fi.xml"
             }
