@@ -5,7 +5,7 @@ InitCommandVelNode::InitCommandVelNode()
     : Node("init_command_vel_node"),
       forward_duration_(8.0),  // Time to move forward in seconds
       rotation_duration_(4.0), // Time to rotate 360 degrees in seconds
-      forward_speed_(0.35),    // Speed to move forward in m/s (0.35 m/s for 2 sec -> 0.7 m)
+      forward_speed_(0.20),    // Speed to move forward in m/s (0.35 m/s for 2 sec -> 0.7 m)
       angular_speed_(M_PI / 6) // Speed to rotate in rad/s (~60 degrees/sec for 6 sec -> 360 degrees)
 {
     // Create publisher on /cmd_vel topic

@@ -21,9 +21,9 @@ namespace frontier_exploration
         max_arrival_info_gt_ = setMaxArrivalInformation();
         LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
         // wait for costmap to be current before computing the above. Hence hardcoded.
-        max_arrival_info_gt_ = 85.0;
+        max_arrival_info_gt_ = 500.0;
         LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
-        min_arrival_info_gt_ = 0.70 * max_arrival_info_gt_;
+        min_arrival_info_gt_ = 0.30 * max_arrival_info_gt_;
     }
 
     void FrontierCostCalculator::setArrivalInformationForFrontier(Frontier &frontier, std::vector<double> &polygon_xy_min_max)

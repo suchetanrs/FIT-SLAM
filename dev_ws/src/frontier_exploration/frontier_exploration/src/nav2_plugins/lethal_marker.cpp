@@ -175,7 +175,12 @@ namespace frontier_exploration
     {
         for (auto index : cells_to_mark)
         {
-            master_array[index] = LETHAL_OBSTACLE;
+            // master_array[index] = LETHAL_OBSTACLE;
+        }
+        for (auto index : cells_to_mark)
+        {
+            if(master_array[index] == nav2_costmap_2d::NO_INFORMATION)
+                master_array[index] = nav2_costmap_2d::FREE_SPACE;
         }
     }
 
@@ -208,6 +213,7 @@ namespace frontier_exploration
     void LethalMarker::updateBounds(double robot_x, double robot_y, double robot_yaw, double *min_x,
                                     double *min_y, double *max_x, double *max_y)
     {
+addNewMarkedArea(robot_x, robot_y, 2.0);
         if (need_recalculation_)
         {
             last_min_x_ = *min_x;
@@ -241,6 +247,7 @@ namespace frontier_exploration
     void LethalMarker::updateCosts(nav2_costmap_2d::Costmap2D &master_grid, int min_i, int min_j,
                                    int max_i, int max_j)
     {
+// 	addNewMarkedArea(robot_x, robot_y, 2.0);
         current_ = true;
         if (!enabled_)
         {

@@ -23,14 +23,14 @@ x-fit-slam-common: &fit-slam-common
   env_file:
     - .env
   privileged: true
-  network_mode: host
-  ipc: host
-  stdin_open: true
-  tty: true
+  network_mode: "host"
+#  ipc: host
+#  stdin_open: true
+#  tty: true
   environment:
     - DISPLAY
   entrypoint: /bin/bash
-  command: -c "source /opt/ros/humble/setup.bash && cd /root/ && sudo chmod +x build_packages.sh && ./build_packages.sh && exec /bin/bash"
+ # command: -c "source /opt/ros/humble/setup.bash && cd /root/ && sudo chmod +x build_packages.sh && ./build_packages.sh && exec /bin/bash"
 
 services:
   fit-slam-amd:

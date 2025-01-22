@@ -1,6 +1,6 @@
 bt_navigator:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
     global_frame: map
     robot_base_frame: base_link
     odom_topic: odom
@@ -62,15 +62,15 @@ bt_navigator:
 
 bt_navigator_navigate_through_poses_rclcpp_node:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
 
 bt_navigator_navigate_to_pose_rclcpp_node:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
 
 controller_server:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
     controller_frequency: 25.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
@@ -224,14 +224,14 @@ controller_server:
       max_robot_pose_search_dist: 10.0
       rotate_to_heading_angular_vel: 5.0
 
-local_costmap2222:
-  local_costmap222:
+local_costmap:
+  local_costmap:
     ros__parameters:
       update_frequency: 5.0
       publish_frequency: 2.0
       global_frame: map
       robot_base_frame: base_link
-      use_sim_time: False
+      use_sim_time: True
       rolling_window: true
       width: 10
       height: 10
@@ -249,67 +249,6 @@ local_costmap2222:
         inflation_radius: 0.60
       always_send_full_costmap: True
 
-local_costmap:
-  local_costmap:
-    ros__parameters:
-      use_sim_time: false
-      always_send_full_costmap: False
-      footprint_padding: 0.03
-      footprint: "[[-0.24,-0.17],[-0.24,0.17],[0.085,0.17],[0.21,0.11],[0.21,-0.11],[0.085,-0.17]]" 
-      global_frame: "odom"
-      height: 4
-      width: 4
-      publish_frequency: 5.0
-      resolution: 0.05
-      robot_base_frame: "base_link"
-      robot_radius: 0.30 #Robot radius to use, if footprint coordinates not provided.
-      track_unknown_space: True
-      transform_tolerance: 1.0
-      ##TODO(prakhar, dipshikha): Verify this parameter  below
-      update_frequency: 5.0
-      use_maximum: False
-      rolling_window: True
-      plugins: ["lidar_layer", "lidar_inflation_layer", "dam", "dam_inflation_layer"]
-      lidar_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
-        observation_sources: scan
-        footprint_clearing_enabled: true
-        scan:
-          topic: /scan_filtered
-          max_obstacle_height: 2.0
-          clearing: True
-          marking: True
-          data_type: "LaserScan"
-      dam:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
-        observation_sources: bev_scan
-        combination_method: 1
-        footprint_clearing_enabled: True
-        bev_scan:
-          sensor_frame: base_link
-          data_type: "PointCloud2"
-          topic: /dam_point_cloud
-          marking: True
-          clearing: True
-          min_obstacle_height: -0.3
-          max_obstacle_height: 0.3
-          obstacle_max_range: 1.3
-          obstacle_min_range: 0.30
-          inf_is_true: True
-          observation_persistence: 0.0
-      lidar_inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.34
-        cost_scaling_factor: 5.0
-        enabled: true
-      dam_inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.22
-        cost_scaling_factor: 3.0
-        enabled: true        
-
 global_costmap:
   global_costmap:
     ros__parameters:
@@ -319,13 +258,13 @@ global_costmap:
       publish_frequency: 3.0
       global_frame: map
       robot_base_frame: base_link
-      use_sim_time: False
+      use_sim_time: True
       resolution: 0.05 #0.05
       track_unknown_space: true
       plugins: ["static_layer", "inflation_layer", "lethal_marker_global_costmap", "lethal_inflation_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: /map # for scout use /traversability_thresholded
+        map_topic: /traversability_thresholded # for scout use /traversability_thresholded
         # map_topic: /robot_0/traversability_thresholded
         map_subscribe_transient_local: True
       inflation_layer:
@@ -388,7 +327,7 @@ planner_server:
 
 smoother_server:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
     smoother_plugins: ["SmoothPath"]
     SmoothPath:
       plugin: "nav2_constrained_smoother/ConstrainedSmoother"
@@ -445,7 +384,7 @@ behavior_server:
 
 waypoint_follower:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
     loop_rate: 20
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
@@ -456,7 +395,7 @@ waypoint_follower:
 
 velocity_smoother:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"

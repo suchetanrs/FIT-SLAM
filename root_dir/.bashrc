@@ -110,13 +110,14 @@ source /opt/ros/humble/setup.bash
 export TURTLEBOT3_MODEL=waffle
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/root/ros2_ws/src/scout_v2/scout_gazebo/models
 export SCOUT_NAMESPACE=scout_2
-export ROS_DOMAIN_ID=55
+export ROS_DOMAIN_ID=26
 export RCUTILS_COLORIZED_OUTPUT=1
-export ROS_LOCALHOST_ONLY=1
+export ROS_LOCALHOST_ONLY=0
 cd
 sros
 sexp
 sslam
-export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+#export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 #export CYCLONEDDS_URI=~/.ros/cyclonedds.xml
-
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export CYCLONEDDS_URI=~/.ros/cyclonedds.xml

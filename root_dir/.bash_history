@@ -1,42 +1,3 @@
-cd dev_ws/
-vsc
-tmux
-cd /root/dev_ws/src/frontier_exploration/frontier_exploration/scripts/viz/nan_check.cpp
-cd /root/dev_ws/src/frontier_exploration/frontier_exploration/scripts/viz/
-g++ -o nan_check nan_check.cpp 
-./nan_check 
-ros2 run exploration_sim explore_sim 
-./shell_scripts/3_exploration.sh 
-nano shell_scripts/3_exploration.sh 
-kk
-./shell_scripts/3_exploration.sh 
-nano shell_scripts/3_exploration.sh 
-./shell_scripts/3_exploration.sh 
-clear
-./shell_scripts/3_exploration.sh 
-cd /root/dev_ws/src/frontier_exploration/frontier_multirobot_allocator/build/
-cmake ..
-make
-make install
-cd dev_ws/
-vsc
-colcon build --symlink-install
-rm -rf build/ install/ log/
-colcon build --symlink-install
-rm -rf build/ install/ log/
-colcon build --symlink-install
-rviz2
-tmux
-ls
-cd ros2_ws/src/scout_v2/scout_
-cd ros2_ws/src/scout_v2/scout_ros2/scout_description/
-ls
-cd config/
-ls
-cat scout_control.yaml 
-ls
-cd ..
-ls
 cd launch/
 ls
 cat scout_base_description.launch.py 
@@ -1998,3 +1959,42 @@ vsc
 cd src/frontier_exploration/
 ls
 vsc
+./build_packages.sh 
+ls
+ros2 topic list
+export ROS_DOMAIN_ID=26
+ros2 topic list
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+cd && source colcon_ws/install/setup.bash && ros2 launch traversability_mapping_ros global_traversability_mapping.launch.py
+ros2 launch robot_navigation2 navigation_fast.launch.py robot_namespace:=robot_0
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+rviz2 -d /root/frontier_exploration.rviz
+cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py
+ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0
+export ROS_DOMAIN_ID=26
+ros2 launch frontier_exploration exploration.launch.py
+echo $RMW_IMPLEMENTATION 
+nano ~/.bashrc 
+nano ~/.ros/cyclonedds.xml 
+ros2 launch frontier_exploration exploration.launch.py
+ros2 launch robot_navigation2 navigation_fast.launch.py robot_namespace:=robot_0
+rviz2 -d /root/frontier_exploration.rviz
+cd && source colcon_ws/install/setup.bash && ros2 launch traversability_mapping_ros global_traversability_mapping.launch.py
+ros2 topic list
+nano ~/.bashrc 
+cd .ros/
+ls
+nano cyclonedds.xml 
+cd
+export ROS_DOMAIN_ID=26
+ros2 topic list
+apt-get install ros-humble-rmw-cyclonedds-cpp
+nano ~/.bashrc 
+nano ~/.ros/cyclonedds.xml 
+ls
+ros2 topic list
+echo $ROS_LOCALHOST_ONLY 
+export ROS_LOCALHOST_ONLY=0
+ros2 topic list
+nano ~/.bashrc 
+bash

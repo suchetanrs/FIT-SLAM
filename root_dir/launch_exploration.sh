@@ -5,7 +5,7 @@
 #wget https://pastebin.com/raw/pTpUXK9A
 #cat pTpUXK9A >> ~/.tmux.conf
 
-cd && sudo chmod +x build_packages.sh && ./build_packages.sh && cd && source ~/.bashrc
+#cd && sudo chmod +x build_packages.sh && ./build_packages.sh && cd && source ~/.bashrc
 
 SESSION_NAME="dusty_dev_tmux"
 tmux new-session -d -s $SESSION_NAME

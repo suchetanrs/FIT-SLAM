@@ -3,6 +3,6 @@
 /usr/local/lib/cmake/frontier_multirobot_allocator/export_frontier_multirobot_allocator-noconfig.cmake
 /usr/local/lib/cmake/frontier_multirobot_allocator/frontier_multirobot_allocatorConfigVersion.cmake
 /usr/local/lib/cmake/frontier_multirobot_allocator/frontier_multirobot_allocatorConfig.cmake
-/usr/local/include/frontier_multirobot_allocator/minPos/minPos.hpp
-/usr/local/include/frontier_multirobot_allocator/hungarian/Hungarian.h
 /usr/local/include/frontier_multirobot_allocator/taskAllocator.hpp
+/usr/local/include/frontier_multirobot_allocator/hungarian/Hungarian.h
+/usr/local/include/frontier_multirobot_allocator/minPos/minPos.hpp

@@ -1080,7 +1080,7 @@ namespace frontier_exploration
                 return BT::NodeStatus::SUCCESS;
             }
             geometry_msgs::msg::Twist twist_msg;
-            twist_msg.linear.x = -0.5; // -0.5 m/s for reverse motion
+            twist_msg.linear.x = -0.15; // -0.5 m/s for reverse motion
             cmd_vel_publisher_->publish(twist_msg);
             return BT::NodeStatus::RUNNING;
         }

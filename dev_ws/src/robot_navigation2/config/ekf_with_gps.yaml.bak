@@ -2,7 +2,7 @@
 /**:
   ekf_filter_node_odom:
     ros__parameters:
-      use_sim_time: false
+      use_sim_time: true
       
       # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin
       # computation until it receives at least one message from one of the inputs. It will then run continuously at the
@@ -239,7 +239,7 @@
   ekf_filter_node_map:
     ros__parameters:
   
-      use_sim_time: false
+      use_sim_time: true
   
   
       frequency: 30.0
@@ -340,7 +340,7 @@
   
   navsat_transform:
     ros__parameters:
-      use_sim_time: false
+      use_sim_time: true
       frequency: 10.0
       delay: 3.0
       magnetic_declination_radians: -0.02740167  # For lat/long of Toulouse
