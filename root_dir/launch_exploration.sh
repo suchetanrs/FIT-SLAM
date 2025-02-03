@@ -19,15 +19,15 @@ tmux split-window -v
 tmux select-pane -t 2
 tmux split-window -v
 
-tmux send-keys -t 0 "ros2 launch frontier_exploration exploration.launch.py robot_namespace:=robot_0" C-m
+tmux send-keys -t 0 "ros2 launch frontier_exploration exploration.launch.py" C-m
 
-tmux send-keys -t 1 "ros2 launch robot_navigation2 navigation_fast.launch.py robot_namespace:=robot_0" C-m
+tmux send-keys -t 1 "ros2 launch robot_navigation2 navigation_fast.launch.py" C-m
 
 tmux send-keys -t 3 "rviz2 -d /root/frontier_exploration.rviz" C-m
 
 # tmux send-keys -t 2 "cd dev_ws && vsc" C-m
 
-tmux send-keys -t 4 "cd && source colcon_ws/install/setup.bash && ros2 launch traversability_mapping_ros global_traversability_mapping.launch.py" C-m
+tmux send-keys -t 4 "cd && source colcon_ws/install/setup.bash && ros2 launch traversability_mapping_ros global_gt_traversability_mapping.launch.py" C-m
 tmux send-keys -t 5 "cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py" C-m
 
 # Attach to the tmux session

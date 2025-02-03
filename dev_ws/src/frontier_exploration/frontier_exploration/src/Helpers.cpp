@@ -121,14 +121,14 @@ namespace frontier_exploration
         for (auto cell : out)
         {
             auto cost = exploration_costmap_.getCost(cell);
-            // std::cout << "Cost is: " << static_cast<int>(cost) << std::endl;
+            // // std::cout << "Cost is: " << static_cast<int>(cost) << std::endl;
             if (static_cast<int>(cost) == 255)
             {
-                // std::cout << "Surrounding cells mapped Returning false " << std::endl;
+                // // std::cout << "Surrounding cells mapped Returning false " << std::endl;
                 return false;
             }
         }
-        // std::cout << "Surrounding cells mapped Returning true " << std::endl;
+        // // std::cout << "Surrounding cells mapped Returning true " << std::endl;
         return true;
     }
 
@@ -192,7 +192,7 @@ namespace frontier_exploration
 
         if (idx > size_x_ * size_y_ - 1)
         {
-            std::cout << "Evaluating nhood for offmap point" << std::endl;
+            // std::cout << "Evaluating nhood for offmap point" << std::endl;
             return out;
         }
 
@@ -369,7 +369,7 @@ namespace frontier_exploration
         Eigen::Matrix<float, 3, 6> dpc_dtwc = leftMat * rightMat;
 
         Eigen::Matrix<float, 3, 6> jacobian = df_dpc * dpc_dtwc;
-        // std::cout << std::endl << "Jacobian is: " << jacobian << std::endl;
+        // // std::cout << std::endl << "Jacobian is: " << jacobian << std::endl;
         return jacobian;
     }
 
@@ -385,11 +385,11 @@ namespace frontier_exploration
 
         // dp_dTwc
         Eigen::Matrix<float, 3, 6> rightMat;
-        rightMat.block<3, 3>(0, 0) = Eigen::Matrix3f::Identity();
-        rightMat.block<3, 3>(0, 3) = (-1.0) * getSkewMatrix(p3d_c_eig_est);
+        rightMat.block<3, 3>(0, 0) = (-1.0) * Eigen::Matrix3f::Identity();
+        rightMat.block<3, 3>(0, 3) = getSkewMatrix(p3d_c_eig_est);
         Eigen::Matrix<float, 3, 6> dpc_dtwc = rightMat;
 
-        Eigen::Matrix<float, 3, 6> jacobian = df_dpc * -1.0 * dpc_dtwc;
+        Eigen::Matrix<float, 3, 6> jacobian = df_dpc * dpc_dtwc;
         // std::cout << std::endl << "Jacobian is: " << jacobian << std::endl;
         return jacobian;
     }
@@ -400,14 +400,18 @@ namespace frontier_exploration
         const float n = p3d_c_eig.norm();
         Eigen::Matrix3f df_dpc = (1 / n) * Eigen::Matrix3f::Identity() -
                                  (1 / (n * n * n)) * p3d_c_eig * p3d_c_eig.transpose();
+        
+        // std::cout << "df_dpc" << df_dpc << std::endl;
 
         // dp_dTwc
         Eigen::Matrix<float, 3, 6> rightMat;
-        rightMat.block<3, 3>(0, 0) = Eigen::Matrix3f::Identity();
-        rightMat.block<3, 3>(0, 3) = (-1.0) * getSkewMatrix(p3d_c_eig);
+        rightMat.block<3, 3>(0, 0) = (-1.0) * Eigen::Matrix3f::Identity();
+        rightMat.block<3, 3>(0, 3) = getSkewMatrix(p3d_c_eig);
         Eigen::Matrix<float, 3, 6> dpc_dtwc = rightMat;
 
-        Eigen::Matrix<float, 3, 6> jacobian = df_dpc * -1.0 * dpc_dtwc;
+        // std::cout << "dpc_dtwc" << dpc_dtwc << std::endl;
+
+        Eigen::Matrix<float, 3, 6> jacobian = df_dpc * dpc_dtwc;
         // std::cout << std::endl << "Jacobian is: " << jacobian << std::endl;
         return jacobian;
     }
@@ -437,6 +441,10 @@ namespace frontier_exploration
     {
         auto jac = computeJacobianForPointLocal(p3d_c_eig);
         auto fim = computeFIM(jac, Q);
+        // std::cout << std::endl;
+        // std::cout << "FIM is: " << fim << std::endl;
+        // std::cout << std::endl;
+        // std::cout << "FIM inverse is: " << fim << std::endl;
         return fim.trace();
     }
 

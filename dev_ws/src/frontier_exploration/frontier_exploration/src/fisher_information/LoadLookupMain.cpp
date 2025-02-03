@@ -5,6 +5,7 @@
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <vector>
+#include <fstream>
 #include "frontier_exploration/Helpers.hpp"
 #include "frontier_exploration/util/event_logger.hpp"
 #include "frontier_exploration/fisher_information/FisherInfoManager.hpp"
@@ -39,13 +40,14 @@ private:
 
         // Setup point cloud data
         pcl::PointCloud<pcl::PointXYZI> cloud;
-        cloud.width = 10201;
+        cloud.width = 10321;
         cloud.height = 1;
         cloud.points.resize(cloud.width * cloud.height);
+        cloud.clear();
 
-        float x = 3.0f;  // Position in x-axis
-        float y = 2.0f;  // Position in y-axis
-        float z = 1.0f; // Position in z-axis
+        float x = 0.0f;  // Position in x-axis
+        float y = 0.0f;  // Position in y-axis
+        float z = 0.0f; // Position in z-axis
 
         float roll = 0.0;  // Roll (rotation around x-axis)
         float pitch = 0.0; // Pitch (rotation around y-axis)
@@ -75,15 +77,26 @@ private:
         // std::cout << "**" << std::endl;
         // std::cout << T_w_c_est.rotation() << std::endl;
         double info_sum = 0;
+        const float epsilon = 1e-6;
 
-        for (float dx = 0; dx <= 8; dx += 1.0)
+        // Open a CSV file for writing
+        std::ofstream file("pointcloud_big.csv");
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file for writing." << std::endl;
+            return;
+        }
+
+        // Write the CSV header
+        file << "x,y,z,intensity\n";
+        float step_min = 0.03;
+        float step_max = 0.3;
+
+        for (float dx = 0; dx <= 2.2; dx += step_min)
         {
-            for (float dy = -8; dy <= 8; dy += 1.0)
+            for (float dy = -3.0; dy <= 3.0; dy += step_min)
             {
-                for (float dz = -8; dz <= 8; dz += 1.0)
+                for (float dz = -3.0; dz <= 3.0; dz += step_min)
                 {
-                    if (dx == 0 && dy == 0 && dz == 0)
-                        continue;
                     auto landmark_x = x + dx;
                     auto landmark_y = y + dy;
                     auto landmark_z = z + dz;
@@ -91,34 +104,51 @@ private:
                     Eigen::Vector3f p3d_w_eig(landmark_x, landmark_y, landmark_z); // Adjust this as needed
                     Eigen::Vector3f cam_pose(1.0, 0.0, 0.0);
                     Eigen::Vector3f p3d_c_eig = T_w_c_est.inverse() * p3d_w_eig;
+                    float voxel_x, voxel_y, voxel_z;
+                    if(!fim_manager.getVoxelCoordinate(voxel_x, voxel_y, voxel_z, landmark_x, landmark_y, landmark_z))
+                    {
+                        // LOG_ERROR("Could not get voxel coordinate for " << landmark_x << ", " << landmark_y << ", " << landmark_z);
+                    }
                     // std::cout << "cam: " << p3d_c_eig.normalized() << std::endl;
                     // std::cout << "world: " << cam_pose.normalized() << std::endl;
                     // std::cout << "cosine: " << abs(acos(p3d_c_eig.normalized().dot(cam_pose.normalized()))) << std::endl;
                     if(abs(acos(p3d_c_eig.normalized().dot(cam_pose.normalized()))) > 1.0)
                         continue;
                     // Compute the information of the point
-                    float information = fim_manager.getInformationFromLookup(p3d_c_eig, 0.1, 0);
+                    float information = fim_manager.getInformationFromLookup(p3d_c_eig, step_max, step_min, 0);
+                    landmark_x = voxel_x;
+                    landmark_y = voxel_y;
+                    landmark_z = voxel_z;
+                    if(std::isnan(information))
+                        continue;
                     info_sum += information;
                     pcl::PointXYZI pclPoint;
                     pclPoint.x = landmark_x;
                     pclPoint.y = landmark_y;
                     pclPoint.z = landmark_z;
                     pclPoint.intensity = information;
-                    cloud.push_back(pclPoint);
                     // Print the result
-                    // std::cout << information << ", ";
+                    cloud.push_back(pclPoint);
+                    if (information > 2.5)
+                    {
+                        // std::cout << information << ", ";
+                        // std::cout << "Info greater thnan 2.5" << std::endl;
+                    }
+                    file << pclPoint.x << "," << pclPoint.y << "," << pclPoint.z << "," << pclPoint.intensity << "\n";
                 }
             }
         }
-        // std::cout << "LOOP COMPLETE" << info_sum << std::endl;
+        std::cout << "LOOP COMPLETE" << info_sum << std::endl;
 
         pcl::toROSMsg(cloud, *pointcloud_msg);
+        file.close();
 
         pointcloud_msg->header.frame_id = "base_link";
         pointcloud_msg->header.stamp = this->now();
 
         publisher_->publish(*pointcloud_msg);
         pose_publisher_->publish(pose_stamped);
+        // exit(0);
     }
 
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;

@@ -33,6 +33,8 @@ ParameterHandler::ParameterHandler()
     parameter_map_["goalHysteresis/use_euclidean_distance"] = loaded_node["goalHysteresis"]["use_euclidean_distance"].as<bool>();
     parameter_map_["goalHysteresis/use_roadmap_planner_distance"] = loaded_node["goalHysteresis"]["use_roadmap_planner_distance"].as<bool>();
 
+    parameter_map_["explorationBT/bt_sleep_ms"] = loaded_node["explorationBT"]["bt_sleep_ms"].as<int>();
+
 
     // sanity checks.
     if(loaded_node["goalHysteresis"]["use_euclidean_distance"].as<bool>() == true && loaded_node["goalHysteresis"]["use_roadmap_planner_distance"].as<bool>() == true)

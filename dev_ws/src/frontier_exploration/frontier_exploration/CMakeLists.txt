@@ -149,6 +149,16 @@ target_link_libraries(gen_fi_lookup taskAllocator_lib ${PCL_LIBRARIES} ${YAML_CP
 add_executable(roadmap_vertices_saver tests/frontier_roadmap_tests/roadmap_vertices_saver.cpp)
 ament_target_dependencies(roadmap_vertices_saver ${dependencies})
 
+add_executable(continous_fi_test tests/continous_fi_test.cpp src/fisher_information/FisherInfoManager.cpp
+              src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
+ament_target_dependencies(continous_fi_test ${dependencies})
+target_link_libraries(continous_fi_test taskAllocator_lib ${PCL_LIBRARIES} ${YAML_CPP_LIBRARIES})
+
+add_executable(pose_fi_test tests/pose_fi_test.cpp src/fisher_information/FisherInfoManager.cpp
+              src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
+ament_target_dependencies(pose_fi_test ${dependencies})
+target_link_libraries(pose_fi_test taskAllocator_lib ${PCL_LIBRARIES} ${YAML_CPP_LIBRARIES})
+
 # -------------------------- Comparision files ---------------------
 add_executable(explored_map_counter comparision_scripts/explored_map_counter.cpp)
 ament_target_dependencies(explored_map_counter ${dependencies})
@@ -160,7 +170,9 @@ add_executable(exploration_path_followed_tf comparision_scripts/exploration_path
 ament_target_dependencies(exploration_path_followed_tf ${dependencies})
 
 # main_fisher_information_manager
-install(TARGETS nav2_interface_main lethal_marker_core frontier_roadmap_planner_core explored_map_counter exploration_path_followed exploration_path_followed_tf
+install(TARGETS nav2_interface_main lethal_marker_core frontier_roadmap_planner_core 
+                explored_map_counter exploration_path_followed exploration_path_followed_tf 
+                continous_fi_test pose_fi_test
 DESTINATION lib/${PROJECT_NAME}
 )
 # ------------------------------------------------------------------

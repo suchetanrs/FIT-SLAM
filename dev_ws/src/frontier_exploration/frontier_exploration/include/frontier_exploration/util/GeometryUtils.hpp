@@ -46,6 +46,23 @@ namespace frontier_exploration
         return rpy;
     };
 
+    inline geometry_msgs::msg::Quaternion eulerToQuat(double roll, double pitch, double yaw)
+    {
+        // Create a tf2 quaternion and set it based on Euler angles
+        tf2::Quaternion tf2_quaternion;
+        tf2_quaternion.setRPY(roll, pitch, yaw);
+        tf2_quaternion.normalize(); // Ensure the quaternion is normalized
+
+        // Convert tf2::Quaternion to geometry_msgs::msg::Quaternion
+        geometry_msgs::msg::Quaternion quat_msg;
+        quat_msg.x = tf2_quaternion.x();
+        quat_msg.y = tf2_quaternion.y();
+        quat_msg.z = tf2_quaternion.z();
+        quat_msg.w = tf2_quaternion.w();
+
+        return quat_msg;
+    };
+
     inline std::vector<double> getDifferenceInRPY(std::vector<double> rpy1, std::vector<double> rpy2)
     {
         std::vector<double> rpy = {0, 0, 0};

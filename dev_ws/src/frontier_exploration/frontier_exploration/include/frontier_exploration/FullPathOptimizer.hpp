@@ -80,6 +80,8 @@ namespace frontier_exploration
 
         void publishBlacklistCircles();
 
+        void publishBlacklistPoses();
+
         // new
         void addToMarkerArrayLinePolygon(visualization_msgs::msg::MarkerArray &marker_array, std::vector<Frontier> &frontier_list,
                                          std::string ns, float r, float g, float b, int id);
@@ -131,6 +133,18 @@ namespace frontier_exploration
             circularBlacklistCenters_.push_back(frontier);
         }
 
+        void blacklistFrontier(geometry_msgs::msg::PoseStamped pose, Frontier& frontier)
+        {
+            auto robotYaw = quatToEuler(pose.pose.orientation)[2];
+            pose.pose.position = frontier.getGoalPoint();
+            pose.pose.position.x += (BLACKLISTING_CIRCLE_RADIUS * cos(robotYaw));
+            pose.pose.position.y += (BLACKLISTING_CIRCLE_RADIUS * sin(robotYaw));
+            robotYaw += M_PI;
+            auto quat = eulerToQuat(0, 0, robotYaw);
+            pose.pose.orientation = quat;
+            poseBlacklists_.poses.push_back(pose.pose);
+        }
+
         void setExhaustiveSearch(bool value)
         {
             exhaustiveLandmarkSearch_ = value;
@@ -148,12 +162,14 @@ namespace frontier_exploration
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_publisher_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr local_search_area_publisher_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr blacklisted_region_publisher_;
+        rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr blacklisted_poses_publisher_;
         rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr subscription_;
         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
         std::shared_ptr<FisherInformationManager> fisher_information_manager_;
         std::unordered_map<FrontierPair, RoadmapPlanResult, FrontierPairHash> frontier_pair_distances_;
         std::unordered_map<FrontierPair, bool, FrontierPairHash> pair_path_safe_;
         std::vector<Frontier> circularBlacklistCenters_;
+        geometry_msgs::msg::PoseArray poseBlacklists_;
         bool blacklistNextGoal_;
         double angle_for_fov_overlap_;
         bool exhaustiveLandmarkSearch_;

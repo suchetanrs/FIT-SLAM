@@ -19,9 +19,9 @@ tmux split-window -v
 tmux select-pane -t 2
 tmux split-window -v
 
-tmux send-keys -t 0 "ros2 launch frontier_exploration active_slam.launch.py robot_namespace:=robot_0" C-m
+tmux send-keys -t 0 "ros2 launch frontier_exploration active_slam.launch.py" C-m
 
-tmux send-keys -t 1 "ros2 launch robot_navigation2 navigation_slow.launch.py robot_namespace:=robot_0" C-m
+tmux send-keys -t 1 "ros2 launch robot_navigation2 navigation_slow.launch.py" C-m
 
 tmux send-keys -t 3 "rviz2 -d /root/frontier_exploration.rviz" C-m
 

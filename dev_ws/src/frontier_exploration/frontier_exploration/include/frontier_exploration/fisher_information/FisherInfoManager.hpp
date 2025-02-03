@@ -10,6 +10,7 @@
 #include "frontier_exploration/planners/FrontierRoadmap.hpp"
 #include "frontier_exploration/util/rosVisualizer.hpp"
 #include "frontier_exploration/util/GeometryUtils.hpp"
+#include "frontier_exploration/util/event_logger.hpp"
 
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/msg/point_field.hpp>
@@ -19,7 +20,12 @@
 
 const double DISTANCE3D_THRESHOLD_KF_CHANGE = 0.1; // in m
 const double ANGLESUM_THRESHOLD_KF_CHANGE = 0.6; // in rad
-
+const float step_min = 0.09;
+const float step_max = 0.3; // 0.3, 0.09
+const float division_size = 0.1;
+const float divisions = step_min / step_max; // the number of divisions is 10. This value is 0.1
+// const float subSampleVoxelUntil_m = (1 / divisions) * division_size; // We try to fit 10 divisions in 1.0m, 11 divisions in 1.1m and so on. Every division takes up 10 cm.
+const float subSampleVoxelUntil_m = 2.0;
 struct LookupKey {
     std::array<float, 3> components;
 
@@ -31,9 +37,9 @@ struct LookupKey {
 struct LookupValue {
     double information;
     int pointCount;
-    int version;  // Tracks the last query this voxel was updated
+    unsigned int version;  // Tracks the last query this voxel was updated
 
-    LookupValue() : information(0.0), pointCount(0), version(0) {}
+    LookupValue() : information(0.0), pointCount(0), version(std::numeric_limits<unsigned int>::max()) {}
 };
 
 namespace std {
@@ -82,20 +88,38 @@ namespace frontier_exploration
          * = 24,220,800
          * ~ 24 MB
          */
-        void generateLookupTable(float minX, float maxX, float minY, float maxY, float minZ, float maxZ, float step);
+        void generateLookupTable(float minX, float maxX, float minY, float maxY, float minZ, float maxZ);
 
         void loadLookupTable();
 
-        float getInformationFromLookup(Eigen::Vector3f& landmark_camera_frame, float step, unsigned int latest_version);
+        float getInformationFromLookup(Eigen::Vector3f& landmark_camera_frame, float step_max, float step_min, unsigned int latest_version);
 
         float getInformationFromLookup(tf2::Vector3& landmark_camera_frame, float step, unsigned int latest_version);
 
-        inline float getFactorFromNum(int num, float z)
+        inline float getFactorFromNum(int num, float s)
         {
-            return std::exp(1 - std::pow(num, std::min(z / 10, 1.0f)));
+            // return std::exp(1 - std::pow(num, std::min(z / 10, 1.0f)));
+            return std::exp(1 - std::pow(num, s));
         };
 
-        bool isPoseSafe(geometry_msgs::msg::Pose& given_pose, bool exhaustiveSearch);
+        inline bool getVoxelCoordinate(float& voxel_x, float& voxel_y, float& voxel_z, float landmark_x, float landmark_y, float landmark_z)
+        {
+            double corrected_step;
+            if(abs(landmark_x) < subSampleVoxelUntil_m && abs(landmark_y) < subSampleVoxelUntil_m && abs(landmark_z) < subSampleVoxelUntil_m)
+                // corrected_step = std::min(std::ceil(landmark_x / divisions) * step_min, step_max);
+                corrected_step = step_min;
+            else
+                corrected_step = step_max;
+            // std::cout << "x: " << landmark_x << " Corrected step: " << corrected_step << std::endl;
+            if(corrected_step == 0)
+                return false;
+            voxel_x = std::round(landmark_x * (1 / corrected_step)) * corrected_step;
+            voxel_y = std::round(landmark_y * (1 / corrected_step)) * corrected_step;
+            voxel_z = std::round(landmark_z * (1 / corrected_step)) * corrected_step;
+            return true;
+        }
+
+        bool isPoseSafe(geometry_msgs::msg::Pose& given_pose, bool exhaustiveSearch, float& information);
 
         bool isPoseSafe(geometry_msgs::msg::Point point_from,  geometry_msgs::msg::Point point_to, bool exhaustiveSearch);
     private:
@@ -113,6 +137,7 @@ namespace frontier_exploration
         unsigned int latest_version_;
         rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr fim_pointcloud_pub_;
         pcl::PointCloud<pcl::PointXYZI> fi_pointcloud_pcl_;
+        unsigned int occupied_voxel_count_ = 0;
         // std::shared_ptr<RosVisualizer> rosVisualizer_;
     };
 }

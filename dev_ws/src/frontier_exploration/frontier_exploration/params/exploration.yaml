@@ -28,3 +28,6 @@ frontierRoadmap:
 goalHysteresis:
   use_euclidean_distance: true
   use_roadmap_planner_distance: false
+
+explorationBT:
+  bt_sleep_ms: 10

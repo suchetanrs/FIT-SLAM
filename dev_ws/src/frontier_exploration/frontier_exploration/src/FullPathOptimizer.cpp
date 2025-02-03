@@ -11,6 +11,7 @@ namespace frontier_exploration
         marker_publisher_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("top_frontiers", 10);
         local_search_area_publisher_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("local_search_area", 10);
         blacklisted_region_publisher_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("blacklisted_region", 10);
+        blacklisted_poses_publisher_ = node_->create_publisher<geometry_msgs::msg::PoseArray>("posearray_blacklisted_region", 10);
         subscription_ = node_->create_subscription<geometry_msgs::msg::PointStamped>(
             "/blacklist_test", 10,
             std::bind(&FullPathOptimizer::blacklistTestCb, this, std::placeholders::_1));
@@ -69,6 +70,12 @@ namespace frontier_exploration
 
         // Publish the marker array
         blacklisted_region_publisher_->publish(marker_array);
+    }
+
+    void FullPathOptimizer::publishBlacklistPoses() {
+        poseBlacklists_.header.stamp = node_->now();
+        poseBlacklists_.header.frame_id = "map";
+        blacklisted_poses_publisher_->publish(poseBlacklists_);
     }
 
     // seperates global and local frontiers.
@@ -314,7 +321,8 @@ namespace frontier_exploration
     PathSafetyStatus FullPathOptimizer::isRobotPoseSafe(geometry_msgs::msg::Pose& robotPose)
     {
         PathSafetyStatus return_value;
-        bool safety_value = fisher_information_manager_->isPoseSafe(robotPose, exhaustiveLandmarkSearch_);        
+        float information;
+        bool safety_value = fisher_information_manager_->isPoseSafe(robotPose, exhaustiveLandmarkSearch_, information);        
         if(!safety_value)
             return_value = UNSAFE;
         else

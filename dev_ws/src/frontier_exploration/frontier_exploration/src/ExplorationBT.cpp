@@ -587,8 +587,10 @@ namespace frontier_exploration
                     float blacklist_y = robotP.pose.position.y + (2.5 * sin(robotYaw));
                     Frontier blacklistedFrontier;
                     blacklistedFrontier.setGoalPoint(blacklist_x, blacklist_y);
-                    full_path_optimizer_->blacklistFrontier(blacklistedFrontier);
-                    full_path_optimizer_->publishBlacklistCircles();
+                    // full_path_optimizer_->blacklistFrontier(blacklistedFrontier);
+                    full_path_optimizer_->blacklistFrontier(robotP, blacklistedFrontier);
+                    // full_path_optimizer_->publishBlacklistCircles();
+                    full_path_optimizer_->publishBlacklistPoses();
                     FrontierRoadMap::getInstance().addFrontierToBlacklist(blacklistedFrontier);
 
                     recovery_controller_->computeVelocityCommand(true);
@@ -1279,12 +1281,13 @@ namespace frontier_exploration
         factory.registerBuilder<ExecuteRecoveryMove>("ExecuteRecoveryMove", execute_recovery_move);
 
         behaviour_tree = factory.createTreeFromFile(bt_xml_path_, blackboard);
+        int bt_sleep_duration = parameterInstance.getValue<int>("explorationBT/bt_sleep_ms");
         while (rclcpp::ok())
         {
             if(exploration_active_)
             {
                 behaviour_tree.tickOnce();
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::this_thread::sleep_for(std::chrono::milliseconds(bt_sleep_duration));
                 LOG_DEBUG("TICKED ONCE");
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
