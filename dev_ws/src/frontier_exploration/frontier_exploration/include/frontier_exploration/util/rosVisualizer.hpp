@@ -59,6 +59,7 @@ public:
     void visualizeFrontierMarker(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
     void exportMapCoverage(std::vector<double> polygon_xy_min_max, int counter_value_, std::string mode_);
     void frontierPlanViz(nav_msgs::msg::Path &path);
+    void fullPathPlanViz(nav_msgs::msg::Path &path);
     void visualizeTrailingPoses(std::deque<geometry_msgs::msg::Pose> robot_queue);
 
 private:
@@ -79,6 +80,7 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr all_frontier_cloud_pub_; ///< Publisher for every frontier cloud.
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr spatial_hashmap_pub_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_plan_pub_;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr full_path_plan_pub_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr fov_marker_publisher_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr frontier_marker_array_publisher_;
     rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr trailing_robot_poses_publisher_;

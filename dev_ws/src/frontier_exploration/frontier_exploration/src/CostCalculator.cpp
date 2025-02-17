@@ -18,12 +18,6 @@ namespace frontier_exploration
         // fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
         robot_radius_ = explore_costmap_ros->getRobotRadius();
         LOG_DEBUG("Got robot radius from costmap.");
-        max_arrival_info_gt_ = setMaxArrivalInformation();
-        LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
-        // wait for costmap to be current before computing the above. Hence hardcoded.
-        max_arrival_info_gt_ = 85.0;
-        LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
-        min_arrival_info_gt_ = 0.70 * max_arrival_info_gt_;
     }
 
     void FrontierCostCalculator::setArrivalInformationForFrontier(Frontier &frontier, std::vector<double> &polygon_xy_min_max)
@@ -128,7 +122,8 @@ namespace frontier_exploration
 
     double FrontierCostCalculator::setMaxArrivalInformation()
     {
-
+        if(arrival_info_limits_set_)
+            return 0.0;
         double sx, sy; // sensor x, sensor y, sensor orientation
         double wx, wy;
         unsigned int max_length = MAX_CAMERA_DEPTH / (exploration_costmap_->getResolution());
@@ -187,6 +182,11 @@ namespace frontier_exploration
                 maxIndex = i;
             }
         }
+        arrival_info_limits_set_ = true;
+        max_arrival_info_gt_ = maxValue * 1.2;
+        LOG_WARN("Max arrival cost GT: " << max_arrival_info_gt_);
+        min_arrival_info_gt_ = 0.70 * max_arrival_info_gt_;
+        LOG_WARN("Min arrival cost GT: " << min_arrival_info_gt_);
         return maxValue;
     }
 
@@ -446,10 +446,11 @@ namespace frontier_exploration
                                                              std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_)
     {
         auto length_to_frontier = sqrt(pow(start_point_w.x - goal_point_w.getGoalPoint().x, 2) + pow(start_point_w.y - goal_point_w.getGoalPoint().y, 2));
+        goal_point_w.setAchievability(true);
         goal_point_w.setPathLength(length_to_frontier);
+        goal_point_w.setPathLengthInM(length_to_frontier);
         if (length_to_frontier == 0)
             goal_point_w.setAchievability(false);
-        goal_point_w.setPathLength(std::numeric_limits<double>::max());
         goal_point_w.setPathHeading(std::numeric_limits<double>::max());
         goal_point_w.setFisherInformation(0.0);
         return;

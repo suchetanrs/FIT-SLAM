@@ -49,6 +49,7 @@ namespace frontier_exploration
                                            std::vector<std::vector<std::string>> &costTypes)
     {
         costCalculator_->reset();
+        costCalculator_->setMaxArrivalInformation();
         LOG_DEBUG("FrontierCostsManager::assignCosts");
         // sanity checks
         if (frontier_list.size() == 0)

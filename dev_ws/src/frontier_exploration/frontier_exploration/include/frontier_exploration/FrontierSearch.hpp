@@ -125,6 +125,21 @@ namespace frontier_exploration
         }
 
     private:
+        inline bool isLethal(unsigned char value)
+        {
+            return (int)value >= lethal_threshold_ && value != nav2_costmap_2d::NO_INFORMATION;
+        };
+
+        inline bool isUnknown(unsigned char value)
+        {
+            return value == nav2_costmap_2d::NO_INFORMATION;
+        };
+
+        inline bool isFree(unsigned char value)
+        {
+            return (int)value < lethal_threshold_;
+        };
+
         nav2_costmap_2d::Costmap2D &costmap_;
         unsigned char *map_;
         unsigned int size_x_, size_y_;
@@ -133,6 +148,7 @@ namespace frontier_exploration
         int max_frontier_cluster_size_;
         double max_frontier_distance_;
         double original_search_distance_;
+        unsigned char lethal_threshold_;
     };
 
     // Define a custom functor with an extra argument

@@ -15,6 +15,7 @@ namespace frontier_exploration
         original_search_distance_ = parameterInstance.getValue<double>("frontierSearch/max_frontier_distance");
         LOG_DEBUG("FrontierSearch::FrontierSearch");
         LOG_INFO("MAX SEARCH DISTANCE: " << max_frontier_distance_);
+        lethal_threshold_ = parameterInstance.getValue<int>("frontierSearch/lethal_threshold");
     }
 
     std::vector<Frontier> FrontierSearch::searchFrom(geometry_msgs::msg::Point position)
@@ -43,7 +44,7 @@ namespace frontier_exploration
 
         // find closest clear cell to start search
         unsigned int clear, pos = costmap_.getIndex(mx, my);
-        if (nearestCell(clear, pos, FREE_SPACE, costmap_))
+        if (nearestFreeCell(clear, pos, lethal_threshold_, costmap_))
         {
             bfs.push(clear);
         }
@@ -63,7 +64,7 @@ namespace frontier_exploration
             for (unsigned nbr : nhood4(idx, costmap_))
             {
                 // add to queue all free, unvisited cells, use descending search in case initialized on non-free cell
-                if (map_[nbr] <= map_[idx] && !visited_flag[nbr])
+                if (isFree(map_[nbr]) && !visited_flag[nbr])
                 {
                     visited_flag[nbr] = true;
                     unsigned int nbr_mx, nbr_my;
@@ -154,7 +155,7 @@ namespace frontier_exploration
                     if (currentFrontierSize > max_frontier_cluster_size_)
                     {
                         Frontier output;
-                        #ifdef FRONTIER_POINT_MEDIAN
+#ifdef FRONTIER_POINT_MEDIAN
                         LOG_DEBUG("*************");
                         LOG_DEBUG("Getting centroid")
                         auto cluster_centroid = getCentroidOfCells(frontier_cell_indices, (costmap_.getResolution() * 1.414 * 2));
@@ -166,11 +167,11 @@ namespace frontier_exploration
                         LOG_DEBUG("Cluster size: " << frontier_cell_indices.size())
                         LOG_DEBUG("x, y goal: " << goal_point.first << " , " << goal_point.second)
                         LOG_DEBUG("Cluster components: ");
-                        for(auto i : frontier_cell_indices)
+                        for (auto i : frontier_cell_indices)
                             LOG_DEBUG_N("x: " << i.first << " y: " << i.second << " atan: " << atan2(i.second - cluster_centroid.second, i.first - cluster_centroid.first) << " ");
                         LOG_DEBUG("");
                         frontier_cell_indices.clear();
-                        #endif
+#endif
                         output.setUID(generateUID(output));
                         LOG_TRACE("1PUSHING NEW FRONTIER TO LIST: UID: " << output.getUID());
                         LOG_TRACE("1Size: " << output.getSize());
@@ -189,7 +190,7 @@ namespace frontier_exploration
         if (currentFrontierSize > min_frontier_cluster_size_)
         {
             Frontier output;
-            #ifdef FRONTIER_POINT_MEDIAN
+#ifdef FRONTIER_POINT_MEDIAN
             auto cluster_centroid = getCentroidOfCells(frontier_cell_indices, (costmap_.getResolution() * 1.414 * 2));
             SortByMedianFunctor sortFunctor(cluster_centroid);
             std::sort(frontier_cell_indices.begin(), frontier_cell_indices.end(), sortFunctor);
@@ -199,11 +200,11 @@ namespace frontier_exploration
             LOG_DEBUG("Cluster size: " << frontier_cell_indices.size())
             LOG_DEBUG("x, y goal: " << goal_point.first << " , " << goal_point.second)
             LOG_DEBUG("Cluster components: ");
-            for(auto i : frontier_cell_indices)
+            for (auto i : frontier_cell_indices)
                 LOG_DEBUG_N(", x: " << i.first << " y: " << i.second << " atan: " << atan2(i.second - cluster_centroid.second, i.first - cluster_centroid.first));
             LOG_DEBUG("");
             frontier_cell_indices.clear();
-            #endif
+#endif
             output.setUID(generateUID(output));
             LOG_TRACE("2PUSHING NEW FRONTIER TO LIST: UID: " << output.getUID());
             LOG_TRACE("2Size: " << output.getSize());
@@ -217,19 +218,32 @@ namespace frontier_exploration
     bool FrontierSearch::isNewFrontierCell(unsigned int idx, const std::vector<bool> &frontier_flag)
     {
         // check that cell is unknown and not already marked as frontier
-        if (map_[idx] != NO_INFORMATION || frontier_flag[idx])
+        if (!isUnknown(map_[idx]) || frontier_flag[idx])
         {
             return false;
         }
 
+        bool has_one_free_neighbour = false;
+        bool has_one_lethal_neighbour = false;
+
         // frontier cells should have at least one cell in 4-connected neighbourhood that is free
         for (unsigned int nbr : nhood4(idx, costmap_))
         {
-            if (map_[nbr] == FREE_SPACE)
+            if (isFree(map_[nbr]))
             {
-                return true;
+                has_one_free_neighbour = true;
+            }
+            if (isLethal(map_[nbr]))
+            {
+                has_one_lethal_neighbour = true;
             }
         }
+        if (has_one_lethal_neighbour)
+            return false;
+        else if (has_one_free_neighbour)
+            return true;
+        else
+            return false;
 
         return false;
     }

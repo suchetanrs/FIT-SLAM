@@ -160,7 +160,17 @@
         "svd": "cpp",
         "*.inc": "cpp",
         "hash_map": "cpp",
-        "hash_set": "cpp"
+        "hash_set": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "valarray": "cpp",
+        "format": "cpp",
+        "charconv": "cpp",
+        "source_location": "cpp",
+        "expected": "cpp",
+        "stdfloat": "cpp",
+        "queue": "cpp"
     },
-    "C_Cpp.errorSquiggles": "enabled"
+    "C_Cpp.errorSquiggles": "enabled",
+    "cmake.sourceDirectory": "/home/suchetan2/FIT-SLAM/dev_ws/src/thirdParty/BehaviorTree.CPP/sample_nodes"
 }

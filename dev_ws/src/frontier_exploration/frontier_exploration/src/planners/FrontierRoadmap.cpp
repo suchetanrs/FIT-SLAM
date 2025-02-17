@@ -199,13 +199,6 @@ namespace frontier_exploration
             if (!populateClosest)
             {
                 // LOG_TRACE(new_frontier);
-                for (auto &point : spatial_hash_map_[grid_cell])
-                {
-                    // LOG_TRACE("Existing frontier");
-                    // LOG_TRACE(point);
-                    if (distanceBetweenFrontiers(new_frontier, point) < 0.1)
-                        isNew = false;
-                }
                 if (isNew)
                 {
                     if(addNewToQueue)
@@ -288,46 +281,51 @@ namespace frontier_exploration
         LOG_INFO("Reconstructing new frontier edges");
         // Add each point as a child of the parent if no obstacle is present
         // std::cout << "Locking constructNewEdges" << std::endl;
-        std::lock_guard<std::mutex> lock(spatial_hash_map_mutex_);
+        // std::lock_guard<std::mutex> lock(spatial_hash_map_mutex_);
         // std::cout << "UnLocking constructNewEdges" << std::endl;
         for (const auto &point : frontiers)
         {
-            // Ensure the point is added if not already present
-            if (roadmap_.find(point) == roadmap_.end())
+            Frontier closestFrontier;
+            getClosestNodeInHashmap(point, closestFrontier);
+            // Ensure the closestFrontier is added if not already present
+            if (roadmap_.find(closestFrontier) == roadmap_.end())
             {
                 roadmap_mutex_.lock();
-                roadmap_[point] = {};
+                roadmap_[closestFrontier] = {};
                 roadmap_mutex_.unlock();
             }
             std::vector<Frontier> closestNodes;
-            getNodesWithinRadius(point, closestNodes, RADIUS_TO_DECIDE_EDGES);
+            getNodesWithinRadius(closestFrontier, closestNodes, RADIUS_TO_DECIDE_EDGES);
             int numChildren = 0;
             for (auto &closestNode : closestNodes)
             {
-                if (closestNode == point)
+                if (closestNode == closestFrontier)
                     continue;
-                if (isConnectable(closestNode, point))
+                roadmap_mutex_.lock();
+                // initialize the closest node memory to add children.
+                if (roadmap_.find(closestNode) == roadmap_.end())
+                    roadmap_[closestNode] = {};
+                // add if only it does not already exist.
+                auto addition1 = roadmap_[closestFrontier];
+                auto addition2 = roadmap_[closestNode];
+                if (std::find(addition1.begin(), addition1.end(), closestNode) != addition1.end() || std::find(addition2.begin(), addition2.end(), closestFrontier) != addition2.end())
                 {
-                    roadmap_mutex_.lock();
-                    // initialize the closest node memory to add children.
-                    if (roadmap_.find(closestNode) == roadmap_.end())
-                        roadmap_[closestNode] = {};
-                    // add if only it does not already exist.
-                    auto addition1 = roadmap_[point];
-                    auto addition2 = roadmap_[closestNode];
-                    if (std::find(addition1.begin(), addition1.end(), closestNode) == addition1.end())
-                        roadmap_[point].push_back(closestNode);
-                    if (std::find(addition2.begin(), addition2.end(), point) == addition2.end())
-                        roadmap_[closestNode].push_back(point);
                     roadmap_mutex_.unlock();
+                    continue;
+                }
+                if (isConnectable(closestNode, closestFrontier))
+                {
+                    roadmap_[closestFrontier].push_back(closestNode);
+                    roadmap_[closestNode].push_back(closestFrontier);
                     numChildren++;
                 }
                 else
                 {
                     // LOG_INFO("Not connectable");
                 }
+                roadmap_mutex_.unlock();
             }
-            LOG_TRACE("Clearing roadmap and constructing new edges for: " << point << " with " << numChildren << " children");
+            LOG_TRACE("Clearing roadmap and constructing new edges for: " << closestFrontier << " with " << numChildren << " children");
         }
         // roadmap_mutex_.lock();
         // roadmap_.clear();
@@ -726,6 +724,10 @@ namespace frontier_exploration
         {
             return false;
         }
+        if (cell_gatherer.getNumUnknown() > RADIUS_TO_DECIDE_EDGES / costmap_->getResolution() * 0.3)
+        {
+            return false;
+        }
         // RosVisualizer::getInstance()observableCellsViz(cell_gatherer.getCells());
         // LOG_INFO("ray trace cell size" << cell_gatherer.getCells().size());
 
@@ -734,6 +736,8 @@ namespace frontier_exploration
 
     void FrontierRoadMap::publishRoadMap()
     {
+        if(marker_pub_roadmap_->get_subscription_count() == 0)
+            return;
         visualization_msgs::msg::MarkerArray marker_array;
 
         // Marker for nodes
@@ -767,18 +771,23 @@ namespace frontier_exploration
         edge_marker.color.b = 1.0;  // Blue channel
 
         LOG_TRACE("Roadmap points: ")
+        int num_roadmap_points = 0;
+        int max_roadmap_children = 0;
         // Populate the markers
         for (const auto &pair : roadmap_)
         {
+            ++num_roadmap_points;
             LOG_TRACE("parent:")
             Frontier parent = pair.first;
             LOG_TRACE(parent);
             geometry_msgs::msg::Point parent_point = parent.getGoalPoint();
             parent_point.z = 0.15;
             node_marker.points.push_back(parent_point);
+            int roadmap_children = 0;
 
             for (const auto &child : pair.second)
             {
+                ++roadmap_children;
                 LOG_TRACE("Children:")
                 LOG_TRACE(child);
                 geometry_msgs::msg::Point child_point = child.getGoalPoint();
@@ -789,6 +798,7 @@ namespace frontier_exploration
                 edge_marker.points.push_back(parent_point);
                 edge_marker.points.push_back(child_point);
             }
+            max_roadmap_children = std::max(roadmap_children, max_roadmap_children);
             LOG_TRACE("=======")
         }
         LOG_TRACE("***********Roadmap points end: ")
@@ -798,6 +808,8 @@ namespace frontier_exploration
         marker_array.markers.push_back(node_marker);
         marker_pub_roadmap_edges_->publish(edge_marker);
         marker_array.markers.push_back(edge_marker);
+        LOG_INFO("Number of roadmap nodes: " << num_roadmap_points);
+        LOG_INFO("Max number of children for a node: " << max_roadmap_children);
 
         // Publish the markers
         marker_pub_roadmap_->publish(marker_array);

@@ -15,7 +15,7 @@
             <GoalUpdater input_goal="{goal}" output_goal="{updated_goal}">
               <Sequence name="ComputeAndSmoothPath">
                 <ComputePathToPose goal="{updated_goal}" path="{path}" planner_id="{selected_planner}"/>
-                <SmoothPath unsmoothed_path="{path}" smoothed_path="{path}"/>
+                <!-- <SmoothPath unsmoothed_path="{path}" smoothed_path="{path}"/> -->
               </Sequence>
             </GoalUpdater>
           </ReactiveSequence>

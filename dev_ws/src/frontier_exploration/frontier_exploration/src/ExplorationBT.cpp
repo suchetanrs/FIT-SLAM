@@ -238,7 +238,8 @@ namespace frontier_exploration
             std::vector<Frontier> frontier_list;
             getInput<std::vector<Frontier>>("frontier_list", frontier_list);
             geometry_msgs::msg::PoseStamped robotP;
-            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP)) {
+            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP))
+            {
                 // Handle the case when "latest_robot_pose" is not found
                 LOG_FATAL("Failed to retrieve latest_robot_pose from blackboard.");
                 throw std::runtime_error("Failed to retrieve latest_robot_pose from blackboard.");
@@ -388,13 +389,14 @@ namespace frontier_exploration
             {
                 BT::RuntimeError("No correct input recieved for every_frontier");
             }
-            if(static_cast<std::string>(ros_node_ptr_->get_namespace()) == "/")
+            if (static_cast<std::string>(ros_node_ptr_->get_namespace()) == "/")
             {
                 robot_name = static_cast<std::string>(ros_node_ptr_->get_namespace());
                 // robot_name.pop();
                 robot_name = robot_name.substr(0, robot_name.size() - 1);
             }
-            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", frontierCostsRequestPtr->start_pose)) {
+            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", frontierCostsRequestPtr->start_pose))
+            {
                 // Handle the case when "latest_robot_pose" is not found
                 LOG_FATAL("Failed to retrieve latest_robot_pose from blackboard.");
                 throw std::runtime_error("Failed to retrieve latest_robot_pose from blackboard.");
@@ -521,13 +523,14 @@ namespace frontier_exploration
             bool use_fi;
             getInput<bool>("use_fisher_information", use_fi);
             geometry_msgs::msg::PoseStamped robotP;
-            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP)) {
+            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP))
+            {
                 // Handle the case when "latest_robot_pose" is not found
                 LOG_FATAL("Failed to retrieve latest_robot_pose from blackboard.");
                 throw std::runtime_error("Failed to retrieve latest_robot_pose from blackboard.");
             }
             Frontier allocatedFrontier;
-            if(currentFIRetries == numberRetriesFI - 1 && use_fi)
+            if (currentFIRetries == numberRetriesFI - 1 && use_fi)
             {
                 LOG_INFO("Setting exhaustive search");
                 full_path_optimizer_->setExhaustiveSearch(true);
@@ -544,13 +547,13 @@ namespace frontier_exploration
             {
                 frontierSearchPtr_->resetSearchDistance();
                 setOutput<Frontier>("allocated_frontier", allocatedFrontier);
-                if(full_path_optimizer_->getExhaustiveSearch())
+                if (full_path_optimizer_->getExhaustiveSearch())
                 {
                     LOG_INFO("Found to be safe with exhaustive search. Incrementing fi_drop_count");
                     currentFIRetries = 0;
                     ++fi_drop_count;
                 }
-                else 
+                else
                 {
                     fi_drop_count = 0;
                     currentFIRetries = 0;
@@ -663,29 +666,31 @@ namespace frontier_exploration
             eventLoggerInstance.startEvent("HysterisisControl");
             LOG_FLOW("MODULE HysterisisControl");
             geometry_msgs::msg::PoseStamped robotP;
-            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP)) {
+            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP))
+            {
                 // Handle the case when "latest_robot_pose" is not found
                 LOG_FATAL("Failed to retrieve latest_robot_pose from blackboard.");
                 throw std::runtime_error("Failed to retrieve latest_robot_pose from blackboard.");
             }
             CurrentGoalStatus status;
-            if (!config().blackboard->get<CurrentGoalStatus>("current_goal_status", status)) {
-                LOG_FATAL( "Failed to retrieve hysteresis_enabled from blackboard.");
+            if (!config().blackboard->get<CurrentGoalStatus>("current_goal_status", status))
+            {
+                LOG_FATAL("Failed to retrieve hysteresis_enabled from blackboard.");
                 throw std::runtime_error("Failed to retrieve hysteresis_enabled from blackboard.");
             }
             /**
-            * The status is set to RUNNING when when the robot is still replanning (typically at 1Hz) towards a goal.
-            * The status is set to SUCCESS when the robot has reached the goal / the goal is mapped.
+             * The status is set to RUNNING when when the robot is still replanning (typically at 1Hz) towards a goal.
+             * The status is set to SUCCESS when the robot has reached the goal / the goal is mapped.
              */
             if (status == CurrentGoalStatus::RUNNING)
             {
                 Frontier allocatedFrontier;
                 getInput<Frontier>("allocated_frontier", allocatedFrontier);
                 LOG_INFO("Hysterisis prior: " << allocatedFrontier);
-                
+
                 LOG_DEBUG("Value of min Distance " << minDistance);
                 LOG_DEBUG("Reference of min Distance " << &minDistance);
-                if(parameterInstance.getValue<bool>("goalHysteresis/use_euclidean_distance") == true)
+                if (parameterInstance.getValue<bool>("goalHysteresis/use_euclidean_distance") == true)
                 {
                     LOG_INFO("Using Euclidean Distance for hysteresis");
                     if (distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position) < minDistance - 3.0)
@@ -695,7 +700,7 @@ namespace frontier_exploration
                         LOG_DEBUG("Found a closer one: " << minDistance);
                     }
                 }
-                else if(parameterInstance.getValue<bool>("goalHysteresis/use_roadmap_planner_distance") == true)
+                else if (parameterInstance.getValue<bool>("goalHysteresis/use_roadmap_planner_distance") == true)
                 {
                     Frontier robotPoseFrontier;
                     robotPoseFrontier.setGoalPoint(robotP.pose.position.x, robotP.pose.position.y);
@@ -704,7 +709,7 @@ namespace frontier_exploration
                     robotPoseFrontier.setPathLengthInM(0.0);
                     LOG_INFO("Using Roadmap Planner Distance for hysteresis");
                     auto lengthToGoal = full_path_optimizer_->calculateLengthRobotToGoal(robotPoseFrontier, allocatedFrontier, robotP);
-                    if(lengthToGoal < minDistance - 3.0)
+                    if (lengthToGoal < minDistance - 3.0)
                     {
                         minDistance = lengthToGoal;
                         mostFrequentFrontier = allocatedFrontier;
@@ -721,9 +726,9 @@ namespace frontier_exploration
                 getInput<Frontier>("allocated_frontier", allocatedFrontier);
                 LOG_INFO("Hysterisis prior: " << allocatedFrontier);
                 setOutput<Frontier>("allocated_frontier_after_hysterisis", allocatedFrontier);
-                if(parameterInstance.getValue<bool>("goalHysteresis/use_euclidean_distance") == true)
+                if (parameterInstance.getValue<bool>("goalHysteresis/use_euclidean_distance") == true)
                     minDistance = distanceBetweenPoints(allocatedFrontier.getGoalPoint(), robotP.pose.position);
-                else if(parameterInstance.getValue<bool>("goalHysteresis/use_roadmap_planner_distance") == true)
+                else if (parameterInstance.getValue<bool>("goalHysteresis/use_roadmap_planner_distance") == true)
                 {
                     Frontier robotPoseFrontier;
                     robotPoseFrontier.setGoalPoint(robotP.pose.position.x, robotP.pose.position.y);
@@ -886,16 +891,26 @@ namespace frontier_exploration
             goalPose.pose.position = allocatedFrontier.getGoalPoint();
             goalPose.pose.orientation = allocatedFrontier.getGoalOrientation();
             nav2_interface_->sendGoal(goalPose);
+            eventLoggerInstance.startEvent("GoalSentToNav2");
+            time_for_planning_ = eventLoggerInstance.getTimeSinceStart("TimeForPlanning");
             return BT::NodeStatus::RUNNING;
         }
 
         BT::NodeStatus onRunning()
         {
+            double timeoutValue;
+            getInput("timeout_value", timeoutValue);
             LOG_DEBUG("SendNav2Goal onRunning");
-            if (nav2_interface_->goalStatus() == 0)
+            if (nav2_interface_->goalStatus() == 0 && eventLoggerInstance.getTimeSinceStart("GoalSentToNav2") + time_for_planning_ < timeoutValue)
                 return BT::NodeStatus::RUNNING;
+            else if (nav2_interface_->goalStatus() == 0 && eventLoggerInstance.getTimeSinceStart("GoalSentToNav2") + time_for_planning_ >= timeoutValue)
+            {
+                eventLoggerInstance.startEvent("TimeForPlanning");
+                return BT::NodeStatus::SUCCESS;
+            }
             else if (nav2_interface_->goalStatus() == 1)
             {
+                eventLoggerInstance.startEvent("TimeForPlanning");
                 latestAllocationFailures_ = 0;
                 return BT::NodeStatus::SUCCESS;
             }
@@ -907,6 +922,7 @@ namespace frontier_exploration
                     latestAllocationFailures_ = 0;
                     latestAllocation_.setBlacklisted(true);
                 }
+                eventLoggerInstance.startEvent("TimeForPlanning");
                 return BT::NodeStatus::FAILURE;
             }
             else
@@ -921,7 +937,8 @@ namespace frontier_exploration
 
         static BT::PortsList providedPorts()
         {
-            return {BT::InputPort<Frontier>("allocated_frontier")};
+            return {BT::InputPort<Frontier>("allocated_frontier"),
+                    BT::InputPort<double>("timeout_value")};
         }
 
         std::shared_ptr<Nav2Interface> nav2_interface_;
@@ -929,6 +946,7 @@ namespace frontier_exploration
         rclcpp::Node::SharedPtr ros_node_ptr_;
         Frontier latestAllocation_;
         int latestAllocationFailures_;
+        double time_for_planning_;
     };
 
     class CheckIfGoalMapped : public BT::StatefulActionNode
@@ -965,12 +983,13 @@ namespace frontier_exploration
                 return BT::NodeStatus::SUCCESS;
             }
             geometry_msgs::msg::PoseStamped robotP;
-            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP)) {
+            if (!config().blackboard->get<geometry_msgs::msg::PoseStamped>("latest_robot_pose", robotP))
+            {
                 // Handle the case when "latest_robot_pose" is not found
                 LOG_FATAL("Failed to retrieve latest_robot_pose from blackboard.");
                 throw std::runtime_error("Failed to retrieve latest_robot_pose from blackboard.");
             }
-            if(!full_path_optimizer_->refineAndPublishPath(robotP, allocatedFrontier))
+            if (!full_path_optimizer_->refineAndPublishPath(robotP, allocatedFrontier))
             {
                 LOG_ERROR("Failed to refine and publish path between robotP: " << robotP.pose.position.x << ", " << robotP.pose.position.y << " and " << allocatedFrontier);
                 config().blackboard->set<CurrentGoalStatus>("current_goal_status", CurrentGoalStatus::COMPLETE);
@@ -1017,13 +1036,21 @@ namespace frontier_exploration
             double timeoutValue;
             getInput("timeout_value", timeoutValue);
             LOG_FLOW("ReplanTimeoutCompleteBT onStart");
+            if (eventLoggerInstance.getTimeSinceStart("triggeredReplan") > timeoutValue)
+            {
+                LOG_WARN("Replan duration exceeded. Check cpu performance!!");
+                eventLoggerInstance.startEvent("triggeredReplan");
+                return BT::NodeStatus::FAILURE;
+            }
             if (eventLoggerInstance.getTimeSinceStart("replanTimeout") > timeoutValue)
             {
                 LOG_WARN("Replanning timed out. Restarting the frontier computation");
                 eventLoggerInstance.startEvent("replanTimeout");
                 config().blackboard->set<CurrentGoalStatus>("current_goal_status", CurrentGoalStatus::RUNNING);
+                eventLoggerInstance.startEvent("triggeredReplan");
                 return BT::NodeStatus::SUCCESS;
             }
+            eventLoggerInstance.startEvent("triggeredReplan");
             return BT::NodeStatus::FAILURE;
         }
 
@@ -1172,6 +1199,11 @@ namespace frontier_exploration
 
     void FrontierExplorationServer::makeBTNodes()
     {
+        while (!explore_costmap_ros_->isCurrent())
+        {
+            LOG_WARN("Waiting for explore costmap to be current.");
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
         eventLoggerInstance.startEvent("clearRoadmap");
         eventLoggerInstance.startEvent("replanTimeout");
 
@@ -1284,7 +1316,7 @@ namespace frontier_exploration
         int bt_sleep_duration = parameterInstance.getValue<int>("explorationBT/bt_sleep_ms");
         while (rclcpp::ok())
         {
-            if(exploration_active_)
+            if (exploration_active_)
             {
                 behaviour_tree.tickOnce();
                 std::this_thread::sleep_for(std::chrono::milliseconds(bt_sleep_duration));
@@ -1296,13 +1328,13 @@ namespace frontier_exploration
 
     void FrontierExplorationServer::rvizControl(std_msgs::msg::Int32 rvizControlValue)
     {
-        if(rvizControlValue.data == 0)
+        if (rvizControlValue.data == 0)
         {
             LOG_WARN("Pausing exploration");
             exploration_active_ = false;
             nav2_interface_->cancelAllGoals();
         }
-        else if(rvizControlValue.data == 1)
+        else if (rvizControlValue.data == 1)
         {
             LOG_WARN("Playing exploration");
             exploration_active_ = true;

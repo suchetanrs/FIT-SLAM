@@ -11,6 +11,7 @@ ParameterHandler::ParameterHandler()
     parameter_map_["frontierSearch/min_frontier_cluster_size"] = loaded_node["frontierSearch"]["min_frontier_cluster_size"].as<double>();
     parameter_map_["frontierSearch/max_frontier_cluster_size"] = loaded_node["frontierSearch"]["max_frontier_cluster_size"].as<double>();
     parameter_map_["frontierSearch/max_frontier_distance"] = loaded_node["frontierSearch"]["max_frontier_distance"].as<double>();
+    parameter_map_["frontierSearch/lethal_threshold"] = loaded_node["frontierSearch"]["lethal_threshold"].as<int>();
 
     parameter_map_["costCalculator/max_camera_depth"] = loaded_node["costCalculator"]["max_camera_depth"].as<double>();
     parameter_map_["costCalculator/delta_theta"] = loaded_node["costCalculator"]["delta_theta"].as<double>();
@@ -44,5 +45,10 @@ ParameterHandler::ParameterHandler()
     else if(loaded_node["goalHysteresis"]["use_euclidean_distance"].as<bool>() == false && loaded_node["goalHysteresis"]["use_roadmap_planner_distance"].as<bool>() == false)
     {
         throw std::runtime_error("Both use_euclidean_distance and use_roadmap_planner_distance are set to false. Please set only one of them to true.");
+    }
+
+    if(loaded_node["frontierSearch"]["lethal_threshold"].as<int>() > 255 || loaded_node["frontierSearch"]["lethal_threshold"].as<int>() < 0)
+    {
+        throw std::runtime_error("Lethal thresholds out of unsigned char range.");
     }
 }

@@ -163,6 +163,7 @@ namespace frontier_exploration
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr local_search_area_publisher_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr blacklisted_region_publisher_;
         rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr blacklisted_poses_publisher_;
+        rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr frontier_nav2_plan_;
         rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr subscription_;
         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
         std::shared_ptr<FisherInformationManager> fisher_information_manager_;

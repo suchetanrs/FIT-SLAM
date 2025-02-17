@@ -29,11 +29,11 @@
                 <Inverter>
                     <CheckIfGoalMapped allocated_frontier="{the_allocated_frontier_after_hysterisis}"/>
                 </Inverter>
-                <Inverter>
+                <!-- <Inverter>
                     <ReplanTimeoutComplete allocated_frontier="{the_allocated_frontier_after_hysterisis}" timeout_value="1.5"/>
-                </Inverter>
+                </Inverter> -->
                 <Fallback>
-                    <SendNav2Goal allocated_frontier="{the_allocated_frontier_after_hysterisis}"/>
+                    <SendNav2Goal allocated_frontier="{the_allocated_frontier_after_hysterisis}" timeout_value="0.05"/>
                     <!-- <RecoveryMoveBack move_back_duration="2.0"/> -->
                     <ExecuteRecoveryMove backward_only="false"/>
                 </Fallback>

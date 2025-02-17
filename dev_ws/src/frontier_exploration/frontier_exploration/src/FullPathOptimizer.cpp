@@ -12,6 +12,7 @@ namespace frontier_exploration
         local_search_area_publisher_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("local_search_area", 10);
         blacklisted_region_publisher_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>("blacklisted_region", 10);
         blacklisted_poses_publisher_ = node_->create_publisher<geometry_msgs::msg::PoseArray>("posearray_blacklisted_region", 10);
+        frontier_nav2_plan_ = node_->create_publisher<nav_msgs::msg::Path>("frontier_roadmap_nav2_plan", 10);
         subscription_ = node_->create_subscription<geometry_msgs::msg::PointStamped>(
             "/blacklist_test", 10,
             std::bind(&FullPathOptimizer::blacklistTestCb, this, std::placeholders::_1));
@@ -152,6 +153,11 @@ namespace frontier_exploration
 
     void FullPathOptimizer::getFilteredFrontiersN(std::vector<Frontier> &frontier_list, size_t n, SortedFrontiers &sortedFrontiers, geometry_msgs::msg::PoseStamped &robotP)
     {
+        // If there are no global frontiers, and local <= n then upto n - 1 are added to local and nth is treated as closest global
+        // If there are no global frontiers, and local > n then all up to n are added to local vector and the farthest one is treated as closest_global_frontier
+        // If there are no local frontiers, add all to global vector and treat closest one as closest_global_frontier
+        // If there are both local and global, and local <= n, then all local added to local vector and all global added to global vector with closest one being closest_g_f
+        // If there are both local and global, and local > n, then upto n are added to local vector and global ones are added to global vector. Closest global = closest_g_f
         double closest_global_frontier_length = std::numeric_limits<double>::max();
         std::vector<Frontier> all_frontiers;
 
@@ -166,42 +172,54 @@ namespace frontier_exploration
         }
         // Sort all frontiers based on path length
         std::sort(all_frontiers.begin(), all_frontiers.end(), [robotP](const Frontier& a, const Frontier& b) {
-            return distanceBetweenPoints(a.getGoalPoint(), robotP.pose.position) < distanceBetweenPoints(b.getGoalPoint(), robotP.pose.position);
+            // return distanceBetweenPoints(a.getGoalPoint(), robotP.pose.position) < distanceBetweenPoints(b.getGoalPoint(), robotP.pose.position);
+            return a.getPathLengthInM() < b.getPathLengthInM();
         });
 
-        // get achievable frontiers
+        // Separate the frontiers into local and global lists.
+        bool global_assigned = false;
+        bool first_case = false;
+        // to cater first case.
+        if (all_frontiers.size() == 0)
+        {
+            LOG_WARN("No achievable frontiers exist during sorting.")
+            return;
+        }
+        int counter = 1;
+        bool need_to_pop = false;
         for (const auto &frontier : all_frontiers)
         {
-            LOG_DEBUG("Path length in m" << frontier.getPathLengthInM());
-            if (distanceBetweenPoints(frontier.getGoalPoint(), robotP.pose.position) <= LOCAL_FRONTIER_SEARCH_RADIUS && sortedFrontiers.local_frontiers.size() <= n)
+            // LOG_INFO("Path length in m" << frontier.getPathLengthInM());
+            if (frontier.getPathLengthInM() <= LOCAL_FRONTIER_SEARCH_RADIUS && counter <= n)
             {
-                LOG_DEBUG("Local Frontiers:");
                 sortedFrontiers.local_frontiers.push_back(frontier);
-                LOG_DEBUG(frontier);
+                LOG_INFO("Local frontier candidate: " << frontier);
+                sortedFrontiers.closest_global_frontier = frontier;
+                need_to_pop = true;
             }
-            else
+            else if (frontier.getPathLengthInM() <= LOCAL_FRONTIER_SEARCH_RADIUS && counter > n)
             {
-                sortedFrontiers.global_frontiers.push_back(frontier);
-                LOG_DEBUG("Global Frontiers:");
-                LOG_DEBUG(frontier);
-                if (frontier.getPathLengthInM() < closest_global_frontier_length)
-                {
-                    LOG_DEBUG("ADDING CLOSEST FRONTIER");
-                    closest_global_frontier_length = frontier.getPathLengthInM();
-                    sortedFrontiers.closest_global_frontier = frontier;
-                }
+                sortedFrontiers.closest_global_frontier = frontier;
+                need_to_pop = false;
             }
+            else if(frontier.getPathLengthInM() > LOCAL_FRONTIER_SEARCH_RADIUS)
+            {
+                if(!global_assigned)
+                {
+                    sortedFrontiers.closest_global_frontier = frontier;
+                    global_assigned = true;
+                }
+                need_to_pop = false;
+                sortedFrontiers.global_frontiers.push_back(frontier);
+                LOG_INFO("Global frontier candidate: " << frontier);
+            }
+            counter++;
         }
-        if (sortedFrontiers.global_frontiers.size() > 0)
+        if(need_to_pop)
+            sortedFrontiers.local_frontiers.pop_back();
+        if(sortedFrontiers.global_frontiers.size() == 0 && sortedFrontiers.local_frontiers.size() == 0)
         {
-            LOG_DEBUG("Closest global Frontier:");
-            LOG_DEBUG(sortedFrontiers.closest_global_frontier);
-        }
-
-        // Limit to best 5 global frontiers
-        if (sortedFrontiers.global_frontiers.size() > n)
-        {
-            sortedFrontiers.global_frontiers.resize(n);
+            sortedFrontiers.global_frontiers.push_back(sortedFrontiers.closest_global_frontier);
         }
     }
 
@@ -333,15 +351,15 @@ namespace frontier_exploration
     double FullPathOptimizer::calculateLengthRobotToGoal(const Frontier& robot, const Frontier& goal, geometry_msgs::msg::PoseStamped& robotP)
     {
         std::vector<Frontier> path = {robot, goal};
-        auto robot_yaw = quatToEuler(robotP.pose.orientation)[2];
-        if (robot_yaw < 0)
-            robot_yaw = robot_yaw + (M_PI * 2);
-        double goal_yaw = atan2(goal.getGoalPoint().y - robotP.pose.position.y, goal.getGoalPoint().x - robotP.pose.position.x);
-        if (goal_yaw < 0)
-            goal_yaw = goal_yaw + (M_PI * 2);
-        double path_heading = abs(robot_yaw - goal_yaw);
-        if (path_heading > M_PI)
-            path_heading = path_heading - (2 * M_PI);
+        // auto robot_yaw = quatToEuler(robotP.pose.orientation)[2];
+        // if (robot_yaw < 0)
+        //     robot_yaw = robot_yaw + (M_PI * 2);
+        // double goal_yaw = atan2(goal.getGoalPoint().y - robotP.pose.position.y, goal.getGoalPoint().x - robotP.pose.position.x);
+        // if (goal_yaw < 0)
+        //     goal_yaw = goal_yaw + (M_PI * 2);
+        // double path_heading = abs(robot_yaw - goal_yaw);
+        // if (path_heading > M_PI)
+        //     path_heading = path_heading - (2 * M_PI);
 
         // return calculatePathLength(path) + (abs(path_heading));
         return calculatePathLength(path);
@@ -389,7 +407,7 @@ namespace frontier_exploration
             else if (current_length.path_exists == false)
             {
                 // set it to a large value since path could not be found.
-                totalLength += LOCAL_FRONTIER_SEARCH_RADIUS * 10000;
+                totalLength += LOCAL_FRONTIER_SEARCH_RADIUS * 100000;
                 frontier_pair_distances_[FrontierPair(path[i], path[i + 1])] = current_length;
                 std::reverse(current_length.path.begin(), current_length.path.end());
                 frontier_pair_distances_[FrontierPair(path[i + 1], path[i])] = current_length;
@@ -398,21 +416,24 @@ namespace frontier_exploration
         return totalLength;
     }
 
-    bool FullPathOptimizer::getBestFullPath(SortedFrontiers& sortedFrontiers, std::vector<Frontier>& bestPath, geometry_msgs::msg::PoseStamped &robotP)
+    bool FullPathOptimizer::getBestFullPath(SortedFrontiers& sortedFrontiers, std::vector<Frontier>& bestFrontierWaypoint, geometry_msgs::msg::PoseStamped &robotP)
     {
         std::vector<std::vector<Frontier>> bestPaths;
         // Create a MarkerArray
         visualization_msgs::msg::MarkerArray marker_array;
         geometry_msgs::msg::PoseStamped robotPose = robotP;
-        addToMarkerArraySolidPolygon(marker_array, robotPose.pose.position, LOCAL_FRONTIER_SEARCH_RADIUS, "local_search", 0.5, 1.0, 0.5, 0);
-        // addToMarkerArrayLinePolygon(marker_array, sortedFrontiers.local_frontiers, "local_search", 0.5, 1.0, 0.5, 0);
         int id = 0;
-
-        if (sortedFrontiers.global_frontiers.size() > 0)
+        for(auto& lf : sortedFrontiers.local_frontiers)
         {
-            addToMarkerArraySolidPolygon(marker_array, sortedFrontiers.closest_global_frontier.getGoalPoint(), 1.0, "global_search", 1.0, 0.5, 0.3, 0);
-            LOG_INFO("Closest global frontier with reasonable information is: " << sortedFrontiers.closest_global_frontier);
+            id++;
+            addToMarkerArraySolidPolygon(marker_array, lf.getGoalPoint(), 1.0, "local_frontier", 0.5, 1.0, 0.5, id);
         }
+        // addToMarkerArrayLinePolygon(marker_array, sortedFrontiers.local_frontiers, "local_search", 0.5, 1.0, 0.5, 0);
+
+        addToMarkerArraySolidPolygon(marker_array, sortedFrontiers.closest_global_frontier.getGoalPoint(), 1.0, "closest_global_frontier", 1.0, 0.5, 0.3, 0);
+        LOG_INFO("Closest global frontier with reasonable information is: " << sortedFrontiers.closest_global_frontier);
+        LOG_INFO("Local frontier list size: " << sortedFrontiers.local_frontiers.size());
+        LOG_INFO("Global frontier list size: " << sortedFrontiers.global_frontiers.size());
 
         local_search_area_publisher_->publish(marker_array);
 
@@ -435,12 +456,9 @@ namespace frontier_exploration
             sortedFrontiers.local_frontiers.insert(sortedFrontiers.local_frontiers.begin(), robotPoseFrontier);
 
             // LOG_DEBUG("Inserting closest global frontier to the end.");
-            if (sortedFrontiers.global_frontiers.size() > 0)
-            {
-                sortedFrontiers.local_frontiers.push_back(sortedFrontiers.closest_global_frontier);
-            }
+            sortedFrontiers.local_frontiers.push_back(sortedFrontiers.closest_global_frontier);
             // add robot pose to the end to complete the TSP.
-            sortedFrontiers.local_frontiers.push_back(robotPoseFrontier);
+            // sortedFrontiers.local_frontiers.push_back(robotPoseFrontier);
             LOG_DEBUG("Computing paths for permutation: " << sortedFrontiers.local_frontiers);
 
             double currentLength = calculatePathLength(sortedFrontiers.local_frontiers);
@@ -484,19 +502,16 @@ namespace frontier_exploration
             // erase the first element (robot position) to prepare for next permutation
             sortedFrontiers.local_frontiers.erase(sortedFrontiers.local_frontiers.begin());
             
-            // remove the robot pose frontier.
-            sortedFrontiers.local_frontiers.pop_back();
-
             // erase the global frontier at the end of vector to prepare for next permutation
-            if (sortedFrontiers.global_frontiers.size() > 0)
-            {
-                sortedFrontiers.local_frontiers.pop_back();
-            }
+            sortedFrontiers.local_frontiers.pop_back();
+            
+            // remove the robot pose frontier.
+            // sortedFrontiers.local_frontiers.pop_back();
 
             LOG_DEBUG("====permutation ended====")
 
         } while (std::next_permutation(sortedFrontiers.local_frontiers.begin(), sortedFrontiers.local_frontiers.end()));
-        if (minLength == LOCAL_FRONTIER_SEARCH_RADIUS * 10000)
+        if (minLength >= LOCAL_FRONTIER_SEARCH_RADIUS * 100000)
         {
             LOG_ERROR("Zero frontiers were reasonable post FI check...returning zero frontier.");
             return false;
@@ -504,6 +519,7 @@ namespace frontier_exploration
         LOG_INFO("Number of best minimum paths: " << bestPaths.size());
         minLength = std::numeric_limits<double>::max();
         LOG_DEBUG("Getting distance with Robot Pose: " << robotPoseFrontier);
+        // this is useful if there are more than one paths with the same length.
         for (const auto& path : bestPaths)
         {
             LOG_DEBUG("Getting distance with local frontiers: " << path);
@@ -512,13 +528,13 @@ namespace frontier_exploration
             if(distance_to_get_minima < minLength)
             {
                 minLength = distance_to_get_minima;
-                bestPath = path;
+                bestFrontierWaypoint = path;
             }
         }
         return true;
     }
 
-    bool FullPathOptimizer::prepareGlobalOptimization(SortedFrontiers& sortedFrontiers, std::vector<Frontier>& bestPath, geometry_msgs::msg::PoseStamped &robotP)
+    bool FullPathOptimizer::prepareGlobalOptimization(SortedFrontiers& sortedFrontiers, std::vector<Frontier>& bestFrontierWaypoint, geometry_msgs::msg::PoseStamped &robotP)
     {
         sortedFrontiers.local_frontiers.clear();
         sortedFrontiers.local_frontiers = sortedFrontiers.global_frontiers;
@@ -529,30 +545,19 @@ namespace frontier_exploration
     PathSafetyStatus FullPathOptimizer::getNextGoal(std::vector<Frontier> &frontier_list, Frontier &nextFrontier, size_t n, geometry_msgs::msg::PoseStamped &robotP, bool use_fi)
     {
         SortedFrontiers sortedFrontiers;
+        // sort based on path length
         getFilteredFrontiersN(frontier_list, NUM_FRONTIERS_IN_LOCAL_AREA, sortedFrontiers, robotP);
-        LOG_INFO("Local frontier list size: " << sortedFrontiers.local_frontiers.size());
-        LOG_INFO("Global frontier list size: " << sortedFrontiers.global_frontiers.size());
 
         Frontier zeroFrontier;
-        std::vector<Frontier> bestPath;
+        std::vector<Frontier> bestFrontierWaypoint;
         if (sortedFrontiers.local_frontiers.size() == 0)
         {
             // LOG_ERROR("Could not find local frontiers. Returning a zero frontiers. The program may crash if goal point is checked...");
-            if (sortedFrontiers.global_frontiers.size() == 1)
+            if (sortedFrontiers.global_frontiers.size() >= 1)
             {
                 LOG_WARN("Could not find more than one global frontiers frontiers. Returning the best global frontier.");
                 nextFrontier = sortedFrontiers.closest_global_frontier;
                 return PathSafetyStatus::SAFE;
-            }
-            else if(sortedFrontiers.global_frontiers.size() > 1)
-            {
-                LOG_WARN("Found " << sortedFrontiers.global_frontiers.size() << "global frontiers");
-                if(!prepareGlobalOptimization(sortedFrontiers, bestPath, robotP))
-                {
-                    LOG_ERROR("Could not optimize multiple global frontiers. Size: " << sortedFrontiers.local_frontiers.size());
-                    nextFrontier = zeroFrontier;
-                    return PathSafetyStatus::UNDETERMINED;
-                }
             }
             else
             {
@@ -562,47 +567,53 @@ namespace frontier_exploration
             }
         }
 
-        if(!getBestFullPath(sortedFrontiers, bestPath, robotP))
+        if(!getBestFullPath(sortedFrontiers, bestFrontierWaypoint, robotP))
         {
             nextFrontier = zeroFrontier;
             return PathSafetyStatus::UNDETERMINED;
         }
 
-        LOG_INFO("Best full path points: " << bestPath);
+        LOG_INFO("Best full path points: " << bestFrontierWaypoint);
         std::vector<std::shared_ptr<Node>> bestPathViz;
         // LOG_INFO("Best full path to follow: ");
-        for (int o = 0; o < bestPath.size() - 1; o++)
+        nav_msgs::msg::Path bestPathROS;
+        bestPathROS.header.frame_id = "map";
+        bestPathROS.header.stamp = node_->now();
+        for (int o = 0; o < bestFrontierWaypoint.size() - 1; o++)
         {
-            // for (auto &fullPoint : frontier_pair_distances_[FrontierPair(bestPath[o], bestPath[o + 1])].path)
+            // for (auto &fullPoint : frontier_pair_distances_[FrontierPair(bestFrontierWaypoint[o], bestFrontierWaypoint[o + 1])].path)
             // {
             //     LOG_INFO(fullPoint->frontier << " , ");
             // }
-            bestPathViz.insert(bestPathViz.end(), frontier_pair_distances_[FrontierPair(bestPath[o], bestPath[o + 1])].path.begin(), frontier_pair_distances_[FrontierPair(bestPath[o], bestPath[o + 1])].path.end());
+            // computePathBetweenPoints(bestPathROS, bestFrontierWaypoint[o].getGoalPoint(), bestFrontierWaypoint[o+1].getGoalPoint(), true, explore_costmap_ros_->getCostmap());
+            computePathBetweenPointsThetaStar(bestPathROS, bestFrontierWaypoint[o].getGoalPoint(), bestFrontierWaypoint[o+1].getGoalPoint(), true, explore_costmap_ros_->getCostmap());
+            // bestPathViz.insert(bestPathViz.end(), frontier_pair_distances_[FrontierPair(bestFrontierWaypoint[o], bestFrontierWaypoint[o + 1])].path.begin(), frontier_pair_distances_[FrontierPair(bestFrontierWaypoint[o], bestFrontierWaypoint[o + 1])].path.end());
         }
 
-        if(bestPath.size() >= 1 && use_fi)
+        if(bestFrontierWaypoint.size() >= 1 && use_fi)
         {
-            // auto pathSafetyValue = isPathSafe(frontier_pair_distances_[FrontierPair(bestPath[0], bestPath[1])]);
+            // auto pathSafetyValue = isPathSafe(frontier_pair_distances_[FrontierPair(bestFrontierWaypoint[0], bestFrontierWaypoint[1])]);
             // auto pathSafetyValue = isPathSafe(refinedPath);
             auto pathSafetyValue = isRobotPoseSafe(robotP.pose);
             if(pathSafetyValue == UNSAFE)
             {
                 LOG_WARN("Dead reckoning!!");
-                nextFrontier = bestPath[1];
+                nextFrontier = bestFrontierWaypoint[1];
                 return PathSafetyStatus::UNSAFE;
             }
             else if(pathSafetyValue == UNDETERMINED)
             {
                 LOG_WARN("Cannot determine frontier safety since it is out of FOV.");
-                nextFrontier = bestPath[1];
+                nextFrontier = bestFrontierWaypoint[1];
                 return PathSafetyStatus::UNDETERMINED;
             }
         }
         eventLoggerInstance.startEvent("publishPlan");
-        FrontierRoadMap::getInstance().publishPlan(bestPathViz, 1.0, 0.0, 0.0);
+        // FrontierRoadMap::getInstance().publishPlan(bestPathViz, 1.0, 0.0, 0.0);
+        RosVisualizer::getInstance().fullPathPlanViz(bestPathROS);
         eventLoggerInstance.endEvent("publishPlan", 2);
         // 0 is robot pose. Return the first frontier in the path.
-        nextFrontier = bestPath[1];
+        nextFrontier = bestFrontierWaypoint[1];
         return PathSafetyStatus::SAFE;
 
         // FrontierRoadMap::getInstance().publishPlan(bestPathViz, 1.0, 0.0, 0.0);
@@ -629,33 +640,43 @@ namespace frontier_exploration
 
     bool FullPathOptimizer::refineAndPublishPath(geometry_msgs::msg::PoseStamped& robotP, Frontier& goalFrontier)
     {
-        Frontier robotPoseFrontier;
-        robotPoseFrontier.setGoalPoint(robotP.pose.position.x, robotP.pose.position.y);
-        robotPoseFrontier.setUID(generateUID(robotPoseFrontier));
-        robotPoseFrontier.setPathLength(0.0);
-        robotPoseFrontier.setPathLengthInM(0.0);
-        if(frontier_pair_distances_.find(FrontierPair(robotPoseFrontier, goalFrontier)) == frontier_pair_distances_.end())
+        // Frontier robotPoseFrontier;
+        // robotPoseFrontier.setGoalPoint(robotP.pose.position.x, robotP.pose.position.y);
+        // robotPoseFrontier.setUID(generateUID(robotPoseFrontier));
+        // robotPoseFrontier.setPathLength(0.0);
+        // robotPoseFrontier.setPathLengthInM(0.0);
+        // if(frontier_pair_distances_.find(FrontierPair(robotPoseFrontier, goalFrontier)) == frontier_pair_distances_.end())
+        // {
+        //     LOG_INFO("Frontier path not found in frontier_pair_distances_. Recomputing path ...");
+        //     auto current_length = FrontierRoadMap::getInstance().getPlan(robotPoseFrontier, true, goalFrontier, true);
+        //     if (current_length.path_exists == true)
+        //     {
+        //         frontier_pair_distances_[FrontierPair(robotPoseFrontier, goalFrontier)] = current_length;
+        //     }
+        //     else
+        //     {
+        //         return false;
+        //     }   
+        // }
+        // auto bestRefinedPath = FrontierRoadMap::getInstance().refinePath(frontier_pair_distances_[FrontierPair(robotPoseFrontier, goalFrontier)]);
+        // if(bestRefinedPath.size() == 0)
+        // {
+        //     LOG_ERROR("Best path size is 0 after refinement.");
+        //     return false;
+        // }
+        
+        // FrontierRoadMap::getInstance().publishPlan(bestRefinedPath, "refinedPath");
+        
+        // return true;
+
+        nav_msgs::msg::Path nav2_plan;
+        nav2_plan.header.frame_id = "map";
+        nav2_plan.header.stamp = node_->now();
+        if(!computePathBetweenPointsThetaStar(nav2_plan, robotP.pose.position, goalFrontier.getGoalPoint(), true, explore_costmap_ros_->getCostmap()))
         {
-            LOG_INFO("Frontier path not found in frontier_pair_distances_. Recomputing path ...");
-            auto current_length = FrontierRoadMap::getInstance().getPlan(robotPoseFrontier, true, goalFrontier, true);
-            if (current_length.path_exists == true)
-            {
-                frontier_pair_distances_[FrontierPair(robotPoseFrontier, goalFrontier)] = current_length;
-            }
-            else
-            {
-                return false;
-            }   
-        }
-        auto bestRefinedPath = FrontierRoadMap::getInstance().refinePath(frontier_pair_distances_[FrontierPair(robotPoseFrontier, goalFrontier)]);
-        if(bestRefinedPath.size() == 0)
-        {
-            LOG_ERROR("Best path size is 0 after refinement.");
             return false;
         }
-        
-        FrontierRoadMap::getInstance().publishPlan(bestRefinedPath, "refinedPath");
-        
+        frontier_nav2_plan_->publish(nav2_plan);
         return true;
     }
 };

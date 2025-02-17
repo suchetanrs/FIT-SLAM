@@ -125,6 +125,7 @@ namespace frontier_exploration
         double robot_radius_;
         double max_arrival_info_gt_ = 0.0;
         double min_arrival_info_gt_ = 0.0;
+        bool arrival_info_limits_set_ = false;
 
         double MAX_CAMERA_DEPTH;
         double DELTA_THETA;

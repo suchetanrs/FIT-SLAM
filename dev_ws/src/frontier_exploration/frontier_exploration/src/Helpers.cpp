@@ -154,21 +154,21 @@ namespace frontier_exploration
         return false; // Robot fits
     }
 
-    bool verifyFrontierList(std::vector<Frontier>& frontier_list, const nav2_costmap_2d::Costmap2D *costmap)
+    bool verifyFrontierList(std::vector<Frontier> &frontier_list, const nav2_costmap_2d::Costmap2D *costmap)
     {
-        for (auto& frontier : frontier_list)
+        for (auto &frontier : frontier_list)
         {
             bool verification_success = false;
             unsigned int mx, my;
             costmap->worldToMap(frontier.getGoalPoint().x, frontier.getGoalPoint().y, mx, my);
             auto out = nhood8(costmap->getIndex(mx, my), *costmap);
-            for (auto& cell : out)
+            for (auto &cell : out)
             {
                 unsigned int cost = costmap->getCost(cell);
-                if(cost == 255)
+                if (cost == 255)
                     verification_success = true;
             }
-            if(!verification_success)
+            if (!verification_success)
                 return false;
         }
         return true;
@@ -278,11 +278,11 @@ namespace frontier_exploration
      * @brief Find nearest cell of a specified value
      * @param result Index of located cell
      * @param start Index initial cell to search from
-     * @param val Specified value to search for
+     * @param val free space threshold
      * @param costmap Reference to map data
      * @return True if a cell with the requested value was found
      */
-    bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, const nav2_costmap_2d::Costmap2D &costmap)
+    bool nearestFreeCell(unsigned int &result, unsigned int start, unsigned char val, const nav2_costmap_2d::Costmap2D &costmap)
     {
 
         const unsigned char *map = costmap.getCharMap();
@@ -309,7 +309,7 @@ namespace frontier_exploration
             bfs.pop();
 
             // return if cell of correct value is found
-            if (map[idx] == val)
+            if (map[idx] < val)
             {
                 result = idx;
                 return true;
@@ -400,7 +400,7 @@ namespace frontier_exploration
         const float n = p3d_c_eig.norm();
         Eigen::Matrix3f df_dpc = (1 / n) * Eigen::Matrix3f::Identity() -
                                  (1 / (n * n * n)) * p3d_c_eig * p3d_c_eig.transpose();
-        
+
         // std::cout << "df_dpc" << df_dpc << std::endl;
 
         // dp_dTwc
@@ -430,7 +430,7 @@ namespace frontier_exploration
     }
 
     float computeInformationOfPointLocal(Eigen::Vector3f &p3d_c_eig, Eigen::Vector3f &p3d_w_eig,
-                                          Eigen::Affine3f &T_w_c_est, Eigen::Matrix3f Q)
+                                         Eigen::Affine3f &T_w_c_est, Eigen::Matrix3f Q)
     {
         auto jac = computeJacobianForPointLocal(p3d_c_eig, p3d_w_eig, T_w_c_est);
         auto fim = computeFIM(jac, Q);
@@ -466,5 +466,124 @@ namespace frontier_exploration
             }
         }
         return pair_information;
+    }
+
+    bool computePathBetweenPoints(nav_msgs::msg::Path &path, const geometry_msgs::msg::Point &start_point,
+                                  const geometry_msgs::msg::Point &goal_point,
+                                  bool planner_allow_unknown, nav2_costmap_2d::Costmap2D *exploration_costmap_)
+    {
+        unsigned int mx, my;
+
+        // Convert start point from world to map coordinates.
+        if (!exploration_costmap_->worldToMap(start_point.x, start_point.y, mx, my))
+        {
+            LOG_ERROR("Start point is off the global costmap.");
+            return false;
+        }
+        int map_start[2] = {static_cast<int>(mx), static_cast<int>(my)};
+
+        // Convert goal point from world to map coordinates.
+        if (!exploration_costmap_->worldToMap(goal_point.x, goal_point.y, mx, my))
+        {
+            LOG_ERROR("Goal point is off the global costmap.");
+            return false;
+        }
+        int map_goal[2] = {static_cast<int>(mx), static_cast<int>(my)};
+
+        // Create and configure the planner.
+        auto planner = std::make_unique<frontier_exploration::NavFn>(
+            exploration_costmap_->getSizeInCellsX(), exploration_costmap_->getSizeInCellsY());
+        planner->setNavArr(exploration_costmap_->getSizeInCellsX(), exploration_costmap_->getSizeInCellsY());
+        planner->setCostmap(exploration_costmap_->getCharMap(), true, planner_allow_unknown);
+
+        // Note: The planner expects the start and goal in reverse order.
+        planner->setStart(map_goal);
+        planner->setGoal(map_start);
+
+        // Run the A* search to compute the navigation function.
+        if (!planner->calcNavFnDijkstra())
+        {
+            LOG_WARN("Planner failed to compute the navigation function.");
+            return false;
+        }
+
+        // Determine the maximum cycles to search.
+        const int max_cycles = (exploration_costmap_->getSizeInCellsX() >= exploration_costmap_->getSizeInCellsY())
+                                   ? (exploration_costmap_->getSizeInCellsX() * 4)
+                                   : (exploration_costmap_->getSizeInCellsY() * 4);
+        const int path_len = planner->calcPath(max_cycles);
+        if (path_len == 0)
+        {
+            LOG_WARN("No path found between the given points.");
+            return false;
+        }
+
+        // Extract the computed path.
+        float *path_x = planner->getPathX();
+        float *path_y = planner->getPathY();
+        const int len = planner->getPathLen();
+
+        // The path is generated in reverse order; iterate from end to beginning.
+        for (int i = len - 1; i >= 0; --i)
+        {
+            double world_x, world_y;
+            exploration_costmap_->mapToWorld(path_x[i], path_y[i], world_x, world_y);
+            geometry_msgs::msg::PoseStamped pose;
+            pose.pose.position.x = world_x;
+            pose.pose.position.y = world_y;
+            pose.pose.position.z = 0.0;
+            path.poses.push_back(pose);
+        }
+        return true;
+    }
+
+    bool computePathBetweenPointsThetaStar(nav_msgs::msg::Path &path, const geometry_msgs::msg::Point &start_point,
+                                           const geometry_msgs::msg::Point &goal_point,
+                                           bool planner_allow_unknown, nav2_costmap_2d::Costmap2D *exploration_costmap_)
+    {
+        unsigned int mx, my;
+
+        // Convert start point from world to map coordinates.
+        if (!exploration_costmap_->worldToMap(start_point.x, start_point.y, mx, my))
+        {
+            LOG_ERROR("Start point is off the global costmap.");
+            return false;
+        }
+        int map_start[2] = {static_cast<int>(mx), static_cast<int>(my)};
+
+        // Convert goal point from world to map coordinates.
+        if (!exploration_costmap_->worldToMap(goal_point.x, goal_point.y, mx, my))
+        {
+            LOG_ERROR("Goal point is off the global costmap.");
+            return false;
+        }
+        int map_goal[2] = {static_cast<int>(mx), static_cast<int>(my)};
+
+        // Create and configure the planner.
+        auto planner = std::make_unique<frontier_exploration::ThetaStar>();
+        planner->costmap_ = exploration_costmap_;
+        planner->how_many_corners_ = 8;
+        planner->allow_unknown_ = planner_allow_unknown;
+        planner->w_euc_cost_ = 1.0;
+        planner->w_traversal_cost_ = 2.0;
+        planner->w_heuristic_cost_ = planner->w_euc_cost_ < 1.0 ? planner->w_euc_cost_ : 1.0;
+        planner->setStartAndGoal(start_point, goal_point);
+        std::vector<coordsW> thetapath;
+        if (planner->isUnsafeToPlan())
+        {
+            LOG_ERROR("Either of the start or goal pose are an obstacle! ");
+            return false;
+        }
+        else if (planner->generatePath(thetapath))
+        {
+            planner->linearInterpolation(thetapath, exploration_costmap_->getResolution(), path);
+            // global_path = linearInterpolation(thetapath, planner->costmap_->getResolution());
+        }
+        else
+        {
+            LOG_ERROR("Could not generate path between the given poses");
+            return false;
+        }
+        return true;
     }
 }

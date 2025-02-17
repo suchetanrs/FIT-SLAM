@@ -78,6 +78,7 @@ add_executable(explore_server
 src/controllers/recovery_controller.cpp 
 src/controllers/initialization_controller.cpp 
 src/planners/planner.cpp 
+src/planners/theta_star.cpp 
 src/planners/FrontierRoadmap.cpp 
 src/planners/astar.cpp 
 src/util/event_logger.cpp 
@@ -127,22 +128,22 @@ add_executable(frontier_class tests/frontier_class.cpp src/Frontier.cpp)
 ament_target_dependencies(frontier_class ${dependencies})
 # target_link_libraries(frontier_class taskAllocator_lib ${PCL_LIBRARIES})
 
-add_executable(main_fim_computation tests/main_fim_computation.cpp src/Helpers.cpp src/Frontier.cpp src/util/event_logger.cpp)
+add_executable(main_fim_computation tests/main_fim_computation.cpp src/Helpers.cpp src/planners/planner.cpp src/planners/theta_star.cpp src/Frontier.cpp src/util/event_logger.cpp)
 ament_target_dependencies(main_fim_computation ${dependencies})
 # target_link_libraries(main_fim_computation taskAllocator_lib ${PCL_LIBRARIES})
 
-add_executable(fim_viz tests/fim_viz.cpp src/Helpers.cpp src/Frontier.cpp src/util/event_logger.cpp)
+add_executable(fim_viz tests/fim_viz.cpp src/Helpers.cpp src/planners/planner.cpp src/planners/theta_star.cpp src/Frontier.cpp src/util/event_logger.cpp)
 ament_target_dependencies(fim_viz ${dependencies})
 # target_link_libraries(fim_viz taskAllocator_lib ${PCL_LIBRARIES})
 
 add_executable(load_fi_lookup src/fisher_information/FisherInfoManager.cpp src/fisher_information/LoadLookupMain.cpp 
-                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
+                                  src/Frontier.cpp src/Helpers.cpp src/planners/planner.cpp src/planners/theta_star.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
 ament_target_dependencies(load_fi_lookup ${dependencies})
 target_link_libraries(load_fi_lookup taskAllocator_lib ${PCL_LIBRARIES} ${YAML_CPP_LIBRARIES})
 # target_link_libraries(fim_viz taskAllocator_lib ${PCL_LIBRARIES})
 
 add_executable(gen_fi_lookup src/fisher_information/FisherInfoManager.cpp src/fisher_information/GenerateLookupMain.cpp 
-                                  src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
+                                  src/Frontier.cpp src/Helpers.cpp src/planners/planner.cpp src/planners/theta_star.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
 ament_target_dependencies(gen_fi_lookup ${dependencies})
 target_link_libraries(gen_fi_lookup taskAllocator_lib ${PCL_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
@@ -150,12 +151,12 @@ add_executable(roadmap_vertices_saver tests/frontier_roadmap_tests/roadmap_verti
 ament_target_dependencies(roadmap_vertices_saver ${dependencies})
 
 add_executable(continous_fi_test tests/continous_fi_test.cpp src/fisher_information/FisherInfoManager.cpp
-              src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
+              src/Frontier.cpp src/Helpers.cpp src/planners/planner.cpp src/planners/theta_star.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
 ament_target_dependencies(continous_fi_test ${dependencies})
 target_link_libraries(continous_fi_test taskAllocator_lib ${PCL_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 add_executable(pose_fi_test tests/pose_fi_test.cpp src/fisher_information/FisherInfoManager.cpp
-              src/Frontier.cpp src/Helpers.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
+              src/Frontier.cpp src/Helpers.cpp src/planners/planner.cpp src/planners/theta_star.cpp src/planners/FrontierRoadmap.cpp src/util/event_logger.cpp src/planners/astar.cpp src/util/rosVisualizer.cpp src/Parameters.cpp)
 ament_target_dependencies(pose_fi_test ${dependencies})
 target_link_libraries(pose_fi_test taskAllocator_lib ${PCL_LIBRARIES} ${YAML_CPP_LIBRARIES})
 

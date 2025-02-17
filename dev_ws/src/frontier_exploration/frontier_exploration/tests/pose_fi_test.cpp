@@ -13,9 +13,10 @@
 class PoseSafetyCheckerNode
 {
 public:
-    PoseSafetyCheckerNode(rclcpp::Node::SharedPtr node)
+    PoseSafetyCheckerNode(rclcpp::Node::SharedPtr node, std::string color_value)
         : node_(node)
     {
+        color_value_ = color_value;
         // Initialize FisherInformationManager with this node's shared pointer.
         fisher_info_manager_ = std::make_shared<frontier_exploration::FisherInformationManager>(node_);
 
@@ -68,13 +69,13 @@ private:
         geometry_msgs::msg::Point p1, p2, p3;
         p1.x = 0.0;
         p1.y = 0.0;
-        p1.z = 0.0;
+        p1.z = 0.3;
         p2.x = 1.3;
         p2.y = -0.75;
-        p2.z = 0.0;
+        p2.z = 0.3;
         p3.x = 1.3;
         p3.y = 0.75;
-        p3.z = 0.0;
+        p3.z = 0.3;
         marker.points.push_back(p1);
         marker.points.push_back(p2);
         marker.points.push_back(p3);
@@ -127,10 +128,26 @@ private:
                 // Normalize the value between 0 (min) and 1 (max).
                 float normalized = (info - global_min_info_) / range;
                 // Map the normalized value to a rainbow color.
-                // marker.color = getRainbowColor(normalized);
-                marker.color = getBlueShadeColor(normalized);
+                if(color_value_ == "rainbow")
+                    marker.color = getRainbowColor(normalized);
+                else if(color_value_ == "blue_shade")
+                    marker.color = getBlueShadeColor(normalized);
+                else if(color_value_ == "just_blue")
+                    marker.color = getBlueColor(normalized);
+                else
+                    throw std::runtime_error("Color scheme invalid");
             }
         }
+    }
+
+    std_msgs::msg::ColorRGBA getBlueColor(float normalized)
+    {
+        std_msgs::msg::ColorRGBA color;
+        color.r = 0.03f;
+        color.g = 0.94f;
+        color.b = 0.901f;
+        color.a = 1.0f;
+        return color;
     }
 
     // Map a normalized value [0,1] to a color on the rainbow.
@@ -230,6 +247,7 @@ private:
     rclcpp::Node::SharedPtr node_;
     visualization_msgs::msg::MarkerArray marker_array_;
     geometry_msgs::msg::PoseArray pose_array_;
+    std::string color_value_;
 
     // Map to store each marker's information value (using marker id as key).
     std::map<int, float> marker_information_map_;
@@ -242,8 +260,10 @@ private:
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
+    std::string arg_value;
+    arg_value = argv[1];
     auto node = rclcpp::Node::make_shared("pose_fi_test");
-    auto checker_node = std::make_shared<PoseSafetyCheckerNode>(node);
+    auto checker_node = std::make_shared<PoseSafetyCheckerNode>(node, arg_value);
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;

@@ -19,6 +19,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node)
     observable_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("observable_cells", 10);
     connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
+    full_path_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("full_path", 10);
     fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
     trailing_robot_poses_publisher_ = node->create_publisher<geometry_msgs::msg::PoseArray>("trailing_robot_poses", 10);
     costmap_ = nullptr;
@@ -41,6 +42,7 @@ RosVisualizer::RosVisualizer(rclcpp::Node::SharedPtr node, nav2_costmap_2d::Cost
     observable_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("observable_cells", 10);
     connecting_cells_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("connecting_cells", 10);
     frontier_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("frontier_plan", 10);
+    full_path_plan_pub_ = node->create_publisher<nav_msgs::msg::Path>("full_path", 10);
     fov_marker_publisher_ = node->create_publisher<visualization_msgs::msg::Marker>("path_fovs", 10);
     trailing_robot_poses_publisher_ = node->create_publisher<geometry_msgs::msg::PoseArray>("trailing_robot_poses", 10);
     costmap_ = costmap;
@@ -379,6 +381,11 @@ void RosVisualizer::exportMapCoverage(std::vector<double> polygon_xy_min_max, in
 void RosVisualizer::frontierPlanViz(nav_msgs::msg::Path &path)
 {
     frontier_plan_pub_->publish(path);
+}
+
+void RosVisualizer::fullPathPlanViz(nav_msgs::msg::Path &path)
+{
+    full_path_plan_pub_->publish(path);
 }
 
 void RosVisualizer::visualizeTrailingPoses(std::deque<geometry_msgs::msg::Pose> robot_queue)

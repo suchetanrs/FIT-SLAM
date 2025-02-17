@@ -7,7 +7,6 @@ Panels:
         - /frontierCellMarker1/Topic1
         - /frontierCellMarker1/Namespaces1
         - /frontierRoadMapPlan1
-        - /localSearchArea1/Namespaces1
         - /globalPath1
         - /GridMap1
         - /blacklistedRegions1
@@ -31,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: visibleLandmarks
+    SyncSource: clusteredFrontiers
   - Class: rviz_common/Displays
     Help Height: 85
     Name: Displays
@@ -47,11 +46,30 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Global Options1
+        - /spatialHashMapPoints1
+        - /frontierRoadMapPlan1
+        - /frontierRoadmap1
+        - /globalPath1
+        - /localCost1
+        - /globalCost1
         - /localTraver1
+        - /globalTraver1
+        - /exploreCostmap1
+        - /GridMap1
+        - /map1
+        - /Pose1
         - /PointCloud21
-        - /base_link2
+        - /base_link1
+        - /TF1
+        - /TF1/Frames1
+        - /map2
+        - /Image1
+        - /MarkerArray2
+        - /MarkerArray2/Namespaces1
+        - /Path1
       Splitter Ratio: 0.5
-    Tree Height: 493
+    Tree Height: 498
   - Class: rviz_plugin/FIT-SLAM Control
     Name: FIT-SLAM Control
 Visualization Manager:
@@ -61,7 +79,7 @@ Visualization Manager:
       Cell Size: 1
       Class: rviz_default_plugins/Grid
       Color: 172; 172; 172
-      Enabled: true
+      Enabled: false
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
@@ -74,7 +92,7 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 60
       Reference Frame: <Fixed Frame>
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -143,7 +161,7 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
-    - Alpha: 1
+    - Alpha: 0.6000000238418579
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
         Max Value: 10
@@ -153,7 +171,7 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 85; 255; 127
-      Color Transformer: FlatColor
+      Color Transformer: RGB8
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -164,8 +182,8 @@ Visualization Manager:
       Name: visibleLandmarks
       Position Transformer: XYZ
       Selectable: true
-      Size (Pixels): 3
-      Size (m): 0.10000000149011612
+      Size (Pixels): 10
+      Size (m): 0.07000000029802322
       Style: Spheres
       Topic:
         Depth: 5
@@ -189,7 +207,7 @@ Visualization Manager:
       Color: 85; 255; 127
       Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 50
@@ -199,7 +217,7 @@ Visualization Manager:
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.5
+      Size (m): 0.10000000149011612
       Style: Spheres
       Topic:
         Depth: 5
@@ -210,35 +228,10 @@ Visualization Manager:
         Value: /spatial_hashmap_points
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
-    - Class: rviz_default_plugins/MarkerArray
-      Enabled: true
-      Name: frontierCellMarker
-      Namespaces:
-        "": true
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /frontier_cell_markers
-      Value: true
-    - Class: rviz_default_plugins/MarkerArray
-      Enabled: true
-      Name: frontierRoadMapPlan
-      Namespaces:
-        plan_edges: true
-        plan_nodes: true
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /frontier_roadmap_plan
       Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: false
-      Name: localSearchArea
+      Name: frontierCellMarker
       Namespaces:
         {}
       Topic:
@@ -246,7 +239,19 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /local_search_area
+        Value: /frontier_cell_markers
+      Value: false
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: false
+      Name: frontierRoadMapPlan
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /frontier_roadmap_plan
       Value: false
     - Class: rviz_default_plugins/MarkerArray
       Enabled: false
@@ -291,13 +296,13 @@ Visualization Manager:
     - Alpha: 1
       Buffer Length: 1
       Class: rviz_default_plugins/Path
-      Color: 25; 255; 0
+      Color: 255; 255; 255
       Enabled: true
       Head Diameter: 0.30000001192092896
       Head Length: 0.20000000298023224
       Length: 0.30000001192092896
       Line Style: Billboards
-      Line Width: 0.07000000029802322
+      Line Width: 0.20000000298023224
       Name: globalPath
       Offset:
         X: 0
@@ -314,14 +319,14 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /plan_smoothed
+        Value: /frontier_roadmap_nav2_plan
       Value: true
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
       Class: rviz_default_plugins/Pose
       Color: 255; 255; 127
-      Enabled: true
+      Enabled: false
       Head Length: 0.30000001192092896
       Head Radius: 0.6000000238418579
       Name: fi_pose
@@ -335,8 +340,8 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /visible_landmarks_pose
-      Value: true
-    - Alpha: 0.20000000298023224
+      Value: false
+    - Alpha: 1
       Class: rviz_default_plugins/Map
       Color Scheme: map
       Draw Behind: false
@@ -369,18 +374,18 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /global_costmap/costmap
+        Value: /traversability_thresholded
       Update Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /global_costmap/costmap_updates
+        Value: /traversability_thresholded_updates
       Use Timestamp: false
       Value: false
     - Alpha: 0.699999988079071
       Class: rviz_default_plugins/Map
-      Color Scheme: map
+      Color Scheme: costmap
       Draw Behind: false
       Enabled: false
       Name: localTraver
@@ -401,7 +406,7 @@ Visualization Manager:
       Value: false
     - Alpha: 0.30000001192092896
       Class: rviz_default_plugins/Map
-      Color Scheme: map
+      Color Scheme: costmap
       Draw Behind: false
       Enabled: false
       Name: globalTraver
@@ -445,7 +450,7 @@ Visualization Manager:
       Class: rviz_default_plugins/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: exploreCostmap
       Topic:
         Depth: 5
@@ -461,31 +466,31 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /explore_costmap/costmap_updates
       Use Timestamp: false
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: false
+      Enabled: true
       Name: exploration_path_followed
       Namespaces:
-        {}
+        path: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /exploration_path_followed
-      Value: false
-    - Alpha: 0.4000000059604645
+      Value: true
+    - Alpha: 0.20000000298023224
       Autocompute Intensity Bounds: true
       Class: grid_map_rviz_plugin/GridMap
       Color: 200; 200; 200
       Color Layer: hazard
       Color Transformer: GridMapLayer
-      Enabled: true
+      Enabled: false
       Height Layer: hazard
-      Height Transformer: GridMapLayer
+      Height Transformer: ""
       History Length: 1
       Invert Rainbow: true
-      Max Color: 255; 255; 255
+      Max Color: 170; 170; 255
       Max Intensity: 10
       Min Color: 0; 0; 0
       Min Intensity: 0
@@ -499,7 +504,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /RTQuadtree_struct
       Use Rainbow: false
-      Value: true
+      Value: false
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: blacklistedRegions
@@ -514,10 +519,10 @@ Visualization Manager:
       Value: true
     - Class: rviz_default_plugins/Axes
       Enabled: true
-      Length: 1.5
-      Name: base_link
-      Radius: 0.5
-      Reference Frame: base_link
+      Length: 0.800000011920929
+      Name: map
+      Radius: 0.20000000298023224
+      Reference Frame: map
       Value: true
     - Alpha: 0.5
       Arrow Length: 0.30000001192092896
@@ -558,7 +563,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /robot_pose_slam
+        Value: /goal_update
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -590,17 +595,148 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /lidar/points
+        Value: /map_points
       Use Fixed Frame: true
       Use rainbow: true
       Value: false
     - Class: rviz_default_plugins/Axes
       Enabled: true
-      Length: 1.5
+      Length: 0.5
       Name: base_link
-      Radius: 0.5
+      Radius: 0.10000000149011612
+      Reference Frame: base_link
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /pose_markers
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Marker
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualization_marker
+      Value: true
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        base_footprint:
+          Value: false
+        base_link:
+          Value: true
+        camera_link:
+          Value: false
+        camera_link_stand:
+          Value: false
+        chassis:
+          Value: false
+        imu_link:
+          Value: false
+        lidar_link:
+          Value: false
+        map:
+          Value: false
+        odom:
+          Value: false
+      Marker Scale: 3
+      Name: TF
+      Show Arrows: false
+      Show Axes: false
+      Show Names: true
+      Tree:
+        map:
+          odom:
+            base_footprint:
+              base_link:
+                chassis:
+                  camera_link:
+                    {}
+                  camera_link_stand:
+                    {}
+                  imu_link:
+                    {}
+                  lidar_link:
+                    {}
+      Update Interval: 0
+      Value: true
+    - Class: rviz_default_plugins/Axes
+      Enabled: true
+      Length: 0.800000011920929
+      Name: map
+      Radius: 0.20000000298023224
       Reference Frame: odom
       Value: true
+    - Class: rviz_default_plugins/Image
+      Enabled: false
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Image
+      Normalize Range: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /rgb_camera
+      Value: false
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        closest_global_frontier: true
+        local_frontier: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /local_search_area
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz_default_plugins/Path
+      Color: 25; 255; 0
+      Enabled: false
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Billboards
+      Line Width: 0.10000000149011612
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /full_path
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -646,36 +782,33 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz_default_plugins/Orbit
-      Distance: 23.650789260864258
+      Angle: -3.1299965381622314
+      Class: rviz_default_plugins/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Focal Point:
-        X: -3.040201425552368
-        Y: -2.9316318035125732
-        Z: -1.1827197074890137
-      Focal Shape Fixed Size: false
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.0297961235046387
-      Target Frame: base_link
-      Value: Orbit (rviz_default_plugins)
-      Yaw: 4.668597221374512
+      Scale: -23.110448837280273
+      Target Frame: map
+      Value: TopDownOrtho (rviz_default_plugins)
+      X: 1.5344736576080322
+      Y: -0.11558178067207336
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
   FIT-SLAM Control:
     collapsed: false
-  Height: 1003
+  Height: 1043
   Hide Left Dock: false
-  Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000019c00000389fc020000000cfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006b00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007300000000440000020b000000eb00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb000000100044006900730070006c00610079007300000001e0000000ed000000eb00fffffffb00000020004600490054002d0053004c0041004d00200043006f006e00740072006f006c000000004400000379000000ff00fffffffb000000100044006900730070006c006100790073010000004400000283000000eb00fffffffb00000020004600490054002d0053004c0041004d00200043006f006e00740072006f006c01000002ce000000ff000000ff00ffffff000000010000010200000389fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000004400000389000000b900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000072a0000003efc0100000002fb0000000800540069006d00650200000056000003ba0000072a0000003efb0000000800540069006d00650100000000000004500000000000000000000004920000038900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Hide Right Dock: true
+  Image:
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd000000040000000000000277000003b1fc020000000dfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006b00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007300000000440000020b000000eb00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb000000100044006900730070006c00610079007300000001e0000000ed000000eb00fffffffb00000020004600490054002d0053004c0041004d00200043006f006e00740072006f006c000000004400000379000000ff00fffffffb000000100044006900730070006c006100790073010000004400000288000000eb00fffffffb00000020004600490054002d0053004c0041004d00200043006f006e00740072006f006c01000002d300000122000000ff00fffffffb0000000a0049006d0061006700650000000304000000c90000002c00ffffff0000000100000102000003b1fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730000000044000003b1000000b900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000072a0000003efc0100000002fb0000000800540069006d00650200000056000003ba0000072a0000003efb0000000800540069006d00650100000000000004500000000000000000000004c0000003b100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -683,7 +816,7 @@ Window Geometry:
   Tool Properties:
     collapsed: false
   Views:
-    collapsed: false
+    collapsed: true
   Width: 1854
-  X: 66
-  Y: 40
+  X: 1986
+  Y: 0
