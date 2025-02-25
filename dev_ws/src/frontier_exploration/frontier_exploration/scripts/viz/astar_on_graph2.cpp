@@ -8,10 +8,11 @@
 #include "frontier_exploration/Frontier.hpp"
 
 using namespace std;
+ 
 
 // Define a Node structure
 struct Node {
-    Frontier frontier;
+    FrontierPtr frontier;
     double g; // Cost from the start node to this node
     double h; // Heuristic cost estimate to the goal
     double f; // Total cost (f = g + h)

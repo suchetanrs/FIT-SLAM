@@ -97,9 +97,9 @@ public:
 
     int getSize() const;
 
-    geometry_msgs::msg::Point getGoalPoint() const;
+    geometry_msgs::msg::Point& getGoalPoint() const;
 
-    geometry_msgs::msg::Quaternion getGoalOrientation() const;
+    geometry_msgs::msg::Quaternion& getGoalOrientation() const;
 
     double getArrivalInformation() const;
     
@@ -128,31 +128,33 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Frontier& obj) {
         // Customize the output format here
         os << "Frontier(x: " << obj.getGoalPoint().x << ", y: " << obj.getGoalPoint().y << ")";
-        // os << "Frontier Path Length(PL: " << obj.getPathLength() << ", PLm: " << obj.getPathLength() << ")";
+        // os << "Frontier Path Length(PL: " << obj->getPathLength() << ", PLm: " << obj->getPathLength() << ")";
         return os;
     }
 };
 
+using FrontierPtr = std::shared_ptr<Frontier>;
+
 // Custom equality function
 struct FrontierGoalPointEquality {
-    bool operator()(const Frontier& lhs, const Frontier& rhs) const {
-        return lhs.getGoalPoint() == rhs.getGoalPoint();
+    bool operator()(const FrontierPtr& lhs, const FrontierPtr& rhs) const {
+        return lhs->getGoalPoint() == rhs->getGoalPoint();
     }
 };
 
 struct FrontierGoalPointEqualityInRange {
-    bool operator()(const Frontier& lhs, const Frontier& rhs) const {
-        return abs(lhs.getGoalPoint().x - rhs.getGoalPoint().x) < 0.3 && abs(lhs.getGoalPoint().y - rhs.getGoalPoint().y) < 0.3;
+    bool operator()(const FrontierPtr& lhs, const FrontierPtr& rhs) const {
+        return abs(lhs->getGoalPoint().x - rhs->getGoalPoint().x) < 0.3 && abs(lhs->getGoalPoint().y - rhs->getGoalPoint().y) < 0.3;
     }
 };
 
-inline size_t generateUID(const Frontier& output)
+inline size_t generateUID(const FrontierPtr& output)
 {
     std::hash<double> hash_fn;
     // std::cout << "Generating UID" << std::endl;
     // Hash each double value
-    std::size_t hash1 = hash_fn(output.getGoalPoint().x);
-    std::size_t hash2 = hash_fn(output.getGoalPoint().y);
+    std::size_t hash1 = hash_fn(output->getGoalPoint().x);
+    std::size_t hash2 = hash_fn(output->getGoalPoint().y);
 
     // return hash1 ^ (hash2 << 1);
     return hash1 ^ (hash2 << 1);
@@ -160,7 +162,7 @@ inline size_t generateUID(const Frontier& output)
 
 struct FrontierHash
 {
-    size_t operator()(const Frontier &key) const
+    size_t operator()(const FrontierPtr &key) const
     {
         // Calculate hash based on some combination of member variables
         size_t hash = 0;
@@ -168,8 +170,8 @@ struct FrontierHash
         //         std::hash<double>()(key.min_distance) ^
         //         std::hash<double>()(key.unique_id);
 
-        hash = std::hash<double>()(key.getGoalPoint().x) ^
-                (std::hash<double>()(key.getGoalPoint().y) << 1);
+        hash = std::hash<double>()(key->getGoalPoint().x) ^
+                (std::hash<double>()(key->getGoalPoint().y) << 1);
                 // std::hash<uint32_t>()(key.size) ^
                 // std::hash<double>()(key.min_distance) ^
                 // std::hash<double>()(key.unique_id);

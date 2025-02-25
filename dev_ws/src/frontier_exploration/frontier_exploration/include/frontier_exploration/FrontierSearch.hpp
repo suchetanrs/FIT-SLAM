@@ -22,6 +22,7 @@
 
 namespace frontier_exploration
 {
+     
     /**
      * @brief Thread-safe implementation of a frontier-search task for an input costmap.
      */
@@ -55,7 +56,7 @@ namespace frontier_exploration
          * @param position Initial position to search from
          * @return List of frontiers, if any
          */
-        std::vector<Frontier> searchFrom(geometry_msgs::msg::Point position);
+        std::vector<FrontierPtr> searchFrom(geometry_msgs::msg::Point position);
 
         /**
          * @brief Getter function for all frontiers unclustered.
@@ -71,7 +72,7 @@ namespace frontier_exploration
          * @param frontier_flag Flag vector indicating which cells are already marked as frontiers
          * @return
          */
-        std::vector<Frontier> buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool> &frontier_flag);
+        std::vector<FrontierPtr> buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool> &frontier_flag);
 
         /**
          * @brief isNewFrontierCell Evaluate if candidate cell is a valid candidate for a new frontier.

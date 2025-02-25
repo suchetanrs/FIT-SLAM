@@ -12,7 +12,7 @@
 
 namespace frontier_exploration
 {
-
+     
     struct Point2D
     {
         double x;
@@ -89,9 +89,9 @@ namespace frontier_exploration
         return quat_msg;
     };
 
-    inline double distanceBetweenFrontiers(const Frontier &f1, const Frontier &f2)
+    inline double distanceBetweenFrontiers(const FrontierPtr &f1, const FrontierPtr &f2)
     {
-        return sqrt(pow(f1.getGoalPoint().x - f2.getGoalPoint().x, 2) + pow(f1.getGoalPoint().y - f2.getGoalPoint().y, 2));
+        return sqrt(pow(f1->getGoalPoint().x - f2->getGoalPoint().x, 2) + pow(f1->getGoalPoint().y - f2->getGoalPoint().y, 2));
     };
 
     inline double distanceBetweenPoints(const geometry_msgs::msg::Point &f1, const geometry_msgs::msg::Point &f2)
@@ -104,9 +104,9 @@ namespace frontier_exploration
         return sqrt(pow(f1.x - x2, 2) + pow(f1.y - y2, 2));
     };
 
-    inline double sqDistanceBetweenFrontiers(const Frontier &f1, const Frontier &f2)
+    inline double sqDistanceBetweenFrontiers(const FrontierPtr &f1, const FrontierPtr &f2)
     {
-        return pow(f1.getGoalPoint().x - f2.getGoalPoint().x, 2) + pow(f1.getGoalPoint().y - f2.getGoalPoint().y, 2);
+        return pow(f1->getGoalPoint().x - f2->getGoalPoint().x, 2) + pow(f1->getGoalPoint().y - f2->getGoalPoint().y, 2);
     };
 
     inline void getRelativePoseGivenTwoPoints(const geometry_msgs::msg::Point& point_from, const geometry_msgs::msg::Point& point_to, geometry_msgs::msg::Pose& oriented_pose)
@@ -139,20 +139,20 @@ namespace frontier_exploration
         return;
     };
 
-    inline double getFOVFrontierPair(const Frontier &frontier_from, const Frontier &frontier_to, double hfov, std::vector<Point2D> &FOV)
+    inline double getFOVFrontierPair(const FrontierPtr &frontier_from, const FrontierPtr &frontier_to, double hfov, std::vector<Point2D> &FOV)
     {
-        double delta_x = frontier_to.getGoalPoint().x - frontier_from.getGoalPoint().x;
-        double delta_y = frontier_to.getGoalPoint().y - frontier_from.getGoalPoint().y;
+        double delta_x = frontier_to->getGoalPoint().x - frontier_from->getGoalPoint().x;
+        double delta_y = frontier_to->getGoalPoint().y - frontier_from->getGoalPoint().y;
         auto alpha = atan2(delta_y, delta_x);
         auto max_depth = distanceBetweenFrontiers(frontier_from, frontier_to);
 
-        Point2D point = {frontier_from.getGoalPoint().x, frontier_from.getGoalPoint().y};
+        Point2D point = {frontier_from->getGoalPoint().x, frontier_from->getGoalPoint().y};
         FOV.push_back(point);
 
-        point = {frontier_from.getGoalPoint().x + max_depth * cos(alpha - hfov / 2), frontier_from.getGoalPoint().y + max_depth * sin(alpha - hfov / 2)};
+        point = {frontier_from->getGoalPoint().x + max_depth * cos(alpha - hfov / 2), frontier_from->getGoalPoint().y + max_depth * sin(alpha - hfov / 2)};
         FOV.push_back(point);
 
-        point = {frontier_from.getGoalPoint().x + max_depth * cos(alpha + hfov / 2), frontier_from.getGoalPoint().y + max_depth * sin(alpha + hfov / 2)};
+        point = {frontier_from->getGoalPoint().x + max_depth * cos(alpha + hfov / 2), frontier_from->getGoalPoint().y + max_depth * sin(alpha + hfov / 2)};
         FOV.push_back(point);
 
         return alpha;

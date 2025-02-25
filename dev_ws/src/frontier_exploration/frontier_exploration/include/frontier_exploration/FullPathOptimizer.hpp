@@ -20,6 +20,7 @@ const bool ADD_DISTANCE_TO_ROBOT_TO_TSP = false;
 const double BLACKLISTING_CIRCLE_RADIUS = 1.7; // in m
 namespace frontier_exploration
 {
+     
     enum PathSafetyStatus {
         SAFE,         // 0
         UNSAFE,       // 1
@@ -29,26 +30,26 @@ namespace frontier_exploration
     struct FrontierPair
     {
         // Constructor
-        FrontierPair(Frontier f1_, Frontier f2_) : f1(f1_), f2(f2_) {}
+        FrontierPair(FrontierPtr f1_, FrontierPtr f2_) : f1(f1_), f2(f2_) {}
 
-        Frontier f1;
-        Frontier f2;
+        FrontierPtr f1;
+        FrontierPtr f2;
 
         // Custom operator< for ordering points in the map
         bool operator<(const FrontierPair &other) const
         {
             // Compare f1 and f2 in lexicographical order
-            if (f1.getUID() != other.f1.getUID())
+            if (f1->getUID() != other.f1->getUID())
             {
-                return f1.getUID() < other.f1.getUID();
+                return f1->getUID() < other.f1->getUID();
             }
-            return f2.getUID() < other.f2.getUID();
+            return f2->getUID() < other.f2->getUID();
         }
 
         bool operator==(const FrontierPair &other) const
         {
             // Compare f1 and f2 in lexicographical order
-            return f2.getGoalPoint() == other.f2.getGoalPoint() && f1.getGoalPoint() == other.f1.getGoalPoint();
+            return f2->getGoalPoint() == other.f2->getGoalPoint() && f1->getGoalPoint() == other.f1->getGoalPoint();
         }
     };
 
@@ -57,9 +58,9 @@ namespace frontier_exploration
     {
         std::size_t operator()(const FrontierPair &fp) const
         {
-            // Combine the hash of both Frontier objects
-            std::size_t h1 = std::hash<int>{}(fp.f1.getUID());
-            std::size_t h2 = std::hash<int>{}(fp.f2.getUID());
+            // Combine the hash of both FrontierPtr objects
+            std::size_t h1 = std::hash<int>{}(fp.f1->getUID());
+            std::size_t h2 = std::hash<int>{}(fp.f2->getUID());
 
             // Hash combination technique (can vary)
             return h1 ^ (h2 << 1); // Example of hash combining
@@ -68,9 +69,9 @@ namespace frontier_exploration
 
     struct SortedFrontiers
     {
-        std::vector<Frontier> local_frontiers;
-        std::vector<Frontier> global_frontiers;
-        Frontier closest_global_frontier;
+        std::vector<FrontierPtr> local_frontiers;
+        std::vector<FrontierPtr> global_frontiers;
+        FrontierPtr closest_global_frontier;
     };
 
     class FullPathOptimizer
@@ -83,30 +84,30 @@ namespace frontier_exploration
         void publishBlacklistPoses();
 
         // new
-        void addToMarkerArrayLinePolygon(visualization_msgs::msg::MarkerArray &marker_array, std::vector<Frontier> &frontier_list,
+        void addToMarkerArrayLinePolygon(visualization_msgs::msg::MarkerArray &marker_array, std::vector<FrontierPtr> &frontier_list,
                                          std::string ns, float r, float g, float b, int id);
 
         void addToMarkerArraySolidPolygon(visualization_msgs::msg::MarkerArray &marker_array, geometry_msgs::msg::Point center, double radius, std::string ns, float r, float g, float b, int id);
 
-        PathSafetyStatus isPathSafe(std::vector<Frontier>& pathToFollow);
+        PathSafetyStatus isPathSafe(std::vector<FrontierPtr>& pathToFollow);
 
         PathSafetyStatus isRobotPoseSafe(geometry_msgs::msg::Pose& robotPose);
 
-        double calculateLengthRobotToGoal(const Frontier& robot, const Frontier& goal, geometry_msgs::msg::PoseStamped& robotP);
+        double calculateLengthRobotToGoal(const FrontierPtr& robot, const FrontierPtr& goal, geometry_msgs::msg::PoseStamped& robotP);
 
-        double calculatePathLength(std::vector<Frontier> &path);
+        double calculatePathLength(std::vector<FrontierPtr> &path);
 
-        bool getBestFullPath(SortedFrontiers& sortedFrontiers, std::vector<Frontier>& bestPath, geometry_msgs::msg::PoseStamped &robotP);
+        bool getBestFullPath(SortedFrontiers& sortedFrontiers, std::vector<FrontierPtr>& bestPath, geometry_msgs::msg::PoseStamped &robotP);
 
-        bool prepareGlobalOptimization(SortedFrontiers& sortedFrontiers, std::vector<Frontier>& bestPath, geometry_msgs::msg::PoseStamped &robotP);
+        bool prepareGlobalOptimization(SortedFrontiers& sortedFrontiers, std::vector<FrontierPtr>& bestPath, geometry_msgs::msg::PoseStamped &robotP);
 
-        void getFilteredFrontiersN(std::vector<Frontier> &frontier_list, size_t n, SortedFrontiers &sortedFrontiers, geometry_msgs::msg::PoseStamped &robotP);
+        void getFilteredFrontiersN(std::vector<FrontierPtr> &frontier_list, size_t n, SortedFrontiers &sortedFrontiers, geometry_msgs::msg::PoseStamped &robotP);
 
-        void getFilteredFrontiers(std::vector<Frontier> &frontier_list, SortedFrontiers &sortedFrontiers, geometry_msgs::msg::PoseStamped &robotP);
+        void getFilteredFrontiers(std::vector<FrontierPtr> &frontier_list, SortedFrontiers &sortedFrontiers, geometry_msgs::msg::PoseStamped &robotP);
 
-        PathSafetyStatus getNextGoal(std::vector<Frontier> &frontier_list, Frontier& nextFrontier, size_t n, geometry_msgs::msg::PoseStamped &robotP, bool use_fi);
+        PathSafetyStatus getNextGoal(std::vector<FrontierPtr> &frontier_list, FrontierPtr& nextFrontier, size_t n, geometry_msgs::msg::PoseStamped &robotP, geometry_msgs::msg::PoseStamped &robotPFI, bool use_fi);
 
-        bool refineAndPublishPath(geometry_msgs::msg::PoseStamped& robotP, Frontier& goalFrontier);
+        bool refineAndPublishPath(geometry_msgs::msg::PoseStamped& robotP, FrontierPtr& goalFrontier);
 
         void clearPlanCache()
         {
@@ -114,29 +115,29 @@ namespace frontier_exploration
             pair_path_safe_.clear();
         };
 
-        bool isInBlacklistedRegion(const Frontier& frontier)
+        bool isInBlacklistedRegion(const FrontierPtr& frontier)
         {
             // verify that frontier is not in blacklisted zone
             for(auto& blacklistedZone : circularBlacklistCenters_)
             {
                 if(distanceBetweenFrontiers(frontier, blacklistedZone) < BLACKLISTING_CIRCLE_RADIUS)
                 {
-                    // frontier.setAchievability(false);
+                    // frontier->setAchievability(false);
                     return true;
                 }
             }
             return false;
         };
 
-        void blacklistFrontier(Frontier& frontier)
+        void blacklistFrontier(FrontierPtr& frontier)
         {
             circularBlacklistCenters_.push_back(frontier);
         }
 
-        void blacklistFrontier(geometry_msgs::msg::PoseStamped pose, Frontier& frontier)
+        void blacklistFrontier(geometry_msgs::msg::PoseStamped pose, FrontierPtr& frontier)
         {
             auto robotYaw = quatToEuler(pose.pose.orientation)[2];
-            pose.pose.position = frontier.getGoalPoint();
+            pose.pose.position = frontier->getGoalPoint();
             pose.pose.position.x += (BLACKLISTING_CIRCLE_RADIUS * cos(robotYaw));
             pose.pose.position.y += (BLACKLISTING_CIRCLE_RADIUS * sin(robotYaw));
             robotYaw += M_PI;
@@ -169,7 +170,7 @@ namespace frontier_exploration
         std::shared_ptr<FisherInformationManager> fisher_information_manager_;
         std::unordered_map<FrontierPair, RoadmapPlanResult, FrontierPairHash> frontier_pair_distances_;
         std::unordered_map<FrontierPair, bool, FrontierPairHash> pair_path_safe_;
-        std::vector<Frontier> circularBlacklistCenters_;
+        std::vector<FrontierPtr> circularBlacklistCenters_;
         geometry_msgs::msg::PoseArray poseBlacklists_;
         bool blacklistNextGoal_;
         double angle_for_fov_overlap_;

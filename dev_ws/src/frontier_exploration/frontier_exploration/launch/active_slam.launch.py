@@ -59,6 +59,14 @@ def generate_launch_description():
             param_rewrites=param_substitutions,
             convert_types=True)
         
+        exploration_accuracy = Node(
+            package='frontier_exploration',
+            executable='exploration_accuracy',
+            output='screen',
+            namespace=context.launch_configurations['robot_namespace'],
+            parameters=[configured_params]
+        )
+
         explore_server = Node(
             package='frontier_exploration',
             executable='explore_server',
@@ -88,6 +96,7 @@ def generate_launch_description():
 
         return [declare_params_file_cmd, 
                 explore_server, 
+                exploration_accuracy,
                 exploration_path_followed, 
                 explored_map_counter]
 

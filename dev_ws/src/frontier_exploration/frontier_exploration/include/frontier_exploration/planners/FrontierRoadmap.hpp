@@ -29,6 +29,7 @@
 
 namespace frontier_exploration
 {
+     
     struct RoadmapPlanResult
     {
         std::vector<std::shared_ptr<Node>> path;
@@ -55,11 +56,11 @@ namespace frontier_exploration
                 frontierRoadmapPtr.reset(new FrontierRoadMap(explore_costmap_ros));
         }
 
-        void addNodes(const std::vector<Frontier> &frontiers, bool populateClosest);
+        void addNodes(const std::vector<FrontierPtr> &frontiers, bool populateClosest);
 
         void addRobotPoseAsNode(geometry_msgs::msg::Pose &start_pose_w, bool populateClosest);
 
-        void constructNewEdges(const std::vector<Frontier> &frontiers);
+        void constructNewEdges(const std::vector<FrontierPtr> &frontiers);
 
         void constructNewEdgeRobotPose(const geometry_msgs::msg::Pose &rPose);
 
@@ -69,7 +70,7 @@ namespace frontier_exploration
         {
             std::lock_guard<std::mutex> lock(spatial_hash_map_mutex_);
             std::size_t total_items = 0;
-            std::vector<Frontier> master_frontier_list;
+            std::vector<FrontierPtr> master_frontier_list;
             for (const auto &cell : spatial_hash_map_)
             {
                 master_frontier_list.insert(master_frontier_list.end(), cell.second.begin(), cell.second.end());
@@ -87,20 +88,20 @@ namespace frontier_exploration
             return trailing_robot_poses_;
         };
 
-        void addFrontierToBlacklist(Frontier& frontier)
+        void addFrontierToBlacklist(FrontierPtr& frontier)
         {
             blacklisted_frontiers_.push_back(frontier);
         }
 
         RoadmapPlanResult getPlan(double xs, double ys, bool useClosestToStart, double xe, double ye, bool useClosestToEnd, bool publish_plan);
 
-        RoadmapPlanResult getPlan(Frontier &startNode, bool useClosestToStart, Frontier &endNode, bool useClosestToEnd);
+        RoadmapPlanResult getPlan(FrontierPtr &startNode, bool useClosestToStart, FrontierPtr &endNode, bool useClosestToEnd);
 
-        std::vector<Frontier> refinePath(RoadmapPlanResult& planResult);
+        std::vector<FrontierPtr> refinePath(RoadmapPlanResult& planResult);
         
         const void publishPlan(const std::vector<std::shared_ptr<Node>> &plan, float r, float g, float b) const;
 
-        const void publishPlan(const std::vector<Frontier> &plan, std::string planType) const;
+        const void publishPlan(const std::vector<FrontierPtr> &plan, std::string planType) const;
 
     private:
         void mapDataCallback(slam_msgs::msg::MapData mapData);
@@ -123,24 +124,24 @@ namespace frontier_exploration
 
         std::pair<int, int> getGridCell(double x, double y);
 
-        void populateNodes(const std::vector<Frontier> &frontiers, bool populateClosest, double min_distance_between_to_add, bool addNewToQueue);
+        void populateNodes(const std::vector<FrontierPtr> &frontiers, bool populateClosest, double min_distance_between_to_add, bool addNewToQueue);
 
-        void getNodesWithinRadius(const Frontier &interestNode, std::vector<Frontier> &closestNodeVector, const double radius);
+        void getNodesWithinRadius(const FrontierPtr &interestNode, std::vector<FrontierPtr> &closestNodeVector, const double radius);
 
-        void getNodesWithinRadius(const geometry_msgs::msg::Point &interestPoint, std::vector<Frontier> &closestNodeVector, const double radius);
+        void getNodesWithinRadius(const geometry_msgs::msg::Point &interestPoint, std::vector<FrontierPtr> &closestNodeVector, const double radius);
 
-        void getClosestNodeInHashmap(const Frontier &interestNode, Frontier &closestNode);
+        void getClosestNodeInHashmap(const FrontierPtr &interestNode, FrontierPtr &closestNode);
 
-        void getClosestNodeInRoadMap(const Frontier &interestNode, Frontier &closestNode);
+        void getClosestNodeInRoadMap(const FrontierPtr &interestNode, FrontierPtr &closestNode);
 
-        bool isPointBlacklisted(const Frontier& point);
+        bool isPointBlacklisted(const FrontierPtr& point);
 
         std::mutex &getRoadmapMutex()
         {
             return roadmap_mutex_;
         };
 
-        std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash> &getRoadMap()
+        std::unordered_map<FrontierPtr, std::vector<FrontierPtr>, FrontierHash> &getRoadMap()
         {
             return roadmap_;
         };
@@ -151,13 +152,13 @@ namespace frontier_exploration
         static std::unique_ptr<FrontierRoadMap> frontierRoadmapPtr;
         static std::mutex instanceMutex_;
 
-        bool isConnectable(const Frontier &f1, const Frontier &f2);
+        bool isConnectable(const FrontierPtr &f1, const FrontierPtr &f2);
         nav2_costmap_2d::Costmap2D *costmap_;
         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
 
-        std::unordered_map<std::pair<int, int>, std::vector<Frontier>, spatialHash> spatial_hash_map_;
+        std::unordered_map<std::pair<int, int>, std::vector<FrontierPtr>, spatialHash> spatial_hash_map_;
 
-        std::queue<Frontier> no_kf_parent_queue_;
+        std::queue<FrontierPtr> no_kf_parent_queue_;
         std::unordered_map<int, geometry_msgs::msg::PoseStamped> latest_keyframe_poses_;
         std::unordered_map<std::pair<int, int>, std::vector<int>, spatialHash> spatial_kf_map_;
         std::unordered_map<int, std::vector<Eigen::Vector3f>> keyframe_mapping_;
@@ -165,7 +166,7 @@ namespace frontier_exploration
         std::mutex spatial_hash_map_mutex_;
 
 
-        std::unordered_map<Frontier, std::vector<Frontier>, FrontierHash> roadmap_;
+        std::unordered_map<FrontierPtr, std::vector<FrontierPtr>, FrontierHash> roadmap_;
         std::mutex roadmap_mutex_;
         double max_connection_length_;
         double max_frontier_distance_;
@@ -180,7 +181,7 @@ namespace frontier_exploration
         rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr clicked_point_sub_;
         std::vector<geometry_msgs::msg::Point> clicked_points_;
         std::deque<geometry_msgs::msg::Pose> trailing_robot_poses_;
-        std::vector<Frontier> blacklisted_frontiers_;
+        std::vector<FrontierPtr> blacklisted_frontiers_;
 
         double GRID_CELL_SIZE;
         double RADIUS_TO_DECIDE_EDGES;

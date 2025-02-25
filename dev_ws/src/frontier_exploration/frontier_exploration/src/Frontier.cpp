@@ -156,14 +156,14 @@ int Frontier::getSize() const
     return *size;
 }
 
-geometry_msgs::msg::Point Frontier::getGoalPoint() const
+geometry_msgs::msg::Point& Frontier::getGoalPoint() const
 {
     if (goal_point == nullptr)
         throw std::runtime_error("Goal point frontier property is null");
     return *goal_point;
 }
 
-geometry_msgs::msg::Quaternion Frontier::getGoalOrientation() const
+geometry_msgs::msg::Quaternion& Frontier::getGoalOrientation() const
 {
     if (best_orientation == nullptr || theta_s_star == nullptr)
         throw std::runtime_error("Goal orientation frontier property is null");

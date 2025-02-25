@@ -35,6 +35,9 @@ ParameterHandler::ParameterHandler()
     parameter_map_["goalHysteresis/use_roadmap_planner_distance"] = loaded_node["goalHysteresis"]["use_roadmap_planner_distance"].as<bool>();
 
     parameter_map_["explorationBT/bt_sleep_ms"] = loaded_node["explorationBT"]["bt_sleep_ms"].as<int>();
+    parameter_map_["explorationBT/recover_on_blacklist"] = loaded_node["explorationBT"]["recover_on_blacklist"].as<bool>();
+
+    parameter_map_["fisherInformation/fisher_information_threshold"] = loaded_node["fisherInformation"]["fisher_information_threshold"].as<double>();
 
 
     // sanity checks.

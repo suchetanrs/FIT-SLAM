@@ -2,10 +2,10 @@
 #include "frontier_exploration/Frontier.hpp"
 
 int main() {
-    Frontier frontier;
-    frontier.setGoalPoint(9.0, 98.0);
-    frontier.setPathLength(5.0);
-    frontier.setPathLengthInM(66);
+    FrontierPtr frontier = std::make_shared<Frontier>();
+    frontier->setGoalPoint(9.0, 98.0);
+    frontier->setPathLength(5.0);
+    frontier->setPathLengthInM(66);
     // Test the logging macros
     LOG_TRACE("This is a TRACE message." << 5);
     LOG_DEBUG("This is a DEBUG message.\n" << frontier);

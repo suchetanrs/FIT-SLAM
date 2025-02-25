@@ -16,6 +16,7 @@
 
 namespace frontier_exploration
 {
+     
     class RayTracedCells
     {
     public:
@@ -128,7 +129,7 @@ namespace frontier_exploration
 
     bool isRobotFootprintInLethal(const nav2_costmap_2d::Costmap2D *costmap, unsigned int center_x, unsigned int center_y, double radius_in_cells);
 
-    bool verifyFrontierList(std::vector<Frontier> &frontier_list, const nav2_costmap_2d::Costmap2D *costmap);
+    bool verifyFrontierList(std::vector<FrontierPtr> &frontier_list, const nav2_costmap_2d::Costmap2D *costmap);
     // -------------------------- COSTMAP TOOLS ---------------------------------------------------------
 
     std::vector<unsigned int> nhood4(unsigned int idx, const nav2_costmap_2d::Costmap2D &costmap);

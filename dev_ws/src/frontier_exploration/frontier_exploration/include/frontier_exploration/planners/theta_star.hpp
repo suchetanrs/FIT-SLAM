@@ -27,7 +27,7 @@
 const double INF_COST = DBL_MAX;
 const int UNKNOWN_COST = 255;
 const int OBS_COST = 254;
-const int LETHAL_COST = 252;
+const int LETHAL_COST = 254;
 
 struct coordsM
 {

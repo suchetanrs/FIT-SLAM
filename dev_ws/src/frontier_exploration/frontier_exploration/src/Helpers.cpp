@@ -154,13 +154,13 @@ namespace frontier_exploration
         return false; // Robot fits
     }
 
-    bool verifyFrontierList(std::vector<Frontier> &frontier_list, const nav2_costmap_2d::Costmap2D *costmap)
+    bool verifyFrontierList(std::vector<FrontierPtr> &frontier_list, const nav2_costmap_2d::Costmap2D *costmap)
     {
         for (auto &frontier : frontier_list)
         {
             bool verification_success = false;
             unsigned int mx, my;
-            costmap->worldToMap(frontier.getGoalPoint().x, frontier.getGoalPoint().y, mx, my);
+            costmap->worldToMap(frontier->getGoalPoint().x, frontier->getGoalPoint().y, mx, my);
             auto out = nhood8(costmap->getIndex(mx, my), *costmap);
             for (auto &cell : out)
             {

@@ -38,6 +38,7 @@ namespace frontier_exploration
 
     bool FisherInformationManager::isPoseSafe(geometry_msgs::msg::Pose& given_pose, bool exhaustiveSearch, float& information)
     {
+        double fisher_information_threshold = parameterInstance.getValue<double>("fisherInformation/fisher_information_threshold");
         // fi_pointcloud_pcl_.clear();
         // fi_pointcloud_pcl_.width = 10201;
         // fi_pointcloud_pcl_.height = 1;
@@ -107,7 +108,8 @@ namespace frontier_exploration
         // if(response->map_points.size() > 150)
         //     return true;
         // return false;  
-        if(total_information > 220.5)
+        // if(total_information > 220.5)
+        if(total_information > fisher_information_threshold)
             return true;
         return false;
     }

@@ -190,15 +190,15 @@ void RosVisualizer::landmarkViz(std::vector<frontier_exploration::Point2D> &poin
     fov_marker_publisher_->publish(marker);
 }
 
-void RosVisualizer::visualizeSpatialHashMap(const std::vector<Frontier> &frontier_list, std::string globalFrameID)
+void RosVisualizer::visualizeSpatialHashMap(const std::vector<FrontierPtr> &frontier_list, std::string globalFrameID)
 {
     pcl::PointCloud<pcl::PointXYZI> spatial_hashmap_viz;
     pcl::PointXYZI frontier_point_viz(50);
     for (const auto &frontier : frontier_list)
     {
         // load frontier into visualization poitncloud
-        frontier_point_viz.x = frontier.getGoalPoint().x;
-        frontier_point_viz.y = frontier.getGoalPoint().y;
+        frontier_point_viz.x = frontier->getGoalPoint().x;
+        frontier_point_viz.y = frontier->getGoalPoint().y;
         spatial_hashmap_viz.push_back(frontier_point_viz);
     }
 
@@ -210,7 +210,7 @@ void RosVisualizer::visualizeSpatialHashMap(const std::vector<Frontier> &frontie
     spatial_hashmap_pub_->publish(frontier_viz_output);
 }
 
-void RosVisualizer::visualizeFrontier(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID)
+void RosVisualizer::visualizeFrontier(const std::vector<FrontierPtr> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID)
 {
     // pointcloud for visualization purposes
     pcl::PointCloud<pcl::PointXYZI> frontier_cloud_viz;
@@ -223,8 +223,8 @@ void RosVisualizer::visualizeFrontier(const std::vector<Frontier> &frontier_list
     for (const auto &frontier : frontier_list)
     {
         // load frontier into visualization poitncloud
-        frontier_point_viz.x = frontier.getGoalPoint().x;
-        frontier_point_viz.y = frontier.getGoalPoint().y;
+        frontier_point_viz.x = frontier->getGoalPoint().x;
+        frontier_point_viz.y = frontier->getGoalPoint().y;
         frontier_cloud_viz.push_back(frontier_point_viz);
     }
 
@@ -251,7 +251,7 @@ void RosVisualizer::visualizeFrontier(const std::vector<Frontier> &frontier_list
     all_frontier_cloud_pub_->publish(all_frontier_viz_output);
 }
 
-void RosVisualizer::visualizeFrontierMarker(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID)
+void RosVisualizer::visualizeFrontierMarker(const std::vector<FrontierPtr> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID)
 {
     visualization_msgs::msg::MarkerArray markers;
     int id = 0;
@@ -266,8 +266,8 @@ void RosVisualizer::visualizeFrontierMarker(const std::vector<Frontier> &frontie
         marker.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING; // Text marker type
 
         // Set marker pose (position)
-        marker.pose.position.x = frontier.getGoalPoint().x;
-        marker.pose.position.y = frontier.getGoalPoint().y;
+        marker.pose.position.x = frontier->getGoalPoint().x;
+        marker.pose.position.y = frontier->getGoalPoint().y;
         marker.pose.position.z = 0.0; // Assuming 2D visualization
 
         // Set marker orientation (optional)
@@ -284,10 +284,10 @@ void RosVisualizer::visualizeFrontierMarker(const std::vector<Frontier> &frontie
 
         // Set marker text
         std::stringstream ss;
-        ss << "weighted_cost:" << frontier.getWeightedCost() << "\n dist_ut:" << frontier.getCost("distance_utility")
-           << "\n path_len:" << frontier.getPathLength() << ", " << frontier.getPathLengthInM() << "\n path_heading:" << frontier.getPathHeading() * 180 / M_PI
-           << "\n arrival_ut:" << frontier.getCost("arrival_gain_utility") << "\n arrival_info:" << frontier.getArrivalInformation()
-           << "\n achievability:" << frontier.isAchievable(); // Example: Display weighted cost
+        ss << "weighted_cost:" << frontier->getWeightedCost() << "\n dist_ut:" << frontier->getCost("distance_utility")
+           << "\n path_len:" << frontier->getPathLength() << ", " << frontier->getPathLengthInM() << "\n path_heading:" << frontier->getPathHeading() * 180 / M_PI
+           << "\n arrival_ut:" << frontier->getCost("arrival_gain_utility") << "\n arrival_info:" << frontier->getArrivalInformation()
+           << "\n achievability:" << frontier->isAchievable(); // Example: Display weighted cost
         marker.text = ss.str();
 
         markers.markers.push_back(marker);
@@ -300,11 +300,11 @@ void RosVisualizer::visualizeFrontierMarker(const std::vector<Frontier> &frontie
         arrow_marker.type = visualization_msgs::msg::Marker::ARROW; // Sphere marker type
 
         // Set marker pose (position)
-        arrow_marker.pose.position.x = frontier.getGoalPoint().x;
-        arrow_marker.pose.position.y = frontier.getGoalPoint().y;
+        arrow_marker.pose.position.x = frontier->getGoalPoint().x;
+        arrow_marker.pose.position.y = frontier->getGoalPoint().y;
         arrow_marker.pose.position.z = 0.0; // On the ground (adjust as needed)
 
-        arrow_marker.pose.orientation = frontier.getGoalOrientation();
+        arrow_marker.pose.orientation = frontier->getGoalOrientation();
 
         // Set marker scale (sphere diameter)
         arrow_marker.scale.x = 0.25; // Arrow length
@@ -386,6 +386,11 @@ void RosVisualizer::frontierPlanViz(nav_msgs::msg::Path &path)
 void RosVisualizer::fullPathPlanViz(nav_msgs::msg::Path &path)
 {
     full_path_plan_pub_->publish(path);
+}
+
+size_t RosVisualizer::getNumSubscribersFullPathPlan()
+{
+    return full_path_plan_pub_->get_subscription_count();
 }
 
 void RosVisualizer::visualizeTrailingPoses(std::deque<geometry_msgs::msg::Pose> robot_queue)

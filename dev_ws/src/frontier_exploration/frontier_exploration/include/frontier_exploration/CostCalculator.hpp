@@ -42,6 +42,7 @@
 
 namespace frontier_exploration
 {
+     
     class FrontierCostCalculator {
     public:
         FrontierCostCalculator(std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros);
@@ -52,7 +53,7 @@ namespace frontier_exploration
          * Sets goal orientation to 0 rad if there is an error occurred.
          * If successful, sets the values accordingly.
         */
-        void setArrivalInformationForFrontier(Frontier& goal_point_w, std::vector<double>& polygon_xy_min_max);
+        void setArrivalInformationForFrontier(FrontierPtr& goal_point_w, std::vector<double>& polygon_xy_min_max);
 
         double setMaxArrivalInformation();
 
@@ -62,29 +63,29 @@ namespace frontier_exploration
          * Sets Fisher information to 0 if there is an error occurred or no path is found.
          * If successful, sets the two values accordingly.
         */
-        void setPlanForFrontier(geometry_msgs::msg::Pose start_pose_w, Frontier& goal_point_w,
+        void setPlanForFrontier(geometry_msgs::msg::Pose start_pose_w, FrontierPtr& goal_point_w,
                                                             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
 
-        void setPlanForFrontierEuclidean(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
+        void setPlanForFrontierEuclidean(geometry_msgs::msg::Pose start_pose_w, FrontierPtr& goal_point_w,
                                                             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
 
-        void setPlanForFrontierRoadmap(geometry_msgs::msg::Pose start_pose_w, Frontier& goal_point_w,
+        void setPlanForFrontierRoadmap(geometry_msgs::msg::Pose start_pose_w, FrontierPtr& goal_point_w,
                                                             std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
         
-        void updateRoadmapData(geometry_msgs::msg::Pose& start_pose_w, std::vector<Frontier>& frontiers);
+        void updateRoadmapData(geometry_msgs::msg::Pose& start_pose_w, std::vector<FrontierPtr>& frontiers);
         
         // -----------------Random costs--------------
         double getRandomVal();
 
-        void setRandomMetaData(Frontier& goal_point_w);
+        void setRandomMetaData(FrontierPtr& goal_point_w);
 
         // -----------------For closest frontier implementation-----------------
 
-        void setClosestFrontierMetaData(geometry_msgs::msg::Point start_point_w, Frontier& goal_point_w,
+        void setClosestFrontierMetaData(geometry_msgs::msg::Pose start_pose_w, FrontierPtr& goal_point_w,
                                                         std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data, bool compute_information, bool planner_allow_unknown_);
 
         // --------------Other----------------
-        void recomputeNormalizationFactors(Frontier& frontier);
+        void recomputeNormalizationFactors(FrontierPtr& frontier);
 
         double getMinPlanDistance()
         {

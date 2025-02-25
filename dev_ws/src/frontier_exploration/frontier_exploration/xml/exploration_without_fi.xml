@@ -33,7 +33,7 @@
                     <ReplanTimeoutComplete allocated_frontier="{the_allocated_frontier_after_hysterisis}" timeout_value="0.05"/>
                 </Inverter> -->
                 <Fallback>
-                    <SendNav2Goal allocated_frontier="{the_allocated_frontier_after_hysterisis}" timeout_value="0.05"/>
+                    <SendNav2Goal allocated_frontier="{the_allocated_frontier_after_hysterisis}" timeout_value="0.3"/>
                     <!-- <RecoveryMoveBack move_back_duration="2.0"/> -->
                     <ExecuteRecoveryMove backward_only="false"/>
                 </Fallback>

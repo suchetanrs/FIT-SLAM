@@ -10,7 +10,7 @@ frontier_distance = np.array([
 ])
 
 # Print the original frontier_distance matrix
-print("Frontier Distance Matrix:")
+print("FrontierPtr Distance Matrix:")
 print(frontier_distance)
 
 # Perform the ordering of distances

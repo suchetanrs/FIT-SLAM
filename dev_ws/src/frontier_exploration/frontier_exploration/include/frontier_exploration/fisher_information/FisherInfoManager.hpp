@@ -25,7 +25,7 @@ const float step_max = 0.3; // 0.3, 0.09
 const float division_size = 0.1;
 const float divisions = step_min / step_max; // the number of divisions is 10. This value is 0.1
 // const float subSampleVoxelUntil_m = (1 / divisions) * division_size; // We try to fit 10 divisions in 1.0m, 11 divisions in 1.1m and so on. Every division takes up 10 cm.
-const float subSampleVoxelUntil_m = 2.0;
+const float subSampleVoxelUntil_m = -1.0;
 struct LookupKey {
     std::array<float, 3> components;
 
@@ -57,11 +57,12 @@ namespace std {
 
 namespace frontier_exploration
 {
+     
     // Custom hash function for std::pair<int, int>
     struct frontierPairHash {
-        std::size_t operator() (const std::pair<Frontier, Frontier> &pair) const {
-            auto hash1 = std::hash<size_t>{}(pair.first.getUID());
-            auto hash2 = std::hash<size_t>{}(pair.second.getUID());
+        std::size_t operator() (const std::pair<FrontierPtr, FrontierPtr> &pair) const {
+            auto hash1 = std::hash<size_t>{}(pair.first->getUID());
+            auto hash2 = std::hash<size_t>{}(pair.second->getUID());
             return hash1 ^ (hash2 << 1); // Combine the two hashes
         }
     };
@@ -132,7 +133,7 @@ namespace frontier_exploration
         std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor_;
         rclcpp::Client<slam_msgs::srv::GetLandmarksInView>::SharedPtr client_;
         std::unordered_map<int32_t, geometry_msgs::msg::PoseStamped> keyframe_poses_cache_;
-        std::unordered_map<std::pair<Frontier, Frontier>, float, frontierPairHash> fisher_information_map_;
+        std::unordered_map<std::pair<FrontierPtr, FrontierPtr>, float, frontierPairHash> fisher_information_map_;
         std::unordered_map<LookupKey, LookupValue> lookup_table_fi_;
         unsigned int latest_version_;
         rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr fim_pointcloud_pub_;

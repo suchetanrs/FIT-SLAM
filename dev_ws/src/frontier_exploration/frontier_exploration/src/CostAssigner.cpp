@@ -26,7 +26,7 @@ namespace frontier_exploration
         rclcpp::shutdown();
     }
 
-    bool CostAssigner::processOurApproach(std::vector<Frontier> &frontier_list, geometry_msgs::msg::Pose& start_pose_w)
+    bool CostAssigner::processOurApproach(std::vector<FrontierPtr> &frontier_list, geometry_msgs::msg::Pose& start_pose_w)
     {
         LOG_DEBUG("CostAssigner::processOurApproach");
         eventLoggerInstance.startEvent("processOurApproach");
@@ -64,7 +64,7 @@ namespace frontier_exploration
         PROFILE_FUNCTION;
         // for(auto frontier : requestData->frontier_list)
         // {
-        //     std::cout << "Frontier cost : " << frontier.getWeightedCost() << std::endl;
+        //     std::cout << "FrontierPtr cost : " << frontier->getWeightedCost() << std::endl;
         // }
         // RosVisualizer::getInstance()exportMapCoverage(polygon_xy_min_max_, counter_, exploration_mode_);
         RosVisualizer::getInstance().visualizeFrontierMarker(requestData->frontier_list, requestData->every_frontier, layered_costmap_->getGlobalFrameID());
@@ -84,7 +84,7 @@ namespace frontier_exploration
                 return resultData->success;
             }
             resultData->success = true;
-            std::vector<Frontier> frontiers_list;
+            std::vector<FrontierPtr> frontiers_list;
             std::vector<double> frontier_costs;
             std::vector<double> frontier_distances;
             std::vector<double> frontier_arrival_information;
@@ -92,9 +92,9 @@ namespace frontier_exploration
             for (auto& frontier : requestData->frontier_list)
             {
                 frontiers_list.push_back(frontier);
-                frontier_costs.push_back(frontier.getWeightedCost());
-                frontier_distances.push_back(frontier.getPathLengthInM());
-                frontier_arrival_information.push_back(frontier.getArrivalInformation());
+                frontier_costs.push_back(frontier->getWeightedCost());
+                frontier_distances.push_back(frontier->getPathLengthInM());
+                frontier_arrival_information.push_back(frontier->getArrivalInformation());
                 // LOG_INFO("Cost is: " << resultData->frontier_costs.size();
             }
             LOG_DEBUG("Making list");

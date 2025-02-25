@@ -71,6 +71,60 @@ namespace frontier_exploration
         return all_cells;
     }
 
+    std::vector<unsigned int> getPointsInIsoscelesTriangle(
+        unsigned int apex_x,
+        unsigned int apex_y,
+        unsigned int triangle_height,   // distance from apex to base along the median
+        unsigned int numPoints,         // number of rays to sample along the base
+        double direction,               // direction from the apex toward the base center (in radians)
+        double apex_angle,              // the angle at the apex (in radians)
+        nav2_costmap_2d::Costmap2D& costmap)
+    {
+        std::vector<unsigned int> all_cells;
+    
+        // Compute the center of the base using the triangle height and the given direction.
+        double base_center_x = apex_x + triangle_height * std::cos(direction);
+        double base_center_y = apex_y + triangle_height * std::sin(direction);
+    
+        // For an isosceles triangle, half the base length can be computed using tan(apex_angle/2)
+        double half_base = triangle_height * std::tan(apex_angle / 2.0);
+    
+        // Compute the endpoints of the base by moving perpendicular to the direction.
+        // Adding/subtracting a perpendicular vector rotates the base by 90 degrees.
+        double left_endpoint_x = base_center_x + half_base * std::cos(direction + M_PI_2);
+        double left_endpoint_y = base_center_y + half_base * std::sin(direction + M_PI_2);
+        double right_endpoint_x = base_center_x + half_base * std::cos(direction - M_PI_2);
+        double right_endpoint_y = base_center_y + half_base * std::sin(direction - M_PI_2);
+    
+        // Sample numPoints evenly along the base (from left endpoint to right endpoint).
+        // If numPoints is 1, we simply use the left endpoint (or base center) to avoid division by zero.
+        for (unsigned int i = 0; i < numPoints; ++i)
+        {
+            double t = (numPoints > 1) ? static_cast<double>(i) / (numPoints - 1) : 0.0;
+            double sample_x = left_endpoint_x + t * (right_endpoint_x - left_endpoint_x);
+            double sample_y = left_endpoint_y + t * (right_endpoint_y - left_endpoint_y);
+    
+            // Enforce boundaries on the sampled point.
+            int64_t cell_x = static_cast<int64_t>(sample_x);
+            int64_t cell_y = static_cast<int64_t>(sample_y);
+            cellEnforceBoundaries(cell_x, cell_y, costmap);
+    
+            // Create a MapLocation for the sampled point.
+            nav2_costmap_2d::MapLocation sample_point;
+            sample_point.x = static_cast<unsigned int>(cell_x);
+            sample_point.y = static_cast<unsigned int>(cell_y);
+    
+            // Ray-trace from the apex to the sampled point.
+            auto traced_points = rayTrace(costmap, apex_x, apex_y, sample_point.x, sample_point.y);
+            for (auto traced_point : traced_points)
+            {
+                all_cells.push_back(static_cast<unsigned int>(traced_point));
+            }
+        }
+    
+        return all_cells;
+    }    
+
     void convertWorldLocationToIndex(std::map<int, std::vector<WorldLocation>>& world_location, 
         nav2_costmap_2d::Costmap2D& costmap, std::map<int, std::vector<unsigned int>>& cells) {
         
@@ -171,11 +225,21 @@ namespace frontier_exploration
         numAdditions_++;
     }
 
+    void LethalMarker::addNewMarkedAreaFOV(double center_wx, double center_wy, double angleYaw, double height)
+    {
+        unsigned int robot_xm, robot_ym;
+        if(!layered_costmap_->getCostmap()->worldToMap(center_wx, center_wy, robot_xm, robot_ym))
+            return;
+        auto height_in_cells = height / layered_costmap_->getCostmap()->getResolution();
+        latest_cells_to_mark_index_[numAdditions_] = getPointsInIsoscelesTriangle(robot_xm, robot_ym, height_in_cells, 20, angleYaw, 45 * M_PI / 180, *layered_costmap_->getCostmap());
+        numAdditions_++;
+    }
+
     void LethalMarker::markCells(unsigned char *master_array, const std::vector<unsigned int>& cells_to_mark)
     {
         for (auto index : cells_to_mark)
         {
-            master_array[index] = LETHAL_OBSTACLE;
+            master_array[index] = 253;
         }
     }
 

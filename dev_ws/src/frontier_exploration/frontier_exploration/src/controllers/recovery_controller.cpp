@@ -38,10 +38,10 @@ bool RecoveryController::computeVelocityCommand(bool backward_only)
     // Compute corresponding command velocities for the best direction
     geometry_msgs::msg::Twist cmd_vel;
     double best_direction = directions[best_direction_idx];
-    cmd_vel.linear.x = std::cos(best_direction); // Move in the direction
+    cmd_vel.linear.x = std::cos(best_direction) * 0.6; // Move in the direction
     cmd_vel.linear.y = 0.0; // Only for holonomic robots
     cmd_vel.angular.z = 0.0;                     // No rotation for simplicity
-    for(auto i=0; i < 100; i++)
+    for(auto i=0; i < 140; i++)
     {
         vel_publisher_->publish(cmd_vel);
         rclcpp::sleep_for(std::chrono::milliseconds(10));

@@ -29,6 +29,7 @@
 
 class RosVisualizer
 {
+     
 public:
     static RosVisualizer &getInstance()
     {
@@ -53,13 +54,14 @@ public:
     void landmarkViz(std::vector<Eigen::Vector3f> &points);
     void landmarkViz(std::vector<frontier_exploration::Point2D> &points, double r = 1.0, double g = 1.0, double b = 1.0);
     
-    void visualizeSpatialHashMap(const std::vector<Frontier> &frontier_list, std::string globalFrameID);
+    void visualizeSpatialHashMap(const std::vector<FrontierPtr> &frontier_list, std::string globalFrameID);
     
-    void visualizeFrontier(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
-    void visualizeFrontierMarker(const std::vector<Frontier> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
+    void visualizeFrontier(const std::vector<FrontierPtr> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
+    void visualizeFrontierMarker(const std::vector<FrontierPtr> &frontier_list, const std::vector<std::vector<double>> &every_frontier, std::string globalFrameID);
     void exportMapCoverage(std::vector<double> polygon_xy_min_max, int counter_value_, std::string mode_);
     void frontierPlanViz(nav_msgs::msg::Path &path);
     void fullPathPlanViz(nav_msgs::msg::Path &path);
+    size_t getNumSubscribersFullPathPlan();
     void visualizeTrailingPoses(std::deque<geometry_msgs::msg::Pose> robot_queue);
 
 private:

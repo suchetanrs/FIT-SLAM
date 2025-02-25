@@ -33,6 +33,7 @@
 
 namespace frontier_exploration
 {
+     
     struct RobotActiveGoals
     {
         std::mutex mutex;
@@ -67,9 +68,9 @@ namespace frontier_exploration
     private:
         // ROS Internal
         rclcpp::Node::SharedPtr bt_node_;
-        std::shared_ptr<tf2_ros::Buffer> tf_listener_;
         rclcpp::CallbackGroup::SharedPtr explore_server_callback_group_;
         rclcpp::CallbackGroup::SharedPtr multirobot_service_callback_group_;
+        rclcpp::CallbackGroup::SharedPtr rviz_control_callback_group_;
 
         std::shared_ptr<nav2_costmap_2d::Costmap2DROS> explore_costmap_ros_;
         std::unique_ptr<nav2_util::NodeThread> explore_costmap_thread_;
@@ -102,7 +103,7 @@ namespace frontier_exploration
         bool use_custom_sim_;
         bool process_other_robots_;
         bool exploration_active_;
-        std::vector<Frontier> blacklisted_frontiers_; // these are the frontiers traversed by this robot.
+        std::vector<FrontierPtr> blacklisted_frontiers_; // these are the frontiers traversed by this robot.
         RobotActiveGoals robot_active_goals_;
         std::shared_ptr<RecoveryController> recovery_controller_;
         std::shared_ptr<InitCommandVelNode> initialization_controller_;

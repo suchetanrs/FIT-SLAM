@@ -31,4 +31,8 @@ goalHysteresis:
   use_roadmap_planner_distance: true
 
 explorationBT:
-  bt_sleep_ms: 10
+  bt_sleep_ms: 70
+  recover_on_blacklist: true
+
+fisherInformation:
+  fisher_information_threshold: 550

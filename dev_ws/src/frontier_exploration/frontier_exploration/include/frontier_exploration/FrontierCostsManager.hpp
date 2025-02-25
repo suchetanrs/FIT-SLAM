@@ -38,6 +38,7 @@
 
 namespace frontier_exploration
 {
+     
     class FrontierCostsManager
     {
     public:
@@ -52,11 +53,11 @@ namespace frontier_exploration
          * 
          * "ClosestFrontier"
          */
-        bool assignCosts(std::vector<Frontier> &frontier_list, std::vector<double> polygon_xy_min_max,
+        bool assignCosts(std::vector<FrontierPtr> &frontier_list, std::vector<double> polygon_xy_min_max,
                              geometry_msgs::msg::Pose start_pose_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
                              std::vector<std::vector<std::string>>& costTypes);
 
-        void setFrontierBlacklist(std::vector<Frontier> &blacklist);
+        void setFrontierBlacklist(std::vector<FrontierPtr> &blacklist);
 
         std::shared_ptr<FrontierCostCalculator> getCostCalcPtr()
         {
@@ -67,7 +68,7 @@ namespace frontier_exploration
         nav2_costmap_2d::Costmap2D *costmap_;
         // std::shared_ptr<RosVisualizer> rosVisualizer_;
         std::shared_ptr<FrontierCostCalculator> costCalculator_;
-        std::unordered_map<Frontier, bool, FrontierHash, FrontierGoalPointEquality> frontier_blacklist_; ///< Stores the blacklisted frontiers.                                      ///< Variable used to give a unique value for each run. This is used as a prefix for the csv files.
+        std::unordered_map<FrontierPtr, bool, FrontierHash, FrontierGoalPointEquality> frontier_blacklist_; ///< Stores the blacklisted frontiers.                                      ///< Variable used to give a unique value for each run. This is used as a prefix for the csv files.
         rclcpp::Logger logger_ = rclcpp::get_logger("frontier_costs_manager");
         bool planner_allow_unknown_;
         std::mutex blacklist_mutex_;

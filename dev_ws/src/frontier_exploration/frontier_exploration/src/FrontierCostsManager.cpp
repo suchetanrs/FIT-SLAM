@@ -22,9 +22,9 @@ namespace frontier_exploration
         LOG_DEBUG("Making cost calculator instance");
     }
 
-    std::vector<Frontier> findDuplicates(const std::vector<Frontier> &vec)
+    std::vector<FrontierPtr> findDuplicates(const std::vector<FrontierPtr> &vec)
     {
-        std::vector<Frontier> duplicates;
+        std::vector<FrontierPtr> duplicates;
 
         // Iterate through the vector
         for (size_t i = 0; i < vec.size(); ++i)
@@ -44,7 +44,7 @@ namespace frontier_exploration
         return duplicates;
     }
 
-    bool FrontierCostsManager::assignCosts(std::vector<Frontier> &frontier_list, std::vector<double> polygon_xy_min_max,
+    bool FrontierCostsManager::assignCosts(std::vector<FrontierPtr> &frontier_list, std::vector<double> polygon_xy_min_max,
                                            geometry_msgs::msg::Pose start_pose_w, std::shared_ptr<slam_msgs::srv::GetMap_Response> map_data,
                                            std::vector<std::vector<std::string>> &costTypes)
     {
@@ -60,12 +60,12 @@ namespace frontier_exploration
 
         if (polygon_xy_min_max.size() <= 0)
         {
-            LOG_ERROR("Frontier cannot be selected, no polygon.");
+            LOG_ERROR("FrontierPtr cannot be selected, no polygon.");
             return false;
         }
 
         // Iterate through each frontier
-        LOG_DEBUG("Frontier list size is (loop): " + std::to_string(frontier_list.size()));
+        LOG_DEBUG("FrontierPtr list size is (loop): " + std::to_string(frontier_list.size()));
         if (findDuplicates(frontier_list).size() > 0)
         {
             throw std::runtime_error("Duplicate frontiers found.");
@@ -76,12 +76,12 @@ namespace frontier_exploration
             auto &frontier = frontier_list[frontier_idx];
             if (frontier_blacklist_.count(frontier) > 0)
             {
-                frontier.setArrivalInformation(0.0);
-                frontier.setGoalOrientation(0.0);
-                frontier.setFisherInformation(0.0);
-                frontier.setPathLength(std::numeric_limits<double>::max());
-                frontier.setPathLengthInM(std::numeric_limits<double>::max());
-                frontier.setWeightedCost(std::numeric_limits<double>::max());
+                frontier->setArrivalInformation(0.0);
+                frontier->setGoalOrientation(0.0);
+                frontier->setFisherInformation(0.0);
+                frontier->setPathLength(std::numeric_limits<double>::max());
+                frontier->setPathLengthInM(std::numeric_limits<double>::max());
+                frontier->setWeightedCost(std::numeric_limits<double>::max());
                 continue;
             }
 
@@ -105,7 +105,7 @@ namespace frontier_exploration
             }
             else if (vectorContains(costTypes[frontier_idx], std::string("EuclideanDistance")))
             {
-                costCalculator_->setPlanForFrontierEuclidean(start_pose_w.position, frontier, map_data, false, planner_allow_unknown_);
+                costCalculator_->setPlanForFrontierEuclidean(start_pose_w, frontier, map_data, false, planner_allow_unknown_);
             }
             if (vectorContains(costTypes[frontier_idx], std::string("RandomCosts")))
             {
@@ -113,7 +113,7 @@ namespace frontier_exploration
             }
             if (vectorContains(costTypes[frontier_idx], std::string("ClosestFrontier")))
             {
-                costCalculator_->setClosestFrontierMetaData(start_pose_w.position, frontier, map_data, false, planner_allow_unknown_);
+                costCalculator_->setClosestFrontierMetaData(start_pose_w, frontier, map_data, false, planner_allow_unknown_);
             }
             costCalculator_->recomputeNormalizationFactors(frontier);
         } // frontier end
@@ -126,11 +126,11 @@ namespace frontier_exploration
         for (auto &frontier_with_properties : frontier_list)
         {
             LOG_DEBUG("================");
-            if (!frontier_with_properties.isAchievable())
+            if (!frontier_with_properties->isAchievable())
             {
-                frontier_with_properties.setWeightedCost(std::numeric_limits<double>::max());
-                frontier_with_properties.setCost("arrival_gain_utility", -69.8);
-                frontier_with_properties.setCost("distance_utility", -1.8);
+                frontier_with_properties->setWeightedCost(std::numeric_limits<double>::max());
+                frontier_with_properties->setCost("arrival_gain_utility", -69.8);
+                frontier_with_properties->setCost("distance_utility", -1.8);
                 continue;
             }
             // the distance term is inverted because we need to choose the closest frontier with tradeoff.
@@ -139,33 +139,33 @@ namespace frontier_exploration
             if (static_cast<double>(costCalculator_->getMaxArrivalInformation() - costCalculator_->getMinArrivalInformation()) == 0.0)
                 arrival_info_utility = 0.0;
             else
-                // arrival_info_utility = static_cast<double>(frontier_with_properties.getArrivalInformation() - costCalculator_->getMinArrivalInformation()) /
+                // arrival_info_utility = static_cast<double>(frontier_with_properties->getArrivalInformation() - costCalculator_->getMinArrivalInformation()) /
                 //                        static_cast<double>(costCalculator_->getMaxArrivalInformation() - costCalculator_->getMinArrivalInformation());
 
-                arrival_info_utility = static_cast<double>(frontier_with_properties.getArrivalInformation()) /
+                arrival_info_utility = static_cast<double>(frontier_with_properties->getArrivalInformation()) /
                                        static_cast<double>(costCalculator_->getMaxArrivalInformation());
 
             if(arrival_info_utility > 1.0)
-                throw std::runtime_error("ARRIVAL UTILITY ERROR! MORE THAN 1. It is: " + std::to_string(frontier_with_properties.getArrivalInformation()));
+                throw std::runtime_error("ARRIVAL UTILITY ERROR! MORE THAN 1. It is: " + std::to_string(frontier_with_properties->getArrivalInformation()));
 
             double frontier_plan_utility;
             if (static_cast<double>((costCalculator_->getMaxPlanDistance()  / max_vx_ + M_PI / max_wx_) - (costCalculator_->getMinPlanDistance() / max_vx_ + 0.0 / max_wx_) == 0.0))
                 frontier_plan_utility = 1.0; // keep it 1 cuz it's -1.0'd later
             else
-                // frontier_plan_utility = static_cast<double>(frontier_with_properties.getPathLength() - costCalculator_->getMinPlanDistance()) /
+                // frontier_plan_utility = static_cast<double>(frontier_with_properties->getPathLength() - costCalculator_->getMinPlanDistance()) /
                 //                         static_cast<double>(costCalculator_->getMaxPlanDistance() - costCalculator_->getMinPlanDistance());
 
-                frontier_plan_utility = static_cast<double>(frontier_with_properties.getPathLength() / max_vx_ + frontier_with_properties.getPathHeading() / max_wx_) /
+                frontier_plan_utility = static_cast<double>(frontier_with_properties->getPathLength() / max_vx_ + frontier_with_properties->getPathHeading() / max_wx_) /
                                         static_cast<double>(costCalculator_->getMaxPlanDistance() / max_vx_ + M_PI / max_wx_);
             frontier_plan_utility = 1.0 - frontier_plan_utility;
 
-            LOG_DEBUG("Path length : " << frontier_with_properties.getPathLength());
+            LOG_DEBUG("Path length : " << frontier_with_properties->getPathLength());
             LOG_DEBUG("Min Path length : " << costCalculator_->getMinPlanDistance());
             LOG_DEBUG("Max Path length : " << costCalculator_->getMaxPlanDistance());
             LOG_DEBUG("Path Utility:" << frontier_plan_utility);
 
             LOG_DEBUG("****************************");
-            LOG_DEBUG("Current info : " << frontier_with_properties.getArrivalInformation());
+            LOG_DEBUG("Current info : " << frontier_with_properties->getArrivalInformation());
             LOG_DEBUG("Min Info: " << costCalculator_->getMinArrivalInformation());
             LOG_DEBUG("Max Info : " << costCalculator_->getMaxArrivalInformation());
             LOG_DEBUG("Info Utility:" << arrival_info_utility);
@@ -183,10 +183,10 @@ namespace frontier_exploration
 
             // LOG_DEBUG("Weighted utility: " << utility);
 
-            // RCLCPP_INFO_STREAM(logger_, "Utility U1 information:" << frontier_with_properties.getArrivalInformation());
+            // RCLCPP_INFO_STREAM(logger_, "Utility U1 information:" << frontier_with_properties->getArrivalInformation());
             // RCLCPP_INFO_STREAM(logger_, "Utility U1 distance:" << costCalculator_->getMinPlanDistance());
-            // RCLCPP_INFO_STREAM(logger_, "arrival utility" << alpha_ * (static_cast<double>(frontier_with_properties.getArrivalInformation()) / static_cast<double>(costCalculator_->getMaxArrivalInformation())));
-            // RCLCPP_INFO_STREAM(logger_, "distance utility" << (1.0 - alpha_) * (static_cast<double>(costCalculator_->getMinPlanDistance()) / frontier_with_properties.getPathLength()));
+            // RCLCPP_INFO_STREAM(logger_, "arrival utility" << alpha_ * (static_cast<double>(frontier_with_properties->getArrivalInformation()) / static_cast<double>(costCalculator_->getMaxArrivalInformation())));
+            // RCLCPP_INFO_STREAM(logger_, "distance utility" << (1.0 - alpha_) * (static_cast<double>(costCalculator_->getMinPlanDistance()) / frontier_with_properties->getPathLength()));
             // RCLCPP_INFO_STREAM(logger_, "Utility U1 before fix:" << utility);
             // It is added with Beta multiplied. If the frontier lies in the N best then this value will be replaced with information on path.
             // If it does not lie in the N best then the information on path is treated as 0 and hence it is appropriate to multiply with beta.
@@ -195,13 +195,13 @@ namespace frontier_exploration
             //     throw std::runtime_error("Something is wrong. Duplicate frontiers?");
 
             // TODO: Set along with Fisher information (alpha).
-            frontier_with_properties.setWeightedCost(1 / (beta_ * utility));
-            frontier_with_properties.setCost("arrival_gain_utility", arrival_info_utility);
-            frontier_with_properties.setCost("distance_utility", frontier_plan_utility);
+            frontier_with_properties->setWeightedCost(1 / (beta_ * utility));
+            frontier_with_properties->setCost("arrival_gain_utility", arrival_info_utility);
+            frontier_with_properties->setCost("distance_utility", frontier_plan_utility);
             LOG_DEBUG("Weighted cost: " << 1 / (beta_ * utility));
             // RCLCPP_INFO_STREAM(logger_, "Utility U1 cost after fix:" << 1 / (beta_ * utility));
             // RCLCPP_INFO_STREAM(logger_, "MAX info:" << costCalculator_->getMaxArrivalInformation());
-            // RCLCPP_INFO_STREAM(logger_, "Currnt path length" << frontier_with_properties.getPathLength());
+            // RCLCPP_INFO_STREAM(logger_, "Currnt path length" << frontier_with_properties->getPathLength());
         }
         // FrontierU1ComparatorCost frontier_u1_comp;
         // // sort the frontier list based on the utility value
@@ -212,7 +212,7 @@ namespace frontier_exploration
         return true;
     }
 
-    void FrontierCostsManager::setFrontierBlacklist(std::vector<Frontier> &blacklist)
+    void FrontierCostsManager::setFrontierBlacklist(std::vector<FrontierPtr> &blacklist)
     {
         std::lock_guard<std::mutex> lock(blacklist_mutex_);
         for (auto frontier : blacklist)

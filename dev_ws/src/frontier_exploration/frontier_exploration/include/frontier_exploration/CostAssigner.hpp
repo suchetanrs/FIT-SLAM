@@ -38,19 +38,20 @@
 
 namespace frontier_exploration
 {
+     
 
     struct GetFrontierCostsRequest
     {
         geometry_msgs::msg::PoseStamped start_pose;
-        std::vector<Frontier> frontier_list;
+        std::vector<FrontierPtr> frontier_list;
         std::vector<std::vector<double>> every_frontier;
-        std::vector<Frontier> prohibited_frontiers;       
+        std::vector<FrontierPtr> prohibited_frontiers;       
     };
 
     struct GetFrontierCostsResponse
     {
         bool success;
-        std::vector<Frontier> frontier_list;
+        std::vector<FrontierPtr> frontier_list;
         std::vector<double> frontier_costs;
         std::vector<double> frontier_distances;
         std::vector<double> frontier_arrival_information;
@@ -78,7 +79,7 @@ namespace frontier_exploration
     protected:
 
         bool processOurApproach(
-            std::vector<Frontier> &frontier_list,
+            std::vector<FrontierPtr> &frontier_list,
             geometry_msgs::msg::Pose& start_pose_w);
 
     private:

@@ -17,12 +17,13 @@
 
 namespace frontier_exploration
 {
+     
     class FrontierSearchAllCells
     {
     public:
         FrontierSearchAllCells(nav2_costmap_2d::Costmap2D &costmap, int min_frontier_cluster_size, int max_frontier_cluster_size);
 
-        std::vector<Frontier> searchAllCells();
+        std::vector<FrontierPtr> searchAllCells();
 
         std::vector<std::vector<double>> getAllFrontiers();
 
@@ -36,7 +37,7 @@ namespace frontier_exploration
 
         bool isNewFrontierCell(unsigned int idx, const std::vector<bool> &frontier_flag);
 
-        std::vector<Frontier> buildNewFrontier(unsigned int initial_cell, std::vector<bool> &frontier_flag);
+        std::vector<FrontierPtr> buildNewFrontier(unsigned int initial_cell, std::vector<bool> &frontier_flag);
     };
 }
 #endif

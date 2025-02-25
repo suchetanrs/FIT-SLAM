@@ -64,6 +64,8 @@ namespace frontier_exploration
 
         void addNewMarkedArea(double center_wx, double center_wy, double radius);
 
+        void addNewMarkedAreaFOV(double center_wx, double center_wy, double angleYaw, double radius);
+
     private:
         void editLethalZoneService(const std::shared_ptr<frontier_msgs::srv::MarkLethal::Request> req,
                                           const std::shared_ptr<frontier_msgs::srv::MarkLethal::Response> res);

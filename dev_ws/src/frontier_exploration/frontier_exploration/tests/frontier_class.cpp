@@ -4,9 +4,9 @@
 
 int main()
 {
-    // Create two instances of the Frontier class
-    Frontier frontier1;
-    Frontier frontier2;
+    // Create two instances of the FrontierPtr class
+    FrontierPtr frontier1;
+    FrontierPtr frontier2;
 
     // Set the same goal point in both frontiers
     geometry_msgs::msg::Point goalPoint;
@@ -14,15 +14,15 @@ int main()
     goalPoint.y = 2.0;
     goalPoint.z = 0.0;
 
-    frontier1.setGoalPoint(goalPoint);
-    frontier2.setGoalPoint(goalPoint);
+    frontier1->setGoalPoint(goalPoint);
+    frontier2->setGoalPoint(goalPoint);
 
     // Check if the two frontiers are equal using the == operator
     if (frontier1 == frontier2)
     {
         std::cout << "The two frontiers are equal." << std::endl;
-        auto h1 = std::hash<double>()(frontier1.getGoalPoint().x) ^ (std::hash<double>()(frontier1.getGoalPoint().y) << 1);
-        auto h2 = std::hash<double>()(frontier2.getGoalPoint().x) ^ (std::hash<double>()(frontier2.getGoalPoint().y) << 1);
+        auto h1 = std::hash<double>()(frontier1->getGoalPoint().x) ^ (std::hash<double>()(frontier1->getGoalPoint().y) << 1);
+        auto h2 = std::hash<double>()(frontier2->getGoalPoint().x) ^ (std::hash<double>()(frontier2->getGoalPoint().y) << 1);
         std::cout << "F1 hash:" << h1 << std::endl;
         std::cout << "F1 hash:" << h2 << std::endl;
         std::cout << "The two frontiers are equal." << std::endl;

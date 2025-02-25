@@ -59,8 +59,8 @@ private:
             return;
         std::lock_guard<std::mutex> lock(odom_lock);
         geometry_msgs::msg::Point point;
-        point.x = latest_odometry_msg_->pose.pose.position.x;
-        point.y = latest_odometry_msg_->pose.pose.position.y;
+        point.x = latest_odometry_msg_->pose.pose.position.x + 3.22;
+        point.y = latest_odometry_msg_->pose.pose.position.y + 5.60;
         point.z = latest_odometry_msg_->pose.pose.position.z + 1.0;
         if (previous_odometry_msg_ != nullptr)
         {

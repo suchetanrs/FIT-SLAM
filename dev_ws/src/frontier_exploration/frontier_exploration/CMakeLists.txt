@@ -170,9 +170,12 @@ ament_target_dependencies(exploration_path_followed ${dependencies})
 add_executable(exploration_path_followed_tf comparision_scripts/exploration_path_followed_tf.cpp)
 ament_target_dependencies(exploration_path_followed_tf ${dependencies})
 
+add_executable(exploration_accuracy comparision_scripts/exploration_accuracy.cpp)
+ament_target_dependencies(exploration_accuracy ${dependencies})
+
 # main_fisher_information_manager
 install(TARGETS nav2_interface_main lethal_marker_core frontier_roadmap_planner_core 
-                explored_map_counter exploration_path_followed exploration_path_followed_tf 
+                explored_map_counter exploration_path_followed exploration_path_followed_tf exploration_accuracy
                 continous_fi_test pose_fi_test
 DESTINATION lib/${PROJECT_NAME}
 )
