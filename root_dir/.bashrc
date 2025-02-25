@@ -120,3 +120,6 @@ sslam
 export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 #export CYCLONEDDS_URI=~/.ros/cyclonedds.xml
 
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export CYCLONEDDS_URI=~/.ros/cyclonedds.xml
+export ROS_DOMAIN_ID=119

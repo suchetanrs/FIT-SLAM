@@ -25,7 +25,7 @@ tmux send-keys -t 1 "ros2 launch robot_navigation2 navigation_slow.launch.py" C-
 
 tmux send-keys -t 3 "rviz2 -d /root/frontier_exploration.rviz" C-m
 
-# tmux send-keys -t 2 "cd dev_ws && vsc" C-m
+tmux send-keys -t 2 "ros2 launch traversability_mapping_ros global_slam_traversability_mapping.launch.py" C-m
 
 tmux send-keys -t 4 "cd && source colcon_ws/install/setup.bash && ros2 launch orb_slam3_ros2_wrapper unirobot.launch.py" C-m
 tmux send-keys -t 5 "cd && source trav_ws/install/setup.bash && ros2 launch traversability_mapping_ros local_traversability_mapping.launch.py" C-m

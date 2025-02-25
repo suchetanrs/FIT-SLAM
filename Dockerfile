@@ -15,4 +15,4 @@ COPY ./root_dir/shell_scripts/exploration_dep_install.sh /root
 RUN cd /root/ && sudo chmod +x * && ./exploration_dep_install.sh && rm -rf exploration_dep_install.sh
 # COPY ./root_dir/shell_scripts/all-installed-packages.sh /root
 # RUN cd /root/ && sudo chmod +x * && ./all-installed-packages.sh && rm -rf all-installed-packages.sh
-# RUN . /opt/ros/humble/setup.sh && apt install ros-$ROS_DISTRO-foxglove-bridge && apt-get install -y ros-humble-rmw-cyclonedds-cpp
+RUN . /opt/ros/humble/setup.sh && apt-get install -y ros-humble-rmw-cyclonedds-cpp

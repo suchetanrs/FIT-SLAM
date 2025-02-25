@@ -12,6 +12,7 @@ root_dir/.*
 !root_dir/build_packages.sh
 !root_dir/.bash_profile
 !root_dir/frontier_exploration.rviz
+!root_dir/.ros/cyclonedds.xml
 dev_ws/src/frontier_exploration/Doxyfile
 dev_ws/src/frontier_exploration/doc/
 dev_ws/build/
