@@ -11,7 +11,7 @@
       <RateController hz="10.0">
         <RecoveryNode number_of_retries="1" name="ComputePathToPose">
           <ReactiveSequence>
-            <PlannerSelector selected_planner="{selected_planner}" default_planner="RoadmapPlanner" topic_name="planner_selector"/>
+            <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
             <GoalUpdater input_goal="{goal}" output_goal="{updated_goal}">
               <Sequence name="ComputeAndSmoothPath">
                 <ComputePathToPose goal="{updated_goal}" path="{path}" planner_id="{selected_planner}"/>

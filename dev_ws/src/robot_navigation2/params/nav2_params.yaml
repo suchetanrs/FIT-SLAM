@@ -6,7 +6,7 @@ bt_navigator:
     odom_topic: odom
     default_nav_to_pose_bt_xml: "/root/dev_ws/src/robot_navigation2/xml/nav_bt.xml"
     default_nav_through_poses_bt_xml: "/root/dev_ws/src/robot_navigation2/xml/nav_bt.xml"
-    bt_loop_duration: 100
+    bt_loop_duration: 50
     default_server_timeout: 20
     # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
     # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
@@ -67,7 +67,7 @@ bt_navigator_navigate_to_pose_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: True
-    controller_frequency: 25.0
+    controller_frequency: 10.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
@@ -116,7 +116,7 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 5.0
+      update_frequency: 4.0
       publish_frequency: 2.0
       global_frame: odom
       robot_base_frame: base_link
@@ -142,7 +142,7 @@ global_costmap:
   global_costmap:
     ros__parameters:
       # footprint: "[ [0.48, 0.38], [0.48, -0.38], [-0.48, -0.38], [ -0.48, 0.38 ] ]"
-      robot_radius: 0.40 # 0.30
+      robot_radius: 0.05 # 0.30
       update_frequency: 3.0
       publish_frequency: 3.0
       global_frame: map
@@ -150,7 +150,8 @@ global_costmap:
       use_sim_time: True
       resolution: 0.05 #0.05
       track_unknown_space: true
-      plugins: ["static_layer", "inflation_layer", "lethal_marker_global_costmap", "lethal_inflation_layer"]
+      # plugins: ["static_layer", "inflation_layer", "lethal_marker_global_costmap", "lethal_inflation_layer"]
+      plugins: ["static_layer", "inflation_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_topic: /traversability_thresholded # for scout use /traversability_thresholded
@@ -160,9 +161,9 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 0.6
         inflation_radius: 5.0
-      lethal_marker_global_costmap:
-        plugin: "frontier_exploration/LethalMarker"
-        enabled: True
+      # lethal_marker_global_costmap:
+      #   plugin: "frontier_exploration/LethalMarker"
+      #   enabled: True
       lethal_inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 0.6
@@ -174,14 +175,14 @@ planner_server:
   ros__parameters:
     expected_planner_frequency: 1.0
     use_sim_time: true
-    planner_plugins: ["RoadmapPlanner"]
+    planner_plugins: ["GridBased"]
     RoadmapPlanner:
       plugin: "frontier_exploration/FrontierRoadmapPlanner"
-    # GridBased:
-    #   plugin: "nav2_navfn_planner/NavfnPlanner"
-    #   tolerance: 0.5
-    #   use_astar: false
-    #   allow_unknown: true
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner"
+      tolerance: 0.5
+      use_astar: false
+      allow_unknown: true
     # NBVP:
     #   plugin: "nbvp_global_planner/NBVPGlobalPlanner"
     #   visualize_tree: true
