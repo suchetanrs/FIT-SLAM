@@ -2,7 +2,7 @@ This respository contains all the packages required to launch the Frontier based
 
 # Setup instructions: Method 1 - Using pre-built base image (recommended)
 
-1. Setup the simulation from https://github.com/suchetanrs/gz-sim-environment. The README contains the instructions for setup.
+1. Setup the simulation from https://github.com/suchetanrs/gz-sim-environment/tree/humble. The README contains the instructions for setup. ONLY `HUMBLE` VERSION IS COMPATIBILE WITH THIS REPOSITORY.
 2. Clone this repository using ```git clone --depth 1 https://github.com/suchetanrs/FIT-SLAM && cd FIT-SLAM```
 3. Update the submodules using ```git submodule update --init --recursive```
 ## AMD machine:
