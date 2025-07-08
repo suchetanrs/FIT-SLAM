@@ -35,11 +35,11 @@ x-fit-slam-common: &fit-slam-common
 services:
   fit-slam-amd:
     <<: *fit-slam-common
-    image: suchetanrs/fit-slam:amd-2.0
+    image: suchetanrs/fit-slam:amd-2.1
 
   fit-slam-arm:
     <<: *fit-slam-common
-    image: suchetanrs/fit-slam:arm-2.0
+    image: suchetanrs/fit-slam:arm-2.1
   
   fit-slam-source-build:
     <<: *fit-slam-common
