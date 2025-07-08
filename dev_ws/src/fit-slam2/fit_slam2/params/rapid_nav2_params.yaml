@@ -6,7 +6,7 @@ bt_navigator:
     odom_topic: odom
     default_nav_to_pose_bt_xml: "/root/dev_ws/src/robot_navigation2/xml/nav_bt.xml"
     default_nav_through_poses_bt_xml: "/root/dev_ws/src/robot_navigation2/xml/nav_bt.xml"
-    bt_loop_duration: 300
+    bt_loop_duration: 50
     default_server_timeout: 20
     # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
     # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
@@ -67,7 +67,7 @@ bt_navigator_navigate_to_pose_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: True
-    controller_frequency: 10.0
+    controller_frequency: 25.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
@@ -144,7 +144,7 @@ global_costmap:
       # footprint: "[ [0.48, 0.38], [0.48, -0.38], [-0.48, -0.38], [ -0.48, 0.38 ] ]"
       robot_radius: 0.05 # 0.30
       update_frequency: 3.0
-      publish_frequency: 0.001
+      publish_frequency: 3.0
       global_frame: map
       robot_base_frame: base_footprint
       use_sim_time: True
