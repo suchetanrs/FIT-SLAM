@@ -19,11 +19,11 @@ tmux split-window -v
 tmux select-pane -t 2
 tmux split-window -v
 
-tmux send-keys -t 0 "ros2 launch fit_slam2 active_slam_exploration.launch.py" C-m
+tmux send-keys -t 0 "ros2 launch fit_slam2 rapid_exploration.launch.py" C-m
 
-tmux send-keys -t 1 "ros2 launch fit_slam2 active_slam_navigation.launch.py" C-m
+tmux send-keys -t 1 "ros2 launch fit_slam2 rapid_navigation.launch.py" C-m
 
-tmux send-keys -t 4 "ros2 launch fit_slam2 orb_slam3.launch.py" C-m
+tmux send-keys -t 4 "ros2 launch fit_slam2 traversability_mapping.launch.py" C-m
 
 # Attach to the tmux session
 tmux attach-session -t $SESSION_NAME
