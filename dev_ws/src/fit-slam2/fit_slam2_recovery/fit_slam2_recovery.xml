@@ -1,0 +1,9 @@
+<library path="fit_slam2_recovery">
+  <class name="roadmap_explorer::RecoveryControllerBTPlugin"
+         type="roadmap_explorer::RecoveryControllerBTPlugin"
+         base_class_type="roadmap_explorer::BTPlugin">
+    <description>
+      Recovery controller BT plugin for roadmap_explorer.
+    </description>
+  </class>
+</library>
