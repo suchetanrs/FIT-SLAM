@@ -2,3 +2,6 @@
 	path = ORB-SLAM3-ROS2-Docker
 	url = https://github.com/suchetanrs/ORB-SLAM3-ROS2-Docker
 	branch = active_slam_integration
+[submodule "dev_ws/src/roadmap-explorer"]
+	path = dev_ws/src/roadmap-explorer
+	url = https://github.com/suchetanrs/roadmap-explorer

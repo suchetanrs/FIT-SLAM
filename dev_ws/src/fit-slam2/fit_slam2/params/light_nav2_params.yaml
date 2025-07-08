@@ -6,7 +6,7 @@ bt_navigator:
     odom_topic: odom
     default_nav_to_pose_bt_xml: "/root/dev_ws/src/robot_navigation2/xml/nav_bt.xml"
     default_nav_through_poses_bt_xml: "/root/dev_ws/src/robot_navigation2/xml/nav_bt.xml"
-    bt_loop_duration: 50
+    bt_loop_duration: 300
     default_server_timeout: 20
     # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
     # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
@@ -84,8 +84,8 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.20 #0.30
-      yaw_goal_tolerance: 1.5 #0.4
+      xy_goal_tolerance: 0.02 #0.30
+      yaw_goal_tolerance: 0.4 #0.4
     
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
@@ -144,7 +144,7 @@ global_costmap:
       # footprint: "[ [0.48, 0.38], [0.48, -0.38], [-0.48, -0.38], [ -0.48, 0.38 ] ]"
       robot_radius: 0.05 # 0.30
       update_frequency: 3.0
-      publish_frequency: 3.0
+      publish_frequency: 0.001
       global_frame: map
       robot_base_frame: base_footprint
       use_sim_time: True
@@ -173,129 +173,11 @@ global_costmap:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 1.0
+    expected_planner_frequency: 10.0
     use_sim_time: true
     planner_plugins: ["GridBased"]
-    RoadmapPlanner:
-      plugin: "frontier_exploration/FrontierRoadmapPlanner"
     GridBased:
       plugin: "nav2_navfn_planner/NavfnPlanner"
       tolerance: 0.5
       use_astar: false
       allow_unknown: true
-    # NBVP:
-    #   plugin: "nbvp_global_planner/NBVPGlobalPlanner"
-    #   visualize_tree: true
-    #   path_resolution: 0.15
-    #   # The below parameters have been moved to ~/.ros/robot_config.yaml as a global parameter and will be loaded from there.
-    #   # exploration_radius: 10.0
-    #   # min_exploration_radius: 0.13
-    #   goal_distance_threshold: 0.25
-    #   gain:
-    #     free: 0.0
-    #     occupied: 0.0
-    #     unmapped: 110.0
-    #     range: 4.5
-    #     zero: 0.0
-    #     degressive_coeff: 0.25
-    #   tree:
-    #     max_best_edges: 10000
-    #     min_extension_range: 0.0
-    #     max_extension_range: 3.5
-    #     max_loop_iterations: 10000
-    #     initial_iterations: 2000
-    #     min_node_cost: 0
-    #     max_node_cost: 254
-    #     min_raytrace_cost: 253
-    #     max_raytrace_cost: 255
-    #   bbx:
-    #     minX: -106.0
-    #     minY: -106.0
-    #     maxX: 106.0
-    #     maxY: 106.0
-    #     explore_by_radius: true
-
-smoother_server:
-  ros__parameters:
-    use_sim_time: True
-    smoother_plugins: ["SmoothPath"]
-    SmoothPath:
-      plugin: "nav2_constrained_smoother/ConstrainedSmoother"
-      reversing_enabled: true       # whether to detect forward/reverse direction and cusps. Should be set to false for paths without orientations assigned
-      path_downsampling_factor: 3   # every n-th node of the path is taken. Useful for speed-up
-      path_upsampling_factor: 1     # 0 - path remains downsampled, 1 - path is upsampled back to original granularity using cubic bezier, 2... - more upsampling
-      keep_start_orientation: true  # whether to prevent the start orientation from being smoothed
-      keep_goal_orientation: true   # whether to prevent the gpal orientation from being smoothed
-      minimum_turning_radius: 0.40  # minimum turning radius the robot can perform. Can be set to 0.0 (or w_curve can be set to 0.0 with the same effect) for diff-drive/holonomic robots
-      w_curve: 30.0                 # weight to enforce minimum_turning_radius
-      w_dist: 0.0                   # weight to bind path to original as optional replacement for cost weight
-      w_smooth: 2000000.0           # weight to maximize smoothness of path
-      w_cost: 3000.015                 # weight to steer robot away from collision and cost
-
-      # Parameters used to improve obstacle avoidance near cusps (forward/reverse movement changes)
-      w_cost_cusp_multiplier: 3.0   # option to use higher weight during forward/reverse direction change which is often accompanied with dangerous rotations
-      cusp_zone_length: 2.5         # length of the section around cusp in which nodes use w_cost_cusp_multiplier (w_cost rises gradually inside the zone towards the cusp point, whose costmap weight eqals w_cost*w_cost_cusp_multiplier)
-
-      # Points in robot frame to grab costmap values from. Format: [x1, y1, weight1, x2, y2, weight2, ...]
-      # IMPORTANT: Requires much higher number of iterations to actually improve the path. Uncomment only if you really need it (highly elongated/asymmetric robots)
-      # cost_check_points: [-0.185, 0.0, 1.0]
-
-      optimizer:
-        max_iterations: 70            # max iterations of smoother
-        debug_optimizer: false        # print debug info
-        gradient_tol: 5e3
-        fn_tol: 1.0e-15
-        param_tol: 1.0e-20
-
-behavior_server:
-  ros__parameters:
-    costmap_topic: local_costmap/costmap_raw
-    footprint_topic: local_costmap/published_footprint
-    cycle_frequency: 10.0
-    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"]
-    spin:
-      plugin: "nav2_behaviors/Spin"
-    backup:
-      plugin: "nav2_behaviors/BackUp"
-    drive_on_heading:
-      plugin: "nav2_behaviors/DriveOnHeading"
-    wait:
-      plugin: "nav2_behaviors/Wait"
-    assisted_teleop:
-      plugin: "nav2_behaviors/AssistedTeleop"
-    global_frame: map
-    robot_base_frame: base_footprint
-    transform_tolerance: 0.1
-    use_sim_time: true
-    simulate_ahead_time: 2.0
-    max_rotational_vel: 1.0
-    min_rotational_vel: 0.4
-    rotational_acc_lim: 3.2
-
-waypoint_follower:
-  ros__parameters:
-    use_sim_time: True
-    loop_rate: 20
-    stop_on_failure: false
-    waypoint_task_executor_plugin: "wait_at_waypoint"
-    wait_at_waypoint:
-      plugin: "nav2_waypoint_follower::WaitAtWaypoint"
-      enabled: True
-      waypoint_pause_duration: 200
-
-velocity_smoother:
-  ros__parameters:
-    use_sim_time: True
-    smoothing_frequency: 20.0
-    scale_velocities: False
-    feedback: "OPEN_LOOP"
-    # max_velocity: [0.50, 0.0, 0.5]
-    # min_velocity: [-0.50, 0.0, 0.5]
-    max_velocity: [0.7, 0.0, 0.8]
-    min_velocity: [-0.7, 0.0, 0.8]
-    max_accel: [2.5, 0.0, 3.2]
-    max_decel: [-2.5, 0.0, -3.2]
-    odom_topic: "odom"
-    odom_duration: 0.1
-    deadband_velocity: [0.0, 0.0, 0.0]
-    velocity_timeout: 1.0

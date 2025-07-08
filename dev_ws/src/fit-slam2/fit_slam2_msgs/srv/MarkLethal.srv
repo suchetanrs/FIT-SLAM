@@ -1,0 +1,5 @@
+geometry_msgs/Point lethal_point
+float64 yaw
+float64 radius
+---
+bool success
