@@ -42,8 +42,9 @@ def generate_launch_description():
     lifecycle_nodes = ['planner_server',
                        'controller_server',
                        'bt_navigator',
-                       'behavior_server',
-                       'smoother_server']
+                    #    'behavior_server',
+                    #    'smoother_server'
+                       ]
 
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
     # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
@@ -65,7 +66,7 @@ def generate_launch_description():
         description='Automatically startup the nav2 stack')
 
     declare_use_composition_cmd = DeclareLaunchArgument(
-        'use_composition', default_value='False',
+        'use_composition', default_value='True',
         description='Use composed bringup if True')
 
     declare_container_name_cmd = DeclareLaunchArgument(
@@ -145,17 +146,17 @@ def generate_launch_description():
                     parameters=[configured_params],
                     arguments=['--ros-args', '--log-level', log_level],
                     remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
-                Node(
-                    package='nav2_behaviors',
-                    executable='behavior_server',
-                    name='behavior_server',
-                    output='screen',
-                    namespace=context.launch_configurations['robot_namespace'],
-                    respawn=use_respawn,
-                    respawn_delay=2.0,
-                    parameters=[configured_params],
-                    arguments=['--ros-args', '--log-level', log_level],
-                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
+                # Node(
+                #     package='nav2_behaviors',
+                #     executable='behavior_server',
+                #     name='behavior_server',
+                #     output='screen',
+                #     namespace=context.launch_configurations['robot_namespace'],
+                #     respawn=use_respawn,
+                #     respawn_delay=2.0,
+                #     parameters=[configured_params],
+                #     arguments=['--ros-args', '--log-level', log_level],
+                #     remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
                 Node(
                     package='nav2_bt_navigator',
                     executable='bt_navigator',
@@ -167,17 +168,17 @@ def generate_launch_description():
                     parameters=[configured_params],
                     arguments=['--ros-args', '--log-level', log_level],
                     remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
-                Node(
-                    package='nav2_smoother',
-                    executable='smoother_server',
-                    name='smoother_server',
-                    output='screen',
-                    namespace=context.launch_configurations['robot_namespace'],
-                    respawn=use_respawn,
-                    respawn_delay=2.0,
-                    parameters=[configured_params],
-                    arguments=['--ros-args', '--log-level', log_level],
-                    remappings=remappings),
+                # Node(
+                #     package='nav2_smoother',
+                #     executable='smoother_server',
+                #     name='smoother_server',
+                #     output='screen',
+                #     namespace=context.launch_configurations['robot_namespace'],
+                #     respawn=use_respawn,
+                #     respawn_delay=2.0,
+                #     parameters=[configured_params],
+                #     arguments=['--ros-args', '--log-level', log_level],
+                #     remappings=remappings),
                 # Node(
                 #     package='nav2_velocity_smoother',
                 #     executable='velocity_smoother',
@@ -202,6 +203,16 @@ def generate_launch_description():
             ]
         )
 
+        composable_container = Node(
+            condition=IfCondition(use_composition),
+            name='nav2_container',
+            package='rclcpp_components',
+            executable='component_container_isolated',
+            parameters=[configured_params, {'autostart': autostart}],
+            emulate_tty=True,
+            remappings=remappings,
+            output='screen')
+
         load_composable_nodes = LoadComposableNodes(
             condition=IfCondition(use_composition),
             target_container=container_name_full,
@@ -212,24 +223,24 @@ def generate_launch_description():
                     name='controller_server',
                     parameters=[configured_params],
                     remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
-                ComposableNode(
-                    package='nav2_smoother',
-                    plugin='nav2_smoother::SmootherServer',
-                    name='smoother_server',
-                    parameters=[configured_params],
-                    remappings=remappings),
+                # ComposableNode(
+                #     package='nav2_smoother',
+                #     plugin='nav2_smoother::SmootherServer',
+                #     name='smoother_server',
+                #     parameters=[configured_params],
+                #     remappings=remappings),
                 ComposableNode(
                     package='nav2_planner',
                     plugin='nav2_planner::PlannerServer',
                     name='planner_server',
                     parameters=[configured_params],
                     remappings=remappings),
-                ComposableNode(
-                    package='nav2_behaviors',
-                    plugin='behavior_server::BehaviorServer',
-                    name='behavior_server',
-                    parameters=[configured_params],
-                    remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
+                # ComposableNode(
+                #     package='nav2_behaviors',
+                #     plugin='behavior_server::BehaviorServer',
+                #     name='behavior_server',
+                #     parameters=[configured_params],
+                #     remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
                 ComposableNode(
                     package='nav2_bt_navigator',
                     plugin='nav2_bt_navigator::BtNavigator',
@@ -253,7 +264,7 @@ def generate_launch_description():
             ],
         )
         
-        return [declare_params_file_cmd, load_nodes, load_composable_nodes]
+        return [declare_params_file_cmd, load_nodes, load_composable_nodes, composable_container]
 
     opaque_function = OpaqueFunction(function=launch_opaque_nodes)
 

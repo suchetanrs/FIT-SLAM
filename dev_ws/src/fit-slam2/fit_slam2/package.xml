@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>fit_slam2</name>
+  <version>0.1.0</version>
+  <description>Frontier exploration package</description>
+
+  <maintainer email="paul@bovbel.com">Paul Bovbel</maintainer>
+  <license>GPLv3</license>
+
+  <depend>rosidl_default_generators</depend>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  
+  <depend>ament_cmake</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>geometry_msgs</depend>
+  <depend>action_msgs</depend>
+  <depend>nav2_msgs</depend>
+  <depend>nav2_costmap_2d</depend>
+  <depend>fit_slam2_msgs</depend>
+  <depend>pcl_ros</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2</depend>
+  <depend>pluginlib</depend>
+  <depend>slam_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>nav2_util</depend>
+  <depend>example_interfaces</depend>
+  <depend>behaviortree_cpp</depend>
+  <depend>roadmap_explorer</depend>
+  <depend>fisher_information_plugins</depend>
+  
+  <export>
+    <build_type>ament_cmake</build_type>
+    <nav2_core plugin="${prefix}/global_planner_plugin.xml"/>
+  </export>
+</package>

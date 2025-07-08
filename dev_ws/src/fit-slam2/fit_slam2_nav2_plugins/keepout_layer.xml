@@ -1,0 +1,7 @@
+<library path="keepout_zones_core">
+  <class name="fit_slam2_nav2_plugins/LethalMarker"
+    type="fit_slam2_nav2_plugins::LethalMarker" 
+    base_class_type="nav2_costmap_2d::Layer">
+    <description>Layer that adds the keepout zone to the costmap.</description>
+  </class>
+</library>

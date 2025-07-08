@@ -1,0 +1,9 @@
+<library path="fisher_information_bt_plugins">
+  <class name="roadmap_explorer::FisherInfoBTPlugin"
+         type="roadmap_explorer::FisherInfoBTPlugin"
+         base_class_type="roadmap_explorer::BTPlugin">
+    <description>
+      Fisher information BT plugin for roadmap_explorer.
+    </description>
+  </class>
+</library>

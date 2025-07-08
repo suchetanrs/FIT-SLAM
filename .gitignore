@@ -7,8 +7,9 @@ root_dir/.*
 !root_dir/.bashrc
 !root_dir/.tmux.conf
 !root_dir/.rangerdir
-!root_dir/launch_exploration.sh
+!root_dir/launch_rapid_exploration.sh
 !root_dir/launch_active_slam.sh
+!root_dir/launch_light_exploration.sh
 !root_dir/build_packages.sh
 !root_dir/.bash_profile
 !root_dir/frontier_exploration.rviz
